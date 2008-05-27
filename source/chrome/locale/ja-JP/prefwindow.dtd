@@ -1,0 +1,6 @@
+<!ENTITY prefwindow.title "Ank Pixiv Tool 設定">
+<!ENTITY mainpane.title "Ank Pixiv Tool 設定">
+<!ENTITY initialDirectory.label "保存ディレクトリ">
+<!ENTITY initialDirectory.path "">
+<!ENTITY showSaveDialog.label "保存ダイアログを表示する(オフの場合、保存ディレクトリに自動で保存します)">
+<!ENTITY browse "参照">

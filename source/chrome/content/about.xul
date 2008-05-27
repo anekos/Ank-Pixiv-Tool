@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<dialog title="about; Ank Pixiv Tool" orient="vertical" autostretch="always" onload="sizeToContent()" buttons="accept" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <groupbox align="center" orient="horizontal">
+    <vbox>
+      <text value="Ank Pixiv Tool" style="font-weight: bold; font-size: x-large;" />
+      <text value="version &version;" />
+      <separator class="thin" />
+      <text value="createdBy" style="font-weight: bold;" />
+      <text value="anekos" />
+      <separator class="thin" />
+    </vbox>
+  </groupbox>
+
+</dialog>

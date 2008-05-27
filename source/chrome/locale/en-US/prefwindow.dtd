@@ -1,0 +1,6 @@
+<!ENTITY prefwindow.title "Ank Pixiv Tool preferences">
+<!ENTITY mainpane.title "Ank Pixiv Tool preferences">
+<!ENTITY initialDirectory.label "Save Directory">
+<!ENTITY initialDirectory.path "">
+<!ENTITY showSaveDialog.label "Show save dialog">
+<!ENTITY browse "browse">

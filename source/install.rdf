@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+
+    <em:id>ankpixiv@snca.net</em:id>
+    <em:name>Ank Pixiv Tool</em:name>
+    <em:version>0.1</em:version>
+    <em:description>pixiiiiiviviiiiieee</em:description>
+    <em:creator>anekos</em:creator>
+    <em:homepageURL>http://snca.net/</em:homepageURL>
+    <em:iconURL>chrome://ankpixiv/skin/ankpixiv.png</em:iconURL>
+    <em:aboutURL>chrome://ankpixiv/content/about.xul</em:aboutURL>
+    <em:optionsURL>chrome://ankpixiv/content/options.xul</em:optionsURL>
+    <em:updateURL>http://snca.net/update.rdf</em:updateURL>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:ankpixiv.jar">
+        <em:package>content/ankpixiv/</em:package>
+      </Description>
+    </em:file>
+
+    <em:targetApplication>
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>2.0</em:minVersion>
+        <em:maxVersion>2.*</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+  </Description>
+
+</RDF>
