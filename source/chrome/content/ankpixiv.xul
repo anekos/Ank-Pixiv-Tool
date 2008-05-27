@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="ankpixiv.css" type="text/css"?>
+<!DOCTYPE prefwindow SYSTEM "chrome://ankpixiv/locale/ankpixiv.dtd">
 
 <overlay id="ankpixivOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -7,18 +8,18 @@
   <script type="application/x-javascript" src="ankpixiv.js" />
 
   <menupopup id="menu_ToolsPopup">
-    <menuitem insertafter="devToolsSeparator" label="AnkPixivTest" id="ankpixiv_menu_test"
-              accesskey="A" oncommand="ap.test();" />	
+    <menuitem insertafter="devToolsSeparator" label="&downloadCurrentImage;" id="ankpixiv_menu_test"
+              accesskey="A" oncommand="AnkPixiv.downloadCurrentImage();" />	
   </menupopup>
 
   <statusbar id="status-bar">
     <statusbarpanel class="statusbarpanel-iconic" id="ankpixiv-panel" 
-                    label="Download picture" onclick="ap.test()"/>
+                    label="&downloadCurrentImage;" onclick="AnkPixiv.downloadCurrentImage()"/>
   </statusbar>
 
   <toolbarpalette id="BrowserToolbarPalette">
     <toolbarbutton id="ankpixiv-toolbar-button" label="neko"
-                   tooltiptext="neko" oncommand="ap.test()" class="toolbarbutton-1" />
+                   tooltiptext="&downloadCurrentImage;" oncommand="AnkPixiv.downloadCurrentImage()" class="toolbarbutton-1" />
   </toolbarpalette>
 
 </overlay>

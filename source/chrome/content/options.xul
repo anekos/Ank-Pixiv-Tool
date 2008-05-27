@@ -22,7 +22,7 @@
     <checkbox id="show-save-dialog-checkbox" preference="show-save-dialog-pref" 
               label="&showSaveDialog.label;"/>
     <textbox id="initial-directory-textbox" preference="initial-directory-pref" />
-    <toolbarbutton id="initial-directory-browse" oncommand="ap.queryInitialDirectory();" 
+    <toolbarbutton id="initial-directory-browse" oncommand="AnkPixiv.queryInitialDirectory();" 
                    instantApply="true" label="&browse;" />
 
   </prefpane>
