@@ -186,7 +186,7 @@ var AnkPixiv = {
   /*
    * showDirectoryPicker
    *    defaultPath: 初期表示ディレクトリ
-   *    return:      選択されたディレクトリのパス
+   *    return:      選択されたディレクトリ(nsIFilePicker)
    * ディレクトリ選択ダイアログを表示
    */
   showDirectoryPicker: function (defaultPath) {
@@ -197,7 +197,7 @@ var AnkPixiv = {
       filePicker.appendFilters(nsIFilePicker.filterAll);
     
       if (filePicker.show() == nsIFilePicker.returnOK) {
-        return filePicker.file.path;
+        return filePicker;
       }
     }
     catch (e) {
@@ -214,9 +214,10 @@ var AnkPixiv = {
     var dir = this.showDirectoryPicker(this.getPref('initialDirectory'));
     if (dir) {
       var edit = document.getElementById('initial-directory-textbox');
-      edit.value = dir;
+      edit.value = dir.file;
+      edit.label = dir.file.path;
       edit.focus();
-      return this.setPref('initialDirectory', dir, 'string');
+      //return this.setPref('initialDirectory', dir, 'string');
     }
   },
 

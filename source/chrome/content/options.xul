@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://mozapps/content/preferences/preferences.css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
+
 <!DOCTYPE prefwindow SYSTEM "chrome://ankpixiv/locale/prefwindow.dtd">
 
 <prefwindow id="ankpixivPreferences" 
@@ -10,10 +13,30 @@
 
   <script type="application/x-javascript" src="ankpixiv.js" />
 
-  <prefpane id="mainpane" label="&mainpane.title;">
+  <script type="application/x-javascript"><![CDATA[
+      function updateUI() {
+          var file = document.getElementById('initial-directory-pref').value;
+          if (file) {
+              var fileField = document.getElementById("initial-directory-filefield");
+              fileField.file = file;
+              fileField.label = file.path;
+          }
+      }
+      function selectDir() {
+          var filePicker = Components.classes["@mozilla.org/filepicker;1"]
+                             .createInstance(Components.interfaces.nsIFilePicker);
+          filePicker.init(window, "Choose a folder.", filePicker.modeGetFolder);
+          if (filePicker.show() == filePicker.returnOK) {
+              document.getElementById('initial-directory-pref').value = filePicker.file;
+              updateUI();
+          }
+      }
+  ]]></script>
+
+  <prefpane id="mainpane" onpaneload="updateUI();" label="&mainpane.title;">
     <preferences>
       <preference id="show-save-dialog-pref" name="extensions.ankpixiv.showSaveDialog" type="bool" />
-      <preference id="initial-directory-pref" name="extensions.ankpixiv.initialDirectory" type="unichar" />
+      <preference id="initial-directory-pref" name="extensions.ankpixiv.initialDirectory" type="file" />
     </preferences>
 
     <label accesskey="I" control="textstringpref">
@@ -21,8 +44,8 @@
     </label>
     <checkbox id="show-save-dialog-checkbox" preference="show-save-dialog-pref" 
               label="&showSaveDialog.label;"/>
-    <textbox id="initial-directory-textbox" preference="initial-directory-pref" />
-    <toolbarbutton id="initial-directory-browse" oncommand="AnkPixiv.queryInitialDirectory();" 
+    <filefield id="initial-directory-filefield" preference="initial-directory-pref" flex="1" />
+    <toolbarbutton id="initial-directory-browse" oncommand="selectDir();" 
                    instantApply="true" label="&browse;" />
 
   </prefpane>
