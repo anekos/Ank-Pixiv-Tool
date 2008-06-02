@@ -45,6 +45,15 @@ var AnkPixiv = {
 
 
   /*
+   * trim
+   * 文字列の前後の空白系を取り除く
+   */
+  trim: function (str) {
+    return str.replace(/^\s*|\s*$/g, '');
+  },
+
+
+  /*
    * prefPrefix
    */
   prefPrefix: 'extensions.ankpixiv.',
@@ -144,6 +153,18 @@ var AnkPixiv = {
   },
 
 
+  
+  /*
+   * findNodesByXPath
+   *    xpath:
+   *    return: nodes
+   */
+  findNodesByXPath: function (xpath) {
+    var doc = this.currentDocument;
+    return doc.evaluate(xpath, doc, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+  },
+
+
   /*
    * getCurrentImagePath
    */
@@ -154,6 +175,49 @@ var AnkPixiv = {
       var elem = this.findNodeByXPath(this.XPath.bigImage);
     }
     return elem && elem.src.replace(/_m\./, '.');
+  },
+
+
+  get currentImageExt function () {
+    return this.currentImagePath.match(/\.\w+$/)[0] || '.jpg';
+  },
+
+
+  get currentImageTitleAndAuthor function () {
+    return this.currentDocument.title.replace(' [pixiv]', '');
+  },
+
+
+  get currentImageAuthorId function () {
+    try {
+      return this.findNodeByXPath('//div[@id="profile"]/div/a').getAttribute('href').replace(/^.*id=/, '');
+    } catch (e) { }
+  },
+
+
+  get currentImageId function () {
+    try {
+      return this.currentImagePath.match(/\/(\d+)(_m)?\.\w{2,4}$/)[1];
+    } catch (e) { }
+  },
+
+  get currentImageAuthor function () {
+    return this.trim(this.currentImageTitleAndAuthor.replace(/^.+\/\s*([^\/]+?)\s*$/, '$1'));
+  },
+
+
+  get currentImageTitle function () {
+    return this.trim(this.currentImageTitleAndAuthor.replace(/^\s*(.+?)\s*\/[^\/]+$/, '$1'));
+  },
+
+
+  get currentImageTags function () {
+    var as = this.findNodesByXPath('//span[@id="tags"]/a');
+    var node, res = [];
+    while (node = as.iterateNext()) {
+      res.push(this.trim(node.textContent));
+    }
+    return res;
   },
 
 
@@ -223,12 +287,23 @@ var AnkPixiv = {
 
 
   /*
-   * newFileURI
+   * fileExists
+   *    url:      String パスURL
+   *    return:   boolean
+   * ファイルが存在するか？
+   */
+  fileExists: function (url) {
+    return this.newLocalFile(url).exists();
+  },
+
+
+  /*
+   * newLocalFile
    *    url:      String パスURL
    *    return:   nsILocalFile
    * nsILocalFileを作成
    */
-  newFileURI: function (url) {
+  newLocalFile: function (url) {
     var IOService = this.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
     // バージョン毎に場合分け(いらないかも)
     try { 
@@ -245,26 +320,53 @@ var AnkPixiv = {
         IOService.initFileFromURLSpec(temp, url);
       }
     }
-    return IOService.newFileURI(temp);
+    return temp;
+  },
+
+
+  /*
+   * newFileURI
+   *    url:      String パスURL
+   *    return:   nsILocalFile
+   * nsILocalFileを作成
+   */
+  newFileURI: function (url) {
+    var IOService = this.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
+    return IOService.newFileURI(this.newLocalFile(url));
   },
 
 
   /*
    * getSaveFilePath 
-   *    defaultFilename:  初期ファイル名
-   *    return:           nsIFilePickerかそれもどき
+   *    author:             作者名
+   *    titles:             タイトルの候補のリスト(一個以上必須)
+   *    ext:                拡張子
+   *    return:             nsIFilePickerかそれもどき
    * ファイルを保存すべきパスを返す
    * 設定によっては、ダイアログを表示する
    */
-  getSaveFilePath: function (defaultFilename) {
-    if (this.getPref('showSaveDialog', true)) {
-      return this.showFilePicker(defaultFilename);
-    } else {
-      var prefInitDir = this.getPref('initialDirectory');
-      var url = 'file://' + prefInitDir + this.SYS_SLASH + defaultFilename.replace(/\/([^\/]+$)/, '-$1');
-      var res = this.newFileURI(url);
-      return {fileURL: res, file: res};
+  getSaveFilePath: function (author, titles, ext) {
+    var IOService = this.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
+    var prefInitDir = this.getPref('initialDirectory');
+
+    for (var i in titles) {
+      var title = this.fixFilename(titles[i]);
+      var filename = title + ' - ' + author + ext;
+      var url = 'file://' + prefInitDir + this.SYS_SLASH + filename;
+      var localfile = this.newLocalFile(url);
+
+      if (localfile.exists())
+        continue;
+
+      if (this.getPref('showSaveDialog', true)) {
+        return this.showFilePicker(filename);
+      } else {
+        var res = IOService.newFileURI(localfile);
+        return {fileURL: res, file: res};
+      }
     }
+
+    return this.showFilePicker(titles[0] + ' - ' + author + ext);
   },
 
 
@@ -289,17 +391,19 @@ var AnkPixiv = {
     return Components.classes[klass].createInstance(_interface);
   },
 
+
   /*
    * downloadFile
-   *    url:      URL
-   *    referer:  リファラ
-   *    filename: ファイル名
-   *    return:   成功?
+   *    url:        URL
+   *    referer:    リファラ
+   *    author:     作者名
+   *    filenames:  ファイル名の候補リスト
+   *    return:     成功?
    * ファイルをダウンロードする
    */ 
-  downloadFile: function (url, referer, filename) {
+  downloadFile: function (url, referer, author, filenames, ext) {
     // 保存ダイアログ
-    var filePicker = this.getSaveFilePath(filename);
+    var filePicker = this.getSaveFilePath(author, filenames, ext);
     if (!filePicker)
       return;
 
@@ -313,7 +417,8 @@ var AnkPixiv = {
     refererURI.spec = referer;
 
     // ダウンロードマネジャに追加
-    var download = dlmanager.addDownload(0, sourceURI, filePicker.fileURL, filename, null, null, null, null, wbpersist);
+    var label = filenames[0] + ' - ' + author;
+    var download = dlmanager.addDownload(0, sourceURI, filePicker.fileURL, label, null, null, null, null, wbpersist);
 
     // キャッシュ
     var cache = null;
@@ -324,6 +429,8 @@ var AnkPixiv = {
       
     // 保存開始
     wbpersist.progressListener = download;
+    wbpersist.persistFlags |= Components.interfaces.nsIWebBrowserPersist.
+                                PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
     wbpersist.saveURI(sourceURI, cache, refererURI, null, null, filePicker.file);
 
     // 成功
@@ -339,10 +446,19 @@ var AnkPixiv = {
   downloadCurrentImage: function () {
     if (!this.currentLocation.match(/\.pixiv\.net\/member_illust.php\?/))
       return false;
+
     var url = this.currentImagePath;
     var ref = this.currentLocation.replace(/mode=medium/, 'mode=big');
-    var fname = this.currentDocument.title.replace(' [pixiv]', '') + url.match(/\.\w+$/)[0];
-    return this.downloadFile(url, ref, fname);
+    var author = this.currentImageAuthor || this.currentImageAuthorId;
+    var titles = this.currentImageTags;
+    var title = this.currentImageTitle;
+
+    if (title)
+      titles.unshift(title);
+    else
+      titles.push(this.currentImageId);
+
+    return this.downloadFile(url, ref, author, titles, this.currentImageExt);
   }
 
 };

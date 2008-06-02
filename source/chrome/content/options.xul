@@ -14,7 +14,7 @@
   <script type="application/x-javascript" src="ankpixiv.js" />
 
   <script type="application/x-javascript"><![CDATA[
-      function updateUI() {
+      function updateUI () {
           var file = document.getElementById('initial-directory-pref').value;
           if (file) {
               var fileField = document.getElementById("initial-directory-filefield");
@@ -22,7 +22,7 @@
               fileField.label = file.path;
           }
       }
-      function selectDir() {
+      function selectDir () {
           var filePicker = Components.classes["@mozilla.org/filepicker;1"]
                              .createInstance(Components.interfaces.nsIFilePicker);
           filePicker.init(window, "Choose a folder.", filePicker.modeGetFolder);
@@ -39,14 +39,17 @@
       <preference id="initial-directory-pref" name="extensions.ankpixiv.initialDirectory" type="file" />
     </preferences>
 
-    <label accesskey="I" control="textstringpref">
-      &initialDirectory.label;
-    </label>
     <checkbox id="show-save-dialog-checkbox" preference="show-save-dialog-pref" 
               label="&showSaveDialog.label;"/>
-    <filefield id="initial-directory-filefield" preference="initial-directory-pref" flex="1" />
-    <toolbarbutton id="initial-directory-browse" oncommand="selectDir();" 
-                   instantApply="true" label="&browse;" />
+
+    <hbox align="center">
+      <label accesskey="I" control="textstringpref">
+        &initialDirectory.label;
+      </label>
+      <filefield id="initial-directory-filefield" preference="initial-directory-pref" flex="1" />
+      <toolbarbutton id="initial-directory-browse" oncommand="selectDir();" 
+                     instantApply="true" label="&browse;" />
+    </hbox>
 
   </prefpane>
 </prefwindow>
