@@ -346,25 +346,27 @@ var AnkPixiv = {
    * 設定によっては、ダイアログを表示する
    */
   getSaveFilePath: function (author, titles, ext) {
-    var IOService = this.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
-    var prefInitDir = this.getPref('initialDirectory');
+    try {
+      var IOService = this.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
+      var prefInitDir = this.getPref('initialDirectory');
 
-    for (var i in titles) {
-      var title = this.fixFilename(titles[i]);
-      var filename = title + ' - ' + author + ext;
-      var url = 'file://' + prefInitDir + this.SYS_SLASH + filename;
-      var localfile = this.newLocalFile(url);
+      for (var i in titles) {
+        var title = this.fixFilename(titles[i]);
+        var filename = title + ' - ' + author + ext;
+        var url = 'file://' + prefInitDir + this.SYS_SLASH + filename;
+        var localfile = this.newLocalFile(url);
 
-      if (localfile.exists())
-        continue;
+        if (localfile.exists())
+          continue;
 
-      if (this.getPref('showSaveDialog', true)) {
-        return this.showFilePicker(filename);
-      } else {
-        var res = IOService.newFileURI(localfile);
-        return {fileURL: res, file: res};
+        if (this.getPref('showSaveDialog', true)) {
+          return this.showFilePicker(filename);
+        } else {
+          var res = IOService.newFileURI(localfile);
+          return {fileURL: res, file: res};
+        }
       }
-    }
+    } catch (e) { }
 
     return this.showFilePicker(titles[0] + ' - ' + author + ext);
   },
