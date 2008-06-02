@@ -13,12 +13,12 @@
   </menupopup>
 
   <statusbar id="status-bar">
-    <statusbarpanel class="statusbarpanel-iconic" id="ankpixiv-panel" 
+    <statusbarpanel class="statusbarpanel-iconic" id="ankpixiv-statusbarpanel" 
                     label="&downloadCurrentImage;" onclick="AnkPixiv.downloadCurrentImage()"/>
   </statusbar>
 
   <toolbarpalette id="BrowserToolbarPalette">
-    <toolbarbutton id="ankpixiv-toolbar-button" label="neko"
+    <toolbarbutton id="ankpixiv-toolbar-button" label="&downloadCurrentImage;"
                    tooltiptext="&downloadCurrentImage;" oncommand="AnkPixiv.downloadCurrentImage()" class="toolbarbutton-1" />
   </toolbarpalette>
 

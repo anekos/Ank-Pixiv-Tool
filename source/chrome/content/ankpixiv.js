@@ -271,18 +271,16 @@ var AnkPixiv = {
 
 
   /*
+   * TODO
    * queryInitialDirectory 
    * ユーザに初期ディレクトリの場所を尋ねる
    */
   queryInitialDirectory: function () {
     var dir = this.showDirectoryPicker(this.getPref('initialDirectory'));
     if (dir) {
-      var edit = document.getElementById('initial-directory-textbox');
-      edit.value = dir.file;
-      edit.label = dir.file.path;
-      edit.focus();
-      //return this.setPref('initialDirectory', dir, 'string');
+      this.setPref('initialDirectory', dir.filePath, 'string');
     }
+    return dir;
   },
 
 
@@ -348,7 +346,15 @@ var AnkPixiv = {
   getSaveFilePath: function (author, titles, ext) {
     try {
       var IOService = this.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
+      var showSaveDialog = this.getPref('showSaveDialog', true);
       var prefInitDir = this.getPref('initialDirectory');
+
+      /*
+      if (!showSaveDialog && !prefInitDir) {
+          alert('select save directory');
+          this.queryInitialDirectory();
+          prefInitDir = this.getPref('initialDirectory');
+      }//*/
 
       for (var i in titles) {
         var title = this.fixFilename(titles[i]);
@@ -359,7 +365,7 @@ var AnkPixiv = {
         if (localfile.exists())
           continue;
 
-        if (this.getPref('showSaveDialog', true)) {
+        if (showSaveDialog) {
           return this.showFilePicker(filename);
         } else {
           var res = IOService.newFileURI(localfile);
@@ -441,12 +447,21 @@ var AnkPixiv = {
 
 
   /*
+   * enabled
+   *    return:   有効？
+   */
+  get enabled function () {
+    return this.currentLocation.match(/\.pixiv\.net\/member_illust.php\?/);
+  },
+
+
+  /*
    * downloadCurrentImage
    *    return:   成功？
    * 現在表示されている画像を保存する
    */
   downloadCurrentImage: function () {
-    if (!this.currentLocation.match(/\.pixiv\.net\/member_illust.php\?/))
+    if (!this.enabled)
       return false;
 
     var url = this.currentImagePath;
@@ -461,6 +476,24 @@ var AnkPixiv = {
       titles.push(this.currentImageId);
 
     return this.downloadFile(url, ref, author, titles, this.currentImageExt);
+  },
+
+
+  onFocus: function (ev) {
+    var f = function (id) {
+      var elem = document.getElementById(id);
+      if (!elem)
+        return;
+      dump("[" + this.enabled + "]");
+      elem.setAttribute('disabled', !this.enabled);
+    };
+    f.call(this, 'ankpixiv-toolbar-button');
+    f.call(this, 'ankpixiv-statusbarpanel');
   }
 
 };
+
+
+
+window.addEventListener("focus", function() { AnkPixiv.onFocus(); }, true);
+//window.addEventListener("load", function() { AnkPixiv.onFocus(); }, true);
