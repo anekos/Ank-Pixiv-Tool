@@ -1,25 +1,25 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="ankpixiv.css" type="text/css"?>
+<?xml-stylesheet href="chrome://ankpixiv/content/ankpixiv.css" type="text/css"?>
 <!DOCTYPE prefwindow SYSTEM "chrome://ankpixiv/locale/ankpixiv.dtd">
 
 <overlay id="ankpixivOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/x-javascript" src="ankpixiv.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankpixiv.js" />
 
   <menupopup id="menu_ToolsPopup">
-    <menuitem insertafter="devToolsSeparator" label="&downloadCurrentImage;" id="ankpixiv_menu_test"
-              accesskey="A" oncommand="AnkPixiv.downloadCurrentImage();" />	
+    <menuitem insertafter="devToolsSeparator" label="&downloadCurrentImage;" id="ankpixiv-menu-download"
+              accesskey="A" onclick="AnkPixiv.onDownloadButtonClick(event)" />	
   </menupopup>
 
   <statusbar id="status-bar">
     <statusbarpanel class="statusbarpanel-iconic" id="ankpixiv-statusbarpanel" 
-                    label="&downloadCurrentImage;" onclick="AnkPixiv.downloadCurrentImage()"/>
+                    label="&downloadCurrentImage;" onclick="AnkPixiv.onDownloadButtonClick(event)"/>
   </statusbar>
 
   <toolbarpalette id="BrowserToolbarPalette">
     <toolbarbutton id="ankpixiv-toolbar-button" label="&downloadCurrentImage;"
-                   tooltiptext="&downloadCurrentImage;" oncommand="AnkPixiv.downloadCurrentImage()" class="toolbarbutton-1" />
+                   tooltiptext="&downloadCurrentImage;" onclick="AnkPixiv.onDownloadButtonClick(event)" class="toolbarbutton-1" />
   </toolbarpalette>
 
 </overlay>

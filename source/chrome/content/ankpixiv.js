@@ -339,14 +339,14 @@ var AnkPixiv = {
    *    author:             作者名
    *    titles:             タイトルの候補のリスト(一個以上必須)
    *    ext:                拡張子
+   *    useDialog:          保存ダイアログを使うか？
    *    return:             nsIFilePickerかそれもどき
    * ファイルを保存すべきパスを返す
    * 設定によっては、ダイアログを表示する
    */
-  getSaveFilePath: function (author, titles, ext) {
+  getSaveFilePath: function (author, titles, ext, useDialog) {
     try {
       var IOService = this.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
-      var showSaveDialog = this.getPref('showSaveDialog', true);
       var prefInitDir = this.getPref('initialDirectory');
 
       /*
@@ -365,7 +365,7 @@ var AnkPixiv = {
         if (localfile.exists())
           continue;
 
-        if (showSaveDialog) {
+        if (useDialog) {
           return this.showFilePicker(filename);
         } else {
           var res = IOService.newFileURI(localfile);
@@ -406,12 +406,14 @@ var AnkPixiv = {
    *    referer:    リファラ
    *    author:     作者名
    *    filenames:  ファイル名の候補リスト
+   *    ext:        拡張子
+   *    useDialog:  保存ダイアログを使うか？
    *    return:     成功?
    * ファイルをダウンロードする
    */ 
-  downloadFile: function (url, referer, author, filenames, ext) {
+  downloadFile: function (url, referer, author, filenames, ext, useDialog) {
     // 保存ダイアログ
-    var filePicker = this.getSaveFilePath(author, filenames, ext);
+    var filePicker = this.getSaveFilePath(author, filenames, ext, useDialog);
     if (!filePicker)
       return;
 
@@ -457,10 +459,11 @@ var AnkPixiv = {
 
   /*
    * downloadCurrentImage
-   *    return:   成功？
+   *    useDialog:  保存ダイアログを使うか？
+   *    return:     成功？
    * 現在表示されている画像を保存する
    */
-  downloadCurrentImage: function () {
+  downloadCurrentImage: function (useDialog) {
     if (!this.enabled)
       return false;
 
@@ -475,7 +478,7 @@ var AnkPixiv = {
     else
       titles.push(this.currentImageId);
 
-    return this.downloadFile(url, ref, author, titles, this.currentImageExt);
+    return this.downloadFile(url, ref, author, titles, this.currentImageExt, useDialog);
   },
 
 
@@ -489,7 +492,29 @@ var AnkPixiv = {
     };
     f.call(this, 'ankpixiv-toolbar-button');
     f.call(this, 'ankpixiv-statusbarpanel');
-  }
+    f.call(this, 'ankpixiv-menu-download');
+  },
+
+
+  onDownloadButtonClick: function (event) {
+    var useDialog = this.getPref('showSaveDialog', true);
+    switch(event.button) {
+      case 0:
+        this.downloadCurrentImage(useDialog);
+        break;
+      case 1:
+        this.downloadCurrentImage(!useDialog);
+        break;
+      case 2:
+        this.openPrefWindow();
+        break;
+    }
+  },
+
+  openPrefWindow: function () {
+    window.openDialog("chrome://ankpixiv/content/options.xul", "Pref Dialog",
+                      "centerscreen,chrome,modal", arguments);
+  },
 
 };
 

@@ -9,7 +9,7 @@
         buttons="accept"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-	<script type="application/x-javascript" src="ankpixiv.js"/>
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankpixiv.js"/>
 	<script type="application/x-javascript"><![CDATA[
 		function setVersion() {
 			var version = document.getElementById('version');
