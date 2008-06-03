@@ -1,6 +1,10 @@
 
 var AnkPixiv = {
 
+  /********************************************************************************
+  * 定数
+  ********************************************************************************/
+
   VERSION: (function () {
     const id = 'ankpixiv@snca.net';
     const ext = Components.classes["@mozilla.org/extensions/manager;1"]
@@ -23,15 +27,24 @@ var AnkPixiv = {
   })(),
 
 
-  // xpathFavLink = '//div[@id="pixiv"]/div/div/a/img/parent::*/parent::*/preceding-sibling::div[1]';
-  // xpathImgAnchor = '//div[@id="pixiv"]/div/div/a/img/parent::*/self::*';
-  // xpathImg = '//div[@id="pixiv"]/div/div/a/img';
+  PREF_PREFIX: 'extensions.ankpixiv.',
+
 
   XPath: {
+    // xpathFavLink = '//div[@id="pixiv"]/div/div/a/img/parent::*/parent::*/preceding-sibling::div[1]';
+    // xpathImgAnchor = '//div[@id="pixiv"]/div/div/a/img/parent::*/self::*';
+    // xpathImg = '//div[@id="pixiv"]/div/div/a/img';
     mediumImage: '//div[@id="content2"]/div/a/img',
     bigImage: '//div[@id="illust_contents"]/a/img',
+    authorIconLink: '//div[@id="profile"]/div/a',
+    tags: '//span[@id="tags"]/a',
   },
 
+
+
+  /********************************************************************************
+  * 文字列関数
+  ********************************************************************************/
 
   /*
    * fixFilename
@@ -53,11 +66,37 @@ var AnkPixiv = {
   },
 
 
-  /*
-   * prefPrefix
-   */
-  prefPrefix: 'extensions.ankpixiv.',
 
+  /********************************************************************************
+  * 手抜き用関数
+  ********************************************************************************/
+
+  /*
+   * ccgs
+   *    klass:
+   *    service:
+   * Components.classes[klass].getService(service)
+   */
+  ccgs: function (klass, service) {
+    return Components.classes[klass].getService(service);
+  },
+
+
+  /*
+   * ccci 
+   *    klass:
+   *    _interface:
+   * Components.classes[klass].createInstance(interface)
+   */
+  ccci: function (klass, _interface) {
+    return Components.classes[klass].createInstance(_interface);
+  },
+
+
+
+  /********************************************************************************
+  * 設定関数
+  ********************************************************************************/
 
   /*
    * prefs
@@ -75,7 +114,7 @@ var AnkPixiv = {
    * 設定値を取得
    */
   getPref: function (name, def) {
-    var name = this.prefPrefix + name;
+    var name = this.PREF_PREFIX + name;
     var type = this.prefs.getPrefType(name);
     const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
     try {
@@ -110,7 +149,7 @@ var AnkPixiv = {
    *    return: ?
    */
   setPref: function (name, value, type) {
-    var name = this.prefPrefix + name;
+    var name = this.PREF_PREFIX + name;
     switch (type || typeof value) {
       case 'string':
         var str = this.ccci('@mozilla.org/supports-string;1', Components.interfaces.nsISupportsString);
@@ -126,21 +165,10 @@ var AnkPixiv = {
   },
 
 
-  /*
-   * currentDocument
-   */
-  get currentDocument function () {
-    return window.content.document;
-  },
 
-
-  /*
-   * currentLocation
-   */
-  get currentLocation function () {
-    return window.content.document.location.href;
-  },
-
+  /********************************************************************************
+  * DOM関数
+  ********************************************************************************/
 
   /*
    * findNodeByXPath
@@ -153,7 +181,6 @@ var AnkPixiv = {
   },
 
 
-  
   /*
    * findNodesByXPath
    *    xpath:
@@ -165,9 +192,16 @@ var AnkPixiv = {
   },
 
 
-  /*
-   * getCurrentImagePath
-   */
+
+  /********************************************************************************
+  * プロパティ
+  ********************************************************************************/
+
+  get currentLocation function () {
+    return window.content.document.location.href;
+  },
+
+
   get currentImagePath function () {
     if (this.currentLocation.match(/mode=medium/)) {
       var elem = this.findNodeByXPath(this.XPath.mediumImage);
@@ -190,7 +224,7 @@ var AnkPixiv = {
 
   get currentImageAuthorId function () {
     try {
-      return this.findNodeByXPath('//div[@id="profile"]/div/a').getAttribute('href').replace(/^.*id=/, '');
+      return this.findNodeByXPath(this.XPath.authorIconLink).getAttribute('href').replace(/^.*id=/, '');
     } catch (e) { }
   },
 
@@ -212,7 +246,7 @@ var AnkPixiv = {
 
 
   get currentImageTags function () {
-    var as = this.findNodesByXPath('//span[@id="tags"]/a');
+    var as = this.findNodesByXPath(this.XPath.tags);
     var node, res = [];
     while (node = as.iterateNext()) {
       res.push(this.trim(node.textContent));
@@ -220,6 +254,21 @@ var AnkPixiv = {
     return res;
   },
 
+
+  get currentDocument function () {
+    return window.content.document;
+  },
+
+
+  get enabled function () {
+    return this.currentLocation.match(/\.pixiv\.net\/member_illust.php\?/);
+  },
+
+
+
+  /********************************************************************************
+  * ダイアログ関連
+  ********************************************************************************/
 
   /*
    * showFilePicker
@@ -283,6 +332,11 @@ var AnkPixiv = {
     return dir;
   },
 
+
+
+  /********************************************************************************
+  * ダウンロード＆ファイル関連
+  ********************************************************************************/
 
   /*
    * fileExists
@@ -349,13 +403,6 @@ var AnkPixiv = {
       var IOService = this.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
       var prefInitDir = this.getPref('initialDirectory');
 
-      /*
-      if (!showSaveDialog && !prefInitDir) {
-          alert('select save directory');
-          this.queryInitialDirectory();
-          prefInitDir = this.getPref('initialDirectory');
-      }//*/
-
       for (var i in titles) {
         var title = this.fixFilename(titles[i]);
         var filename = title + ' - ' + author + ext;
@@ -375,28 +422,6 @@ var AnkPixiv = {
     } catch (e) { }
 
     return this.showFilePicker(titles[0] + ' - ' + author + ext);
-  },
-
-
-  /*
-   * ccgs
-   *    klass:
-   *    service:
-   * Components.classes[klass].getService(service)
-   */
-  ccgs: function (klass, service) {
-    return Components.classes[klass].getService(service);
-  },
-
-
-  /*
-   * ccci 
-   *    klass:
-   *    _interface:
-   * Components.classes[klass].createInstance(interface)
-   */
-  ccci: function (klass, _interface) {
-    return Components.classes[klass].createInstance(_interface);
   },
 
 
@@ -449,15 +474,6 @@ var AnkPixiv = {
 
 
   /*
-   * enabled
-   *    return:   有効？
-   */
-  get enabled function () {
-    return this.currentLocation.match(/\.pixiv\.net\/member_illust.php\?/);
-  },
-
-
-  /*
    * downloadCurrentImage
    *    useDialog:  保存ダイアログを使うか？
    *    return:     成功？
@@ -479,6 +495,17 @@ var AnkPixiv = {
       titles.push(this.currentImageId);
 
     return this.downloadFile(url, ref, author, titles, this.currentImageExt, useDialog);
+  },
+
+
+
+  /********************************************************************************
+  * イベント
+  ********************************************************************************/
+
+  openPrefWindow: function () {
+    window.openDialog("chrome://ankpixiv/content/options.xul", "Pref Dialog",
+                      "centerscreen,chrome,modal", arguments);
   },
 
 
@@ -511,14 +538,12 @@ var AnkPixiv = {
     }
   },
 
-  openPrefWindow: function () {
-    window.openDialog("chrome://ankpixiv/content/options.xul", "Pref Dialog",
-                      "centerscreen,chrome,modal", arguments);
-  },
 
 };
 
 
+/********************************************************************************
+* イベント設定
+********************************************************************************/
 
 window.addEventListener("focus", function() { AnkPixiv.onFocus(); }, true);
-//window.addEventListener("load", function() { AnkPixiv.onFocus(); }, true);
