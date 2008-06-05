@@ -10,20 +10,18 @@
   -moz-image-region: rect(0px 24px 24px 0px);
 }
 #ankpixiv-toolbar-button[disabled="true"] {
-  list-style-image: url("toolbar-button-disabled.png");
-  -moz-image-region: rect(0px 24px 24px 0px);
+  list-style-image: url("toolbar-button.png");
+  -moz-image-region: rect(24px 24px 48px 0px);
 }
 #ankpixiv-toolbar-button:hover {
-  -moz-image-region: rect(24px 24px 48px  0px);
 }
 
 [iconsize="small"] #ankpixiv-toolbar-button {
   list-style-image: url("toolbar-button.png");
-  -moz-image-region: rect( 0px 40px 16px 24px);
+  -moz-image-region: rect(0px 40px 16px 24px);
 }
 [iconsize="small"] #ankpixiv-toolbar-button[disabled="true"] {
-  list-style-image: url("toolbar-button-disabled.png");
+  -moz-image-region: rect(24px 40px 40px 24px);
 }
 [iconsize="small"] #ankpixiv-toolbar-button:hover {
-  -moz-image-region: rect(24px 40px 40px 24px);
 }
