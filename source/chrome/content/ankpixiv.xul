@@ -22,5 +22,10 @@
                    tooltiptext="&downloadCurrentImage;" onclick="AnkPixiv.onDownloadButtonClick(event)" class="toolbarbutton-1" />
   </toolbarpalette>
 
+  <popup id="contentAreaContextMenu">
+    <menuitem id="ankpixiv-context-menu" label="&downloadThisImage;" hidden="true"
+              oncommand="AnkPixiv.onContextMenu(event);"/>
+  </popup>
+
 </overlay>
 

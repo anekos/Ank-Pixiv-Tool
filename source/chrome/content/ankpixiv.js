@@ -41,6 +41,33 @@ var AnkPixiv = {
   },
 
 
+  Tables: {
+    histories: {
+      illust_id: "integer",
+      member_id: "integer",
+      local_path: "string",
+      tags: "string",
+      server: "string"
+    }
+  },
+
+
+  //TODO
+  Storage: (function () {
+    try {
+      var file = Components.classes["@mozilla.org/file/directory_service;1"].
+                  getService(Components.interfaces.nsIProperties).
+                  get("ProfD", Components.interfaces.nsIFile);
+      file.append("ankpixiv.sqlite");
+      var storageService = Components.classes["@mozilla.org/storage/service;1"].
+                             getService(Components.interfaces.mozIStorageService);
+      var db = storageService.openDatabase(file);
+      return db;
+    } catch (e) {
+      dump(e);
+    }
+  })(),
+
 
   /********************************************************************************
   * 文字列関数
@@ -63,6 +90,24 @@ var AnkPixiv = {
    */
   trim: function (str) {
     return str.replace(/^\s*|\s*$/g, '');
+  },
+
+
+  /*
+   * join
+   *    list:   リスト
+   *    deli:   区切り文字
+   */
+  join: function (list, deli) {
+    if (!deli)
+      deli = ',';
+    var result = "";
+    for (var i = 0; i < list.length; i++) {
+      result += list[i].toString();
+      if (i < (list.length - 1))
+        result += deli;
+    }
+    return result;
   },
 
 
@@ -469,7 +514,7 @@ var AnkPixiv = {
     wbpersist.saveURI(sourceURI, cache, refererURI, null, null, filePicker.file);
 
     // 成功
-    return true;
+    return filePicker.fileURL.path;
   },
 
 
@@ -494,7 +539,22 @@ var AnkPixiv = {
     else
       titles.push(this.currentImageId);
 
-    return this.downloadFile(url, ref, author, titles, this.currentImageExt, useDialog);
+    var result = this.downloadFile(url, ref, author, titles, this.currentImageExt, useDialog);
+
+    dump(result);
+
+    if (!result)
+      return;
+
+    this.Tables.histories.add({
+      member_id: this.currentImageAuthorId,
+      illust_id: this.currentImageId,
+      tags: this.join(this.currentImageTags, ' '),
+      server: this.currentImagePath.match(/^http:\/\/([^\/\.]+)\./i)[1],
+      local_path: result,
+    });
+
+    return result;
   },
 
 
@@ -514,7 +574,6 @@ var AnkPixiv = {
       var elem = document.getElementById(id);
       if (!elem)
         return;
-      dump("[" + this.enabled + "]");
       elem.setAttribute('disabled', !this.enabled);
     };
     f.call(this, 'ankpixiv-toolbar-button');
@@ -537,13 +596,61 @@ var AnkPixiv = {
         break;
     }
   },
-
-
 };
 
 
 /********************************************************************************
 * イベント設定
 ********************************************************************************/
+
+
+(function () {
+  try {
+
+    //データベースのテーブルを作成
+    for (var tableName in this.Tables) {
+      if (this.Storage.tableExists(tableName))
+        continue;
+      var cs = this.Tables[tableName];
+      var q = "";
+      for (var c in cs) {
+        q += c + " " + cs[c] + ",";
+      }      
+      this.Storage.createTable(tableName, q.replace(/,$/, ''));
+    }
+
+    //テーブルにメソッド追加
+    var storage = this.Storage;
+    for (var tableName in this.Tables) {
+      var table = this.Tables[tableName];
+      //add
+      (function (table, tableName) {
+        table.add = function (values) {
+          var ns = [], vs = [], ps = [], vi = 0;
+          for (var fieldName in values) {
+            ns.push(fieldName);
+            (function (idx, type, value) {
+              vs.push(function (stmt) {
+                switch (type) {
+                  case 'string':  return stmt.bindUTF8StringParameter(idx, value);
+                  case 'integer': return stmt.bindInt32Parameter(idx, value);
+                }
+              });
+            })(vi, table[fieldName], values[fieldName]);
+            ps.push('?' + (++vi));
+          }
+          var q = 'insert into ' + tableName + ' (' + AnkPixiv.join(ns) + ') values(' + AnkPixiv.join(ps) + ')'
+          var stmt = storage.createStatement(q);
+          for (var i in vs)
+            (vs[i])(stmt);
+          return stmt.executeStep();
+        }
+      })(table, tableName);
+    }
+
+  } catch (e) {
+    dump(e);
+  }
+}).apply(AnkPixiv);
 
 window.addEventListener("focus", function() { AnkPixiv.onFocus(); }, true);
