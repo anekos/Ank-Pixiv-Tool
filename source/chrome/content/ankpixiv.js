@@ -29,7 +29,8 @@ AnkPixiv = {
         member_id: "integer",
         local_path: "string",
         tags: "string",
-        server: "string"
+        server: "string",
+        datetime: "datetime",
       },
     }
   ),
@@ -377,6 +378,7 @@ AnkPixiv = {
         tags: AnkUtils.join(this.currentImageTags, ' '),
         server: this.currentImagePath.match(/^http:\/\/([^\/\.]+)\./i)[1],
         local_path: result,
+        datetime: AnkUtils.toSQLDateTimeString(),
       });
     } catch (e) {dump(e); }
 

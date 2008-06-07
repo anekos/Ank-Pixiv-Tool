@@ -70,7 +70,31 @@ var AnkUtils = {
   },
 
 
+  padCharToLeft: function (str, len, c) {
+    str = str.toString();
+    if (str.length >= len)
+      return str;
+    for (var i = str.length; i < len; i++)
+      str = c + str;
+    return str;
+  },
 
+
+  toSQLDateTimeString: function (datetime) {
+    if (!datetime)
+      datetime = new Date();
+    var $ = this, f = function (v,l) { return $.padCharToLeft(v, l, '0'); };
+    with (datetime) {
+      var dy = f(getFullYear(), 4);
+      var dm = f(getMonth(),    2);
+      var dd = f(getDate(),     2);
+      var th = f(getHours(),    2);
+      var tm = f(getMinutes(), 2);
+      var ts = f(getSeconds(), 2);
+      return dy + '/' + dm + '/' + dd + ' ' + th + ':' + tm + ':' + ts;
+    }
+  },
+  
   /********************************************************************************
   * 手抜き用関数
   ********************************************************************************/

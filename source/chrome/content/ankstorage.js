@@ -30,10 +30,13 @@ AnkStorage.prototype = {
     for (var fieldName in values) {
       ns.push(fieldName);
       (function (idx, type, value) {
+        dump(idx+type+value+"\n");
         vs.push(function (stmt) {
           switch (type) {
-            case 'string':  return stmt.bindUTF8StringParameter(idx, value);
-            case 'integer': return stmt.bindInt32Parameter(idx, value);
+            case 'string':   return stmt.bindUTF8StringParameter(idx, value);
+            case 'integer':  return stmt.bindInt32Parameter(idx, value);
+            case 'datetime': return stmt.bindUTF8StringParameter(idx, value);
+            default:         return stmt.bindNullParameter(idx);
           }
         });
       })(vi, table.fields[fieldName], values[fieldName]);
@@ -41,31 +44,38 @@ AnkStorage.prototype = {
     }
 
     var q = 'insert into ' + table.name + ' (' + AnkUtils.join(ns) + ') values(' + AnkUtils.join(ps) + ');'
+    dump(q + "\n");
     var stmt = this.database.createStatement(q);
-    for (var i in vs)
-      (vs[i])(stmt);
-
-    return dump("result" + stmt.execute());
+    try {
+      for (var i in vs)
+        (vs[i])(stmt);
+      var result = stmt.executeStep();
+    } finally {
+      stmt.reset();
+    }
   },
 
 
-  _find: function (tableName, conditions) {
+  /*
+   * 必ず、result.reset すること。
+   */
+  find: function (tableName, conditions) {
     var q = 'select * from ' + tableName + ' where ' + conditions;
+    dump(q);
     return this.database.createStatement(q);
   },
 
 
-  find: function (tableName, conditions) {
-    var storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
-                                       Components.interfaces.mozIStorageStatementWrapper);
-    storageWrapper.initialize(this._find.apply(this, arguments));
-    return storageWrapper;
-  },
-
-
   exists: function (tableName, conditions) {
+    var result, stmt = this.find.apply(this, arguments);
+    try {
+      result = !!(stmt.executeStep());
+      dump(result);
+    } finally {
+      stmt.reset();
+    }
     // boolean を返すようにする
-    return !!(this._find.apply(this, arguments).executeStep());
+    return result;
   },
 
 
@@ -79,7 +89,7 @@ AnkStorage.prototype = {
 
   createTable: function (table) {
     if (this.database.tableExists(table.name))
-      return true;
+      return this.updateTable(table);
 
     var fs = [];
     for (var fieldName in table.fields) {
@@ -87,6 +97,35 @@ AnkStorage.prototype = {
     }      
 
     return this.database.createTable(table.name, AnkUtils.join(fs));
+  },
+
+
+  tableInfo: function (tableName) {
+    var storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
+                                       Components.interfaces.mozIStorageStatementWrapper);
+    var q = 'pragma table_info (' + tableName + ')';
+    var stmt = this.database.createStatement(q);
+    storageWrapper.initialize(stmt);
+    var result = {};
+    while (storageWrapper.step()) {
+      result[storageWrapper.row["name"]] = {type: storageWrapper.row["type"]};
+    }
+    return result;
+  },
+
+
+  updateTable: function (table) {
+    try {
+    dump("updateTable()\n");
+    var etable = this.tableInfo(table.name);
+    for (var fieldName in table.fields) {
+      if (etable[fieldName])
+        continue;
+      dump(fieldName + "\n");
+      var q = "alter table " + table.name + ' add column ' + fieldName + ' ' + table.fields[fieldName];
+      this.database.executeSimpleSQL(q);
+    }
+    } catch(e) { dump("updateTable: " + e + "\n"); }
   },
 };
 
