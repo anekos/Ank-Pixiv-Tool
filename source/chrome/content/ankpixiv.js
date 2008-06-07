@@ -1,34 +1,15 @@
 
-var AnkPixiv = {
+try{
+
+AnkPixiv = {
 
   /********************************************************************************
   * 定数
   ********************************************************************************/
 
-  VERSION: (function () {
-    const id = 'ankpixiv@snca.net';
-    const ext = Components.classes["@mozilla.org/extensions/manager;1"]
-                  .getService(Components.interfaces.nsIExtensionManager)
-                  .getItemForID(id);
-    return ext.version;
-  })(),
-
-
-  SYS_SLASH: (function () {
-    try {
-      var props = Components.classes["@mozilla.org/file/directory_service;1"].
-                    getService(Components.interfaces.nsIProperties);
-      var file = props.get("ProfD", Components.interfaces.nsIFile);
-      file.append('dummy');
-      return (file.path.indexOf('/') != -1) ? '/' : '\\';
-    } catch (e) {
-      return '/';
-    }
-  })(),
-
+  VERSION: AnkUtils.getVersion('ankpixiv@snca.net'),
 
   PREF_PREFIX: 'extensions.ankpixiv.',
-
 
   XPath: {
     // xpathFavLink = '//div[@id="pixiv"]/div/div/a/img/parent::*/parent::*/preceding-sibling::div[1]';
@@ -41,200 +22,20 @@ var AnkPixiv = {
   },
 
 
-  Tables: {
-    histories: {
-      illust_id: "integer",
-      member_id: "integer",
-      local_path: "string",
-      tags: "string",
-      server: "string"
+  Storage: new AnkStorage("ankpixiv.sqlite", 
+    {
+      histories: {
+        illust_id: "integer",
+        member_id: "integer",
+        local_path: "string",
+        tags: "string",
+        server: "string"
+      },
     }
-  },
+  ),
 
-
-  //TODO
-  Storage: (function () {
-    try {
-      var file = Components.classes["@mozilla.org/file/directory_service;1"].
-                  getService(Components.interfaces.nsIProperties).
-                  get("ProfD", Components.interfaces.nsIFile);
-      file.append("ankpixiv.sqlite");
-      var storageService = Components.classes["@mozilla.org/storage/service;1"].
-                             getService(Components.interfaces.mozIStorageService);
-      var db = storageService.openDatabase(file);
-      return db;
-    } catch (e) {
-      dump(e);
-    }
-  })(),
-
-
-  /********************************************************************************
-  * 文字列関数
-  ********************************************************************************/
-
-  /*
-   * fixFilename
-   *    filename: ファイル名
-   *    return:   ファイル名
-   * ファイル名として使えない文字を除去する。
-   */
-  fixFilename: function (filename) {
-    return filename.replace(/[\\\/:,;\*\?\"<>\|]/g, '_');
-  },
-
-
-  /*
-   * trim
-   * 文字列の前後の空白系を取り除く
-   */
-  trim: function (str) {
-    return str.replace(/^\s*|\s*$/g, '');
-  },
-
-
-  /*
-   * join
-   *    list:   リスト
-   *    deli:   区切り文字
-   */
-  join: function (list, deli) {
-    if (!deli)
-      deli = ',';
-    var result = "";
-    for (var i = 0; i < list.length; i++) {
-      result += list[i].toString();
-      if (i < (list.length - 1))
-        result += deli;
-    }
-    return result;
-  },
-
-
-
-  /********************************************************************************
-  * 手抜き用関数
-  ********************************************************************************/
-
-  /*
-   * ccgs
-   *    klass:
-   *    service:
-   * Components.classes[klass].getService(service)
-   */
-  ccgs: function (klass, service) {
-    return Components.classes[klass].getService(service);
-  },
-
-
-  /*
-   * ccci 
-   *    klass:
-   *    _interface:
-   * Components.classes[klass].createInstance(interface)
-   */
-  ccci: function (klass, _interface) {
-    return Components.classes[klass].createInstance(_interface);
-  },
-
-
-
-  /********************************************************************************
-  * 設定関数
-  ********************************************************************************/
-
-  /*
-   * prefs
-   *    nsIPrefBranch
-   */
-  prefs: Components.classes["@mozilla.org/preferences-service;1"].
-           getService(Components.interfaces.nsIPrefBranch),
-
-
-  /* 
-   * getPref
-   *    name:   項目名
-   *    def:    デフォルト値
-   *    return: 項目の値
-   * 設定値を取得
-   */
-  getPref: function (name, def) {
-    var name = this.PREF_PREFIX + name;
-    var type = this.prefs.getPrefType(name);
-    const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
-    try {
-      switch (type) {
-        case nsIPrefBranch.PREF_STRING:
-          try {
-            return this.prefs.getComplexValue(name, Components.interfaces.nsISupportsString).data;
-          }
-          catch (e) {
-            this.prefs.getCharPref(name);
-          }
-          break;
-        case nsIPrefBranch.PREF_INT:
-          return this.prefs.getIntPref(name);
-          break;
-        case nsIPrefBranch.PREF_BOOL:
-          return this.prefs.getBoolPref(name);
-        default:
-          return def;
-      }
-    } catch (e) {
-      return def;
-    }
-  },
-
-
-  /*
-   * setPref
-   *    name:   項目名
-   *    value:  設定する値
-   *    type:   型(省略可)
-   *    return: ?
-   */
-  setPref: function (name, value, type) {
-    var name = this.PREF_PREFIX + name;
-    switch (type || typeof value) {
-      case 'string':
-        var str = this.ccci('@mozilla.org/supports-string;1', Components.interfaces.nsISupportsString);
-        str.data = value;
-        return this.prefs.setComplexValue(name, Components.interfaces.nsISupportsString, str);
-      case 'boolean':
-        return this.prefs.setBoolPref(name, value);
-      case 'number':
-        return this.prefs.setIntPref(name, value);
-      default:
-        alert('unknown pref type');
-    }
-  },
-
-
-
-  /********************************************************************************
-  * DOM関数
-  ********************************************************************************/
-
-  /*
-   * findNodeByXPath
-   *    xpath:
-   *    return: node
-   */
-  findNodeByXPath: function (xpath) {
-    var doc = this.currentDocument;
-    return doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-  },
-
-
-  /*
-   * findNodesByXPath
-   *    xpath:
-   *    return: nodes
-   */
-  findNodesByXPath: function (xpath) {
-    var doc = this.currentDocument;
-    return doc.evaluate(xpath, doc, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
-  },
+  
+  Prefs: new AnkPref('extensions.ankpixiv'),
 
 
 
@@ -249,9 +50,9 @@ var AnkPixiv = {
 
   get currentImagePath function () {
     if (this.currentLocation.match(/mode=medium/)) {
-      var elem = this.findNodeByXPath(this.XPath.mediumImage);
+      var elem = AnkUtils.findNodeByXPath(this.XPath.mediumImage);
     } else {
-      var elem = this.findNodeByXPath(this.XPath.bigImage);
+      var elem = AnkUtils.findNodeByXPath(this.XPath.bigImage);
     }
     return elem && elem.src.replace(/_m\./, '.');
   },
@@ -269,7 +70,7 @@ var AnkPixiv = {
 
   get currentImageAuthorId function () {
     try {
-      return this.findNodeByXPath(this.XPath.authorIconLink).getAttribute('href').replace(/^.*id=/, '');
+      return AnkUtils.findNodeByXPath(this.XPath.authorIconLink).getAttribute('href').replace(/^.*id=/, '');
     } catch (e) { }
   },
 
@@ -281,20 +82,20 @@ var AnkPixiv = {
   },
 
   get currentImageAuthor function () {
-    return this.trim(this.currentImageTitleAndAuthor.replace(/^.+\/\s*([^\/]+?)\s*$/, '$1'));
+    return AnkUtils.trim(this.currentImageTitleAndAuthor.replace(/^.+\/\s*([^\/]+?)\s*$/, '$1'));
   },
 
 
   get currentImageTitle function () {
-    return this.trim(this.currentImageTitleAndAuthor.replace(/^\s*(.+?)\s*\/[^\/]+$/, '$1'));
+    return AnkUtils.trim(this.currentImageTitleAndAuthor.replace(/^\s*(.+?)\s*\/[^\/]+$/, '$1'));
   },
 
 
   get currentImageTags function () {
-    var as = this.findNodesByXPath(this.XPath.tags);
+    var as = AnkUtils.findNodesByXPath(this.XPath.tags);
     var node, res = [];
     while (node = as.iterateNext()) {
-      res.push(this.trim(node.textContent));
+      res.push(AnkUtils.trim(node.textContent));
     }
     return res;
   },
@@ -323,16 +124,15 @@ var AnkPixiv = {
    */
   showFilePicker: function (defaultFilename) {
     const nsIFilePicker = Components.interfaces.nsIFilePicker;
-    var filePicker = this.ccci('@mozilla.org/filepicker;1', nsIFilePicker);
+    var filePicker = AnkUtils.ccci('@mozilla.org/filepicker;1', nsIFilePicker);
 
     filePicker.appendFilters(nsIFilePicker.filterAll);
     filePicker.init(window, "pixiviiiiieee", nsIFilePicker.modeSave);
     filePicker.defaultString = defaultFilename;
 
-    var prefInitDir = this.getPref('initialDirectory');
+    var prefInitDir = this.Prefs.get('initialDirectory');
     if (prefInitDir) {
-      var initdir = Components.classes["@mozilla.org/file/local;1"].
-                      createInstance(Components.interfaces.nsILocalFile);
+      var initdir = AnkUtils.ccci("@mozilla.org/file/local;1", Components.interfaces.nsILocalFile);
       initdir.initWithPath(prefInitDir);
       filePicker.displayDirectory = initdir;
     }
@@ -350,7 +150,7 @@ var AnkPixiv = {
   showDirectoryPicker: function (defaultPath) {
     try {
       var nsIFilePicker = Components.interfaces.nsIFilePicker;
-      var filePicker = this.ccci('@mozilla.org/filepicker;1', nsIFilePicker);
+      var filePicker = AnkUtils.ccci('@mozilla.org/filepicker;1', nsIFilePicker);
       filePicker.init(window, "pixiviiiiieee", nsIFilePicker.modeGetFolder);
       filePicker.appendFilters(nsIFilePicker.filterAll);
     
@@ -370,9 +170,9 @@ var AnkPixiv = {
    * ユーザに初期ディレクトリの場所を尋ねる
    */
   queryInitialDirectory: function () {
-    var dir = this.showDirectoryPicker(this.getPref('initialDirectory'));
+    var dir = this.showDirectoryPicker(this.Prefs.get('initialDirectory'));
     if (dir) {
-      this.setPref('initialDirectory', dir.filePath, 'string');
+      this.Prefs.set('initialDirectory', dir.filePath, 'string');
     }
     return dir;
   },
@@ -401,7 +201,7 @@ var AnkPixiv = {
    * nsILocalFileを作成
    */
   newLocalFile: function (url) {
-    var IOService = this.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
+    var IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
     // バージョン毎に場合分け(いらないかも)
     try { 
       var fileHandler = IOService.getProtocolHandler('file').
@@ -413,7 +213,7 @@ var AnkPixiv = {
         temp = IOService.getFileFromURLSpec(url);
       }
       catch(ex) { 
-        temp = this.ccci('@mozilla.org/file/local;1', Components.interfaces.nsILocalFile);
+        temp = AnkUtils.ccci('@mozilla.org/file/local;1', Components.interfaces.nsILocalFile);
         IOService.initFileFromURLSpec(temp, url);
       }
     }
@@ -428,7 +228,7 @@ var AnkPixiv = {
    * nsILocalFileを作成
    */
   newFileURI: function (url) {
-    var IOService = this.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
+    var IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
     return IOService.newFileURI(this.newLocalFile(url));
   },
 
@@ -445,13 +245,13 @@ var AnkPixiv = {
    */
   getSaveFilePath: function (author, titles, ext, useDialog) {
     try {
-      var IOService = this.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
-      var prefInitDir = this.getPref('initialDirectory');
+      var IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
+      var prefInitDir = this.Prefs.get('initialDirectory');
 
       for (var i in titles) {
-        var title = this.fixFilename(titles[i]);
+        var title = AnkUtils.fixFilename(titles[i]);
         var filename = title + ' - ' + author + ext;
-        var url = 'file://' + prefInitDir + this.SYS_SLASH + filename;
+        var url = 'file://' + prefInitDir + AnkUtils.SYS_SLASH + filename;
         var localfile = this.newLocalFile(url);
 
         if (localfile.exists())
@@ -464,7 +264,7 @@ var AnkPixiv = {
           return {fileURL: res, file: res};
         }
       }
-    } catch (e) { }
+    } catch (e) { dump(e); }
 
     return this.showFilePicker(titles[0] + ' - ' + author + ext);
   },
@@ -488,12 +288,12 @@ var AnkPixiv = {
       return;
 
     // 各種オブジェクトの生成
-    var sourceURI = this.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService).
+    var sourceURI = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService).
                       newURI(url, null, null);
-    var dlmanager = this.ccgs('@mozilla.org/download-manager;1', Components.interfaces.nsIDownloadManager);
-    var wbpersist = this.ccci('@mozilla.org/embedding/browser/nsWebBrowserPersist;1',
+    var dlmanager = AnkUtils.ccgs('@mozilla.org/download-manager;1', Components.interfaces.nsIDownloadManager);
+    var wbpersist = AnkUtils.ccci('@mozilla.org/embedding/browser/nsWebBrowserPersist;1',
                               Components.interfaces.nsIWebBrowserPersist);
-    var refererURI = this.ccci('@mozilla.org/network/standard-url;1', Components.interfaces.nsIURI);
+    var refererURI = AnkUtils.ccci('@mozilla.org/network/standard-url;1', Components.interfaces.nsIURI);
     refererURI.spec = referer;
 
     // ダウンロードマネジャに追加
@@ -506,6 +306,27 @@ var AnkPixiv = {
       with (getWebNavigation().sessionHistory) 
         cache = getEntryAtIndex(index, false).QueryInterface(Components.interfaces.nsISHEntry).postData;
     } catch (e) { }
+
+
+    /* for Firefox3
+    // 進行状況リスナ
+    var dlplistener = {
+      onDownloadStateChange: function (state, donwload) {
+        dump(state);
+      },
+      onStateChange: function () {
+      },
+      onProgressChange: function () {
+      },
+      onStatusChange: function () {
+      },
+      onLocationChange: function () {
+      },
+      onSecurityChange: function () {
+      },
+    };
+    dlmanager.addListener(dlplistener);
+    */
       
     // 保存開始
     wbpersist.progressListener = download;
@@ -528,31 +349,35 @@ var AnkPixiv = {
     if (!this.enabled)
       return false;
 
+    if (this.Storage.exists('histories', 'illust_id = ' + this.currentImageId)) {
+      if (!confirm('すでにダウンロードされた画像ですが、再度ダウンロードしますか？'))
+        return;
+    }
+
     var url = this.currentImagePath;
     var ref = this.currentLocation.replace(/mode=medium/, 'mode=big');
     var author = this.currentImageAuthor || this.currentImageAuthorId;
     var titles = this.currentImageTags;
     var title = this.currentImageTitle;
 
-    if (title)
+    if (title) {
       titles.unshift(title);
-    else
+    } else {
       titles.push(this.currentImageId);
+    }
 
     var result = this.downloadFile(url, ref, author, titles, this.currentImageExt, useDialog);
 
-    dump(result);
-
-    if (!result)
-      return;
-
-    this.Tables.histories.add({
-      member_id: this.currentImageAuthorId,
-      illust_id: this.currentImageId,
-      tags: this.join(this.currentImageTags, ' '),
-      server: this.currentImagePath.match(/^http:\/\/([^\/\.]+)\./i)[1],
-      local_path: result,
-    });
+    try {
+      dump('result: ' + result + "\n");
+      this.Storage.insert('histories', {
+        member_id: this.currentImageAuthorId,
+        illust_id: this.currentImageId,
+        tags: AnkUtils.join(this.currentImageTags, ' '),
+        server: this.currentImagePath.match(/^http:\/\/([^\/\.]+)\./i)[1],
+        local_path: result,
+      });
+    } catch (e) {dump(e); }
 
     return result;
   },
@@ -583,7 +408,7 @@ var AnkPixiv = {
 
 
   onDownloadButtonClick: function (event) {
-    var useDialog = this.getPref('showSaveDialog', true);
+    var useDialog = this.Prefs.get('showSaveDialog', true);
     switch(event.button) {
       case 0:
         this.downloadCurrentImage(useDialog);
@@ -604,53 +429,9 @@ var AnkPixiv = {
 ********************************************************************************/
 
 
-(function () {
-  try {
-
-    //データベースのテーブルを作成
-    for (var tableName in this.Tables) {
-      if (this.Storage.tableExists(tableName))
-        continue;
-      var cs = this.Tables[tableName];
-      var q = "";
-      for (var c in cs) {
-        q += c + " " + cs[c] + ",";
-      }      
-      this.Storage.createTable(tableName, q.replace(/,$/, ''));
-    }
-
-    //テーブルにメソッド追加
-    var storage = this.Storage;
-    for (var tableName in this.Tables) {
-      var table = this.Tables[tableName];
-      //add
-      (function (table, tableName) {
-        table.add = function (values) {
-          var ns = [], vs = [], ps = [], vi = 0;
-          for (var fieldName in values) {
-            ns.push(fieldName);
-            (function (idx, type, value) {
-              vs.push(function (stmt) {
-                switch (type) {
-                  case 'string':  return stmt.bindUTF8StringParameter(idx, value);
-                  case 'integer': return stmt.bindInt32Parameter(idx, value);
-                }
-              });
-            })(vi, table[fieldName], values[fieldName]);
-            ps.push('?' + (++vi));
-          }
-          var q = 'insert into ' + tableName + ' (' + AnkPixiv.join(ns) + ') values(' + AnkPixiv.join(ps) + ')'
-          var stmt = storage.createStatement(q);
-          for (var i in vs)
-            (vs[i])(stmt);
-          return stmt.executeStep();
-        }
-      })(table, tableName);
-    }
-
-  } catch (e) {
-    dump(e);
-  }
-}).apply(AnkPixiv);
-
 window.addEventListener("focus", function() { AnkPixiv.onFocus(); }, true);
+
+
+} catch (e) {
+  dump(e + "\n");
+}

@@ -5,6 +5,8 @@
 <overlay id="ankpixivOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankutils.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankstorage.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankpixiv.js" />
 
   <menupopup id="menu_ToolsPopup">
