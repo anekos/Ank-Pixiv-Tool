@@ -28,6 +28,7 @@ AnkPixiv = {
         illust_id: "integer",
         member_id: "integer",
         local_path: "string",
+        title: "string",
         tags: "string",
         server: "string",
         datetime: "datetime",
@@ -375,6 +376,7 @@ AnkPixiv = {
       this.Storage.insert('histories', {
         member_id: this.currentImageAuthorId,
         illust_id: this.currentImageId,
+        title: this.currentImageTitle,
         tags: AnkUtils.join(this.currentImageTags, ' '),
         server: this.currentImagePath.match(/^http:\/\/([^\/\.]+)\./i)[1],
         local_path: result,
