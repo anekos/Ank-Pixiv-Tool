@@ -349,7 +349,8 @@ AnkPixiv = {
     if (!this.enabled)
       return false;
 
-    if (this.Storage.exists('histories', 'illust_id = ' + this.currentImageId)) {
+    if (this.Prefs.get('checkExistingDownload') &&
+    this.Storage.exists('histories', 'illust_id = ' + this.currentImageId)) {
       if (!confirm('すでにダウンロードされた画像ですが、再度ダウンロードしますか？'))
         return;
     }
