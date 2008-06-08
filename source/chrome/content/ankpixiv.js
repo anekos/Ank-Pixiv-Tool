@@ -32,6 +32,7 @@ AnkPixiv = {
         tags: "string",
         server: "string",
         datetime: "datetime",
+        saved: "boolean",
       },
     }
   ),
@@ -39,6 +40,8 @@ AnkPixiv = {
   
   Prefs: new AnkPref('extensions.ankpixiv'),
 
+
+  Locale: AnkUtils.getLocale('chrome://ankpixiv/locale/ankpixiv.properties'),
 
 
   /********************************************************************************
@@ -329,12 +332,36 @@ AnkPixiv = {
     };
     dlmanager.addListener(dlplistener);
     */
+
+
+    // ダウンロード通知
+    try {
+      var progressListener = {
+        onStateChange: function (_webProgress, _request, _stateFlags, _status) {
+          if (_stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+            var alertsService = AnkUtils.ccgs("@mozilla.org/alerts-service;1",
+                                              Components.interfaces.nsIAlertsService);
+            alertsService.showAlertNotification("chrome://ankpixiv/content/statusbar-button.ico", 
+                                                "Finished!", label, false, "", null);
+          }
+        },
+        onProgressChange: function (_webProgress, _request, _curSelfProgress, _maxSelfProgress, 
+                                              _curTotalProgress, _maxTotalProgress) { },
+        onLocationChange: function (_webProgress, _request, _location) {},
+        onStatusChange  : function (_webProgress, _request, _status, _message) {},
+        onSecurityChange: function (_webProgress, _request, _state) {},
+      }
+    } catch (e) {
+      dump("dlalert: " + e + "\n");
+    }
+
       
     // 保存開始
-    wbpersist.progressListener = download;
-    wbpersist.persistFlags |= Components.interfaces.nsIWebBrowserPersist.
-                                PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+    wbpersist.progressListener = progressListener;
+    wbpersist.persistFlags = Components.interfaces.nsIWebBrowserPersist.
+                               PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
     wbpersist.saveURI(sourceURI, cache, refererURI, null, null, filePicker.file);
+
 
     // 成功
     return filePicker.fileURL.path;
@@ -353,7 +380,7 @@ AnkPixiv = {
 
     if (this.Prefs.get('checkExistingDownload') &&
     this.Storage.exists('histories', 'illust_id = ' + this.currentImageId)) {
-      if (!confirm('すでにダウンロードされた画像ですが、再度ダウンロードしますか？'))
+      if (!confirm(this.Locale('downloadExistingImage')))
         return;
     }
 
@@ -380,9 +407,12 @@ AnkPixiv = {
         tags: AnkUtils.join(this.currentImageTags, ' '),
         server: this.currentImagePath.match(/^http:\/\/([^\/\.]+)\./i)[1],
         local_path: result,
+        saved: true,
         datetime: AnkUtils.toSQLDateTimeString(),
       });
-    } catch (e) {dump(e); }
+    } catch (e) {
+      dump("downloadCurrentImage: " + e);
+    }
 
     return result;
   },
@@ -432,7 +462,6 @@ AnkPixiv = {
 /********************************************************************************
 * イベント設定
 ********************************************************************************/
-
 
 window.addEventListener("focus", function() { AnkPixiv.onFocus(); }, true);
 

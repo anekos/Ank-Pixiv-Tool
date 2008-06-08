@@ -94,6 +94,25 @@ var AnkUtils = {
       return dy + '/' + dm + '/' + dd + ' ' + th + ':' + tm + ':' + ts;
     }
   },
+
+
+  getLocale: function (path) {
+    const BUNDLE_SVC = AnkUtils.ccgs('@mozilla.org/intl/stringbundle;1',
+                                     Components.interfaces.nsIStringBundleService);
+    var stringBundle = BUNDLE_SVC.createBundle(path);
+    return function (key, replacements) {
+      try {
+        if (!replacements) {
+          return stringBundle.GetStringFromName(key);
+        } else {
+          return stringBundle.formatStringFromName(key, replacements, replacements.length);
+        }
+      } catch (e) {
+        return key;
+      }
+    };
+  },
+
   
   /********************************************************************************
   * 手抜き用関数

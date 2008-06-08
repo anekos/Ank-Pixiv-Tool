@@ -30,11 +30,11 @@ AnkStorage.prototype = {
     for (var fieldName in values) {
       ns.push(fieldName);
       (function (idx, type, value) {
-        dump(idx+type+value+"\n");
         vs.push(function (stmt) {
           switch (type) {
             case 'string':   return stmt.bindUTF8StringParameter(idx, value);
             case 'integer':  return stmt.bindInt32Parameter(idx, value);
+            case 'boolean':  return stmt.bindInt32Parameter(idx, value);
             case 'datetime': return stmt.bindUTF8StringParameter(idx, value);
             default:         return stmt.bindNullParameter(idx);
           }
@@ -44,7 +44,6 @@ AnkStorage.prototype = {
     }
 
     var q = 'insert into ' + table.name + ' (' + AnkUtils.join(ns) + ') values(' + AnkUtils.join(ps) + ');'
-    dump(q + "\n");
     var stmt = this.database.createStatement(q);
     try {
       for (var i in vs)
@@ -61,7 +60,6 @@ AnkStorage.prototype = {
    */
   find: function (tableName, conditions) {
     var q = 'select * from ' + tableName + ' where ' + conditions;
-    dump(q);
     return this.database.createStatement(q);
   },
 
@@ -70,7 +68,6 @@ AnkStorage.prototype = {
     var result, stmt = this.find.apply(this, arguments);
     try {
       result = !!(stmt.executeStep());
-      dump(result);
     } finally {
       stmt.reset();
     }
@@ -116,16 +113,16 @@ AnkStorage.prototype = {
 
   updateTable: function (table) {
     try {
-    dump("updateTable()\n");
-    var etable = this.tableInfo(table.name);
-    for (var fieldName in table.fields) {
-      if (etable[fieldName])
-        continue;
-      dump(fieldName + "\n");
-      var q = "alter table " + table.name + ' add column ' + fieldName + ' ' + table.fields[fieldName];
-      this.database.executeSimpleSQL(q);
+      var etable = this.tableInfo(table.name);
+      for (var fieldName in table.fields) {
+        if (etable[fieldName])
+          continue;
+        var q = "alter table " + table.name + ' add column ' + fieldName + ' ' + table.fields[fieldName];
+        this.database.executeSimpleSQL(q);
+      }
+    } catch(e) { 
+      dump("updateTable: " + e + "\n"); 
     }
-    } catch(e) { dump("updateTable: " + e + "\n"); }
   },
 };
 

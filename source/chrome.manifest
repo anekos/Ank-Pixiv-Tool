@@ -1,8 +1,8 @@
 
-content	ankpixiv	chrome/content/
-overlay	chrome://browser/content/browser.xul	chrome://ankpixiv/content/ankpixiv.xul
-overlay	chrome://navigator/content/navigator.xul	chrome://ankpixiv/content/ankpixiv.xul
+content  ankpixiv  chrome/content/
+overlay  chrome://browser/content/browser.xul  chrome://ankpixiv/content/ankpixiv.xul
+overlay  chrome://navigator/content/navigator.xul  chrome://ankpixiv/content/ankpixiv.xul
 style chrome://global/content/customizeToolbar.xul  chrome://ankpixiv/content/ankpixiv.css
-locale ankpixiv ja-JP chrome/locale/ja-JP/
 locale ankpixiv en-US chrome/locale/en-US/
+locale ankpixiv ja-JP chrome/locale/ja-JP/
 

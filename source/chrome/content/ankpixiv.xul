@@ -3,11 +3,16 @@
 <!DOCTYPE prefwindow SYSTEM "chrome://ankpixiv/locale/ankpixiv.dtd">
 
 <overlay id="ankpixivOverlay"
+         onload="onload()"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankutils.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankstorage.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankpixiv.js" />
+
+  <stringbundleset id="ankpixiv-bundle-set">
+    <stringbundle id="ankpixiv-string-bundle" src="chrome://ankpixiv/locale/ankpixiv.properties" />
+  </stringbundleset>
 
   <menupopup id="menu_ToolsPopup">
     <menuitem insertafter="devToolsSeparator" label="&downloadCurrentImage;" id="ankpixiv-menu-download"
@@ -21,13 +26,15 @@
 
   <toolbarpalette id="BrowserToolbarPalette">
     <toolbarbutton id="ankpixiv-toolbar-button" label="&downloadCurrentImage;"
-                   tooltiptext="&downloadCurrentImage;" onclick="AnkPixiv.onDownloadButtonClick(event)" class="toolbarbutton-1" />
+                   tooltiptext="&downloadCurrentImage;" onclick="AnkPixiv.onDownloadButtonClick(event)" 
+                   class="toolbarbutton-1" />
   </toolbarpalette>
 
   <popup id="contentAreaContextMenu">
     <menuitem id="ankpixiv-context-menu" label="&downloadThisImage;" hidden="true"
-              oncommand="AnkPixiv.onContextMenu(event);"/>
+              oncommand="AnkPixiv.onContextMenu(event);" />
   </popup>
+
 
 </overlay>
 
