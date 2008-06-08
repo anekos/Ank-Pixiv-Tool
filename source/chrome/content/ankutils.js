@@ -97,9 +97,9 @@ var AnkUtils = {
 
 
   getLocale: function (path) {
-    const BUNDLE_SVC = AnkUtils.ccgs('@mozilla.org/intl/stringbundle;1',
-                                     Components.interfaces.nsIStringBundleService);
-    var stringBundle = BUNDLE_SVC.createBundle(path);
+    const STR_BUNDLE_SVC = AnkUtils.ccgs('@mozilla.org/intl/stringbundle;1',
+                                         Components.interfaces.nsIStringBundleService);
+    var stringBundle = STR_BUNDLE_SVC.createBundle(path);
     return function (key, replacements) {
       try {
         if (!replacements) {
