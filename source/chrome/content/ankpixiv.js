@@ -300,7 +300,6 @@ AnkPixiv = {
     // 各種オブジェクトの生成
     var sourceURI = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService).
                       newURI(url, null, null);
-    var dlmanager = AnkUtils.ccgs('@mozilla.org/download-manager;1', Components.interfaces.nsIDownloadManager);
     var wbpersist = AnkUtils.ccci('@mozilla.org/embedding/browser/nsWebBrowserPersist;1',
                               Components.interfaces.nsIWebBrowserPersist);
     var refererURI = AnkUtils.ccci('@mozilla.org/network/standard-url;1', Components.interfaces.nsIURI);
@@ -308,7 +307,6 @@ AnkPixiv = {
 
     // ダウンロードマネジャに追加
     var label = filenames[0] + ' - ' + author;
-    var download = dlmanager.addDownload(0, sourceURI, filePicker.fileURL, label, null, null, null, null, wbpersist);
 
     // キャッシュ
     var cache = null;
@@ -419,6 +417,7 @@ AnkPixiv = {
         }
       }
       this.popupAlert(caption, text);
+      return true;
     };
 
     var result = this.downloadFile(url, ref, author, titles, this.currentImageExt, useDialog, onComplete);
