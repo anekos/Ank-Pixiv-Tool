@@ -83,16 +83,15 @@ var AnkUtils = {
   toSQLDateTimeString: function (datetime) {
     if (!datetime)
       datetime = new Date();
-    var $ = this, f = function (v,l) { return $.padCharToLeft(v, l, '0'); };
-    with (datetime) {
-      var dy = f(getFullYear(), 4);
-      var dm = f(getMonth(),    2);
-      var dd = f(getDate(),     2);
-      var th = f(getHours(),    2);
-      var tm = f(getMinutes(), 2);
-      var ts = f(getSeconds(), 2);
-      return dy + '/' + dm + '/' + dd + ' ' + th + ':' + tm + ':' + ts;
-    }
+    var $ = this;
+    var zeroPad = (function (v,l) { return $.padCharToLeft(v, l, '0'); });
+    var dy = zeroPad(datetime.getFullYear(), 4);
+    var dm = zeroPad(datetime.getMonth(),    2);
+    var dd = zeroPad(datetime.getDate(),     2);
+    var th = zeroPad(datetime.getHours(),    2);
+    var tm = zeroPad(datetime.getMinutes(),  2);
+    var ts = zeroPad(datetime.getSeconds(),  2);
+    return dy + '/' + dm + '/' + dd + ' ' + th + ':' + tm + ':' + ts;
   },
 
 
@@ -111,6 +110,18 @@ var AnkUtils = {
         return key;
       }
     };
+  },
+
+
+
+  /********************************************************************************
+  * 色々
+  ********************************************************************************/
+
+  popupAlert: function (iconPath, title, text, buttonEnabled, a, b) {
+    const ALERT_SVC = AnkUtils.ccgs("@mozilla.org/alerts-service;1",
+                                    Components.interfaces.nsIAlertsService);
+    return ALERT_SVC.showAlertNotification.apply(ALERT_SVC, arguments);
   },
 
   

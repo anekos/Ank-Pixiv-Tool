@@ -3,4 +3,5 @@
 <!ENTITY initialDirectory.label "保存ディレクトリ">
 <!ENTITY initialDirectory.path "">
 <!ENTITY showSaveDialog.label "保存ダイアログを使う(オフの場合、保存ディレクトリに自動で保存します)">
+<!ENTITY saveHistory.label "ダウンロード履歴を保存する">
 <!ENTITY browse "参照">

@@ -3,4 +3,5 @@
 <!ENTITY initialDirectory.label "Save image to:">
 <!ENTITY initialDirectory.path "">
 <!ENTITY showSaveDialog.label "Use save dialog when downloading image">
+<!ENTITY saveHistory.label "Save download history">
 <!ENTITY browse "Browse...">

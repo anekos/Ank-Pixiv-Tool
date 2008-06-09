@@ -38,6 +38,7 @@
     <preferences>
       <preference id="show-save-dialog-pref" name="extensions.ankpixiv.showSaveDialog" type="bool" />
       <preference id="initial-directory-pref" name="extensions.ankpixiv.initialDirectory" type="file" />
+      <preference id="save-history-pref" name="extensions.ankpixiv.saveHistory" type="bool" />
     </preferences>
 
     <checkbox id="show-save-dialog-checkbox" preference="show-save-dialog-pref" 
@@ -51,6 +52,9 @@
       <toolbarbutton id="initial-directory-browse" oncommand="selectDir();" 
                      instantApply="true" label="&browse;" />
     </hbox>
+
+    <checkbox id="save-history-checkbox" preference="save-history-pref" 
+              label="&saveHistory.label;"/>
 
   </prefpane>
 </prefwindow>

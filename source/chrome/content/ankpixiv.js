@@ -183,6 +183,10 @@ AnkPixiv = {
   },
 
 
+  popupAlert: function (title, text) {
+    return AnkUtils.popupAlert("chrome://ankpixiv/content/statusbar-button.ico", 
+                               title, text, false, "", null);
+  },
 
   /********************************************************************************
   * ダウンロード＆ファイル関連
@@ -277,16 +281,17 @@ AnkPixiv = {
 
   /*
    * downloadFile
-   *    url:        URL
-   *    referer:    リファラ
-   *    author:     作者名
-   *    filenames:  ファイル名の候補リスト
-   *    ext:        拡張子
-   *    useDialog:  保存ダイアログを使うか？
-   *    return:     成功?
+   *    url:            URL
+   *    referer:        リファラ
+   *    author:         作者名
+   *    filenames:      ファイル名の候補リスト
+   *    ext:            拡張子
+   *    useDialog:      保存ダイアログを使うか？
+   *    return:         成功?
+   *    onComplete      終了時のアラート
    * ファイルをダウンロードする
    */ 
-  downloadFile: function (url, referer, author, filenames, ext, useDialog) {
+  downloadFile: function (url, referer, author, filenames, ext, useDialog, onComplete) {
     // 保存ダイアログ
     var filePicker = this.getSaveFilePath(author, filenames, ext, useDialog);
     if (!filePicker)
@@ -335,24 +340,19 @@ AnkPixiv = {
 
 
     // ダウンロード通知
-    try {
-      var progressListener = {
-        onStateChange: function (_webProgress, _request, _stateFlags, _status) {
-          if (_stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-            var alertsService = AnkUtils.ccgs("@mozilla.org/alerts-service;1",
-                                              Components.interfaces.nsIAlertsService);
-            alertsService.showAlertNotification("chrome://ankpixiv/content/statusbar-button.ico", 
-                                                "Finished!", label, false, "", null);
-          }
-        },
-        onProgressChange: function (_webProgress, _request, _curSelfProgress, _maxSelfProgress, 
-                                              _curTotalProgress, _maxTotalProgress) { },
-        onLocationChange: function (_webProgress, _request, _location) {},
-        onStatusChange  : function (_webProgress, _request, _status, _message) {},
-        onSecurityChange: function (_webProgress, _request, _state) {},
-      }
-    } catch (e) {
-      dump("dlalert: " + e + "\n");
+    var $ = this;
+    var progressListener = {
+      onStateChange: function (_webProgress, _request, _stateFlags, _status) {
+        if (_stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+          if (onComplete)
+            onComplete.apply($, arguments);
+        }
+      },
+      onProgressChange: function (_webProgress, _request, _curSelfProgress, _maxSelfProgress, 
+                                            _curTotalProgress, _maxTotalProgress) { },
+      onLocationChange: function (_webProgress, _request, _location) {},
+      onStatusChange  : function (_webProgress, _request, _status, _message) {},
+      onSecurityChange: function (_webProgress, _request, _state) {},
     }
 
       
@@ -395,23 +395,36 @@ AnkPixiv = {
     } else {
       titles.push(this.currentImageId);
     }
+    
+    var record = {
+      member_id: this.currentImageAuthorId,
+      illust_id: this.currentImageId,
+      title: this.currentImageTitle,
+      tags: AnkUtils.join(this.currentImageTags, ' '),
+      server: this.currentImagePath.match(/^http:\/\/([^\/\.]+)\./i)[1],
+      local_path: result,
+      saved: true,
+      datetime: AnkUtils.toSQLDateTimeString(),
+    };
 
-    var result = this.downloadFile(url, ref, author, titles, this.currentImageExt, useDialog);
+    var onComplete = function (_webProgress, _request, _stateFlags, _status) {
+      var caption = this.Locale('finishedDownload');
+      var text = title + ' / ' + author;
+      if (this.Prefs.get('saveHistory', true)) {
+        try {
+          this.Storage.insert('histories', record);
+        } catch (e) {
+          caption = 'Error - onComplete';
+          text = e;
+        }
+      }
+      this.popupAlert(caption, text);
+    };
 
-    try {
-      dump('result: ' + result + "\n");
-      this.Storage.insert('histories', {
-        member_id: this.currentImageAuthorId,
-        illust_id: this.currentImageId,
-        title: this.currentImageTitle,
-        tags: AnkUtils.join(this.currentImageTags, ' '),
-        server: this.currentImagePath.match(/^http:\/\/([^\/\.]+)\./i)[1],
-        local_path: result,
-        saved: true,
-        datetime: AnkUtils.toSQLDateTimeString(),
-      });
-    } catch (e) {
-      dump("downloadCurrentImage: " + e);
+    var result = this.downloadFile(url, ref, author, titles, this.currentImageExt, useDialog, onComplete);
+
+    if (!result) {
+      this.popupAlert('Error', 'Download error');
     }
 
     return result;
@@ -430,15 +443,15 @@ AnkPixiv = {
 
 
   onFocus: function (ev) {
-    var f = function (id) {
+    var changeEnabled = function (id) {
       var elem = document.getElementById(id);
       if (!elem)
         return;
       elem.setAttribute('disabled', !this.enabled);
     };
-    f.call(this, 'ankpixiv-toolbar-button');
-    f.call(this, 'ankpixiv-statusbarpanel');
-    f.call(this, 'ankpixiv-menu-download');
+    changeEnabled.call(this, 'ankpixiv-toolbar-button');
+    changeEnabled.call(this, 'ankpixiv-statusbarpanel');
+    changeEnabled.call(this, 'ankpixiv-menu-download');
   },
 
 
