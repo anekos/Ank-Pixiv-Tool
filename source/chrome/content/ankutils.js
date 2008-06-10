@@ -41,7 +41,7 @@ try {
      * ファイル名として使えない文字を除去する。
      */
     fixFilename: function (filename) {
-      return filename.replace(/[\\\/:,;\*\?\"<>\|]/g, '_');
+      return filename.replace(/[\\\/:,;\*\?\"\<\>\|]/g, '_');
     },
 
 
