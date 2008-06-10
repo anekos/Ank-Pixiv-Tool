@@ -46,8 +46,17 @@ AnkStorage.prototype = {
     var q = 'insert into ' + table.name + ' (' + AnkUtils.join(ns) + ') values(' + AnkUtils.join(ps) + ');'
     var stmt = this.database.createStatement(q);
     try {
-      for (var i in vs)
-        (vs[i])(stmt);
+      for (var i = 0; i < vs.length; i++) {
+        try { 
+          (vs[i])(stmt); 
+        } catch (e) {  
+          AnkUtils.dumpError(e); 
+          AnkUtils.dump(["vs[" + i + "] dumped",
+                         "type: " + (typeof vs[i]),
+                         "value:" + vs[i]]);
+          alert('ダンプログをみよ!'); 
+        }
+      }
       var result = stmt.executeStep();
     } finally {
       stmt.reset();
@@ -56,7 +65,7 @@ AnkStorage.prototype = {
 
 
   /*
-   * $BI,$:!"(Bresult.reset $B$9$k$3$H!#(B
+   * 必ず、result.reset すること。
    */
   find: function (tableName, conditions) {
     var q = 'select * from ' + tableName + ' where ' + conditions;
@@ -71,13 +80,13 @@ AnkStorage.prototype = {
     } finally {
       stmt.reset();
     }
-    // boolean $B$rJV$9$h$&$K$9$k(B
+    // boolean を返すようにする
     return result;
   },
 
 
   createTables: function () {
-    //$B%G!<%?%Y!<%9$N%F!<%V%k$r:n@.(B
+    //データベースのテーブルを作成
     for (var tableName in this.tables) {
       this.createTable(this.tables[tableName]);
     }
@@ -121,7 +130,7 @@ AnkStorage.prototype = {
         this.database.executeSimpleSQL(q);
       }
     } catch(e) { 
-      dump("updateTable: " + e + "\n"); 
+      AnkUtils.dump("updateTable: " + e + "\n"); 
     }
   },
 };

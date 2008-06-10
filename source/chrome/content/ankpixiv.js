@@ -316,34 +316,15 @@ try {
       } catch (e) { }
 
 
-      /* for Firefox3
-      // 進行状況リスナ
-      var dlplistener = {
-        onDownloadStateChange: function (state, donwload) {
-          dump(state);
-        },
-        onStateChange: function () {
-        },
-        onProgressChange: function () {
-        },
-        onStatusChange: function () {
-        },
-        onLocationChange: function () {
-        },
-        onSecurityChange: function () {
-        },
-      };
-      dlmanager.addListener(dlplistener);
-      */
-
-
       // ダウンロード通知
       var $ = this;
       var progressListener = {
         onStateChange: function (_webProgress, _request, _stateFlags, _status) {
           if (_stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-            if (onComplete)
-              onComplete.apply($, arguments);
+            if (onComplete) {
+              var orig_args = arguments;
+              onComplete.call($, orig_args, filePicker.fileURL.path);
+            }
           }
         },
         onProgressChange: function (_webProgress, _request, _curSelfProgress, _maxSelfProgress, 
@@ -402,21 +383,21 @@ try {
           title: this.currentImageTitle,
           tags: AnkUtils.join(this.currentImageTags, ' '),
           server: this.currentImagePath.match(/^http:\/\/([^\/\.]+)\./i)[1],
-          local_path: result,
           saved: true,
           datetime: AnkUtils.toSQLDateTimeString(),
         };
 
-        var onComplete = function (_webProgress, _request, _stateFlags, _status) {
+        var onComplete = function (orig_args, local_path) {
           var caption = this.Locale('finishedDownload');
           var text = title + ' / ' + author;
           dump("[AP] Download complete\n");
           if (this.Prefs.get('saveHistory', true)) {
             try {
+              record['local_path'] = local_path;
               this.Storage.insert('histories', record);
               dump("[AP] history inserted download\n");
             } catch (e) {
-              AnkUtils.putError(e);
+              AnkUtils.dumpError(e);
               caption = 'Error - onComplete';
               text = e;
             }
@@ -440,7 +421,7 @@ try {
         return result;
 
       } catch (e) {
-        AnkUtils.putError(e);
+        AnkUtils.dumpError(e);
       }
     },
 

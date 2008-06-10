@@ -128,8 +128,21 @@ try {
     },
 
 
-    putError: function (error) {
-      var msg = this.errorToString(error);
+    dumpError: function (error) {
+      var msg = "\n<<ANK<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
+      msg += this.errorToString(error) ;
+      msg += ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
+      dump(msg);
+      return msg;
+    },
+
+
+    dump: function (msgs) {
+      var msg = "\n<<ANK<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
+      for (var i = 0; i < msgs.length; i++) {
+        msg += "  " + msgs[i] + "\n";
+      }
+      msg += ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
       dump(msg);
       return msg;
     },
