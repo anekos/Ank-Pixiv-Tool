@@ -158,6 +158,11 @@ try {
       return ALERT_SVC.showAlertNotification.apply(ALERT_SVC, arguments);
     },
 
+
+    simplePopupAlert: function (title, text) {
+      return this.popupAlert("", title, text, false, null, null);
+    },
+
     
     /********************************************************************************
     * 手抜き用関数
@@ -291,6 +296,20 @@ try {
       }
     },
   };
+
+
+
+  /********************************************************************************
+    設定用
+  ********************************************************************************/
+
+  /* デバッグの設定を読み取る */
+  (function () {
+    var pref = new AnkPref('extensions.ankutils');
+    AnkUtils.DEBUG = pref.get('debugMode', false);
+  })();
+
+
 
 } catch (error) {
  dump("[" + error.name + "]\n" +

@@ -390,33 +390,27 @@ try {
         var onComplete = function (orig_args, local_path) {
           var caption = this.Locale('finishedDownload');
           var text = title + ' / ' + author;
-          dump("[AP] Download complete\n");
+
           if (this.Prefs.get('saveHistory', true)) {
             try {
               record['local_path'] = local_path;
               this.Storage.insert('histories', record);
-              dump("[AP] history inserted download\n");
             } catch (e) {
               AnkUtils.dumpError(e);
               caption = 'Error - onComplete';
               text = e;
             }
           }
+
           this.popupAlert(caption, text);
           return true;
         };
 
-        dump("[AP] Finished download1\n");
-
         var result = this.downloadFile(url, ref, author, titles, this.currentImageExt, useDialog, onComplete);
-
-        dump("[AP] Finished download2\n");
 
         if (!result) {
           this.popupAlert('Error', 'Download error');
         }
-
-        dump("[AP] Finished download3\n");
 
         return result;
 

@@ -54,7 +54,8 @@ AnkStorage.prototype = {
           AnkUtils.dump(["vs[" + i + "] dumped",
                          "type: " + (typeof vs[i]),
                          "value:" + vs[i]]);
-          alert('ダンプログをみよ!'); 
+          if (AnkUtils.DEBUG)
+            AnkUtils.simplePopupAlert('エラー発生', e); 
         }
       }
       var result = stmt.executeStep();
