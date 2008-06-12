@@ -44,12 +44,31 @@ try {
     Locale: AnkUtils.getLocale('chrome://ankpixiv/locale/ankpixiv.properties'),
 
 
+    URL: {
+      Pixiv: 'http://www.pixiv.net/',
+    },
+
+
+    MAX_ILLUST_ID: 960000,
+
+
     /********************************************************************************
     * プロパティ
     ********************************************************************************/
 
     get currentLocation function () {
       return window.content.document.location.href;
+    },
+
+
+    get inPixiv function () {
+      return this.currentLocation.match(/^http:\/\/[^\.\/]+\.pixiv\.net\//i);
+    },
+
+
+    get randomImagePageURL function () {
+      var id = parseInt(Math.random() * this.Prefs.get('maxIllustId', this.MAX_ILLUST_ID));
+      return 'http://www.pixiv.net/member_illust.php?mode=medium&illust_id=' + id;
     },
 
 
@@ -82,8 +101,8 @@ try {
 
     get currentImageId function () {
       try {
-        return this.currentImagePath.match(/\/(\d+)(_m)?\.\w{2,4}$/)[1];
-      } catch (e) { }
+        return parseInt(this.currentImagePath.match(/\/(\d+)(_m)?\.\w{2,4}$/)[1]);
+      } catch (e) { return 0; }
     },
 
     get currentImageAuthor function () {
@@ -112,7 +131,7 @@ try {
 
 
     get enabled function () {
-      return this.currentLocation.match(/\.pixiv\.net\/member_illust.php\?/);
+      return this.currentLocation.match(/\.pixiv\.net\/member_illust.php\?.*illust_id=/);
     },
 
 
@@ -359,24 +378,25 @@ try {
         if (!this.enabled)
           return false;
 
-        if (this.Prefs.get('checkExistingDownload') &&
-        this.Storage.exists('histories', 'illust_id = ' + this.currentImageId)) {
-          if (!confirm(this.Locale('downloadExistingImage')))
-            return;
-        }
-
         var url = this.currentImagePath;
+        var illust_id = this.currentImageId;
         var ref = this.currentLocation.replace(/mode=medium/, 'mode=big');
         var author = this.currentImageAuthor || this.currentImageAuthorId;
         var titles = this.currentImageTags;
         var title = this.currentImageTitle;
+
+        if (this.Prefs.get('checkExistingDownload') &&
+        this.Storage.exists('histories', 'illust_id = ' + illust_id)) {
+          if (!confirm(this.Locale('downloadExistingImage')))
+            return;
+        }
 
         if (title) {
           titles.unshift(title);
         } else {
           titles.push(this.currentImageId);
         }
-        
+
         var record = {
           member_id: this.currentImageAuthorId,
           illust_id: this.currentImageId,
@@ -432,30 +452,43 @@ try {
 
 
     onFocus: function (ev) {
+
       var changeEnabled = function (id) {
         var elem = document.getElementById(id);
         if (!elem)
           return;
-        elem.setAttribute('disabled', !this.enabled);
+        elem.setAttribute('dark', !this.enabled);
       };
+
       changeEnabled.call(this, 'ankpixiv-toolbar-button');
       changeEnabled.call(this, 'ankpixiv-statusbarpanel');
       changeEnabled.call(this, 'ankpixiv-menu-download');
+
+      if (this.enabled) {
+        var illust_id = this.currentImageId;
+        if (this.Prefs.get('maxIllustId', this.MAX_ILLUST_ID) < illust_id) {
+          this.Prefs.set('maxIllustId', illust_id);
+        }
+      }
     },
 
 
     onDownloadButtonClick: function (event) {
       var useDialog = this.Prefs.get('showSaveDialog', true);
-      switch(event.button) {
-        case 0:
-          this.downloadCurrentImage(useDialog);
-          break;
-        case 1:
-          this.downloadCurrentImage(!useDialog);
-          break;
-        case 2:
-          this.openPrefWindow();
-          break;
+      if (this.enabled) {
+        switch(event.button) {
+          case 0:
+              this.downloadCurrentImage(useDialog);
+            break;
+          case 1:
+            this.downloadCurrentImage(!useDialog);
+            break;
+          case 2:
+            this.openPrefWindow();
+            break;
+        }
+      } else {
+        AnkUtils.openTab(this.URL.Pixiv);
       }
     },
   };

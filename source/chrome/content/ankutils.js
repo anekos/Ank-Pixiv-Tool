@@ -164,6 +164,20 @@ try {
     },
 
     
+    openTab: function (url, ref) {
+      if ('delayedOpenTab' in window)
+        window.delayedOpenTab(url, ref);
+      else
+        window.getBrowser().addTab(url, ref);
+    },
+
+
+    loadURI: function (url) {
+      if (window.loadURI)
+        window.loadURI(url);
+    },
+    
+
     /********************************************************************************
     * 手抜き用関数
     ********************************************************************************/
