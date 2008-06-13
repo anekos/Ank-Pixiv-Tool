@@ -472,7 +472,7 @@ try {
         }
 
         var div = doc.createElement('div');
-        div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: 100%; background: white; text-align: center; padding-top: 10px; padding-bottom: 30px; display: none;');
+        div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none;');
 
         var bigImg = doc.createElement('img');
         with (bigImg) {
@@ -486,7 +486,7 @@ try {
         doc.addEventListener('click', function (e) { 
           if ((e.target.src == medImg.src) && (e.button == 0)) {
             e.preventDefault();
-            //div.style.height = bigImg.clientHeight;
+            //div.style.height = medImg.clientHeight;
             div.style.top = window.content.scrollY + 'px';
             div.style.display = ''; 
           }
