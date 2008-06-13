@@ -435,7 +435,7 @@ try {
         var result = this.downloadFile(url, ref, author, titles, this.currentImageExt, useDialog, onComplete);
 
         if (!result) {
-          this.popupAlert('Error', 'Download error');
+          //this.popupAlert('Error', 'Download error');
         }
 
         return result;
@@ -472,7 +472,7 @@ try {
         }
 
         var div = doc.createElement('div');
-        div.setAttribute('style', 'position: absolute; top: 10px; left: 10px; width: 100%; padding-top: 10px; text-align: center; display: none;');
+        div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: 100%; background: white; text-align: center; padding-top: 10px; padding-bottom: 30px; display: none;');
 
         var bigImg = doc.createElement('img');
         with (bigImg) {
@@ -486,7 +486,8 @@ try {
         doc.addEventListener('click', function (e) { 
           if ((e.target.src == medImg.src) && (e.button == 0)) {
             e.preventDefault();
-            div.style.top = (window.content.scrollY + 10) + 'px';
+            //div.style.height = bigImg.clientHeight;
+            div.style.top = window.content.scrollY + 'px';
             div.style.display = ''; 
           }
         }, true);
