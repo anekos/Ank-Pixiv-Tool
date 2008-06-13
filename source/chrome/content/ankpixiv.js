@@ -16,6 +16,7 @@ try {
       // xpathImgAnchor = '//div[@id="pixiv"]/div/div/a/img/parent::*/self::*';
       // xpathImg = '//div[@id="pixiv"]/div/div/a/img';
       mediumImage: '//div[@id="content2"]/div/a/img',
+      mediumImageLink: '//div[@id="content2"]/div/a',
       bigImage: '//div[@id="illust_contents"]/a/img',
       authorIconLink: '//div[@id="profile"]/div/a',
       tags: '//span[@id="tags"]/a',
@@ -79,6 +80,11 @@ try {
         var elem = AnkUtils.findNodeByXPath(this.XPath.bigImage);
       }
       return elem && elem.src.replace(/_m\./, '.');
+    },
+
+
+    get currentBigImagePath function () {
+      return this.currentImagePath.replace(/_m\./, '.');
     },
 
 
@@ -440,6 +446,60 @@ try {
     },
 
 
+    installFunctions: function () {
+      var doc = this.currentDocument;
+      if (doc.ankpixivFunctionsIntalled)
+        return;
+
+      doc.ankpixivFunctionsIntalled = true;
+
+      var $ = this;
+
+      var installer = function () {
+
+        try {
+          var body = doc.getElementsByTagName('body')[0];
+          var medImg = AnkUtils.findNodeByXPath($.XPath.mediumImage);
+          var bigImgPath = $.currentBigImagePath;
+        } catch (e) {
+          setTimeout(arguments.callee, 500);
+          return;
+        }
+
+        if (!(body && medImg && bigImgPath)) {
+          setTimeout(arguments.callee, 500);
+          return;
+        }
+
+        var div = doc.createElement('div');
+        div.setAttribute('style', 'position: absolute; top: 10px; left: 10px; width: 100%; padding-top: 10px; text-align: center; display: none;');
+
+        var bigImg = doc.createElement('img');
+        with (bigImg) {
+          setAttribute('src', bigImgPath);
+          addEventListener('click', function () { div.style.display = 'none'; }, true);
+        }
+
+        div.appendChild(bigImg);
+        body.appendChild(div);
+
+        doc.addEventListener('click', function (e) { 
+          if ((e.target.src == medImg.src) && (e.button == 0)) {
+            e.preventDefault();
+            div.style.top = (window.content.scrollY + 10) + 'px';
+            div.style.display = ''; 
+          }
+        }, true);
+        
+        var showBigImage = function () {
+          bigImg.style.display = 'none';
+        };
+      };
+
+      installer();
+    },
+
+
 
     /********************************************************************************
     * イベント
@@ -448,6 +508,12 @@ try {
     openPrefWindow: function () {
       window.openDialog("chrome://ankpixiv/content/options.xul", "Pref Dialog",
                         "centerscreen,chrome,modal", arguments);
+    },
+
+
+    onLoad: function () {
+      window.removeEventListener("load", AnkPixiv.onLoad, false);
+      window.addEventListener("DOMContentLoaded", function(){ AnkPixiv.installFunctions(); }, false);
     },
 
 
@@ -465,6 +531,7 @@ try {
       changeEnabled.call(this, 'ankpixiv-menu-download');
 
       if (this.enabled) {
+        this.installFunctions();
         var illust_id = this.currentImageId;
         if (this.Prefs.get('maxIllustId', this.MAX_ILLUST_ID) < illust_id) {
           this.Prefs.set('maxIllustId', illust_id);
@@ -499,6 +566,7 @@ try {
   ********************************************************************************/
 
   window.addEventListener("focus", function() { AnkPixiv.onFocus(); }, true);
+  window.addEventListener("load", function() { AnkPixiv.onLoad(); }, true);
 
 
 } catch (error) {
