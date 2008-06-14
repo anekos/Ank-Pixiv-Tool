@@ -176,6 +176,35 @@ try {
       if (window.loadURI)
         window.loadURI(url);
     },
+
+
+    loadJavaScript: function (doc, path) {
+      var elem = doc.createElement('script');
+      elem.setAttribute('type', 'text/javascript');
+      elem.setAttribute('src', path);
+      var head = doc.getElementsByTagName('head')[0];
+      if (head) {
+        head.appendChild(elem);
+        return elem;
+      } else {
+        return;
+      }
+    },
+
+    loadStyleSheet: function (doc, path) {
+      var elem = doc.createElement('link');
+      elem.setAttribute('type', 'text/css');
+      elem.setAttribute('rel', 'stylesheet');
+      elem.setAttribute('media', 'screen');
+      elem.setAttribute('href', path);
+      var head = doc.getElementsByTagName('head')[0];
+      if (head) {
+        head.appendChild(elem);
+        return elem;
+      } else {
+        return;
+      }
+    },
     
 
     /********************************************************************************

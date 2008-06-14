@@ -67,6 +67,11 @@ try {
     },
 
 
+    get inMedium function () {
+      return this.inPixiv && this.currentLocation.match(/member_illust\.php\?mode=medium&illust_id=\d+/);
+    },
+
+
     get randomImagePageURL function () {
       var id = parseInt(Math.random() * this.Prefs.get('maxIllustId', this.MAX_ILLUST_ID));
       return 'http://www.pixiv.net/member_illust.php?mode=medium&illust_id=' + id;
@@ -454,11 +459,13 @@ try {
       doc.ankpixivFunctionsIntalled = true;
 
       var $ = this;
+      var ut = AnkUtils;
 
       var installer = function () {
 
         try {
           var body = doc.getElementsByTagName('body')[0];
+          var wrapper = doc.getElementById('wrapper');
           var medImg = AnkUtils.findNodeByXPath($.XPath.mediumImage);
           var bigImgPath = $.currentBigImagePath;
         } catch (e) {
@@ -466,29 +473,37 @@ try {
           return;
         }
 
-        if (!(body && medImg && bigImgPath)) {
+        if (!(body && medImg && bigImgPath && wrapper)) {
           setTimeout(arguments.callee, 500);
           return;
         }
 
         var div = doc.createElement('div');
-        div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none;');
+        div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
 
         var bigImg = doc.createElement('img');
-        with (bigImg) {
-          setAttribute('src', bigImgPath);
-          addEventListener('click', function () { div.style.display = 'none'; }, true);
-        }
 
         div.appendChild(bigImg);
         body.appendChild(div);
+        var bigMode = false;
 
         doc.addEventListener('click', function (e) { 
+          if (bigMode && (e.button == 0)) {
+            div.style.display = 'none'; 
+            wrapper.setAttribute('style', '-moz-opacity: 1;');
+            bigMode = false;
+            return;
+          }
           if ((e.target.src == medImg.src) && (e.button == 0)) {
+            bigMode = true;
             e.preventDefault();
-            //div.style.height = medImg.clientHeight;
-            div.style.top = window.content.scrollY + 'px';
+            bigImg.setAttribute('src', bigImgPath);
+            //div.style.top = window.content.scrollY + 'px';
+            window.content.scrollTo(0, 0);
             div.style.display = ''; 
+            wrapper.setAttribute('style', '-moz-opacity: 0.1;');
+            bigImg.style['-moz-opacity'] = '1 !important;';
+            return;
           }
         }, true);
         
@@ -497,7 +512,8 @@ try {
         };
       };
 
-      installer();
+      if (this.inMedium)
+        installer();
     },
 
 
