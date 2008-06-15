@@ -289,7 +289,7 @@ try {
 
         for (var i in titles) {
           var title = AnkUtils.fixFilename(titles[i]);
-          var filename = title + ' - ' + author + ext;
+          var filename = author + ' - ' + title + ext;
           var url = 'file://' + prefInitDir + AnkUtils.SYS_SLASH + filename;
           var localfile = this.newLocalFile(url);
 
@@ -305,7 +305,7 @@ try {
         }
       } catch (e) { dump(e); }
 
-      return this.showFilePicker(titles[0] + ' - ' + author + ext);
+      return this.showFilePicker(author + ' - ' + titles[0] + ext);
     },
 
 
@@ -336,7 +336,7 @@ try {
       refererURI.spec = referer;
 
       // ダウンロードマネジャに追加
-      var label = filenames[0] + ' - ' + author;
+      var label = author + ' - ' + filenames[0];
 
       // キャッシュ
       var cache = null;
@@ -439,10 +439,6 @@ try {
 
         var result = this.downloadFile(url, ref, author, titles, this.currentImageExt, useDialog, onComplete);
 
-        if (!result) {
-          //this.popupAlert('Error', 'Download error');
-        }
-
         return result;
 
       } catch (e) {
@@ -451,15 +447,10 @@ try {
     },
 
 
-    installFunctions: function () {
-      var doc = this.currentDocument;
-      if (doc.ankpixivFunctionsIntalled)
-        return;
-
-      doc.ankpixivFunctionsIntalled = true;
-
+    get functionsInstaller function () {
       var $ = this;
       var ut = AnkUtils;
+      var installInterval = 500;
 
       var installer = function () {
 
@@ -469,12 +460,16 @@ try {
           var medImg = AnkUtils.findNodeByXPath($.XPath.mediumImage);
           var bigImgPath = $.currentBigImagePath;
         } catch (e) {
-          setTimeout(arguments.callee, 500);
+          AnkUtils.dump("delay installation by error");
+          setTimeout(arguments.callee, installInterval);
+          installInterval *= 2;
           return;
         }
 
         if (!(body && medImg && bigImgPath && wrapper)) {
-          setTimeout(arguments.callee, 500);
+          AnkUtils.dump("delay installation by null");
+          setTimeout(arguments.callee, installInterval);
+          installInterval *= 2;
           return;
         }
 
@@ -498,7 +493,6 @@ try {
             bigMode = true;
             e.preventDefault();
             bigImg.setAttribute('src', bigImgPath);
-            //div.style.top = window.content.scrollY + 'px';
             window.content.scrollTo(0, 0);
             div.style.display = ''; 
             wrapper.setAttribute('style', '-moz-opacity: 0.1;');
@@ -510,10 +504,22 @@ try {
         var showBigImage = function () {
           bigImg.style.display = 'none';
         };
+
+
+        AnkUtils.dump('installed');
       };
 
+      return installer;
+    },
+
+
+    installFunctions: function () {
+      var doc = this.currentDocument;
+      if (doc.ankpixivFunctionsIntalled)
+        return;
+      doc.ankpixivFunctionsIntalled = true;
       if (this.inMedium)
-        installer();
+        this.functionsInstaller();
     },
 
 
@@ -528,7 +534,10 @@ try {
     },
 
 
-    onLoad: function () {
+    onLoad: function (event) {
+      var doc = event.originalTarget;
+      if (!doc || doc.nodeName != "#document")
+          return;
       window.removeEventListener("load", AnkPixiv.onLoad, false);
       window.addEventListener("DOMContentLoaded", function(){ AnkPixiv.installFunctions(); }, false);
     },

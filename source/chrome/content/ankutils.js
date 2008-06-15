@@ -137,14 +137,20 @@ try {
     },
 
 
-    dump: function (msgs) {
-      var msg = "\n<<ANK<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
-      for (var i = 0; i < msgs.length; i++) {
-        msg += "  " + msgs[i] + "\n";
+    dump: function () {
+      if (arguments.length <= 1) {
+        var msg = "\n<<ANK " + arguments[0] + " >>\n";
+        dump(msg);
+        return msg;
+      } else {
+        var msg = "\n<<ANK<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
+        for (var i = 0; i < arguments.length; i++) {
+          msg += "  " + arguments[i] + "\n";
+        }
+        msg += ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
+        dump(msg);
+        return msg;
       }
-      msg += ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
-      dump(msg);
-      return msg;
     },
 
 
