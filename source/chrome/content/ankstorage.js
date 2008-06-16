@@ -74,9 +74,11 @@ AnkStorage.prototype = {
   },
 
 
-  exists: function (tableName, conditions) {
+  exists: function (tableName, conditions, stmtFunc) {
     var result, stmt = this.find.apply(this, arguments);
     try {
+      if (stmtFunc)
+        stmtFunc(stmt);
       result = !!(stmt.executeStep());
     } finally {
       stmt.reset();

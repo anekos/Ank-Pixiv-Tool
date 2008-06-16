@@ -34,6 +34,7 @@ try {
           server: "string",
           datetime: "datetime",
           saved: "boolean",
+          filename: "string",
         },
       }
     ),
@@ -223,13 +224,20 @@ try {
     ********************************************************************************/
 
     /*
-     * fileExists
-     *    url:      String パスURL
+     * filenameExists
+     *    filename:      String パスfilename
      *    return:   boolean
-     * ファイルが存在するか？
+     * 同じファイル名が存在するか？
      */
-    fileExists: function (url) {
-      return this.newLocalFile(url).exists();
+    filenameExists: function (filename) {
+      var se = function () {
+        return AnkPixiv.Storage.exists('histories', 
+                                   'filename like ?', 
+                                   function (stmt) {
+                                     stmt.bindUTF8StringParameter(0, filename);
+                                   });
+      };
+      return se();
     },
 
 
@@ -293,7 +301,7 @@ try {
           var url = 'file://' + prefInitDir + AnkUtils.SYS_SLASH + filename;
           var localfile = this.newLocalFile(url);
 
-          if (localfile.exists())
+          if (localfile.exists() || this.filenameExists(filename))
             continue;
 
           if (useDialog) {
@@ -358,7 +366,7 @@ try {
           }
         },
         onProgressChange: function (_webProgress, _request, _curSelfProgress, _maxSelfProgress, 
-                                              _curTotalProgress, _maxTotalProgress) { },
+                                    _curTotalProgress, _maxTotalProgress) { },
         onLocationChange: function (_webProgress, _request, _location) {},
         onStatusChange  : function (_webProgress, _request, _status, _message) {},
         onSecurityChange: function (_webProgress, _request, _state) {},
@@ -421,10 +429,12 @@ try {
         var onComplete = function (orig_args, local_path) {
           var caption = this.Locale('finishedDownload');
           var text = title + ' / ' + author;
+          var local_path = decodeURIComponent(local_path);
 
           if (this.Prefs.get('saveHistory', true)) {
             try {
               record['local_path'] = local_path;
+              record['filename'] = AnkUtils.extractFilename(local_path);
               this.Storage.insert('histories', record);
             } catch (e) {
               AnkUtils.dumpError(e);
@@ -451,8 +461,16 @@ try {
       var $ = this;
       var ut = AnkUtils;
       var installInterval = 500;
+      var installer = null;
+      var doc = this.currentDocument;
 
-      var installer = function () {
+      var delay = function (msg) {
+        AnkUtils.dump(msg);
+        setTimeout(installer, installInterval);
+        installInterval += 500;
+      };
+
+      installer = function () {
 
         try {
           var body = doc.getElementsByTagName('body')[0];
@@ -460,18 +478,12 @@ try {
           var medImg = AnkUtils.findNodeByXPath($.XPath.mediumImage);
           var bigImgPath = $.currentBigImagePath;
         } catch (e) {
-          AnkUtils.dump("delay installation by error");
-          setTimeout(arguments.callee, installInterval);
-          installInterval *= 2;
-          return;
+          AnkUtils.dumpError(e);
+          return delay("delay installation by error");
         }
 
-        if (!(body && medImg && bigImgPath && wrapper)) {
-          AnkUtils.dump("delay installation by null");
-          setTimeout(arguments.callee, installInterval);
-          installInterval *= 2;
-          return;
-        }
+        if (!(body && medImg && bigImgPath && wrapper))
+          return delay("delay installation by null");
 
         var div = doc.createElement('div');
         div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
@@ -522,6 +534,90 @@ try {
         this.functionsInstaller();
     },
 
+
+    /********************************************************************************
+    * データ修正など
+    ********************************************************************************/
+
+    fixStorageEncode: function () {
+      try {
+        var storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
+                                           Components.interfaces.mozIStorageStatementWrapper);
+        var db = this.Storage.database;
+        var updates = [];
+
+        var update = function (columnName, value, rowid) {
+          updates.push(function () {
+            var stmt = db.createStatement('update histories set ' + columnName + ' =  ?1 where rowid = ?2');
+            try {
+              stmt.bindUTF8StringParameter(0, value); 
+              stmt.bindInt32Parameter(1, rowid); 
+              stmt.execute();
+            } finally {
+              stmt.reset();
+            }
+          });
+        };
+
+        var stmt = db.createStatement('select rowid, * from histories');
+        stmt.reset();
+        storageWrapper.initialize(stmt);
+        while (storageWrapper.step()) {
+          var rowid = storageWrapper.row["rowid"];
+          var filename = storageWrapper.row["filename"];
+          var local_path = storageWrapper.row["local_path"];
+          if (local_path) update('local_path', decodeURIComponent(local_path), rowid);
+          if (filename)
+            update('filename', decodeURIComponent(filename), rowid);
+          else 
+            update('filename', decodeURIComponent(AnkUtils.extractFilename(local_path)), rowid);
+        }
+        for (var i in updates) {
+          (updates[i])();
+        }
+      } catch (e) {
+        AnkUtils.dumpError(e);
+      }
+    },
+
+
+    exchangeFilename: function () {
+      try {
+        var storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
+                                           Components.interfaces.mozIStorageStatementWrapper);
+        var db = this.Storage.database;
+        var updates = [];
+
+        var update = function (columnName, value, rowid) {
+          updates.push(function () {
+            var stmt = db.createStatement('update histories set ' + columnName + ' =  ?1 where rowid = ?2');
+            try {
+              stmt.bindUTF8StringParameter(0, value); 
+              stmt.bindInt32Parameter(1, rowid); 
+              stmt.execute();
+            } finally {
+              stmt.reset();
+            }
+          });
+        };
+
+        var stmt = db.createStatement('select rowid, * from histories where rowid >= 180');
+        stmt.reset();
+        storageWrapper.initialize(stmt);
+        while (storageWrapper.step()) {
+          var rowid = storageWrapper.row["rowid"];
+          var filename = storageWrapper.row["filename"];
+          if (filename) {
+            update('filename', filename.replace(/^([^\-]+) - ([^\.]+)(\.\w{2,4})$/, '$2 - $1$3'), rowid);
+          }
+        }
+        for (var i in updates) {
+          (updates[i])();
+        }
+      } catch (e) {
+        AnkUtils.dumpError(e);
+      }
+    },
 
 
     /********************************************************************************
@@ -591,6 +687,8 @@ try {
   * イベント設定
   ********************************************************************************/
 
+  //AnkPixiv.fixStorageEncode();
+  //AnkPixiv.exchangeFilename();
   window.addEventListener("focus", function() { AnkPixiv.onFocus(); }, true);
   window.addEventListener("load", function() { AnkPixiv.onLoad(); }, true);
 

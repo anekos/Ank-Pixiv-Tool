@@ -46,6 +46,18 @@ try {
 
 
     /*
+     * extractFilename
+     *    filepath
+     */
+    extractFilename: function (filepath) {
+      try {
+        return filepath.match(/\/([^\/]+)$/)[1] || filepath;
+      } catch (e) {
+        return filepath;
+      }
+    },
+
+    /*
      * trim
      * 文字列の前後の空白系を取り除く
      */
