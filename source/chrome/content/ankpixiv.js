@@ -631,11 +631,17 @@ try {
 
 
     onLoad: function (event) {
-      var doc = event.originalTarget;
-      if (!doc || doc.nodeName != "#document")
-          return;
-      window.removeEventListener("load", AnkPixiv.onLoad, false);
-      window.addEventListener("DOMContentLoaded", function(){ AnkPixiv.installFunctions(); }, false);
+      if (!(this.inPixiv && this.inMedium))
+        return;
+      try {
+        var doc = event.originalTarget;
+        if (!doc || doc.nodeName != "#document")
+            return;
+        window.removeEventListener("load", AnkPixiv.onLoad, false);
+        window.addEventListener("DOMContentLoaded", function(){ AnkPixiv.installFunctions(); }, false);
+      } catch (e) {
+        //AnkUtils.dumpError(e);
+      }
     },
 
 

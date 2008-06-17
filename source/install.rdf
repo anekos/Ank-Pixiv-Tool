@@ -7,14 +7,14 @@
 
     <em:id>ankpixiv@snca.net</em:id>
     <em:name>Ank Pixiv Tool</em:name>
-    <em:version>0.4</em:version>
-    <em:description>pixiiiiiviviiiiieee</em:description>
+    <em:version>1.0.1</em:version>
+    <em:description>Easy Pixiv-illust downloader</em:description>
     <em:creator>anekos</em:creator>
     <em:homepageURL>http://snca.net/</em:homepageURL>
     <em:iconURL>chrome://ankpixiv/skin/ankpixiv.png</em:iconURL>
     <em:aboutURL>chrome://ankpixiv/content/about.xul</em:aboutURL>
     <em:optionsURL>chrome://ankpixiv/content/options.xul</em:optionsURL>
-    <em:updateURL>https://snca.net/update.rdf</em:updateURL>
+    <em:type>2</em:type>
 
     <em:file>
       <Description about="urn:mozilla:extension:file:ankpixiv.jar">
