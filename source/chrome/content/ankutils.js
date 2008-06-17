@@ -35,6 +35,17 @@ try {
     ********************************************************************************/
 
     /*
+     * HTMLの実体参照を修正 TODO  
+     */
+    decodeHtmlSpChars: function (s) {
+      return s.replace(/&amp;/g, '&')
+              .replace(/&quot;/g, '"')
+              .replace(/&lt;/g, '<')
+              .replace(/&gt;/g, '>');
+    },
+
+
+    /*
      * fixFilename
      *    filename: ファイル名
      *    return:   ファイル名

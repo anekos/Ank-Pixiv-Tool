@@ -99,8 +99,15 @@ try {
     },
 
 
+    // CHECK - Pixiv のバグに対応するためのコード
+    get currentDocumentTitle function () {
+      var res = this.currentDocument.getElementsByTagName('title')[0].textContent;
+      return AnkUtils.decodeHtmlSpChars(res);
+    },
+
+
     get currentImageTitleAndAuthor function () {
-      return this.currentDocument.title.replace(' [pixiv]', '');
+      return this.currentDocumentTitle.replace(' [pixiv]', '');
     },
 
 
