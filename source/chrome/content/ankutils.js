@@ -297,7 +297,10 @@ try {
   ********************************************************************************/
 
   var AnkPref = function (prefix) {
-    this.prefix = prefix + (prefix.match(/\.$/) ? '' : '.');
+    if (prefix)
+      this.prefix = prefix + (prefix.match(/\.$/) ? '' : '.');
+    else 
+      this.prefix = "";
     return this;
   };
 

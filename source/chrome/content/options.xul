@@ -39,10 +39,25 @@
       <preference id="show-save-dialog-pref" name="extensions.ankpixiv.showSaveDialog" type="bool" />
       <preference id="initial-directory-pref" name="extensions.ankpixiv.initialDirectory" type="file" />
       <preference id="save-history-pref" name="extensions.ankpixiv.saveHistory" type="bool" />
+      <preference id="download-when-rate" name="extensions.ankpixiv.downloadWhenRate" type="bool" />
+      <preference id="download-rate" name="extensions.ankpixiv.downloadRate" type="int" />
     </preferences>
 
-    <checkbox id="show-save-dialog-checkbox" preference="show-save-dialog-pref" 
-              label="&showSaveDialog.label;"/>
+    <checkbox id="show-save-dialog-checkbox" preference="show-save-dialog-pref" label="&showSaveDialog.label;"/>
+
+    <hbox align="center">
+      <checkbox preference="download-when-rate" />
+      <menulist preference="download-rate">
+        <menupopup>
+          <menuitem label="6" value="6"/>
+          <menuitem label="7" value="7"/>
+          <menuitem label="8" value="8"/>
+          <menuitem label="9" value="9"/>
+          <menuitem label="10" value="10"/>
+        </menupopup>
+      </menulist>
+      <label value="&downloadRate.label;"/>
+    </hbox>
 
     <hbox align="center">
       <label accesskey="I" control="textstringpref">

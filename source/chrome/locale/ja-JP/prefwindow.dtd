@@ -4,4 +4,5 @@
 <!ENTITY initialDirectory.path "">
 <!ENTITY showSaveDialog.label "保存ダイアログを使う(オフの場合、保存ディレクトリに自動で保存します)">
 <!ENTITY saveHistory.label "ダウンロード履歴を保存する">
+<!ENTITY downloadRate.label "点以上つけたとき、イラストをダウンロードする。">
 <!ENTITY browse "参照">

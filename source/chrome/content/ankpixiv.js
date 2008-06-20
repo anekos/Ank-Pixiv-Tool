@@ -43,6 +43,9 @@ try {
     Prefs: new AnkPref('extensions.ankpixiv'),
 
 
+    AllPrefs: new AnkPref(),
+
+
     Locale: AnkUtils.getLocale('chrome://ankpixiv/locale/ankpixiv.properties'),
 
 
@@ -479,6 +482,7 @@ try {
 
       installer = function () {
 
+        // 完全に読み込まれて以内っぽいときは、遅延する
         try {
           var body = doc.getElementsByTagName('body')[0];
           var wrapper = doc.getElementById('wrapper');
@@ -489,40 +493,55 @@ try {
           return delay("delay installation by error");
         }
 
+        // 完全に読み込まれて以内っぽいときは、遅延する
         if (!(body && medImg && bigImgPath && wrapper))
           return delay("delay installation by null");
 
-        var div = doc.createElement('div');
-        div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
+        // 大画像関係
+        (function () {
+          var div = doc.createElement('div');
+          div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
 
-        var bigImg = doc.createElement('img');
+          var bigImg = doc.createElement('img');
 
-        div.appendChild(bigImg);
-        body.appendChild(div);
-        var bigMode = false;
+          div.appendChild(bigImg);
+          body.appendChild(div);
+          var bigMode = false;
 
-        doc.addEventListener('click', function (e) { 
-          if (bigMode && (e.button == 0)) {
-            div.style.display = 'none'; 
-            wrapper.setAttribute('style', '-moz-opacity: 1;');
-            bigMode = false;
+          doc.addEventListener('click', function (e) { 
+            if (bigMode && (e.button == 0)) {
+              div.style.display = 'none'; 
+              wrapper.setAttribute('style', '-moz-opacity: 1;');
+              bigMode = false;
+              return;
+            }
+            if ((e.target.src == medImg.src) && (e.button == 0)) {
+              bigMode = true;
+              e.preventDefault();
+              bigImg.setAttribute('src', bigImgPath);
+              window.content.scrollTo(0, 0);
+              div.style.display = ''; 
+              wrapper.setAttribute('style', '-moz-opacity: 0.1;');
+              bigImg.style['-moz-opacity'] = '1 !important;';
+              return;
+            }
+          }, true);
+
+        })();
+
+        // レイティングによるダウンロード
+        (function () {
+          if (!$.Prefs.get('downloadWhenRate', false))
             return;
+          var point = $.Prefs.get('downloadRate', 10);
+          var elem, iter = AnkUtils.findNodesByXPath("//ul[@class='unit-rating']/li/a");
+          while (elem = iter.iterateNext()) {
+            var m = elem.className.match(/r(\d{1,2})-unit/);
+            if (m && (point <= parseInt(m[1]))) {
+              elem.addEventListener('click', function(){$.downloadCurrentImage();}, true);
+            }
           }
-          if ((e.target.src == medImg.src) && (e.button == 0)) {
-            bigMode = true;
-            e.preventDefault();
-            bigImg.setAttribute('src', bigImgPath);
-            window.content.scrollTo(0, 0);
-            div.style.display = ''; 
-            wrapper.setAttribute('style', '-moz-opacity: 0.1;');
-            bigImg.style['-moz-opacity'] = '1 !important;';
-            return;
-          }
-        }, true);
-        
-        var showBigImage = function () {
-          bigImg.style.display = 'none';
-        };
+        })();
 
 
         AnkUtils.dump('installed');
@@ -679,18 +698,23 @@ try {
       var useDialog = this.Prefs.get('showSaveDialog', true);
       if (this.enabled) {
         switch(event.button) {
-          case 0:
-              this.downloadCurrentImage(useDialog);
-            break;
-          case 1:
-            this.downloadCurrentImage(!useDialog);
-            break;
-          case 2:
-            this.openPrefWindow();
-            break;
+          case 0: this.downloadCurrentImage(useDialog); break;
+          case 1: this.downloadCurrentImage(!useDialog); break;
+          case 2: this.openPrefWindow(); break;
         }
       } else {
-        AnkUtils.openTab(this.URL.Pixiv);
+        var open = function (left) {
+          var tab = AnkPixiv.AllPrefs.get('extensions.tabmix.opentabfor.bookmarks', false);
+          if (!!left ^ !!tab)
+            AnkUtils.loadURI(AnkPixiv.URL.Pixiv);
+          else
+            AnkUtils.openTab(AnkPixiv.URL.Pixiv);
+        };
+        switch(event.button) {
+          case 0: open(true); break;
+          case 1: open(false); break;
+          case 2: this.openPrefWindow(); break;
+        }
       }
     },
   };
