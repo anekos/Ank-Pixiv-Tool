@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#"
+         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <RDF:Description RDF:about="rdf:#$bTHWr1"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="2.0"
+                   em:maxVersion="3.0.*"
+                   em:updateLink="http://www.kurinton.net/~snca/newsofts/ank_pixiv_tool-1.0.1.xpi"
+                   em:updateInfoURL="http://d.hatena.ne.jp/nokturnalmortum/20080617" />
+  <RDF:Seq RDF:about="rdf:#$7THWr1">
+    <RDF:li RDF:resource="rdf:#$8THWr1"/>
+    <RDF:li RDF:resource="rdf:#$hTHWr1"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="rdf:#$hTHWr1"
+                   em:version="1.0.2">
+    <em:targetApplication RDF:resource="rdf:#$kTHWr1"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$kTHWr1"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="2.0"
+                   em:maxVersion="3.0.*"
+                   em:updateLink="http://www.kurinton.net/~snca/newsofts/ank_pixiv_tool-1.0.2.xpi"
+                   em:updateInfoURL="http://d.hatena.ne.jp/nokturnalmortum/20080617" />
+  <RDF:Description RDF:about="rdf:#$8THWr1"
+                   em:version="1.0.1">
+    <em:targetApplication RDF:resource="rdf:#$bTHWr1"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:mozilla:extension:ankpixiv@snca.net"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAOX+CdrYIICVfyCyXkPbbArCG4qE8NVAWHgYd6zi1EBjAA/Fa0yfQz0snGrDLCeXq4axYJt6ea4YGlmAsZeweJTY+3IqelO0dcsvZeX7t0EGpILoPF8zxKzELn/GobkCIryaeIVEQQCpw5MOoFPAm9BPjq7uHwpKmcE9O6bhAtI1">
+    <em:updates RDF:resource="rdf:#$7THWr1"/>
+  </RDF:Description>
+</RDF:RDF>
