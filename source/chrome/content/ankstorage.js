@@ -1,4 +1,7 @@
 
+try {
+
+
 var AnkStorage = function (filename, tables) {
   this.filename = filename;
   this.tables = {};
@@ -21,7 +24,46 @@ var AnkStorage = function (filename, tables) {
 };
 
 
+/*
+ * statementToObject
+ *    stmt:   
+ * statement を JS のオブジェクトに変換する
+ */
+AnkStorage.statementToObject = function (stmt) {
+  var res = {}, cl = stmt.columnCount;
+  for (var i = 0; i < cl; i++) {
+    var val;
+    switch (stmt.getTypeOfIndex(i)) {
+      case stmt.VALUE_TYPE_NULL:    val = null;                  break;
+      case stmt.VALUE_TYPE_INTEGER: val = stmt.getInt32(i);      break;
+      case stmt.VALUE_TYPE_FLOAT:   val = stmt.getDouble(i);     break;
+      case stmt.VALUE_TYPE_TEXT:    val = stmt.getUTF8String(i); break;
+    }
+    res[stmt.getColumnName(i)] = val;
+  }
+  return res;
+};
+
+
 AnkStorage.prototype = {
+
+  /*
+   * createStatement
+   * 自動的に finalize してくれるラッパー
+   */
+  createStatement: function (query, block) {
+    var stmt = this.database.createStatement(query);
+    try {
+      var res = block(stmt);
+    } finally {
+      stmt.finalize();
+    }
+    return res;
+  },
+
+  /*
+   * JSオブジェクトを挿入
+   */
   insert: function (table, values) {
     if ('string' == typeof table)
       table = this.tables[table];
@@ -44,47 +86,49 @@ AnkStorage.prototype = {
     }
 
     var q = 'insert into ' + table.name + ' (' + AnkUtils.join(ns) + ') values(' + AnkUtils.join(ps) + ');'
-    var stmt = this.database.createStatement(q);
-    try {
-      for (var i = 0; i < vs.length; i++) {
-        try { 
-          (vs[i])(stmt); 
-        } catch (e) {  
-          AnkUtils.dumpError(e); 
-          AnkUtils.dump(["vs[" + i + "] dumped",
-                         "type: " + (typeof vs[i]),
-                         "value:" + vs[i]]);
-          if (AnkUtils.DEBUG)
-            AnkUtils.simplePopupAlert('エラー発生', e); 
+    this.createStatement(q, function (stmt) {
+      try {
+        for (var i = 0; i < vs.length; i++) {
+          try { 
+            (vs[i])(stmt); 
+          } catch (e) {  
+            AnkUtils.dumpError(e); 
+            AnkUtils.dump(["vs[" + i + "] dumped",
+                           "type: " + (typeof vs[i]),
+                           "value:" + vs[i]]);
+            if (AnkUtils.DEBUG)
+              AnkUtils.simplePopupAlert('エラー発生', e); 
+          }
         }
+        var result = stmt.executeStep();
+      } finally {
+        stmt.reset();
       }
-      var result = stmt.executeStep();
-    } finally {
-      stmt.reset();
-    }
+      return result;
+    });
   },
 
 
   /*
-   * 必ず、result.reset すること。
+   * block を指定しない場合は、必ず、result.reset すること。
    */
-  find: function (tableName, conditions) {
+  find: function (tableName, conditions, block) {
     var q = 'select * from ' + tableName + ' where ' + conditions;
-    return this.database.createStatement(q);
+    return this.createStatement(q, function (stmt) {
+      return (typeof block == 'function') ? block(stmt) : stmt;
+    });
   },
 
 
-  exists: function (tableName, conditions, stmtFunc) {
-    var result, stmt = this.find.apply(this, arguments);
-    try {
-      if (stmtFunc)
-        stmtFunc(stmt);
+  exists: function (tableName, conditions, block) {
+    var _block = function (stmt) {
+      if (typeof block == 'function')
+        block(stmt);
       result = !!(stmt.executeStep());
-    } finally {
       stmt.reset();
-    }
-    // boolean を返すようにする
-    return result;
+      return result;
+    };
+    return this.find(tableName, conditions, _block);
   },
 
 
@@ -113,13 +157,14 @@ AnkStorage.prototype = {
     var storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
                                        Components.interfaces.mozIStorageStatementWrapper);
     var q = 'pragma table_info (' + tableName + ')';
-    var stmt = this.database.createStatement(q);
-    storageWrapper.initialize(stmt);
-    var result = {};
-    while (storageWrapper.step()) {
-      result[storageWrapper.row["name"]] = {type: storageWrapper.row["type"]};
-    }
-    return result;
+    return this.createStatement(q, function (stmt) {
+      storageWrapper.initialize(stmt);
+      var result = {};
+      while (storageWrapper.step()) {
+        result[storageWrapper.row["name"]] = {type: storageWrapper.row["type"]};
+      }
+      return result;
+    });
   },
 
 
@@ -133,9 +178,16 @@ AnkStorage.prototype = {
         this.database.executeSimpleSQL(q);
       }
     } catch(e) { 
-      AnkUtils.dump("updateTable: " + e + "\n"); 
+      AnkUtils.dumpError(e);
     }
   },
+
+
+  execute: function (query, block) {
+    var stmt = this.createStatement(query, function (stmt) {
+      return (typeof block == 'function') ? block(stmt) : stmt;
+    });
+  }
 };
 
 
@@ -148,3 +200,11 @@ var AnkTable = function (name, fields) {
 
 
 
+
+} catch (error) {
+ dump("[" + error.name + "]\n" +
+      "  message: " + error.message + "\n" +
+      "  filename: " + error.fileName + "\n" +
+      "  linenumber: " + error.lineNumber + "\n" +
+      "  stack: " + error.stack + "\n");
+}

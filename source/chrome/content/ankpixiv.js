@@ -36,6 +36,10 @@ try {
           saved: "boolean",
           filename: "string",
         },
+        members: {
+          id: "integer",
+          name: "string",
+        }
       }
     ),
 
@@ -716,6 +720,7 @@ try {
           case 2: this.openPrefWindow(); break;
         }
       }
+      event.preventDefault();
     },
   };
 
