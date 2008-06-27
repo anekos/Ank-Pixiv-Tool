@@ -62,6 +62,7 @@ FireGestures / Vimperator で確認。
 データファイルは、プロファイルディレクトリ内の「ankpixiv.sqlite」です。
 ちなみに、これらのデータを見る機能は今のところありませんが「SQLite Manager」という拡張を使えば見られます。
 https://addons.mozilla.org/ja/firefox/addon/5817
+また、設定でオフにすれば履歴は残りません。
 
 
 **著作権云々

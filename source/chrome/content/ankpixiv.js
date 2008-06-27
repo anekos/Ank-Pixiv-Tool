@@ -418,13 +418,15 @@ try {
         var titles = this.currentImageTags;
         var title = this.currentImageTitle;
 
-        try {
-          if (this.Storage.exists('members', 'id = ' + parseInt(this.currentImageAuthorId))) {
-          } else {
-            this.Storage.insert('members', {id: this.currentImageAuthorId, name: author});
+        if (this.Prefs.get('saveHistory', true)) {
+          try {
+            if (this.Storage.exists('members', 'id = ' + parseInt(this.currentImageAuthorId))) {
+            } else {
+              this.Storage.insert('members', {id: this.currentImageAuthorId, name: author});
+            }
+          } catch (e) {
+            AnkUtils.dumpError(e);
           }
-        } catch (e) {
-          AnkUtils.dumpError(e);
         }
 
         if (this.Prefs.get('checkExistingDownload') &&
