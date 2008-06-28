@@ -75,6 +75,7 @@ AnkStorage.prototype = {
         vs.push(function (stmt) {
           switch (type) {
             case 'string':   return stmt.bindUTF8StringParameter(idx, value);
+            case 'text':     return stmt.bindUTF8StringParameter(idx, value);
             case 'integer':  return stmt.bindInt32Parameter(idx, value);
             case 'boolean':  return stmt.bindInt32Parameter(idx, value);
             case 'datetime': return stmt.bindUTF8StringParameter(idx, value);
@@ -113,7 +114,7 @@ AnkStorage.prototype = {
    * block を指定しない場合は、必ず、result.reset すること。
    */
   find: function (tableName, conditions, block) {
-    var q = 'select * from ' + tableName + ' where ' + conditions;
+    var q = 'select rowid, * from ' + tableName + ' where ' + conditions;
     return this.createStatement(q, function (stmt) {
       return (typeof block == 'function') ? block(stmt) : stmt;
     });
@@ -146,7 +147,9 @@ AnkStorage.prototype = {
 
     var fs = [];
     for (var fieldName in table.fields) {
-      fs.push(fieldName + " " + table.fields[fieldName]);
+      fs.push(fieldName + ' ' + 
+              table.fields[fieldName] + ' ' +
+              (table.constraints[fieldName] || ''))
     }      
 
     return this.database.createTable(table.name, AnkUtils.join(fs));
@@ -192,8 +195,10 @@ AnkStorage.prototype = {
 
 
 
-var AnkTable = function (name, fields) {
+var AnkTable = function (name, fields, constraints) {
   this.name = name;
+  this.constraints = constraints || fields.constraints || {};
+  delete fields.constraints;
   this.fields = fields;
   return this;
 };
