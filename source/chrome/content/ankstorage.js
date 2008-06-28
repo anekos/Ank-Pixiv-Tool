@@ -56,7 +56,7 @@ AnkStorage.prototype = {
     try {
       var res = block(stmt);
     } finally {
-      stmt.finalize();
+      stmt.finalize && stmt.finalize();
     }
     return res;
   },
