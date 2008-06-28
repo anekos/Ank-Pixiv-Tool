@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#"
+         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <RDF:Description RDF:about="rdf:#$aUlyM1"
+                   em:version="1.0.1">
+    <em:targetApplication RDF:resource="rdf:#$dUlyM1"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$dUlyM1"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="2.0"
+                   em:maxVersion="3.0.*"
+                   em:updateLink="http://www.kurinton.net/~snca/newsofts/ank_pixiv_tool-1.0.1.xpi"
+                   em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml" />
+  <RDF:Description RDF:about="urn:mozilla:extension:ankpixiv@snca.net"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAG03pNh31FUa7wGDxXJX9yqDuoRL/AuqpuYJosJznbFECd7/7cIH5iqG81m8S3yJ20mb3MsQe3RQWzsv1qPenlsZ5HeRp4xjEcgQeev5rb/S4xLKZq18qkiM2jGW8cVbeSQ6AC0NINg8xc/bXCZeKOEQrsWx0w1eMk9UfvlxJ+c0">
+    <em:updates RDF:resource="rdf:#$9UlyM1"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$mUlyM1"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="2.0"
+                   em:maxVersion="3.0.*"
+                   em:updateLink="http://www.kurinton.net/~snca/newsofts/ank_pixiv_tool-1.0.2.xpi"
+                   em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml"
+                   em:updateHash="sha1:1123da490cc53b4bf950e307bb9dbdeb387e8312" />
+  <RDF:Description RDF:about="rdf:#$jUlyM1"
+                   em:version="1.0.2">
+    <em:targetApplication RDF:resource="rdf:#$mUlyM1"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$DUlyM1"
+                   em:version="1.1.1">
+    <em:targetApplication RDF:resource="rdf:#$GUlyM1"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$wUlyM1"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="2.0"
+                   em:maxVersion="3.0.*"
+                   em:updateLink="http://www.kurinton.net/~snca/newsofts/ank_pixiv_tool-1.1.0.xpi"
+                   em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml"
+                   em:updateHash="sha1:ebacaf183de42abe3a72e7feea114fb5f0be0821" />
+  <RDF:Description RDF:about="rdf:#$QUlyM1"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="2.0"
+                   em:maxVersion="3.0.*"
+                   em:updateLink="http://www.kurinton.net/~snca/newsofts/ank_pixiv_tool-1.1.2.xpi"
+                   em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml"
+                   em:updateHash="sha1:24ffe7ac34b7c0b9711c2dcdc253746cf0ce3505" />
+  <RDF:Description RDF:about="rdf:#$GUlyM1"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="2.0"
+                   em:maxVersion="3.0.*"
+                   em:updateLink="http://www.kurinton.net/~snca/newsofts/ank_pixiv_tool-1.1.1.xpi"
+                   em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml"
+                   em:updateHash="sha1:6d02c899a2312c9637237da70739196451b803e0" />
+  <RDF:Description RDF:about="rdf:#$NUlyM1"
+                   em:version="1.1.2">
+    <em:targetApplication RDF:resource="rdf:#$QUlyM1"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$.UlyM1"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="2.0"
+                   em:maxVersion="3.0.*"
+                   em:updateLink="http://www.kurinton.net/~snca/newsofts/ank_pixiv_tool-1.1.3.xpi"
+                   em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml"
+                   em:updateHash="sha1:abd3713495b4dc6f36c691a1a7b3fd199a624dff" />
+  <RDF:Seq RDF:about="rdf:#$9UlyM1">
+    <RDF:li RDF:resource="rdf:#$aUlyM1"/>
+    <RDF:li RDF:resource="rdf:#$jUlyM1"/>
+    <RDF:li RDF:resource="rdf:#$tUlyM1"/>
+    <RDF:li RDF:resource="rdf:#$DUlyM1"/>
+    <RDF:li RDF:resource="rdf:#$NUlyM1"/>
+    <RDF:li RDF:resource="rdf:#$XUlyM1"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="rdf:#$tUlyM1"
+                   em:version="1.1.0">
+    <em:targetApplication RDF:resource="rdf:#$wUlyM1"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$XUlyM1"
+                   em:version="1.1.3">
+    <em:targetApplication RDF:resource="rdf:#$.UlyM1"/>
+  </RDF:Description>
+</RDF:RDF>

@@ -1,4 +1,4 @@
-set name=ank_pixiv_tool-1.0.x
+set name=ank_pixiv_tool-1.x.y
 
 cd C:\root\project\FirefoxAddons\ank_pixiv\trunk\build\
 
