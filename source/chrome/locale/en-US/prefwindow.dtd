@@ -6,3 +6,4 @@
 <!ENTITY saveHistory.label "Save download history">
 <!ENTITY downloadRate.label "Download the illustration when you put this point or more.">
 <!ENTITY browse "Browse...">
+<!ENTITY defaultFilename "Default filename">

@@ -296,22 +296,24 @@ try {
 
     /*
      * getSaveFilePath 
-     *    author:             作者名
-     *    titles:             タイトルの候補のリスト(一個以上必須)
+     *    filenames:          ファイル名の候補のリスト(一個以上必須)
      *    ext:                拡張子
      *    useDialog:          保存ダイアログを使うか？
      *    return:             nsIFilePickerかそれもどき
      * ファイルを保存すべきパスを返す
      * 設定によっては、ダイアログを表示する
      */
-    getSaveFilePath: function (author, titles, ext, useDialog) {
+    getSaveFilePath: function (filenames, ext, useDialog) {
       try {
         var IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
         var prefInitDir = this.Prefs.get('initialDirectory');
+        var initDir = this.newLocalFile('file://' + prefInitDir);
 
-        for (var i in titles) {
-          var title = AnkUtils.fixFilename(titles[i]);
-          var filename = author + ' - ' + title + ext;
+        if (!initDir.exists())
+          return this.showFilePicker(filenames[0] + ext);
+
+        for (var i in filenames) {
+          var filename = AnkUtils.fixFilename(filenames[i]) + ext;
           var url = 'file://' + prefInitDir + AnkUtils.SYS_SLASH + filename;
           var localfile = this.newLocalFile(url);
 
@@ -327,7 +329,7 @@ try {
         }
       } catch (e) { dump(e); }
 
-      return this.showFilePicker(author + ' - ' + titles[0] + ext);
+      return this.showFilePicker(filenames[0] + ext);
     },
 
 
@@ -335,7 +337,6 @@ try {
      * downloadFile
      *    url:            URL
      *    referer:        リファラ
-     *    author:         作者名
      *    filenames:      ファイル名の候補リスト
      *    ext:            拡張子
      *    useDialog:      保存ダイアログを使うか？
@@ -343,9 +344,9 @@ try {
      *    onComplete      終了時のアラート
      * ファイルをダウンロードする
      */ 
-    downloadFile: function (url, referer, author, filenames, ext, useDialog, onComplete) {
+    downloadFile: function (url, referer, filenames, ext, useDialog, onComplete) {
       // 保存ダイアログ
-      var filePicker = this.getSaveFilePath(author, filenames, ext, useDialog);
+      var filePicker = this.getSaveFilePath(filenames, ext, useDialog);
       if (!filePicker)
         return;
 
@@ -358,7 +359,7 @@ try {
       refererURI.spec = referer;
 
       // ダウンロードマネジャに追加
-      var label = author + ' - ' + filenames[0];
+      var label = filenames[0];
 
       // キャッシュ
       var cache = null;
@@ -411,18 +412,21 @@ try {
         if (!this.enabled)
           return false;
 
-        var url = this.currentImagePath;
-        var illust_id = this.currentImageId;
-        var ref = this.currentLocation.replace(/mode=medium/, 'mode=big');
-        var author = this.currentImageAuthor || this.currentImageAuthorId;
-        var titles = this.currentImageTags;
-        var title = this.currentImageTitle;
+        var url         = this.currentImagePath;
+        var illust_id   = this.currentImageId;
+        var ref         = this.currentLocation.replace(/mode=medium/, 'mode=big');
+        var member_id   = this.currentImageAuthorId;
+        var member_name = this.currentImageAuthor || member_id;
+        var tags        = this.currentImageTags;
+        var titles      = this.currentImageTags;
+        var title       = this.currentImageTitle;
+        var filenames   = [];
 
         if (this.Prefs.get('saveHistory', true)) {
           try {
-            if (this.Storage.exists('members', 'id = ' + parseInt(this.currentImageAuthorId))) {
+            if (this.Storage.exists('members', 'id = ' + parseInt(member_id))) {
             } else {
-              this.Storage.insert('members', {id: this.currentImageAuthorId, name: author});
+              this.Storage.insert('members', {id: member_id, name: member_name});
             }
           } catch (e) {
             AnkUtils.dumpError(e);
@@ -441,11 +445,28 @@ try {
           titles.push(this.currentImageId);
         }
 
+        var defaultFilename = this.Prefs.get('defaultFilename', '?member-name? - ?title?');
+        (function () {
+          function repl (s, title) {
+            return s.replace('?title?', title).
+                     replace('?member-id?', member_id).
+                     replace('?member-name?', member_name).
+                     replace('?tags?', AnkUtils.join(tags, ' '));
+          }
+          if (defaultFilename.indexOf('?title?')) {
+            for (var i in titles) {
+              filenames.push(repl(defaultFilename, titles[i]));
+            }
+          } else {
+            filenames.push(repl(defaultFilename, title));
+          }
+        })();
+
         var record = {
-          member_id: this.currentImageAuthorId,
-          illust_id: this.currentImageId,
-          title: this.currentImageTitle,
-          tags: AnkUtils.join(this.currentImageTags, ' '),
+          member_id: member_id,
+          illust_id: illust_id,
+          title: title,
+          tags: AnkUtils.join(tags, ' '),
           server: this.currentImagePath.match(/^http:\/\/([^\/\.]+)\./i)[1],
           saved: true,
           datetime: AnkUtils.toSQLDateTimeString(),
@@ -453,7 +474,7 @@ try {
 
         var onComplete = function (orig_args, local_path) {
           var caption = this.Locale('finishedDownload');
-          var text = title + ' / ' + author;
+          var text = filenames[0];
           var local_path = decodeURIComponent(local_path);
 
           if (this.Prefs.get('saveHistory', true)) {
@@ -472,7 +493,7 @@ try {
           return true;
         };
 
-        var result = this.downloadFile(url, ref, author, titles, this.currentImageExt, useDialog, onComplete);
+        var result = this.downloadFile(url, ref, filenames, this.currentImageExt, useDialog, onComplete);
 
         return result;
 

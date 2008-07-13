@@ -9,9 +9,11 @@
             title="&prefwindow.title;"
             persist="lastSelected screenX screenY"
             style="width:52em;"
-            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankutils.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankstorage.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankpixiv.js" />
 
   <script type="application/x-javascript"><![CDATA[
@@ -41,35 +43,51 @@
       <preference id="save-history-pref" name="extensions.ankpixiv.saveHistory" type="bool" />
       <preference id="download-when-rate" name="extensions.ankpixiv.downloadWhenRate" type="bool" />
       <preference id="download-rate" name="extensions.ankpixiv.downloadRate" type="int" />
+      <preference id="default-filename" name="extensions.ankpixiv.defaultFilename" type="string" />
     </preferences>
 
-    <checkbox id="show-save-dialog-checkbox" preference="show-save-dialog-pref" label="&showSaveDialog.label;"/>
+    <groupbox>
+      <checkbox id="show-save-dialog-checkbox" preference="show-save-dialog-pref" label="&showSaveDialog.label;"/>
 
-    <hbox align="center">
-      <checkbox preference="download-when-rate" />
-      <menulist preference="download-rate">
-        <menupopup>
-          <menuitem label="6" value="6"/>
-          <menuitem label="7" value="7"/>
-          <menuitem label="8" value="8"/>
-          <menuitem label="9" value="9"/>
-          <menuitem label="10" value="10"/>
-        </menupopup>
-      </menulist>
-      <label value="&downloadRate.label;"/>
-    </hbox>
+      <hbox align="center">
+        <checkbox preference="download-when-rate" />
+        <menulist preference="download-rate">
+          <menupopup>
+            <menuitem label="6" value="6"/>
+            <menuitem label="7" value="7"/>
+            <menuitem label="8" value="8"/>
+            <menuitem label="9" value="9"/>
+            <menuitem label="10" value="10"/>
+          </menupopup>
+        </menulist>
+        <label value="&downloadRate.label;"/>
+      </hbox>
 
-    <hbox align="center">
-      <label accesskey="I" control="textstringpref">
-        &initialDirectory.label;
-      </label>
-      <filefield id="initial-directory-filefield" preference="initial-directory-pref" flex="1" />
-      <toolbarbutton id="initial-directory-browse" oncommand="selectDir();" 
-                     instantApply="true" label="&browse;" />
-    </hbox>
+      <hbox align="center">
+        <label accesskey="I" control="textstringpref">
+          &initialDirectory.label;
+        </label>
+        <filefield id="initial-directory-filefield" preference="initial-directory-pref" flex="1" />
+        <toolbarbutton id="initial-directory-browse" oncommand="selectDir();" 
+                       instantApply="true" label="&browse;" />
+      </hbox>
 
-    <checkbox id="save-history-checkbox" preference="save-history-pref" 
-              label="&saveHistory.label;"/>
+      <checkbox id="save-history-checkbox" preference="save-history-pref" 
+                label="&saveHistory.label;" />
+    </groupbox>
+
+    <groupbox orient="vertical">
+      <caption label="&defaultFilename;" />
+      <textbox preference="default-filename" />
+      <groupbox>
+        <description>
+          ?member-name?
+          ?member-id?
+          ?title?
+          ?tags?
+        </description>
+      </groupbox>
+    </groupbox>
 
   </prefpane>
 </prefwindow>
