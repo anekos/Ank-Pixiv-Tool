@@ -458,6 +458,7 @@ try {
           function repl (s, title) {
             return s.replace('?title?', title).
                      replace('?member-id?', member_id).
+                     replace('?illust-id?', illust_id).
                      replace('?member-name?', member_name).
                      replace('?tags?', AnkUtils.join(tags, ' ')).
                      replace('?short-tags?', AnkUtils.join(shortTags, ' '));
