@@ -45,6 +45,24 @@ AnkStorage.statementToObject = function (stmt) {
 };
 
 
+/*
+ * 日付をSQL用の文字列形式に変換
+ */
+AnkStorage.datetimeToSQLString = function (datetime) {
+  if (!datetime)
+    datetime = new Date();
+  var $ = this;
+  var zeroPad = function(s, n) s.replace(new RegExp('^(.{0,'+(n-1)+'})$'), function(s)zeroPad('0'+s, n));
+  var dy = zeroPad(datetime.getFullYear(), 4);
+  var dm = zeroPad(datetime.getMonth(),    2);
+  var dd = zeroPad(datetime.getDate(),     2);
+  var th = zeroPad(datetime.getHours(),    2);
+  var tm = zeroPad(datetime.getMinutes(),  2);
+  var ts = zeroPad(datetime.getSeconds(),  2);
+  return dy + '/' + dm + '/' + dd + ' ' + th + ':' + tm + ':' + ts;
+};
+
+
 AnkStorage.prototype = {
 
   /*

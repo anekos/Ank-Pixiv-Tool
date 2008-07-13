@@ -672,14 +672,15 @@ try {
 
 
     onLoad: function (event) {
-      if (!(this.inPixiv && this.inMedium))
-        return;
       try {
+        if (!(this.inPixiv && this.inMedium))
+          return;
         var doc = event.originalTarget;
         if (!doc || doc.nodeName != "#document")
             return;
         window.removeEventListener("load", AnkPixiv.onLoad, false);
-        window.addEventListener("DOMContentLoaded", function(){ AnkPixiv.installFunctions(); }, false);
+        //window.addEventListener("DOMContentLoaded", function(){ AnkPixiv.installFunctions(); }, false);
+        window.addEventListener("domready", function(){ AnkPixiv.installFunctions(); }, false);
       } catch (e) {
         //AnkUtils.dumpError(e);
       }
@@ -687,24 +688,27 @@ try {
 
 
     onFocus: function (ev) {
+      try {
+        var changeEnabled = function (id) {
+          var elem = document.getElementById(id);
+          if (!elem)
+            return;
+          elem.setAttribute('dark', !this.enabled);
+        };
 
-      var changeEnabled = function (id) {
-        var elem = document.getElementById(id);
-        if (!elem)
-          return;
-        elem.setAttribute('dark', !this.enabled);
-      };
+        changeEnabled.call(this, 'ankpixiv-toolbar-button');
+        changeEnabled.call(this, 'ankpixiv-statusbarpanel');
+        changeEnabled.call(this, 'ankpixiv-menu-download');
 
-      changeEnabled.call(this, 'ankpixiv-toolbar-button');
-      changeEnabled.call(this, 'ankpixiv-statusbarpanel');
-      changeEnabled.call(this, 'ankpixiv-menu-download');
-
-      if (this.enabled) {
-        this.installFunctions();
-        var illust_id = this.currentImageId;
-        if (this.Prefs.get('maxIllustId', this.MAX_ILLUST_ID) < illust_id) {
-          this.Prefs.set('maxIllustId', illust_id);
+        if (this.enabled) {
+          this.installFunctions();
+          var illust_id = this.currentImageId;
+          if (this.Prefs.get('maxIllustId', this.MAX_ILLUST_ID) < illust_id) {
+            this.Prefs.set('maxIllustId', illust_id);
+          }
         }
+      } catch (e) {
+        //AnkUtils.dumpError(e);
       }
     },
 
