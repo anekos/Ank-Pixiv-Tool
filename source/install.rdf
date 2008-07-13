@@ -5,7 +5,7 @@
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
                    em:id="ankpixiv@snca.net"
                    em:name="Ank Pixiv Tool"
-                   em:version="1.1.3"
+                   em:version="1.2.0"
                    em:description="Easy Pixiv-illust downloader"
                    em:creator="anekos"
                    em:homepageURL="http://d.hatena.ne.jp/nokturnalmortum/20080617"
@@ -14,9 +14,9 @@
                    em:updateURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/update.rdf"
                    em:type="2"
                    em:updateKey="MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDuAgiETaqAO8fhlKcWz8BnLRQq5Vyj5ETsAElSqn6ZstjTBlANRxLdPu6YuZlwXVpfwc32dxpLGZlp4Q/9o18skR/TDIOI5YwFpVkptqDj7hOulCq0afLrGnA3kSIQlnN/6boRByPT8I5kKCe0E9/StW2ZR1mD1gKQxR4gV2/qywIDAQAB">
-    <em:targetApplication RDF:resource="rdf:#$7TlyM1"/>
+    <em:targetApplication RDF:resource="rdf:#$YUQLW3"/>
   </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$7TlyM1"
+  <RDF:Description RDF:about="rdf:#$YUQLW3"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="2.0"
                    em:maxVersion="3.0.*" />

@@ -52,7 +52,10 @@ AnkStorage.datetimeToSQLString = function (datetime) {
   if (!datetime)
     datetime = new Date();
   var $ = this;
-  var zeroPad = function(s, n) s.replace(new RegExp('^(.{0,'+(n-1)+'})$'), function(s)zeroPad('0'+s, n));
+  var zeroPad = function(s, n) {
+    return s.replace(new RegExp('^(.{0,'+(n-1)+'})$'), 
+                     function(s) { return zeroPad('0'+s, n); });
+  };
   var dy = zeroPad(datetime.getFullYear(), 4);
   var dm = zeroPad(datetime.getMonth(),    2);
   var dd = zeroPad(datetime.getDate(),     2);
