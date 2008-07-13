@@ -421,6 +421,14 @@ try {
         var titles      = this.currentImageTags;
         var title       = this.currentImageTitle;
         var filenames   = [];
+        var shortTags   = (function (len) {
+                            var result = [];
+                            for (var i in tags) {
+                              if (tags[i].length <= len)
+                                result.push(tags[i]);
+                            }
+                            return result;
+                          })(8);
 
         if (this.Prefs.get('saveHistory', true)) {
           try {
@@ -451,7 +459,8 @@ try {
             return s.replace('?title?', title).
                      replace('?member-id?', member_id).
                      replace('?member-name?', member_name).
-                     replace('?tags?', AnkUtils.join(tags, ' '));
+                     replace('?tags?', AnkUtils.join(tags, ' ')).
+                     replace('?short-tags?', AnkUtils.join(shortTags, ' '));
           }
           if (defaultFilename.indexOf('?title?')) {
             for (var i in titles) {

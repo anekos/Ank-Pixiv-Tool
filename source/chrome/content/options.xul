@@ -81,10 +81,7 @@
       <textbox preference="default-filename" />
       <groupbox>
         <description>
-          ?member-name?
-          ?member-id?
-          ?title?
-          ?tags?
+          ?member-name?  ?member-id?  ?title?  ?short-tags?  ?tags?
         </description>
       </groupbox>
     </groupbox>
