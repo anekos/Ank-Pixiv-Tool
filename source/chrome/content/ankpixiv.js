@@ -781,7 +781,9 @@ try {
       for each (let old in olds) {
         try {
           let dt = AnkUtils.toSQLDateTimeString(new Date(old.datetime));
-          this.Storage.update('histories', "`datetime` = datetime('" + dt + "', '1 months')", 'rowid = ' + old.rowid);
+          this.Storage.update('histories', 
+                              "`datetime` = datetime('" + dt + "', '1 months'), version = " + AnkPixiv.DB_VERSION, 
+                              'rowid = ' + old.rowid);
         } catch (e) {
           //liberator.log(e);
         }
