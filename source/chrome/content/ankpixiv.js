@@ -7,6 +7,8 @@ try {
     * 定数
     ********************************************************************************/
 
+    DB_VERSION: 1,
+
     VERSION: AnkUtils.getVersion('ankpixiv@snca.net'),
 
     PREF_PREFIX: 'extensions.ankpixiv.',
@@ -35,10 +37,12 @@ try {
           datetime: "datetime",
           saved: "boolean",
           filename: "string",
+          version: "integer",
         },
         members: {
           id: "integer",
           name: "string",
+          version: "integer",
         }
       }
     ),
@@ -434,7 +438,7 @@ try {
           try {
             if (this.Storage.exists('members', 'id = ' + parseInt(member_id))) {
             } else {
-              this.Storage.insert('members', {id: member_id, name: member_name});
+              this.Storage.insert('members', {id: member_id, name: member_name, version: AnkPixiv.DB_VERSION});
             }
           } catch (e) {
             AnkUtils.dumpError(e);
@@ -480,6 +484,7 @@ try {
           server: this.currentImagePath.match(/^http:\/\/([^\/\.]+)\./i)[1],
           saved: true,
           datetime: AnkUtils.toSQLDateTimeString(),
+          version: AnkPixiv.DB_VERSION,
         };
 
         var onComplete = function (orig_args, local_path) {
@@ -767,6 +772,20 @@ try {
         }
       }
       event.preventDefault();
+    },
+
+
+    updateDatabase: function () {
+      // version 1
+      let olds = this.Storage.oselect('histories', '(version is null) or (version < 1)');
+      for each (let old in olds) {
+        try {
+          let dt = AnkUtils.toSQLDateTimeString(new Date(old.datetime));
+          this.Storage.update('histories', "`datetime` = datetime('" + dt + "', '1 months')", 'rowid = ' + old.rowid);
+        } catch (e) {
+          liberator.log(e);
+        }
+      }
     },
   };
 

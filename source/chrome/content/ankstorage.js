@@ -2,7 +2,7 @@
 try {
 
 
-var AnkStorage = function (filename, tables) {
+AnkStorage = function (filename, tables) {
   this.filename = filename;
   this.tables = {};
 
@@ -45,27 +45,6 @@ AnkStorage.statementToObject = function (stmt) {
 };
 
 
-/*
- * 日付をSQL用の文字列形式に変換
- */
-AnkStorage.datetimeToSQLString = function (datetime) {
-  if (!datetime)
-    datetime = new Date();
-  var $ = this;
-  var zeroPad = function(s, n) {
-    return s.replace(new RegExp('^(.{0,'+(n-1)+'})$'), 
-                     function(s) { return zeroPad('0'+s, n); });
-  };
-  var dy = zeroPad(datetime.getFullYear(), 4);
-  var dm = zeroPad(datetime.getMonth(),    2);
-  var dd = zeroPad(datetime.getDate(),     2);
-  var th = zeroPad(datetime.getHours(),    2);
-  var tm = zeroPad(datetime.getMinutes(),  2);
-  var ts = zeroPad(datetime.getSeconds(),  2);
-  return dy + '/' + dm + '/' + dd + ' ' + th + ':' + tm + ':' + ts;
-};
-
-
 AnkStorage.prototype = {
 
   /*
@@ -81,6 +60,7 @@ AnkStorage.prototype = {
     }
     return res;
   },
+
 
   /*
    * JSオブジェクトを挿入
@@ -135,12 +115,43 @@ AnkStorage.prototype = {
    * block を指定しない場合は、必ず、result.reset すること。
    */
   find: function (tableName, conditions, block) {
-    var q = 'select rowid, * from ' + tableName + ' where ' + conditions;
+    var q = 'select rowid, * from ' + tableName + (conditions ? ' where ' + conditions : '');
     return this.createStatement(q, function (stmt) {
       return (typeof block == 'function') ? block(stmt) : stmt;
     });
   },
 
+
+  select: function () this.find.apply(this, arguments),
+
+
+  oselect: function (tableName, conditions, block) {
+    return this.select(tableName, conditions, function (stmt) {
+      let r;
+      if (typeof block == 'function') {
+        while (stmt.executeStep())
+          r = block(AnkStorage.statementToObject(stmt));
+      } else {
+        r = [];
+        while (stmt.executeStep())
+          r.push(AnkStorage.statementToObject(stmt));
+      }
+      return r;
+    });
+  },
+
+
+  update: function (tableName, values, conditions) {
+    let set;
+    if (typeof values == 'string') {
+      set = values;
+    } else {
+      let keys = [it for (it in values)];
+      // TODO
+    }
+    let q = 'update ' + tableName + ' set ' + set + (conditions ? ' where ' + conditions : '');
+    return this.database.executeSimpleSQL(q);
+  },
 
   exists: function (tableName, conditions, block) {
     var _block = function (stmt) {
@@ -206,6 +217,11 @@ AnkStorage.prototype = {
     }
   },
 
+
+  delete: function (table, conditions) {
+    var q = 'delete from ' + table + (conditions ? ' where ' + conditions : ''); 
+    return this.database.executeSimpleSQL(q);
+  },
 
   execute: function (query, block) {
     var stmt = this.createStatement(query, function (stmt) {

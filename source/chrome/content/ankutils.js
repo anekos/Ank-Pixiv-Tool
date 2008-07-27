@@ -1,7 +1,7 @@
 
 try {
 
-  var AnkUtils = {
+  AnkUtils = {
 
     SYS_SLASH: (function () {
       try {
@@ -109,14 +109,18 @@ try {
       if (!datetime)
         datetime = new Date();
       var $ = this;
-      var zeroPad = (function (v,l) { return $.padCharToLeft(v, l, '0'); });
-      var dy = zeroPad(datetime.getFullYear(), 4);
-      var dm = zeroPad(datetime.getMonth(),    2);
-      var dd = zeroPad(datetime.getDate(),     2);
-      var th = zeroPad(datetime.getHours(),    2);
-      var tm = zeroPad(datetime.getMinutes(),  2);
-      var ts = zeroPad(datetime.getSeconds(),  2);
-      return dy + '/' + dm + '/' + dd + ' ' + th + ':' + tm + ':' + ts;
+      var zeroPad = function(s, n) {
+        return s.toString().replace(new RegExp('^(.{0,'+(n-1)+'})$'), 
+                         function(s) { return zeroPad('0'+s, n); });
+      };
+      var dy = zeroPad(datetime.getFullYear(),      4);
+      var dm = zeroPad(datetime.getMonth() + 1,     2);
+      var dd = zeroPad(datetime.getDate(),          2);
+      var th = zeroPad(datetime.getHours(),         2);
+      var tm = zeroPad(datetime.getMinutes(),       2);
+      var ts = zeroPad(datetime.getSeconds(),       2);
+      var ms = zeroPad(datetime.getMilliseconds(),  3);
+      return dy + '-' + dm + '-' + dd + ' ' + th + ':' + tm + ':' + ts + '.' + ms;
     },
 
 
