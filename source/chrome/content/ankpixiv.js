@@ -783,7 +783,7 @@ try {
           let dt = AnkUtils.toSQLDateTimeString(new Date(old.datetime));
           this.Storage.update('histories', "`datetime` = datetime('" + dt + "', '1 months')", 'rowid = ' + old.rowid);
         } catch (e) {
-          liberator.log(e);
+          //liberator.log(e);
         }
       }
     },
