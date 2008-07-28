@@ -140,7 +140,7 @@
             <em:targetApplication>
               <RDF:Description>
                 <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-                <em:minVersion>2.0</em:minVersion>
+                <em:minVersion>3.0</em:minVersion>
                 <em:maxVersion>3.0.*</em:maxVersion>
                 <em:updateLink>http://www.kurinton.net/~snca/dcl.cgi?act=up&amp;url=./newsofts/ank_pixiv_tool-1.2.2.xpi</em:updateLink>
                 <em:updateInfoURL>http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml</em:updateInfoURL>

@@ -2,117 +2,117 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="rdf:#$ThJbo1"
+  <RDF:Description RDF:about="rdf:#$AUBXG3"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="2.0"
                    em:maxVersion="3.0.*"
                    em:updateLink="http://www.kurinton.net/~snca/dcl.cgi?act=up&amp;url=./newsofts/ank_pixiv_tool-1.0.1.xpi"
                    em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml" />
-  <RDF:Description RDF:about="rdf:#$ViJbo1"
-                   em:version="1.2.1">
-    <em:targetApplication RDF:resource="rdf:#$YiJbo1"/>
+  <RDF:Description RDF:about="rdf:#$.UBXG3"
+                   em:version="1.1.1">
+    <em:targetApplication RDF:resource="rdf:#$1VBXG3"/>
   </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$uiJbo1"
+  <RDF:Description RDF:about="rdf:#$sVBXG3"
+                   em:version="1.2.0">
+    <em:targetApplication RDF:resource="rdf:#$vVBXG3"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$8VBXG3"
+                   em:version="1.1.2">
+    <em:targetApplication RDF:resource="rdf:#$bVBXG3"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$bVBXG3"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="2.0"
                    em:maxVersion="3.0.*"
                    em:updateLink="http://www.kurinton.net/~snca/dcl.cgi?act=up&amp;url=./newsofts/ank_pixiv_tool-1.1.2.xpi"
                    em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml"
                    em:updateHash="sha1:24ffe7ac34b7c0b9711c2dcdc253746cf0ce3505" />
-  <RDF:Description RDF:about="urn:mozilla:extension:ankpixiv@snca.net"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAGPG6AyzpVldwbgN/5lp7CY36e1BZ+tOm5slLqaEtvbkcCbNeYfOocnENjngf2DFts3He3t/0ahVVAm5AjFhwjqdw046y44txOi8tnKImS2gXgJ4bsQifmVy2nq54K/8Qc+NZm7WdNAfWygGRAOt/WuNuq8GwFPEX25jS+aQO4Fe">
-    <em:updates RDF:resource="rdf:#$PhJbo1"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$3jJbo1"
-                   em:version="1.2.2">
-    <em:targetApplication RDF:resource="rdf:#$6jJbo1"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$QhJbo1"
-                   em:version="1.0.1">
-    <em:targetApplication RDF:resource="rdf:#$ThJbo1"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$ZhJbo1"
-                   em:version="1.0.2">
-    <em:targetApplication RDF:resource="rdf:#$0iJbo1"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$6jJbo1"
-                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
-                   em:minVersion="2.0"
-                   em:maxVersion="3.0.*"
-                   em:updateLink="http://www.kurinton.net/~snca/dcl.cgi?act=up&amp;url=./newsofts/ank_pixiv_tool-1.2.2.xpi"
-                   em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml"
-                   em:updateHash="sha1:64194a6c0fc05d69a60810248c85b69023ede983" />
-  <RDF:Description RDF:about="rdf:#$EiJbo1"
-                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
-                   em:minVersion="2.0"
-                   em:maxVersion="3.0.*"
-                   em:updateLink="http://www.kurinton.net/~snca/dcl.cgi?act=up&amp;url=./newsofts/ank_pixiv_tool-1.1.3.xpi"
-                   em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml"
-                   em:updateHash="sha1:abd3713495b4dc6f36c691a1a7b3fd199a624dff" />
-  <RDF:Description RDF:about="rdf:#$LiJbo1"
-                   em:version="1.2.0">
-    <em:targetApplication RDF:resource="rdf:#$OiJbo1"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$aiJbo1"
+  <RDF:Description RDF:about="rdf:#$TUBXG3"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="2.0"
                    em:maxVersion="3.0.*"
                    em:updateLink="http://www.kurinton.net/~snca/dcl.cgi?act=up&amp;url=./newsofts/ank_pixiv_tool-1.1.0.xpi"
                    em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml"
                    em:updateHash="sha1:ebacaf183de42abe3a72e7feea114fb5f0be0821" />
-  <RDF:Description RDF:about="rdf:#$YiJbo1"
+  <RDF:Description RDF:about="rdf:#$lVBXG3"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="2.0"
                    em:maxVersion="3.0.*"
-                   em:updateLink="http://www.kurinton.net/~snca/dcl.cgi?act=up&amp;url=./newsofts/ank_pixiv_tool-1.2.1.xpi"
+                   em:updateLink="http://www.kurinton.net/~snca/dcl.cgi?act=up&amp;url=./newsofts/ank_pixiv_tool-1.1.3.xpi"
                    em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml"
-                   em:updateHash="sha1:31342584fb4760938dc5295566950353772f1232" />
-  <RDF:Seq RDF:about="rdf:#$PhJbo1">
-    <RDF:li RDF:resource="rdf:#$QhJbo1"/>
-    <RDF:li RDF:resource="rdf:#$ZhJbo1"/>
-    <RDF:li RDF:resource="rdf:#$7iJbo1"/>
-    <RDF:li RDF:resource="rdf:#$hiJbo1"/>
-    <RDF:li RDF:resource="rdf:#$riJbo1"/>
-    <RDF:li RDF:resource="rdf:#$BiJbo1"/>
-    <RDF:li RDF:resource="rdf:#$LiJbo1"/>
-    <RDF:li RDF:resource="rdf:#$ViJbo1"/>
-    <RDF:li RDF:resource="rdf:#$3jJbo1"/>
-  </RDF:Seq>
-  <RDF:Description RDF:about="rdf:#$BiJbo1"
-                   em:version="1.1.3">
-    <em:targetApplication RDF:resource="rdf:#$EiJbo1"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$hiJbo1"
-                   em:version="1.1.1">
-    <em:targetApplication RDF:resource="rdf:#$kiJbo1"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$0iJbo1"
-                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
-                   em:minVersion="2.0"
-                   em:maxVersion="3.0.*"
-                   em:updateLink="http://www.kurinton.net/~snca/dcl.cgi?act=up&amp;url=./newsofts/ank_pixiv_tool-1.0.2.xpi"
-                   em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml"
-                   em:updateHash="sha1:1123da490cc53b4bf950e307bb9dbdeb387e8312" />
-  <RDF:Description RDF:about="rdf:#$7iJbo1"
-                   em:version="1.1.0">
-    <em:targetApplication RDF:resource="rdf:#$aiJbo1"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$kiJbo1"
-                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
-                   em:minVersion="2.0"
-                   em:maxVersion="3.0.*"
-                   em:updateLink="http://www.kurinton.net/~snca/dcl.cgi?act=up&amp;url=./newsofts/ank_pixiv_tool-1.1.1.xpi"
-                   em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml"
-                   em:updateHash="sha1:6d02c899a2312c9637237da70739196451b803e0" />
-  <RDF:Description RDF:about="rdf:#$riJbo1"
-                   em:version="1.1.2">
-    <em:targetApplication RDF:resource="rdf:#$uiJbo1"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$OiJbo1"
+                   em:updateHash="sha1:abd3713495b4dc6f36c691a1a7b3fd199a624dff" />
+  <RDF:Description RDF:about="rdf:#$vVBXG3"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="2.0"
                    em:maxVersion="3.0.*"
                    em:updateLink="http://www.kurinton.net/~snca/dcl.cgi?act=up&amp;url=./newsofts/ank_pixiv_tool-1.2.0.xpi"
                    em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml"
                    em:updateHash="sha1:7aed2fc8678134e3a5facf53a27c9d11594dca24" />
+  <RDF:Seq RDF:about="rdf:#$wUBXG3">
+    <RDF:li RDF:resource="rdf:#$xUBXG3"/>
+    <RDF:li RDF:resource="rdf:#$GUBXG3"/>
+    <RDF:li RDF:resource="rdf:#$QUBXG3"/>
+    <RDF:li RDF:resource="rdf:#$.UBXG3"/>
+    <RDF:li RDF:resource="rdf:#$8VBXG3"/>
+    <RDF:li RDF:resource="rdf:#$iVBXG3"/>
+    <RDF:li RDF:resource="rdf:#$sVBXG3"/>
+    <RDF:li RDF:resource="rdf:#$CVBXG3"/>
+    <RDF:li RDF:resource="rdf:#$MVBXG3"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="rdf:#$QUBXG3"
+                   em:version="1.1.0">
+    <em:targetApplication RDF:resource="rdf:#$TUBXG3"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:mozilla:extension:ankpixiv@snca.net"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAIyPogMRLgprUWKSpgg/8LrfmFJg8nBdpnm/7UHLXTJzFvWGZT7/rg9qDzUJqPqxm7WtgZhPGrQOw1c09GTLTLZ82nxIf2cAxZ+2VvaOL8NJhZRJ8fDfaXGgpkwmrBleet1YMBpwfd7ZJChu+XsU+a+iYldRalJ2j3KuzvMUhvOV">
+    <em:updates RDF:resource="rdf:#$wUBXG3"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$CVBXG3"
+                   em:version="1.2.1">
+    <em:targetApplication RDF:resource="rdf:#$FVBXG3"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$JUBXG3"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="2.0"
+                   em:maxVersion="3.0.*"
+                   em:updateLink="http://www.kurinton.net/~snca/dcl.cgi?act=up&amp;url=./newsofts/ank_pixiv_tool-1.0.2.xpi"
+                   em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml"
+                   em:updateHash="sha1:1123da490cc53b4bf950e307bb9dbdeb387e8312" />
+  <RDF:Description RDF:about="rdf:#$MVBXG3"
+                   em:version="1.2.2">
+    <em:targetApplication RDF:resource="rdf:#$PVBXG3"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$GUBXG3"
+                   em:version="1.0.2">
+    <em:targetApplication RDF:resource="rdf:#$JUBXG3"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$xUBXG3"
+                   em:version="1.0.1">
+    <em:targetApplication RDF:resource="rdf:#$AUBXG3"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$FVBXG3"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="2.0"
+                   em:maxVersion="3.0.*"
+                   em:updateLink="http://www.kurinton.net/~snca/dcl.cgi?act=up&amp;url=./newsofts/ank_pixiv_tool-1.2.1.xpi"
+                   em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml"
+                   em:updateHash="sha1:31342584fb4760938dc5295566950353772f1232" />
+  <RDF:Description RDF:about="rdf:#$1VBXG3"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="2.0"
+                   em:maxVersion="3.0.*"
+                   em:updateLink="http://www.kurinton.net/~snca/dcl.cgi?act=up&amp;url=./newsofts/ank_pixiv_tool-1.1.1.xpi"
+                   em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml"
+                   em:updateHash="sha1:6d02c899a2312c9637237da70739196451b803e0" />
+  <RDF:Description RDF:about="rdf:#$iVBXG3"
+                   em:version="1.1.3">
+    <em:targetApplication RDF:resource="rdf:#$lVBXG3"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$PVBXG3"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="3.0"
+                   em:maxVersion="3.0.*"
+                   em:updateLink="http://www.kurinton.net/~snca/dcl.cgi?act=up&amp;url=./newsofts/ank_pixiv_tool-1.2.2.xpi"
+                   em:updateInfoURL="http://www.kurinton.net/~snca/cgi4app/ankpixiv/history-ja.xhtml"
+                   em:updateHash="sha1:64194a6c0fc05d69a60810248c85b69023ede983" />
 </RDF:RDF>
