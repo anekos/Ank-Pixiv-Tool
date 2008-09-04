@@ -48,6 +48,19 @@ try {
     ),
 
     
+    FULL_WIDTH_CHARS: {
+      "\\": "￥",
+      "\/": "／",
+      ":":  "：",
+      ";":  "；",
+      "*":  "＊",
+      "?":  "？",
+      "\"": "”",
+      "<":  "＜",
+      ">":  "＞",
+      "|":  "｜"
+    },
+    
     Prefs: new AnkPref('extensions.ankpixiv'),
 
 
@@ -242,6 +255,15 @@ try {
     ********************************************************************************/
 
     /*
+     * fixFilename
+     *    filename:   String ファイル名
+     * 設定を考慮して、ファイル名を修正する
+     */
+    fixFilename: function (filename) {
+      return AnkUtils.fixFilename(filename);
+    },
+
+    /*
      * filenameExists
      *    filename:      String パスfilename
      *    return:   boolean
@@ -314,10 +336,10 @@ try {
         var initDir = this.newLocalFile('file://' + prefInitDir);
 
         if (!initDir.exists())
-          return this.showFilePicker(filenames[0] + ext);
+          return this.showFilePicker(this.fixFilename(filenames[0]) + ext);
 
         for (var i in filenames) {
-          var filename = AnkUtils.fixFilename(filenames[i]) + ext;
+          var filename = this.fixFilename(filenames[i]) + ext;
           var url = 'file://' + prefInitDir + AnkUtils.SYS_SLASH + filename;
           var localfile = this.newLocalFile(url);
 
@@ -333,7 +355,7 @@ try {
         }
       } catch (e) { dump(e); }
 
-      return this.showFilePicker(filenames[0] + ext);
+      return this.showFilePicker(this.fixFilename(filenames[0]) + ext);
     },
 
 
