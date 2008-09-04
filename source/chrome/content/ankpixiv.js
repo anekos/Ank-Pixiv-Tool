@@ -467,12 +467,12 @@ try {
                      replace('?tags?', AnkUtils.join(tags, ' ')).
                      replace('?short-tags?', AnkUtils.join(shortTags, ' '));
           }
-          if (defaultFilename.indexOf('?title?')) {
+          if (~defaultFilename.indexOf('?title?')) {
             for (var i in titles) {
               filenames.push(repl(defaultFilename, titles[i]));
             }
           } else {
-            filenames.push(repl(defaultFilename, title));
+            filenames.push(repl(defaultFilename, null));
           }
         })();
 
