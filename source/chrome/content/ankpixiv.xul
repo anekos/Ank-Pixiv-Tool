@@ -16,7 +16,7 @@
 
   <menupopup id="menu_ToolsPopup">
     <menuitem insertafter="devToolsSeparator" label="&downloadCurrentImage;" id="ankpixiv-menu-download"
-              accesskey="A" onclick="AnkPixiv.onDownloadButtonClick(event)" />	
+              onclick="AnkPixiv.onDownloadButtonClick(event)" />	
   </menupopup>
 
   <statusbar id="status-bar">
