@@ -581,22 +581,28 @@ try {
           body.appendChild(div);
           var bigMode = false;
 
-          doc.addEventListener('click', function (e) { 
-            if (bigMode && (e.button == 0)) {
+          var changeImageSize = function () {
+            if (bigMode) {
               div.style.display = 'none'; 
               wrapper.setAttribute('style', '-moz-opacity: 1;');
-              bigMode = false;
-              return;
-            }
-            if ((e.target.src == medImg.src) && (e.button == 0)) {
-              bigMode = true;
-              e.preventDefault();
+            } else {
               bigImg.setAttribute('src', bigImgPath);
               window.content.scrollTo(0, 0);
               div.style.display = ''; 
               wrapper.setAttribute('style', '-moz-opacity: 0.1;');
               bigImg.style['-moz-opacity'] = '1 !important;';
+            }
+            bigMode = !bigMode;
+          };
+
+          doc.changeImageSize = changeImageSize;
+
+          doc.addEventListener('click', function (e) { 
+            if (e.button)
               return;
+            if (bigMode || (e.target.src == medImg.src)) {
+              e.preventDefault();
+              changeImageSize();
             }
           }, true);
 
