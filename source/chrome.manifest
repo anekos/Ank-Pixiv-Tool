@@ -5,4 +5,5 @@ overlay  chrome://navigator/content/navigator.xul  chrome://ankpixiv/content/ank
 style chrome://global/content/customizeToolbar.xul  chrome://ankpixiv/content/ankpixiv.css
 locale ankpixiv en-US chrome/locale/en-US/
 locale ankpixiv ja-JP chrome/locale/ja-JP/
+locale ankpixiv zh-TW chrome/locale/zh-TW/
 
