@@ -26,7 +26,7 @@ AnkStorage = function (filename, tables) {
 
 /*
  * statementToObject
- *    stmt:   
+ *    stmt:
  * statement を JS のオブジェクトに変換する
  */
 AnkStorage.statementToObject = function (stmt) {
@@ -91,15 +91,15 @@ AnkStorage.prototype = {
     this.createStatement(q, function (stmt) {
       try {
         for (var i = 0; i < vs.length; i++) {
-          try { 
-            (vs[i])(stmt); 
-          } catch (e) {  
-            AnkUtils.dumpError(e); 
+          try {
+            (vs[i])(stmt);
+          } catch (e) {
+            AnkUtils.dumpError(e);
             AnkUtils.dump(["vs[" + i + "] dumped",
                            "type: " + (typeof vs[i]),
                            "value:" + vs[i]]);
             if (AnkUtils.DEBUG)
-              AnkUtils.simplePopupAlert('エラー発生', e); 
+              AnkUtils.simplePopupAlert('エラー発生', e);
           }
         }
         var result = stmt.executeStep();
@@ -179,10 +179,10 @@ AnkStorage.prototype = {
 
     var fs = [];
     for (var fieldName in table.fields) {
-      fs.push(fieldName + ' ' + 
+      fs.push(fieldName + ' ' +
               table.fields[fieldName] + ' ' +
               (table.constraints[fieldName] || ''))
-    }      
+    }
 
     return this.database.createTable(table.name, AnkUtils.join(fs));
   },
@@ -212,14 +212,14 @@ AnkStorage.prototype = {
         var q = "alter table " + table.name + ' add column ' + fieldName + ' ' + table.fields[fieldName];
         this.database.executeSimpleSQL(q);
       }
-    } catch(e) { 
+    } catch(e) {
       AnkUtils.dumpError(e);
     }
   },
 
 
   delete: function (table, conditions) {
-    var q = 'delete from ' + table + (conditions ? ' where ' + conditions : ''); 
+    var q = 'delete from ' + table + (conditions ? ' where ' + conditions : '');
     return this.database.executeSimpleSQL(q);
   },
 

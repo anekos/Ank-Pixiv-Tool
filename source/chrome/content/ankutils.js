@@ -35,7 +35,7 @@ try {
     ********************************************************************************/
 
     /*
-     * HTMLの実体参照を修正 TODO  
+     * HTMLの実体参照を修正 TODO
      */
     decodeHtmlSpChars: function (s) {
       return s.replace(/&amp;/g, '&')
@@ -56,7 +56,7 @@ try {
       const badChars = /[\\\/:;\*\?\"\<\>\|\#]/g;
       if (trPattern) {
         return filename.replace(badChars, function (c) (trPattern[c] || '_'));
-      } 
+      }
       return filename.replace(badChars, '_');
     },
 
@@ -115,7 +115,7 @@ try {
         datetime = new Date();
       var $ = this;
       var zeroPad = function(s, n) {
-        return s.toString().replace(new RegExp('^(.{0,'+(n-1)+'})$'), 
+        return s.toString().replace(new RegExp('^(.{0,'+(n-1)+'})$'),
                          function(s) { return zeroPad('0'+s, n); });
       };
       var dy = zeroPad(datetime.getFullYear(),      4);
@@ -201,7 +201,7 @@ try {
       return this.popupAlert("", title, text, false, null, null);
     },
 
-    
+
     openTab: function (url, ref) {
       if ('delayedOpenTab' in window)
         window.delayedOpenTab(url, ref);
@@ -243,7 +243,7 @@ try {
         return;
       }
     },
-    
+
 
     /********************************************************************************
     * 手抜き用関数
@@ -261,7 +261,7 @@ try {
 
 
     /*
-     * ccci 
+     * ccci
      *    klass:
      *    _interface:
      * Components.classes[klass].createInstance(interface)
@@ -308,7 +308,7 @@ try {
   var AnkPref = function (prefix) {
     if (prefix)
       this.prefix = prefix + (prefix.match(/\.$/) ? '' : '.');
-    else 
+    else
       this.prefix = "";
     return this;
   };
@@ -322,7 +322,7 @@ try {
              getService(Components.interfaces.nsIPrefBranch),
 
 
-    /* 
+    /*
      * get
      *    name:   項目名
      *    def:    デフォルト値

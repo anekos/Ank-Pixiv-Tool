@@ -25,7 +25,7 @@ try {
     },
 
 
-    Storage: new AnkStorage("ankpixiv.sqlite", 
+    Storage: new AnkStorage("ankpixiv.sqlite",
       {
         histories: {
           illust_id: "integer",
@@ -47,7 +47,7 @@ try {
       }
     ),
 
-    
+
     FULL_WIDTH_CHARS: {
       "\\": "￥",
       "\/": "／",
@@ -60,7 +60,7 @@ try {
       ">":  "＞",
       "|":  "｜"
     },
-    
+
     Prefs: new AnkPref('extensions.ankpixiv'),
 
 
@@ -203,7 +203,7 @@ try {
         initdir.initWithPath(prefInitDir);
         filePicker.displayDirectory = initdir;
       }
-      
+
       return (filePicker.show() == nsIFilePicker.returnOK) && filePicker;
     },
 
@@ -220,7 +220,7 @@ try {
         var filePicker = AnkUtils.ccci('@mozilla.org/filepicker;1', nsIFilePicker);
         filePicker.init(window, "pixiviiiiieee", nsIFilePicker.modeGetFolder);
         filePicker.appendFilters(nsIFilePicker.filterAll);
-      
+
         if (filePicker.show() == nsIFilePicker.returnOK) {
           return filePicker;
         }
@@ -233,7 +233,7 @@ try {
 
     /*
      * TODO
-     * queryInitialDirectory 
+     * queryInitialDirectory
      * ユーザに初期ディレクトリの場所を尋ねる
      */
     queryInitialDirectory: function () {
@@ -246,7 +246,7 @@ try {
 
 
     popupAlert: function (title, text) {
-      return AnkUtils.popupAlert("chrome://ankpixiv/content/statusbar-button.ico", 
+      return AnkUtils.popupAlert("chrome://ankpixiv/content/statusbar-button.ico",
                                  title, text, false, "", null);
     },
 
@@ -271,8 +271,8 @@ try {
      */
     filenameExists: function (filename) {
       var se = function () {
-        return AnkPixiv.Storage.exists('histories', 
-                                   'filename like ?', 
+        return AnkPixiv.Storage.exists('histories',
+                                   'filename like ?',
                                    function (stmt) {
                                      stmt.bindUTF8StringParameter(0, filename);
                                    });
@@ -290,7 +290,7 @@ try {
     newLocalFile: function (url) {
       var IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
       // バージョン毎に場合分け(いらないかも)
-      try { 
+      try {
         var fileHandler = IOService.getProtocolHandler('file').
                             QueryInterface(Components.interfaces.nsIFileProtocolHandler);
         temp = fileHandler.getFileFromURLSpec(url);
@@ -299,7 +299,7 @@ try {
         try {
           temp = IOService.getFileFromURLSpec(url);
         }
-        catch(ex) { 
+        catch(ex) {
           temp = AnkUtils.ccci('@mozilla.org/file/local;1', Components.interfaces.nsILocalFile);
           IOService.initFileFromURLSpec(temp, url);
         }
@@ -321,7 +321,7 @@ try {
 
 
     /*
-     * getSaveFilePath 
+     * getSaveFilePath
      *    filenames:          ファイル名の候補のリスト(一個以上必須)
      *    ext:                拡張子
      *    useDialog:          保存ダイアログを使うか？
@@ -369,7 +369,7 @@ try {
      *    return:         成功?
      *    onComplete      終了時のアラート
      * ファイルをダウンロードする
-     */ 
+     */
     downloadFile: function (url, referer, filenames, ext, useDialog, onComplete) {
       // 保存ダイアログ
       var filePicker = this.getSaveFilePath(filenames, ext, useDialog);
@@ -390,7 +390,7 @@ try {
       // キャッシュ
       var cache = null;
       try {
-        with (getWebNavigation().sessionHistory) 
+        with (getWebNavigation().sessionHistory)
           cache = getEntryAtIndex(index, false).QueryInterface(Components.interfaces.nsISHEntry).postData;
       } catch (e) { }
 
@@ -406,14 +406,14 @@ try {
             }
           }
         },
-        onProgressChange: function (_webProgress, _request, _curSelfProgress, _maxSelfProgress, 
+        onProgressChange: function (_webProgress, _request, _curSelfProgress, _maxSelfProgress,
                                     _curTotalProgress, _maxTotalProgress) { },
         onLocationChange: function (_webProgress, _request, _location) {},
         onStatusChange  : function (_webProgress, _request, _status, _message) {},
         onSecurityChange: function (_webProgress, _request, _state) {},
       }
 
-        
+
       // 保存開始
       wbpersist.progressListener = progressListener;
       wbpersist.persistFlags = Components.interfaces.nsIWebBrowserPersist.
@@ -583,12 +583,12 @@ try {
 
           var changeImageSize = function () {
             if (bigMode) {
-              div.style.display = 'none'; 
+              div.style.display = 'none';
               wrapper.setAttribute('style', '-moz-opacity: 1;');
             } else {
               bigImg.setAttribute('src', bigImgPath);
               window.content.scrollTo(0, 0);
-              div.style.display = ''; 
+              div.style.display = '';
               wrapper.setAttribute('style', '-moz-opacity: 0.1;');
               bigImg.style['-moz-opacity'] = '1 !important;';
             }
@@ -597,7 +597,7 @@ try {
 
           doc.changeImageSize = changeImageSize;
 
-          doc.addEventListener('click', function (e) { 
+          doc.addEventListener('click', function (e) {
             if (e.button)
               return;
             if (bigMode || (e.target.src == medImg.src)) {
@@ -655,8 +655,8 @@ try {
           updates.push(function () {
             var stmt = db.createStatement('update histories set ' + columnName + ' =  ?1 where rowid = ?2');
             try {
-              stmt.bindUTF8StringParameter(0, value); 
-              stmt.bindInt32Parameter(1, rowid); 
+              stmt.bindUTF8StringParameter(0, value);
+              stmt.bindInt32Parameter(1, rowid);
               stmt.execute();
             } finally {
               stmt.reset();
@@ -674,7 +674,7 @@ try {
           if (local_path) update('local_path', decodeURIComponent(local_path), rowid);
           if (filename)
             update('filename', decodeURIComponent(filename), rowid);
-          else 
+          else
             update('filename', decodeURIComponent(AnkUtils.extractFilename(local_path)), rowid);
         }
         for (var i in updates) {
@@ -697,8 +697,8 @@ try {
           updates.push(function () {
             var stmt = db.createStatement('update histories set ' + columnName + ' =  ?1 where rowid = ?2');
             try {
-              stmt.bindUTF8StringParameter(0, value); 
-              stmt.bindInt32Parameter(1, rowid); 
+              stmt.bindUTF8StringParameter(0, value);
+              stmt.bindInt32Parameter(1, rowid);
               stmt.execute();
             } finally {
               stmt.reset();
@@ -809,8 +809,8 @@ try {
       for each (let old in olds) {
         try {
           let dt = AnkUtils.toSQLDateTimeString(new Date(old.datetime));
-          this.Storage.update('histories', 
-                              "`datetime` = datetime('" + dt + "', '1 months'), version = " + AnkPixiv.DB_VERSION, 
+          this.Storage.update('histories',
+                              "`datetime` = datetime('" + dt + "', '1 months'), version = " + AnkPixiv.DB_VERSION,
                               'rowid = ' + old.rowid);
         } catch (e) {
           //liberator.log(e);
