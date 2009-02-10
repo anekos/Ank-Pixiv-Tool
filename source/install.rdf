@@ -7,13 +7,16 @@
 
     <em:id>ankpixiv@snca.net</em:id>
     <em:name>Ank Pixiv Tool</em:name>
-    <em:version>1.2.5</em:version>
-    <em:description>Easy Pixiv-illust downloader</em:description>
+    <em:version>1.2.6</em:version>
+    <em:description>Easy Pixiv-illustraion downloader</em:description>
     <em:creator>anekos</em:creator>
-    <em:homepageURL>http://d.hatena.ne.jp/nokturnalmortum/20080617</em:homepageURL>
+    <em:homepageURL>http://d.hatena.ne.jp/nokturnalmortum/20080617/1213645393</em:homepageURL>
     <em:iconURL>chrome://ankpixiv/skin/ankpixiv.png</em:iconURL>
     <em:optionsURL>chrome://ankpixiv/content/options.xul</em:optionsURL>
     <em:type>2</em:type>
+
+    <em:translator>anekos</em:translator>
+    <em:translator>Wang Wini</em:translator>
 
     <em:targetApplication>
       <Description>
