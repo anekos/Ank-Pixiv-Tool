@@ -41,7 +41,8 @@ try {
       return s.replace(/&amp;/g, '&')
               .replace(/&quot;/g, '"')
               .replace(/&lt;/g, '<')
-              .replace(/&gt;/g, '>');
+              .replace(/&gt;/g, '>')
+              .replace(/&#39;/g, "'");
     },
 
 
@@ -52,7 +53,7 @@ try {
      * ファイル名として使えない文字を除去する。
      */
     fixFilename: function (filename, trPattern) {
-      const badChars = /[\\\/:;\*\?\"\<\>\|]/g;
+      const badChars = /[\\\/:;\*\?\"\<\>\|\#]/g;
       if (trPattern) {
         return filename.replace(badChars, function (c) (trPattern[c] || '_'));
       } 
