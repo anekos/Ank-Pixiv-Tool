@@ -42,7 +42,7 @@ try {
               .replace(/&quot;/g, '"')
               .replace(/&lt;/g, '<')
               .replace(/&gt;/g, '>')
-              .replace(/&#39;/g, "'");
+              .replace(/&#(\d+);/g, function (_, n) String.fromCharCode(parseInt(n, 10)));
     },
 
 
