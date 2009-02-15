@@ -75,26 +75,23 @@ try {
     },
 
 
-    MAX_ILLUST_ID: 960000,
+    MAX_ILLUST_ID: 3110000,
 
 
     /********************************************************************************
     * プロパティ
     ********************************************************************************/
 
-    get currentLocation function () {
-      return window.content.document.location.href;
-    },
+    get currentLocation ()
+      window.content.document.location.href,
 
 
-    get inPixiv function () {
-      return this.currentLocation.match(/^http:\/\/[^\.\/]+\.pixiv\.net\//i);
-    },
+    get inPixiv ()
+      this.currentLocation.match(/^http:\/\/[^\.\/]+\.pixiv\.net\//i),
 
 
-    get inMedium function () {
-      return this.inPixiv && this.currentLocation.match(/member_illust\.php\?mode=medium&illust_id=\d+/);
-    },
+    get inMedium ()
+      this.inPixiv && this.currentLocation.match(/member_illust\.php\?mode=medium&illust_id=\d+/),
 
 
     get randomImagePageURL function () {
@@ -103,7 +100,7 @@ try {
     },
 
 
-    get currentImagePath function () {
+    get currentImagePath () {
       if (this.currentLocation.match(/mode=medium/)) {
         var elem = AnkUtils.findNodeByXPath(this.XPath.mediumImage);
       } else {
@@ -113,52 +110,47 @@ try {
     },
 
 
-    get currentBigImagePath function () {
-      return this.currentImagePath.replace(/_m\./, '.');
-    },
+    get currentBigImagePath ()
+      this.currentImagePath.replace(/_m\./, '.'),
 
 
-    get currentImageExt function () {
-      return this.currentImagePath.match(/\.\w+$/)[0] || '.jpg';
-    },
+    get currentImageExt ()
+      (this.currentImagePath.match(/\.\w+$/)[0] || '.jpg'),
 
 
-    // CHECK - Pixiv のバグに対応するためのコード
-    get currentDocumentTitle function () {
+    // XXX Pixiv のバグに対応するためのコード
+    get currentDocumentTitle () {
       var res = this.currentDocument.getElementsByTagName('title')[0].textContent;
       return AnkUtils.decodeHtmlSpChars(res);
     },
 
 
-    get currentImageTitleAndAuthor function () {
-      return this.currentDocumentTitle.replace(' [pixiv]', '');
-    },
+    get currentImageTitleAndAuthor ()
+      this.currentDocumentTitle.replace(' [pixiv]', ''),
 
 
-    get currentImageAuthorId function () {
+    get currentImageAuthorId () {
       try {
         return AnkUtils.findNodeByXPath(this.XPath.authorIconLink).getAttribute('href').replace(/^.*id=/, '');
       } catch (e) { }
     },
 
 
-    get currentImageId function () {
+    get currentImageId () {
       try {
         return parseInt(this.currentImagePath.match(/\/(\d+)(_m)?\.\w{2,4}$/)[1]);
       } catch (e) { return 0; }
     },
 
-    get currentImageAuthor function () {
-      return AnkUtils.trim(this.currentImageTitleAndAuthor.replace(/^.+\/\s*([^\/]+?)\s*$/, '$1'));
-    },
+    get currentImageAuthor ()
+      AnkUtils.trim(this.currentImageTitleAndAuthor.replace(/^.+\/\s*([^\/]+?)\s*$/, '$1')),
 
 
-    get currentImageTitle function () {
-      return AnkUtils.trim(this.currentImageTitleAndAuthor.replace(/^\s*(.+?)\s*\/[^\/]+$/, '$1'));
-    },
+    get currentImageTitle ()
+      AnkUtils.trim(this.currentImageTitleAndAuthor.replace(/^\s*(.+?)\s*\/[^\/]+$/, '$1')),
 
 
-    get currentImageTags function () {
+    get currentImageTags () {
       var as = AnkUtils.findNodesByXPath(this.XPath.tags);
       var node, res = [];
       while (node = as.iterateNext()) {
@@ -168,14 +160,12 @@ try {
     },
 
 
-    get currentDocument function () {
-      return window.content.document;
-    },
+    get currentDocument ()
+      window.content.document,
 
 
-    get enabled function () {
-      return this.currentLocation.match(/\.pixiv\.net\/member_illust.php\?.*illust_id=/);
-    },
+    get enabled ()
+      this.currentLocation.match(/\.pixiv\.net\/member_illust.php\?.*illust_id=/),
 
 
 
@@ -272,10 +262,8 @@ try {
     filenameExists: function (filename) {
       var se = function () {
         return AnkPixiv.Storage.exists('histories',
-                                   'filename like ?',
-                                   function (stmt) {
-                                     stmt.bindUTF8StringParameter(0, filename);
-                                   });
+                                       'filename like ?',
+                                       function (stmt) stmt.bindUTF8StringParameter(0, filename));
       };
       return se();
     },

@@ -24,9 +24,8 @@ try {
     },
 
 
-    get currentDocument function () {
-      return window.content.document;
-    },
+    get currentDocument ()
+      window.content.document,
 
 
 
