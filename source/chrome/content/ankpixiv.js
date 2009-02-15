@@ -259,14 +259,10 @@ try {
      * 同じファイル名が存在するか？
      */
     // FIXME
-    filenameExists: function (filename) {
-      let se = function () {
-        return AnkPixiv.Storage.exists('histories',
-                                       'filename like ?',
-                                       function (stmt) stmt.bindUTF8StringParameter(0, filename));
-      };
-      return se();
-    },
+    filenameExists: function (filename)
+      AnkPixiv.Storage.exists('histories',
+                              'filename like ?',
+                              function (stmt) stmt.bindUTF8StringParameter(0, filename)),
 
 
     /*

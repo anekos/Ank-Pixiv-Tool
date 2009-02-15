@@ -5,8 +5,8 @@ try {
 
     SYS_SLASH: (function () {
       try {
-        let props = Components.classes["@mozilla.org/file/directory_service;1"].
-                      getService(Components.interfaces.nsIProperties);
+        let props = Components.classes["@mozilla.org/file/directory_service;1"]
+                      .getService(Components.interfaces.nsIProperties);
         let file = props.get("ProfD", Components.interfaces.nsIFile);
         file.append('dummy');
         return (file.path.indexOf('/') != -1) ? '/' : '\\';
@@ -202,10 +202,11 @@ try {
 
 
     openTab: function (url, ref) {
-      if ('delayedOpenTab' in window)
+      if ('delayedOpenTab' in window) {
         window.delayedOpenTab(url, ref);
-      else
+      } else {
         window.getBrowser().addTab(url, ref);
+      }
     },
 
 
@@ -223,8 +224,6 @@ try {
       if (head) {
         head.appendChild(elem);
         return elem;
-      } else {
-        return;
       }
     },
 
@@ -238,8 +237,6 @@ try {
       if (head) {
         head.appendChild(elem);
         return elem;
-      } else {
-        return;
       }
     },
 
@@ -254,9 +251,8 @@ try {
      *    service:
      * Components.classes[klass].getService(service)
      */
-    ccgs: function (klass, service) {
-      return Components.classes[klass].getService(service);
-    },
+    ccgs: function (klass, service)
+      Components.classes[klass].getService(service),
 
 
     /*
@@ -265,9 +261,8 @@ try {
      *    _interface:
      * Components.classes[klass].createInstance(interface)
      */
-    ccci: function (klass, _interface) {
-      return Components.classes[klass].createInstance(_interface);
-    },
+    ccci: function (klass, _interface)
+      Components.classes[klass].createInstance(_interface),
 
 
 
@@ -303,10 +298,11 @@ try {
   ********************************************************************************/
 
   AnkPref = function (prefix) {
-    if (prefix)
+    if (prefix) {
       this.prefix = prefix + (prefix.match(/\.$/) ? '' : '.');
-    else
+    } else {
       this.prefix = "";
+    }
     return this;
   };
 
@@ -385,10 +381,10 @@ try {
   ********************************************************************************/
 
   /* デバッグの設定を読み取る */
-  (function () {
+  {
     let pref = new AnkPref('extensions.ankutils');
     AnkUtils.DEBUG = pref.get('debugMode', false);
-  })();
+  }
 
 
 
