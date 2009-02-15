@@ -6,15 +6,15 @@ try {
     this.filename = filename;
     this.tables = {};
 
-    for (var key in tables) {
+    for (let key in tables) {
       this.tables[key] = new AnkTable(key, tables[key]);
     }
 
-    var file = Components.classes["@mozilla.org/file/directory_service;1"].
+    let file = Components.classes["@mozilla.org/file/directory_service;1"].
                 getService(Components.interfaces.nsIProperties).
                 get("ProfD", Components.interfaces.nsIFile);
     file.append(filename);
-    var storageService = Components.classes["@mozilla.org/storage/service;1"].
+    let storageService = Components.classes["@mozilla.org/storage/service;1"].
                            getService(Components.interfaces.mozIStorageService);
     this.database = storageService.openDatabase(file);
 
@@ -30,9 +30,9 @@ try {
    * statement を JS のオブジェクトに変換する
    */
   AnkStorage.statementToObject = function (stmt) {
-    var res = {}, cl = stmt.columnCount;
-    for (var i = 0; i < cl; i++) {
-      var val;
+    let res = {}, cl = stmt.columnCount;
+    for (let i = 0; i < cl; i++) {
+      let val;
       switch (stmt.getTypeOfIndex(i)) {
         case stmt.VALUE_TYPE_NULL:    val = null;                  break;
         case stmt.VALUE_TYPE_INTEGER: val = stmt.getInt32(i);      break;
@@ -52,7 +52,7 @@ try {
      * 自動的に finalize してくれるラッパー
      */
     createStatement: function (query, block) {
-      var stmt = this.database.createStatement(query);
+      let stmt = this.database.createStatement(query);
       try {
         var res = block(stmt);
       } finally {
@@ -69,8 +69,8 @@ try {
       if ('string' == typeof table)
         table = this.tables[table];
 
-      var ns = [], vs = [], ps = [], vi = 0;
-      for (var fieldName in values) {
+      let ns = [], vs = [], ps = [], vi = 0;
+      for (let fieldName in values) {
         ns.push(fieldName);
         (function (idx, type, value) {
           vs.push(function (stmt) {
@@ -87,10 +87,10 @@ try {
         ps.push('?' + (++vi));
       }
 
-      var q = 'insert into ' + table.name + ' (' + AnkUtils.join(ns) + ') values(' + AnkUtils.join(ps) + ');'
+      let q = 'insert into ' + table.name + ' (' + AnkUtils.join(ns) + ') values(' + AnkUtils.join(ps) + ');'
       this.createStatement(q, function (stmt) {
         try {
-          for (var i = 0; i < vs.length; i++) {
+          for (let i = 0; i < vs.length; i++) {
             try {
               (vs[i])(stmt);
             } catch (e) {
@@ -102,7 +102,7 @@ try {
                 AnkUtils.simplePopupAlert('エラー発生', e);
             }
           }
-          var result = stmt.executeStep();
+          let result = stmt.executeStep();
         } finally {
           stmt.reset();
         }
@@ -115,7 +115,7 @@ try {
      * block を指定しない場合は、必ず、result.reset すること。
      */
     find: function (tableName, conditions, block) {
-      var q = 'select rowid, * from ' + tableName + (conditions ? ' where ' + conditions : '');
+      let q = 'select rowid, * from ' + tableName + (conditions ? ' where ' + conditions : '');
       return this.createStatement(q, function (stmt) {
         return (typeof block == 'function') ? block(stmt) : stmt;
       });
@@ -154,7 +154,7 @@ try {
     },
 
     exists: function (tableName, conditions, block) {
-      var _block = function (stmt) {
+      let _block = function (stmt) {
         if (typeof block == 'function')
           block(stmt);
         result = !!(stmt.executeStep());
@@ -167,7 +167,7 @@ try {
 
     createTables: function () {
       //データベースのテーブルを作成
-      for (var tableName in this.tables) {
+      for (let tableName in this.tables) {
         this.createTable(this.tables[tableName]);
       }
     },
@@ -177,8 +177,8 @@ try {
       if (this.database.tableExists(table.name))
         return this.updateTable(table);
 
-      var fs = [];
-      for (var fieldName in table.fields) {
+      let fs = [];
+      for (let fieldName in table.fields) {
         fs.push(fieldName + ' ' +
                 table.fields[fieldName] + ' ' +
                 (table.constraints[fieldName] || ''))
@@ -189,12 +189,12 @@ try {
 
 
     tableInfo: function (tableName) {
-      var storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
+      let storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
                                          Components.interfaces.mozIStorageStatementWrapper);
-      var q = 'pragma table_info (' + tableName + ')';
+      let q = 'pragma table_info (' + tableName + ')';
       return this.createStatement(q, function (stmt) {
         storageWrapper.initialize(stmt);
-        var result = {};
+        let result = {};
         while (storageWrapper.step()) {
           result[storageWrapper.row["name"]] = {type: storageWrapper.row["type"]};
         }
@@ -205,11 +205,11 @@ try {
 
     updateTable: function (table) {
       try {
-        var etable = this.tableInfo(table.name);
-        for (var fieldName in table.fields) {
+        let etable = this.tableInfo(table.name);
+        for (let fieldName in table.fields) {
           if (etable[fieldName])
             continue;
-          var q = "alter table " + table.name + ' add column ' + fieldName + ' ' + table.fields[fieldName];
+          let q = "alter table " + table.name + ' add column ' + fieldName + ' ' + table.fields[fieldName];
           this.database.executeSimpleSQL(q);
         }
       } catch(e) {
@@ -219,12 +219,12 @@ try {
 
 
     delete: function (table, conditions) {
-      var q = 'delete from ' + table + (conditions ? ' where ' + conditions : '');
+      let q = 'delete from ' + table + (conditions ? ' where ' + conditions : '');
       return this.database.executeSimpleSQL(q);
     },
 
     execute: function (query, block) {
-      var stmt = this.createStatement(query, function (stmt) {
+      let stmt = this.createStatement(query, function (stmt) {
         return (typeof block == 'function') ? block(stmt) : stmt;
       });
     }
@@ -232,7 +232,7 @@ try {
 
 
 
-  var AnkTable = function (name, fields, constraints) {
+  AnkTable = function (name, fields, constraints) {
     this.name = name;
     this.constraints = constraints || fields.constraints || {};
     delete fields.constraints;

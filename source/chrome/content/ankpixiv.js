@@ -94,18 +94,14 @@ try {
       this.inPixiv && this.currentLocation.match(/member_illust\.php\?mode=medium&illust_id=\d+/),
 
 
-    get randomImagePageURL function () {
-      var id = parseInt(Math.random() * this.Prefs.get('maxIllustId', this.MAX_ILLUST_ID));
-      return 'http://www.pixiv.net/member_illust.php?mode=medium&illust_id=' + id;
-    },
+    get randomImagePageURL ()
+      let (id = parseInt(Math.random() * this.Prefs.get('maxIllustId', this.MAX_ILLUST_ID)))
+        ('http://www.pixiv.net/member_illust.php?mode=medium&illust_id=' + id),
 
 
     get currentImagePath () {
-      if (this.currentLocation.match(/mode=medium/)) {
-        var elem = AnkUtils.findNodeByXPath(this.XPath.mediumImage);
-      } else {
-        var elem = AnkUtils.findNodeByXPath(this.XPath.bigImage);
-      }
+      let elem = /mode=medium/.test(this.currentLocation) ? AnkUtils.findNodeByXPath(this.XPath.mediumImage)
+                                                          : AnkUtils.findNodeByXPath(this.XPath.bigImage);
       return elem && elem.src.replace(/_m\./, '.');
     },
 
@@ -119,10 +115,8 @@ try {
 
 
     // XXX Pixiv のバグに対応するためのコード
-    get currentDocumentTitle () {
-      var res = this.currentDocument.getElementsByTagName('title')[0].textContent;
-      return AnkUtils.decodeHtmlSpChars(res);
-    },
+    get currentDocumentTitle ()
+      AnkUtils.decodeHtmlSpChars(this.currentDocument.getElementsByTagName('title')[0].textContent),
 
 
     get currentImageTitleAndAuthor ()
@@ -132,15 +126,20 @@ try {
     get currentImageAuthorId () {
       try {
         return AnkUtils.findNodeByXPath(this.XPath.authorIconLink).getAttribute('href').replace(/^.*id=/, '');
-      } catch (e) { }
+      } catch (e) {
+        return 0;
+      }
     },
 
 
     get currentImageId () {
       try {
         return parseInt(this.currentImagePath.match(/\/(\d+)(_m)?\.\w{2,4}$/)[1]);
-      } catch (e) { return 0; }
+      } catch (e) {
+        return 0;
+      }
     },
+
 
     get currentImageAuthor ()
       AnkUtils.trim(this.currentImageTitleAndAuthor.replace(/^.+\/\s*([^\/]+?)\s*$/, '$1')),
@@ -151,8 +150,8 @@ try {
 
 
     get currentImageTags () {
-      var as = AnkUtils.findNodesByXPath(this.XPath.tags);
-      var node, res = [];
+      let as = AnkUtils.findNodesByXPath(this.XPath.tags);
+      let node, res = [];
       while (node = as.iterateNext()) {
         res.push(AnkUtils.trim(node.textContent));
       }
@@ -181,15 +180,15 @@ try {
      */
     showFilePicker: function (defaultFilename) {
       const nsIFilePicker = Components.interfaces.nsIFilePicker;
-      var filePicker = AnkUtils.ccci('@mozilla.org/filepicker;1', nsIFilePicker);
+      let filePicker = AnkUtils.ccci('@mozilla.org/filepicker;1', nsIFilePicker);
 
       filePicker.appendFilters(nsIFilePicker.filterAll);
       filePicker.init(window, "pixiviiiiieee", nsIFilePicker.modeSave);
       filePicker.defaultString = defaultFilename;
 
-      var prefInitDir = this.Prefs.get('initialDirectory');
+      let prefInitDir = this.Prefs.get('initialDirectory');
       if (prefInitDir) {
-        var initdir = AnkUtils.ccci("@mozilla.org/file/local;1", Components.interfaces.nsILocalFile);
+        let initdir = AnkUtils.ccci("@mozilla.org/file/local;1", Components.interfaces.nsILocalFile);
         initdir.initWithPath(prefInitDir);
         filePicker.displayDirectory = initdir;
       }
@@ -206,8 +205,8 @@ try {
      */
     showDirectoryPicker: function (defaultPath) {
       try {
-        var nsIFilePicker = Components.interfaces.nsIFilePicker;
-        var filePicker = AnkUtils.ccci('@mozilla.org/filepicker;1', nsIFilePicker);
+        let nsIFilePicker = Components.interfaces.nsIFilePicker;
+        let filePicker = AnkUtils.ccci('@mozilla.org/filepicker;1', nsIFilePicker);
         filePicker.init(window, "pixiviiiiieee", nsIFilePicker.modeGetFolder);
         filePicker.appendFilters(nsIFilePicker.filterAll);
 
@@ -227,7 +226,7 @@ try {
      * ユーザに初期ディレクトリの場所を尋ねる
      */
     queryInitialDirectory: function () {
-      var dir = this.showDirectoryPicker(this.Prefs.get('initialDirectory'));
+      let dir = this.showDirectoryPicker(this.Prefs.get('initialDirectory'));
       if (dir) {
         this.Prefs.set('initialDirectory', dir.filePath, 'string');
       }
@@ -259,8 +258,9 @@ try {
      *    return:   boolean
      * 同じファイル名が存在するか？
      */
+    // FIXME
     filenameExists: function (filename) {
-      var se = function () {
+      let se = function () {
         return AnkPixiv.Storage.exists('histories',
                                        'filename like ?',
                                        function (stmt) stmt.bindUTF8StringParameter(0, filename));
@@ -276,18 +276,17 @@ try {
      * nsILocalFileを作成
      */
     newLocalFile: function (url) {
-      var IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
+      let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
       // バージョン毎に場合分け(いらないかも)
+      let temp;
       try {
-        var fileHandler = IOService.getProtocolHandler('file').
+        let fileHandler = IOService.getProtocolHandler('file').
                             QueryInterface(Components.interfaces.nsIFileProtocolHandler);
         temp = fileHandler.getFileFromURLSpec(url);
-      }
-      catch(ex) {
+      } catch (ex) {
         try {
           temp = IOService.getFileFromURLSpec(url);
-        }
-        catch(ex) {
+        } catch(ex) {
           temp = AnkUtils.ccci('@mozilla.org/file/local;1', Components.interfaces.nsILocalFile);
           IOService.initFileFromURLSpec(temp, url);
         }
@@ -303,7 +302,7 @@ try {
      * nsILocalFileを作成
      */
     newFileURI: function (url) {
-      var IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
+      let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
       return IOService.newFileURI(this.newLocalFile(url));
     },
 
@@ -319,17 +318,17 @@ try {
      */
     getSaveFilePath: function (filenames, ext, useDialog) {
       try {
-        var IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
-        var prefInitDir = this.Prefs.get('initialDirectory');
-        var initDir = this.newLocalFile('file://' + prefInitDir);
+        let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
+        let prefInitDir = this.Prefs.get('initialDirectory');
+        let initDir = this.newLocalFile('file://' + prefInitDir);
 
         if (!initDir.exists())
           return this.showFilePicker(this.fixFilename(filenames[0]) + ext);
 
-        for (var i in filenames) {
-          var filename = this.fixFilename(filenames[i]) + ext;
-          var url = 'file://' + prefInitDir + AnkUtils.SYS_SLASH + filename;
-          var localfile = this.newLocalFile(url);
+        for (let i in filenames) {
+          let filename = this.fixFilename(filenames[i]) + ext;
+          let url = 'file://' + prefInitDir + AnkUtils.SYS_SLASH + filename;
+          let localfile = this.newLocalFile(url);
 
           if (localfile.exists() || this.filenameExists(filename))
             continue;
@@ -337,11 +336,14 @@ try {
           if (useDialog) {
             return this.showFilePicker(filename);
           } else {
-            var res = IOService.newFileURI(localfile);
+            let res = IOService.newFileURI(localfile);
             return {fileURL: res, file: res};
           }
         }
-      } catch (e) { dump(e); }
+      } catch (e) {
+        // FIXME ?
+        dump(e);
+      }
 
       return this.showFilePicker(this.fixFilename(filenames[0]) + ext);
     },
@@ -360,36 +362,37 @@ try {
      */
     downloadFile: function (url, referer, filenames, ext, useDialog, onComplete) {
       // 保存ダイアログ
-      var filePicker = this.getSaveFilePath(filenames, ext, useDialog);
+      let filePicker = this.getSaveFilePath(filenames, ext, useDialog);
       if (!filePicker)
         return;
 
       // 各種オブジェクトの生成
-      var sourceURI = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService).
+      let sourceURI = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService).
                         newURI(url, null, null);
-      var wbpersist = AnkUtils.ccci('@mozilla.org/embedding/browser/nsWebBrowserPersist;1',
+      let wbpersist = AnkUtils.ccci('@mozilla.org/embedding/browser/nsWebBrowserPersist;1',
                                 Components.interfaces.nsIWebBrowserPersist);
-      var refererURI = AnkUtils.ccci('@mozilla.org/network/standard-url;1', Components.interfaces.nsIURI);
+      let refererURI = AnkUtils.ccci('@mozilla.org/network/standard-url;1', Components.interfaces.nsIURI);
       refererURI.spec = referer;
 
       // ダウンロードマネジャに追加
-      var label = filenames[0];
+      let label = filenames[0];
 
       // キャッシュ
-      var cache = null;
+      let cache = null;
       try {
         with (getWebNavigation().sessionHistory)
           cache = getEntryAtIndex(index, false).QueryInterface(Components.interfaces.nsISHEntry).postData;
-      } catch (e) { }
-
+      } catch (e) {
+        /* DO NOTHING */
+      }
 
       // ダウンロード通知
-      var $ = this;
-      var progressListener = {
+      let $ = this;
+      let progressListener = {
         onStateChange: function (_webProgress, _request, _stateFlags, _status) {
           if (_stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
             if (onComplete) {
-              var orig_args = arguments;
+              let orig_args = arguments;
               onComplete.call($, orig_args, filePicker.fileURL.path);
             }
           }
@@ -426,18 +429,18 @@ try {
         if (!this.enabled)
           return false;
 
-        var url         = this.currentImagePath;
-        var illust_id   = this.currentImageId;
-        var ref         = this.currentLocation.replace(/mode=medium/, 'mode=big');
-        var member_id   = this.currentImageAuthorId;
-        var member_name = this.currentImageAuthor || member_id;
-        var tags        = this.currentImageTags;
-        var titles      = this.currentImageTags;
-        var title       = this.currentImageTitle;
-        var filenames   = [];
-        var shortTags   = (function (len) {
-                            var result = [];
-                            for (var i in tags) {
+        let url         = this.currentImagePath;
+        let illust_id   = this.currentImageId;
+        let ref         = this.currentLocation.replace(/mode=medium/, 'mode=big');
+        let member_id   = this.currentImageAuthorId;
+        let member_name = this.currentImageAuthor || member_id;
+        let tags        = this.currentImageTags;
+        let titles      = this.currentImageTags;
+        let title       = this.currentImageTitle;
+        let filenames   = [];
+        let shortTags   = (function (len) {
+                            let result = [];
+                            for (let i in tags) {
                               if (tags[i].length <= len)
                                 result.push(tags[i]);
                             }
@@ -467,7 +470,7 @@ try {
           titles.push(this.currentImageId);
         }
 
-        var defaultFilename = this.Prefs.get('defaultFilename', '?member-name? - ?title?');
+        let defaultFilename = this.Prefs.get('defaultFilename', '?member-name? - ?title?');
         (function () {
           function repl (s, title) {
             return s.replace('?title?', title).
@@ -478,7 +481,7 @@ try {
                      replace('?short-tags?', AnkUtils.join(shortTags, ' '));
           }
           if (~defaultFilename.indexOf('?title?')) {
-            for (var i in titles) {
+            for (let i in titles) {
               filenames.push(repl(defaultFilename, titles[i]));
             }
           } else {
@@ -486,7 +489,7 @@ try {
           }
         })();
 
-        var record = {
+        let record = {
           member_id: member_id,
           illust_id: illust_id,
           title: title,
@@ -497,10 +500,10 @@ try {
           version: AnkPixiv.DB_VERSION,
         };
 
-        var onComplete = function (orig_args, local_path) {
-          var caption = this.Locale('finishedDownload');
-          var text = filenames[0];
-          var local_path = decodeURIComponent(local_path);
+        let onComplete = function (orig_args, local_path) {
+          let caption = this.Locale('finishedDownload');
+          let text = filenames[0];
+          let local_path = decodeURIComponent(local_path);
 
           if (this.Prefs.get('saveHistory', true)) {
             try {
@@ -518,7 +521,7 @@ try {
           return true;
         };
 
-        var result = this.downloadFile(url, ref, filenames, this.currentImageExt, useDialog, onComplete);
+        let result = this.downloadFile(url, ref, filenames, this.currentImageExt, useDialog, onComplete);
 
         return result;
 
@@ -529,13 +532,13 @@ try {
 
 
     get functionsInstaller function () {
-      var $ = this;
-      var ut = AnkUtils;
-      var installInterval = 500;
-      var installer = null;
-      var doc = this.currentDocument;
+      let $ = this;
+      let ut = AnkUtils;
+      let installInterval = 500;
+      let installer = null;
+      let doc = this.currentDocument;
 
-      var delay = function (msg) {
+      let delay = function (msg) {
         AnkUtils.dump(msg);
         setTimeout(installer, installInterval);
         installInterval += 500;
@@ -559,17 +562,17 @@ try {
           return delay("delay installation by null");
 
         // 大画像関係
-        (function () {
-          var div = doc.createElement('div');
+        {
+          let div = doc.createElement('div');
           div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
 
-          var bigImg = doc.createElement('img');
+          let bigImg = doc.createElement('img');
 
           div.appendChild(bigImg);
           body.appendChild(div);
-          var bigMode = false;
+          let bigMode = false;
 
-          var changeImageSize = function () {
+          let changeImageSize = function () {
             if (bigMode) {
               div.style.display = 'none';
               wrapper.setAttribute('style', '-moz-opacity: 1;');
@@ -593,17 +596,16 @@ try {
               changeImageSize();
             }
           }, true);
-
-        })();
+        }
 
         // レイティングによるダウンロード
         (function () {
           if (!$.Prefs.get('downloadWhenRate', false))
             return;
-          var point = $.Prefs.get('downloadRate', 10);
-          var elem, iter = AnkUtils.findNodesByXPath("//ul[@class='unit-rating']/li/a");
+          let point = $.Prefs.get('downloadRate', 10);
+          let elem, iter = AnkUtils.findNodesByXPath("//ul[@class='unit-rating']/li/a");
           while (elem = iter.iterateNext()) {
-            var m = elem.className.match(/r(\d{1,2})-unit/);
+            let m = elem.className.match(/r(\d{1,2})-unit/);
             if (m && (point <= parseInt(m[1]))) {
               elem.addEventListener('click', function(){$.downloadCurrentImage();}, true);
             }
@@ -619,7 +621,7 @@ try {
 
 
     installFunctions: function () {
-      var doc = this.currentDocument;
+      let doc = this.currentDocument;
       if (doc.ankpixivFunctionsIntalled)
         return;
       doc.ankpixivFunctionsIntalled = true;
@@ -634,14 +636,14 @@ try {
 
     fixStorageEncode: function () {
       try {
-        var storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
+        let storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
                                            Components.interfaces.mozIStorageStatementWrapper);
-        var db = this.Storage.database;
-        var updates = [];
+        let db = this.Storage.database;
+        let updates = [];
 
-        var update = function (columnName, value, rowid) {
+        let update = function (columnName, value, rowid) {
           updates.push(function () {
-            var stmt = db.createStatement('update histories set ' + columnName + ' =  ?1 where rowid = ?2');
+            let stmt = db.createStatement('update histories set ' + columnName + ' =  ?1 where rowid = ?2');
             try {
               stmt.bindUTF8StringParameter(0, value);
               stmt.bindInt32Parameter(1, rowid);
@@ -652,20 +654,20 @@ try {
           });
         };
 
-        var stmt = db.createStatement('select rowid, * from histories');
+        let stmt = db.createStatement('select rowid, * from histories');
         stmt.reset();
         storageWrapper.initialize(stmt);
         while (storageWrapper.step()) {
-          var rowid = storageWrapper.row["rowid"];
-          var filename = storageWrapper.row["filename"];
-          var local_path = storageWrapper.row["local_path"];
+          let rowid = storageWrapper.row["rowid"];
+          let filename = storageWrapper.row["filename"];
+          let local_path = storageWrapper.row["local_path"];
           if (local_path) update('local_path', decodeURIComponent(local_path), rowid);
           if (filename)
             update('filename', decodeURIComponent(filename), rowid);
           else
             update('filename', decodeURIComponent(AnkUtils.extractFilename(local_path)), rowid);
         }
-        for (var i in updates) {
+        for (let i in updates) {
           (updates[i])();
         }
       } catch (e) {
@@ -676,14 +678,14 @@ try {
 
     exchangeFilename: function () {
       try {
-        var storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
+        let storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
                                            Components.interfaces.mozIStorageStatementWrapper);
-        var db = this.Storage.database;
-        var updates = [];
+        let db = this.Storage.database;
+        let updates = [];
 
-        var update = function (columnName, value, rowid) {
+        let update = function (columnName, value, rowid) {
           updates.push(function () {
-            var stmt = db.createStatement('update histories set ' + columnName + ' =  ?1 where rowid = ?2');
+            let stmt = db.createStatement('update histories set ' + columnName + ' =  ?1 where rowid = ?2');
             try {
               stmt.bindUTF8StringParameter(0, value);
               stmt.bindInt32Parameter(1, rowid);
@@ -694,17 +696,17 @@ try {
           });
         };
 
-        var stmt = db.createStatement('select rowid, * from histories where rowid >= 180');
+        let stmt = db.createStatement('select rowid, * from histories where rowid >= 180');
         stmt.reset();
         storageWrapper.initialize(stmt);
         while (storageWrapper.step()) {
-          var rowid = storageWrapper.row["rowid"];
-          var filename = storageWrapper.row["filename"];
+          let rowid = storageWrapper.row["rowid"];
+          let filename = storageWrapper.row["filename"];
           if (filename) {
             update('filename', filename.replace(/^([^\-]+) - ([^\.]+)(\.\w{2,4})$/, '$2 - $1$3'), rowid);
           }
         }
-        for (var i in updates) {
+        for (let i in updates) {
           (updates[i])();
         }
       } catch (e) {
@@ -727,7 +729,7 @@ try {
       try {
         if (!(this.inPixiv && this.inMedium))
           return;
-        var doc = event.originalTarget;
+        let doc = event.originalTarget;
         if (!doc || doc.nodeName != "#document")
             return;
         window.removeEventListener("load", AnkPixiv.onLoad, false);
@@ -741,8 +743,8 @@ try {
 
     onFocus: function (ev) {
       try {
-        var changeEnabled = function (id) {
-          var elem = document.getElementById(id);
+        let changeEnabled = function (id) {
+          let elem = document.getElementById(id);
           if (!elem)
             return;
           elem.setAttribute('dark', !this.enabled);
@@ -754,7 +756,7 @@ try {
 
         if (this.enabled) {
           this.installFunctions();
-          var illust_id = this.currentImageId;
+          let illust_id = this.currentImageId;
           if (this.Prefs.get('maxIllustId', this.MAX_ILLUST_ID) < illust_id) {
             this.Prefs.set('maxIllustId', illust_id);
           }
@@ -766,7 +768,7 @@ try {
 
 
     onDownloadButtonClick: function (event) {
-      var useDialog = this.Prefs.get('showSaveDialog', true);
+      let useDialog = this.Prefs.get('showSaveDialog', true);
       if (this.enabled) {
         switch(event.button) {
           case 0: this.downloadCurrentImage(useDialog); break;
@@ -774,8 +776,8 @@ try {
           case 2: this.openPrefWindow(); break;
         }
       } else {
-        var open = function (left) {
-          var tab = AnkPixiv.AllPrefs.get('extensions.tabmix.opentabfor.bookmarks', false);
+        let open = function (left) {
+          let tab = AnkPixiv.AllPrefs.get('extensions.tabmix.opentabfor.bookmarks', false);
           if (!!left ^ !!tab)
             AnkUtils.loadURI(AnkPixiv.URL.Pixiv);
           else

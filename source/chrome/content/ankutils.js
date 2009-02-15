@@ -5,9 +5,9 @@ try {
 
     SYS_SLASH: (function () {
       try {
-        var props = Components.classes["@mozilla.org/file/directory_service;1"].
+        let props = Components.classes["@mozilla.org/file/directory_service;1"].
                       getService(Components.interfaces.nsIProperties);
-        var file = props.get("ProfD", Components.interfaces.nsIFile);
+        let file = props.get("ProfD", Components.interfaces.nsIFile);
         file.append('dummy');
         return (file.path.indexOf('/') != -1) ? '/' : '\\';
       } catch (e) {
@@ -89,8 +89,8 @@ try {
     join: function (list, deli) {
       if (!deli)
         deli = ',';
-      var result = "";
-      for (var i = 0; i < list.length; i++) {
+      let result = "";
+      for (let i = 0; i < list.length; i++) {
         result += list[i].toString();
         if (i < (list.length - 1))
           result += deli;
@@ -103,7 +103,7 @@ try {
       str = str.toString();
       if (str.length >= len)
         return str;
-      for (var i = str.length; i < len; i++)
+      for (let i = str.length; i < len; i++)
         str = c + str;
       return str;
     },
@@ -112,18 +112,18 @@ try {
     toSQLDateTimeString: function (datetime) {
       if (!datetime)
         datetime = new Date();
-      var $ = this;
-      var zeroPad = function(s, n) {
+      let $ = this;
+      let zeroPad = function(s, n) {
         return s.toString().replace(new RegExp('^(.{0,'+(n-1)+'})$'),
                          function(s) { return zeroPad('0'+s, n); });
       };
-      var dy = zeroPad(datetime.getFullYear(),      4);
-      var dm = zeroPad(datetime.getMonth() + 1,     2);
-      var dd = zeroPad(datetime.getDate(),          2);
-      var th = zeroPad(datetime.getHours(),         2);
-      var tm = zeroPad(datetime.getMinutes(),       2);
-      var ts = zeroPad(datetime.getSeconds(),       2);
-      var ms = zeroPad(datetime.getMilliseconds(),  3);
+      let dy = zeroPad(datetime.getFullYear(),      4);
+      let dm = zeroPad(datetime.getMonth() + 1,     2);
+      let dd = zeroPad(datetime.getDate(),          2);
+      let th = zeroPad(datetime.getHours(),         2);
+      let tm = zeroPad(datetime.getMinutes(),       2);
+      let ts = zeroPad(datetime.getSeconds(),       2);
+      let ms = zeroPad(datetime.getMilliseconds(),  3);
       return dy + '-' + dm + '-' + dd + ' ' + th + ':' + tm + ':' + ts + '.' + ms;
     },
 
@@ -131,7 +131,7 @@ try {
     getLocale: function (path) {
       const STR_BUNDLE_SVC = AnkUtils.ccgs('@mozilla.org/intl/stringbundle;1',
                                            Components.interfaces.nsIStringBundleService);
-      var stringBundle = STR_BUNDLE_SVC.createBundle(path);
+      let stringBundle = STR_BUNDLE_SVC.createBundle(path);
       return function (key, replacements) {
         try {
           if (!replacements) {
@@ -160,7 +160,7 @@ try {
 
 
     dumpError: function (error) {
-      var msg = "\n<<ANK<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
+      let msg = "\n<<ANK<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
       msg += this.errorToString(error) ;
       msg += ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
       dump(msg);
@@ -170,12 +170,12 @@ try {
 
     dump: function () {
       if (arguments.length <= 1) {
-        var msg = "\n<<ANK " + arguments[0] + " >>\n";
+        let msg = "\n<<ANK " + arguments[0] + " >>\n";
         dump(msg);
         return msg;
       } else {
-        var msg = "\n<<ANK<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
-        for (var i = 0; i < arguments.length; i++) {
+        let msg = "\n<<ANK<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
+        for (let i = 0; i < arguments.length; i++) {
           msg += "  " + arguments[i] + "\n";
         }
         msg += ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
@@ -216,10 +216,10 @@ try {
 
 
     loadJavaScript: function (doc, path) {
-      var elem = doc.createElement('script');
+      let elem = doc.createElement('script');
       elem.setAttribute('type', 'text/javascript');
       elem.setAttribute('src', path);
-      var head = doc.getElementsByTagName('head')[0];
+      let head = doc.getElementsByTagName('head')[0];
       if (head) {
         head.appendChild(elem);
         return elem;
@@ -229,12 +229,12 @@ try {
     },
 
     loadStyleSheet: function (doc, path) {
-      var elem = doc.createElement('link');
+      let elem = doc.createElement('link');
       elem.setAttribute('type', 'text/css');
       elem.setAttribute('rel', 'stylesheet');
       elem.setAttribute('media', 'screen');
       elem.setAttribute('href', path);
-      var head = doc.getElementsByTagName('head')[0];
+      let head = doc.getElementsByTagName('head')[0];
       if (head) {
         head.appendChild(elem);
         return elem;
@@ -280,10 +280,9 @@ try {
      *    xpath:
      *    return: node
      */
-    findNodeByXPath: function (xpath) {
-      var doc = this.currentDocument;
-      return doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-    },
+    findNodeByXPath: function (xpath)
+      let (doc = this.currentDocument)
+        doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue,
 
 
     /*
@@ -291,10 +290,9 @@ try {
      *    xpath:
      *    return: nodes
      */
-    findNodesByXPath: function (xpath) {
-      var doc = this.currentDocument;
-      return doc.evaluate(xpath, doc, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
-    },
+    findNodesByXPath: function (xpath)
+      let (doc = this.currentDocument)
+        doc.evaluate(xpath, doc, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null),
 
   };
 
@@ -304,7 +302,7 @@ try {
     設定用
   ********************************************************************************/
 
-  var AnkPref = function (prefix) {
+  AnkPref = function (prefix) {
     if (prefix)
       this.prefix = prefix + (prefix.match(/\.$/) ? '' : '.');
     else
@@ -330,16 +328,16 @@ try {
      */
     get: function (name, def) {
       try {
-      var name = this.prefix + name;
-      var type = this.prefs.getPrefType(name);
-      const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
+        name = this.prefix + name;
+        let type = this.prefs.getPrefType(name);
+        const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
         switch (type) {
           case nsIPrefBranch.PREF_STRING:
             try {
               return this.prefs.getComplexValue(name, Components.interfaces.nsISupportsString).data;
             }
             catch (e) {
-              this.prefs.getCharPref(name);
+              return this.prefs.getCharPref(name);
             }
             break;
           case nsIPrefBranch.PREF_INT:
@@ -364,10 +362,10 @@ try {
      *    return: ?
      */
     set: function (name, value, type) {
-      var name = this.prefix + name;
+      let name = this.prefix + name;
       switch (type || typeof value) {
         case 'string':
-          var str = this.ccci('@mozilla.org/supports-string;1', Components.interfaces.nsISupportsString);
+          let str = this.ccci('@mozilla.org/supports-string;1', Components.interfaces.nsISupportsString);
           str.data = value;
           return this.prefs.setComplexValue(name, Components.interfaces.nsISupportsString, str);
         case 'boolean':
@@ -388,7 +386,7 @@ try {
 
   /* デバッグの設定を読み取る */
   (function () {
-    var pref = new AnkPref('extensions.ankutils');
+    let pref = new AnkPref('extensions.ankutils');
     AnkUtils.DEBUG = pref.get('debugMode', false);
   })();
 
