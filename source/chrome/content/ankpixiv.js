@@ -167,6 +167,51 @@ try {
       this.currentLocation.match(/\.pixiv\.net\/member_illust.php\?.*illust_id=/),
 
 
+    info: (function (self) {
+      let illust = {
+        get dateTime () {
+          let node = AnkUtils.findNodeByXPath('//*[@id="content2"]/div/table/tbody/tr/td/div[1]');
+          let m = node.textContent.match(/(\d+)年(\d+)月(\d+)日 (\d+):(\d+)/);
+          return {
+            year: m[1],
+            month: m[2],
+            day: m[3],
+            hour: m[4],
+            minute: m[5],
+          };
+        },
+
+        get size () {
+          let node = AnkUtils.findNodeByXPath('//*[@id="content2"]/div[6]/span');
+          let m = node.textContent.match(/(\d+)×(\d+)/);
+          if (!m)
+            return;
+          return {
+            width: parseInt(m[1], 10),
+            height: parseInt(m[1], 10),
+          };
+        },
+
+        get width ()
+          let (sz = illust.size) (sz && sz.width),
+
+        get height ()
+          let (sz = illust.size) (sz && sz.height),
+      };
+      'year month day hour minute'.split(/\s+/).forEach(function (name) {
+        illust.__defineGetter__(name, function () illust.dateTime[name]);
+      });
+
+      return {
+        illust: illust,
+        get pixivId () {
+          let node = AnkUtils.findNodesByXPath('//*[@id="profile"]/div/a/img');
+          let m = node.src.match(/\/profile\/([^\/]+)\//);
+          return m && m[1];
+        },
+      };
+    })(self),
+
 
     /********************************************************************************
     * ダイアログ関連
@@ -469,12 +514,20 @@ try {
         let defaultFilename = this.Prefs.get('defaultFilename', '?member-name? - ?title?');
         (function () {
           function repl (s, title) {
+            let i = AnkPixiv.info;
+            let ii = i.illust;
             return s.replace('?title?', title).
                      replace('?member-id?', member_id).
                      replace('?illust-id?', illust_id).
                      replace('?member-name?', member_name).
                      replace('?tags?', AnkUtils.join(tags, ' ')).
-                     replace('?short-tags?', AnkUtils.join(shortTags, ' '));
+                     replace('?short-tags?', AnkUtils.join(shortTags, ' ')).
+                     replace('?illust-year?', ii.year).
+                     replace('?illust-month?', ii.month).
+                     replace('?illust-day?', ii.day).
+                     replace('?illust-hour?', ii.hour).
+                     replace('?illust-minute?', ii.minute).
+                     toString();
           }
           if (~defaultFilename.indexOf('?title?')) {
             for (let i in titles) {

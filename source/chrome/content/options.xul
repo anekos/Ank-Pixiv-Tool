@@ -81,7 +81,7 @@
       <textbox preference="default-filename" />
       <groupbox>
         <description>
-          ?member-name?  ?member-id?  ?title?  ?short-tags?  ?tags?  ?illust-id?
+          ?member-name?  ?member-id?  ?title?  ?short-tags?  ?tags?  ?illust-id? ?illust-year? ?illust-month? ?illust-day? ?illust-hour? ?illust-minute?
         </description>
       </groupbox>
     </groupbox>
