@@ -5,7 +5,7 @@
 
 <!DOCTYPE prefwindow SYSTEM "chrome://ankpixiv/locale/prefwindow.dtd">
 
-<prefwindow id="ankpixivPreferences" 
+<prefwindow id="ankpixivPreferences"
             title="&prefwindow.title;"
             persist="lastSelected screenX screenY"
             style="width:52em;"
@@ -68,11 +68,11 @@
           &initialDirectory.label;
         </label>
         <filefield id="initial-directory-filefield" preference="initial-directory-pref" flex="1" />
-        <toolbarbutton id="initial-directory-browse" oncommand="selectDir();" 
+        <toolbarbutton id="initial-directory-browse" oncommand="selectDir();"
                        instantApply="true" label="&browse;" />
       </hbox>
 
-      <checkbox id="save-history-checkbox" preference="save-history-pref" 
+      <checkbox id="save-history-checkbox" preference="save-history-pref"
                 label="&saveHistory.label;" />
     </groupbox>
 

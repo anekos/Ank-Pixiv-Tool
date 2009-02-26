@@ -16,17 +16,17 @@
 
   <menupopup id="menu_ToolsPopup">
     <menuitem insertafter="devToolsSeparator" label="&downloadCurrentImage;" id="ankpixiv-menu-download"
-              onclick="AnkPixiv.onDownloadButtonClick(event)" />	
+              onclick="AnkPixiv.onDownloadButtonClick(event)" />
   </menupopup>
 
   <statusbar id="status-bar">
-    <statusbarpanel class="statusbarpanel-iconic" id="ankpixiv-statusbarpanel" 
+    <statusbarpanel class="statusbarpanel-iconic" id="ankpixiv-statusbarpanel"
                     label="&downloadCurrentImage;" onclick="AnkPixiv.onDownloadButtonClick(event)"/>
   </statusbar>
 
   <toolbarpalette id="BrowserToolbarPalette">
     <toolbarbutton id="ankpixiv-toolbar-button" label="&iconLabel;"
-                   tooltiptext="&iconLabel;" onclick="AnkPixiv.onDownloadButtonClick(event)" 
+                   tooltiptext="&iconLabel;" onclick="AnkPixiv.onDownloadButtonClick(event)"
                    class="toolbarbutton-1" />
   </toolbarpalette>
 
