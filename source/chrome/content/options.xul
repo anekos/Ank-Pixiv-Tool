@@ -2,6 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://mozapps/content/preferences/preferences.css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
+<?xml-stylesheet href="chrome://ankpixiv/content/options.css"?>
 
 <!DOCTYPE prefwindow SYSTEM "chrome://ankpixiv/locale/prefwindow.dtd">
 
@@ -33,6 +34,12 @@
               document.getElementById('initial-directory-pref').value = filePicker.file;
               updateUI();
           }
+      }
+      function pushTag (elem) {
+          var pref = document.getElementById('default-filename');
+          if (/\?$/.test(pref.value))
+            pref.value += ' ';
+          pref.value += elem.selectedItem.label;
       }
   ]]></script>
 
@@ -80,9 +87,32 @@
       <caption label="&defaultFilename;" />
       <textbox preference="default-filename" />
       <groupbox>
-        <description>
-          ?member-name?  ?member-id?  ?title?  ?short-tags?  ?tags?  ?illust-id? ?illust-year? ?illust-month? ?illust-day? ?illust-hour? ?illust-minute?
-        </description>
+        <hbox>
+          <listbox id="tag-listbox1" rows="7" class="tag-listbox" onclick="pushTag(this)">
+            <listitem label="?title?"></listitem>
+            <listitem label="?member-id?"></listitem>
+            <listitem label="?member-name?"></listitem>
+            <listitem label="?tags?"></listitem>
+            <listitem label="?short-tags?"></listitem>
+            <listitem label="?tools?"></listitem>
+            <listitem label="?pixiv-id?"></listitem>
+          </listbox>
+          <listbox id="tag-listbox2" rows="7" class="tag-listbox" onclick="pushTag(this)">
+            <listitem label="?illust-id?"></listitem>
+            <listitem label="?illust-year?"></listitem>
+            <listitem label="?illust-month?"></listitem>
+            <listitem label="?illust-day?"></listitem>
+            <listitem label="?illust-hour?"></listitem>
+            <listitem label="?illust-minute?"></listitem>
+          </listbox>
+          <listbox id="tag-listbox3" rows="7" class="tag-listbox" onclick="pushTag(this)">
+            <listitem label="?saved-year?"></listitem>
+            <listitem label="?saved-month?"></listitem>
+            <listitem label="?saved-day?"></listitem>
+            <listitem label="?saved-hour?"></listitem>
+            <listitem label="?saved-minute?"></listitem>
+          </listbox>
+         </hbox>
       </groupbox>
     </groupbox>
 

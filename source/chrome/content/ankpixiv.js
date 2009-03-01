@@ -167,7 +167,7 @@ try {
       this.currentLocation.match(/\.pixiv\.net\/member_illust.php\?.*illust_id=/),
 
 
-    info: (function (self) {
+    info: (function () {
       let illust = {
         get dateTime () {
           let node = AnkUtils.findNodeByXPath('//*[@id="content2"]/div/table/tbody/tr/td/div[1]');
@@ -192,11 +192,22 @@ try {
           };
         },
 
+        get tools () {
+          let node = AnkUtils.findNodeByXPath('//*[@id="content2"]/div[6]/span');
+          let m = node.textContent.match(/\|\s*(.+)/);
+          if (!m)
+            return [];
+          return m[1].split(/[\s　]+/);
+        },
+
         get width ()
           let (sz = illust.size) (sz && sz.width),
 
         get height ()
           let (sz = illust.size) (sz && sz.height),
+
+        get server ()
+          AnkPixiv.currentImagePath.match(/^http:\/\/([^\/\.]+)\./i)[1],
       };
       'year month day hour minute'.split(/\s+/).forEach(function (name) {
         illust.__defineGetter__(name, function () illust.dateTime[name]);
@@ -205,12 +216,12 @@ try {
       return {
         illust: illust,
         get pixivId () {
-          let node = AnkUtils.findNodesByXPath('//*[@id="profile"]/div/a/img');
+          let node = AnkUtils.findNodeByXPath('//*[@id="profile"]/div/a/img');
           let m = node.src.match(/\/profile\/([^\/]+)\//);
           return m && m[1];
         },
       };
-    })(self),
+    })(),
 
 
     /********************************************************************************
@@ -511,6 +522,7 @@ try {
           titles.push(this.currentImageId);
         }
 
+        let savedDateTime = new Date();
         let defaultFilename = this.Prefs.get('defaultFilename', '?member-name? - ?title?');
         (function () {
           function repl (s, title) {
@@ -518,15 +530,22 @@ try {
             let ii = i.illust;
             return s.replace('?title?', title).
                      replace('?member-id?', member_id).
-                     replace('?illust-id?', illust_id).
                      replace('?member-name?', member_name).
                      replace('?tags?', AnkUtils.join(tags, ' ')).
                      replace('?short-tags?', AnkUtils.join(shortTags, ' ')).
+                     replace('?tools?', ii.tools).
+                     replace('?pixiv-id?', i.pixivId).
+                     replace('?illust-id?', illust_id).
                      replace('?illust-year?', ii.year).
                      replace('?illust-month?', ii.month).
                      replace('?illust-day?', ii.day).
                      replace('?illust-hour?', ii.hour).
                      replace('?illust-minute?', ii.minute).
+                     replace('?saved-year?', savedDateTime.getFullYear()).
+                     replace('?saved-month?', savedDateTime.getMonth() + 1).
+                     replace('?saved-day?', savedDateTime.getDate()).
+                     replace('?saved-hour?', savedDateTime.getHours()).
+                     replace('?saved-minute?', savedDateTime.getMinutes()).
                      toString();
           }
           if (~defaultFilename.indexOf('?title?')) {
@@ -543,9 +562,9 @@ try {
           illust_id: illust_id,
           title: title,
           tags: AnkUtils.join(tags, ' '),
-          server: this.currentImagePath.match(/^http:\/\/([^\/\.]+)\./i)[1],
+          server: this.info.illust.server,
           saved: true,
-          datetime: AnkUtils.toSQLDateTimeString(),
+          datetime: AnkUtils.toSQLDateTimeString(savedDateTime),
           version: AnkPixiv.DB_VERSION,
         };
 
