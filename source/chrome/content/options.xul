@@ -35,7 +35,7 @@
               updateUI();
           }
       }
-      function pushTag (elem) {
+      function pushToken (elem) {
           var pref = document.getElementById('default-filename');
           if (/\?$/.test(pref.value))
             pref.value += ' ';
@@ -88,7 +88,7 @@
       <textbox preference="default-filename" />
       <groupbox>
         <hbox>
-          <listbox id="tag-listbox1" rows="7" class="tag-listbox" onclick="pushTag(this)">
+          <listbox id="token-listbox1" rows="7" class="token-listbox" onclick="pushToken(this)">
             <listitem label="?title?"></listitem>
             <listitem label="?member-id?"></listitem>
             <listitem label="?member-name?"></listitem>
@@ -97,7 +97,7 @@
             <listitem label="?tools?"></listitem>
             <listitem label="?pixiv-id?"></listitem>
           </listbox>
-          <listbox id="tag-listbox2" rows="7" class="tag-listbox" onclick="pushTag(this)">
+          <listbox id="token-listbox2" rows="7" class="token-listbox" onclick="pushToken(this)">
             <listitem label="?illust-id?"></listitem>
             <listitem label="?illust-year?"></listitem>
             <listitem label="?illust-month?"></listitem>
@@ -105,7 +105,7 @@
             <listitem label="?illust-hour?"></listitem>
             <listitem label="?illust-minute?"></listitem>
           </listbox>
-          <listbox id="tag-listbox3" rows="7" class="tag-listbox" onclick="pushTag(this)">
+          <listbox id="token-listbox3" rows="7" class="token-listbox" onclick="pushToken(this)">
             <listitem label="?saved-year?"></listitem>
             <listitem label="?saved-month?"></listitem>
             <listitem label="?saved-day?"></listitem>
