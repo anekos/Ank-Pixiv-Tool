@@ -141,14 +141,6 @@ try {
     },
 
 
-    get currentImageAuthor ()
-      AnkUtils.trim(this.currentImageTitleAndAuthor.replace(/^.+\/\s*([^\/]+?)\s*$/, '$1')),
-
-
-    get currentImageTitle ()
-      AnkUtils.trim(this.currentImageTitleAndAuthor.replace(/^\s*(.+?)\s*\/[^\/]+$/, '$1')),
-
-
     get currentImageTags () {
       let as = AnkUtils.findNodesByXPath(this.XPath.tags);
       let node, res = [];
@@ -208,6 +200,11 @@ try {
 
         get server ()
           AnkPixiv.currentImagePath.match(/^http:\/\/([^\/\.]+)\./i)[1],
+
+        get title () {
+          let node = AnkUtils.findNodeByXPath('//*[@id="content2"]/div/table/tbody/tr/td/div[2]');
+          return AnkUtils.trim(node.textContent);
+        },
       };
       'year month day hour minute'.split(/\s+/).forEach(function (name) {
         illust.__defineGetter__(name, function () illust.dateTime[name]);
@@ -219,6 +216,10 @@ try {
           let node = AnkUtils.findNodeByXPath('//*[@id="profile"]/div/a/img');
           let m = node.src.match(/\/profile\/([^\/]+)\//);
           return m && m[1];
+        },
+        get memberName () {
+          let node = AnkUtils.findNodeByXPath('//*[@id="profile"]/div');
+          return AnkUtils.trim(node.textContent);
         },
       };
     })(),
@@ -485,10 +486,10 @@ try {
         let illust_id   = this.currentImageId;
         let ref         = this.currentLocation.replace(/mode=medium/, 'mode=big');
         let member_id   = this.currentImageAuthorId;
-        let member_name = this.currentImageAuthor || member_id;
+        let member_name = this.info.memberName || member_id;
         let tags        = this.currentImageTags;
         let titles      = this.currentImageTags;
-        let title       = this.currentImageTitle;
+        let title       = this.info.illust.title;
         let filenames   = [];
         let shortTags   = (function (len) {
                             let result = [];
