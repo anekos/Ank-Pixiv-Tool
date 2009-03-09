@@ -36,10 +36,15 @@
           }
       }
       function pushToken (elem) {
-          var pref = document.getElementById('default-filename');
-          if (/\?$/.test(pref.value))
-            pref.value += ' ';
-          pref.value += elem.selectedItem.label;
+          let token = elem.selectedItem.label
+          let pref = document.getElementById('default-filename');
+          let box = document.getElementById('default-filename-box');
+          let now = box.value;
+          let [ap, bp] = [box.selectionStart, box.selectionEnd];
+          let [as, bs] = [now.slice(0, ap), now.slice(bp, now.length)];
+          pref.value = as + token + bs;
+          let (p = ap + token.length)
+            box.setSelectionRange(p, p);
       }
   ]]></script>
 
@@ -85,7 +90,7 @@
 
     <groupbox orient="vertical">
       <caption label="&defaultFilename;" />
-      <textbox preference="default-filename" />
+      <textbox id="default-filename-box" preference="default-filename" />
       <groupbox>
         <hbox>
           <listbox id="token-listbox1" rows="7" class="token-listbox" onclick="pushToken(this)">
