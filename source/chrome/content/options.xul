@@ -35,7 +35,7 @@
           filePicker.init(window, "Choose a folder.", filePicker.modeGetFolder);
           if (filePicker.show() == filePicker.returnOK) {
               AnkPixiv.Prefs.set("initialDirectory", filePicker.file.path);
-              updateUI();
+              onLoad();
           }
       }
       function pushToken (elem) {
@@ -54,7 +54,6 @@
               prop = 'value';
             let elem = document.getElementById(id);
             elem[prop] = AnkPixiv.Prefs.get(name, elem[prop]);
-            dump(elem.value);
           });
           return true;
       }
@@ -65,7 +64,6 @@
             let elem = document.getElementById(id);
             AnkPixiv.Prefs.set(name, elem[prop], type);
           });
-          alert('Saved!');
           return true;
       }
   ]]></script>
