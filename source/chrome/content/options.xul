@@ -11,7 +11,7 @@
             persist="lastSelected screenX screenY"
             style="width:52em;"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            ondialogaccept="onDialogAccept(event)"
+            ondialogaccept="return onDialogAccept(event)"
             xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankutils.js" />
@@ -46,6 +46,7 @@
       function onDialogAccept (event) {
           let textbox = document.getElementById("initial-directory-textbox");
           AnkPixiv.Prefs.set("initialDirectory", textbox.value, "string");
+          return true;
       }
   ]]></script>
 
