@@ -52,7 +52,6 @@
   <prefpane id="mainpane" onpaneload="updateUI();" label="&mainpane.title;">
     <preferences>
       <preference id="show-save-dialog-pref" name="extensions.ankpixiv.showSaveDialog" type="bool" />
-      <preference id="initial-directory-pref" name="extensions.ankpixiv.initialDirectory" type="file" />
       <preference id="save-history-pref" name="extensions.ankpixiv.saveHistory" type="bool" />
       <preference id="download-when-rate" name="extensions.ankpixiv.downloadWhenRate" type="bool" />
       <preference id="download-rate" name="extensions.ankpixiv.downloadRate" type="int" />
