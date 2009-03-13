@@ -11,7 +11,7 @@
             persist="lastSelected screenX screenY"
             style="width:52em;"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            ondialogaccept="onDialogAccept(2)"
+            ondialogaccept="onDialogAccept(event)"
             xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankutils.js" />
@@ -43,7 +43,7 @@
           let (p = ap + token.length)
             box.setSelectionRange(p, p);
       }
-      function onDialogAccept () {
+      function onDialogAccept (event) {
           let textbox = document.getElementById("initial-directory-textbox");
           AnkPixiv.Prefs.set("initialDirectory", textbox.value, "string");
       }
@@ -80,7 +80,7 @@
         <label accesskey="I" control="textstringpref">
           &initialDirectory.label;
         </label>
-        <textbox id="initial-directory-textbox" preference="initial-directory-pref" flex="1" />
+        <textbox id="initial-directory-textbox" flex="1" />
         <toolbarbutton id="initial-directory-browse" oncommand="selectDir();"
                        instantApply="true" label="&browse;" />
       </hbox>
