@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://mozapps/content/preferences/preferences.css"?>
-<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
 <?xml-stylesheet href="chrome://ankpixiv/content/options.css"?>
 
 <!DOCTYPE prefwindow SYSTEM "chrome://ankpixiv/locale/prefwindow.dtd">
 
-<prefwindow id="ankpixivPreferences"
+<dialog id="ankpixivPreferences"
             title="&prefwindow.title;"
             persist="lastSelected screenX screenY"
+            buttons="accept,cancel"
             style="width:52em;"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            ondialogaccept="return onDialogAccept(event)"
+            onload="return onLoad()"
+            ondialogaccept="return onSave()"
             xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankutils.js" />
@@ -19,12 +19,18 @@
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankpixiv.js" />
 
   <script type="application/x-javascript"><![CDATA[
-      function updateUI () {
-          let textbox = document.getElementById('initial-directory-textbox');
-          textbox.value = AnkPixiv.Prefs.get('initialDirectory') || '';
+      function settings () {
+        return [
+          ['initial-directory',   'initialDirectory', 'string'],
+          ['show-save-dialog',    'showSaveDialog',   'boolean', 'checked'],
+          ['save-history',        'saveHistory',      'boolean', 'checked'],
+          ['download-when-rate',  'downloadWhenRate', 'boolean', 'checked'],
+          ['download-rate',       'downloadRate',     'number'],
+          ['default-filename',    'defaultFilename', 'string'],
+        ];
       }
       function selectDir () {
-          var filePicker = Components.classes["@mozilla.org/filepicker;1"]
+          var filePicker = Components.classes['@mozilla.org/filepicker;1']
                              .createInstance(Components.interfaces.nsIFilePicker);
           filePicker.init(window, "Choose a folder.", filePicker.modeGetFolder);
           if (filePicker.show() == filePicker.returnOK) {
@@ -34,37 +40,42 @@
       }
       function pushToken (elem) {
           let token = elem.selectedItem.label
-          let pref = document.getElementById('default-filename');
-          let box = document.getElementById('default-filename-box');
+          let box = document.getElementById('default-filename');
           let now = box.value;
           let [ap, bp] = [box.selectionStart, box.selectionEnd];
           let [as, bs] = [now.slice(0, ap), now.slice(bp, now.length)];
-          pref.value = as + token + bs;
+          box.value = as + token + bs;
           let (p = ap + token.length)
             box.setSelectionRange(p, p);
       }
-      function onDialogAccept (event) {
-          let textbox = document.getElementById("initial-directory-textbox");
-          AnkPixiv.Prefs.set("initialDirectory", textbox.value, "string");
+      function onLoad () {
+          settings().forEach(function ([id, name, type, prop]) {
+            if (!prop)
+              prop = 'value';
+            let elem = document.getElementById(id);
+            elem[prop] = AnkPixiv.Prefs.get(name, elem[prop]);
+            dump(elem.value);
+          });
+          return true;
+      }
+      function onSave (event) {
+          settings().forEach(function ([id, name, type, prop]) {
+            if (!prop)
+              prop = 'value';
+            let elem = document.getElementById(id);
+            AnkPixiv.Prefs.set(name, elem[prop], type);
+          });
+          alert('Saved!');
           return true;
       }
   ]]></script>
 
-  <prefpane id="mainpane" onpaneload="updateUI();" label="&mainpane.title;">
-    <preferences>
-      <preference id="show-save-dialog-pref" name="extensions.ankpixiv.showSaveDialog" type="bool" />
-      <preference id="save-history-pref" name="extensions.ankpixiv.saveHistory" type="bool" />
-      <preference id="download-when-rate" name="extensions.ankpixiv.downloadWhenRate" type="bool" />
-      <preference id="download-rate" name="extensions.ankpixiv.downloadRate" type="int" />
-      <preference id="default-filename" name="extensions.ankpixiv.defaultFilename" type="string" />
-    </preferences>
-
     <groupbox>
-      <checkbox id="show-save-dialog-checkbox" preference="show-save-dialog-pref" label="&showSaveDialog.label;"/>
+      <checkbox id="show-save-dialog" label="&showSaveDialog.label;"/>
 
       <hbox align="center">
-        <checkbox preference="download-when-rate" />
-        <menulist preference="download-rate">
+        <checkbox id="download-when-rate" />
+        <menulist id="download-rate">
           <menupopup>
             <menuitem label="6" value="6"/>
             <menuitem label="7" value="7"/>
@@ -80,18 +91,17 @@
         <label accesskey="I" control="textstringpref">
           &initialDirectory.label;
         </label>
-        <textbox id="initial-directory-textbox" flex="1" />
+        <textbox id="initial-directory" flex="1" />
         <toolbarbutton id="initial-directory-browse" oncommand="selectDir();"
                        instantApply="true" label="&browse;" />
       </hbox>
 
-      <checkbox id="save-history-checkbox" preference="save-history-pref"
-                label="&saveHistory.label;" />
+      <checkbox id="save-history" label="&saveHistory.label;" />
     </groupbox>
 
     <groupbox orient="vertical">
       <caption label="&defaultFilename;" />
-      <textbox id="default-filename-box" preference="default-filename" />
+      <textbox id="default-filename" />
       <groupbox>
         <hbox>
           <listbox id="token-listbox1" rows="7" class="token-listbox" onclick="pushToken(this)">
@@ -122,5 +132,4 @@
       </groupbox>
     </groupbox>
 
-  </prefpane>
-</prefwindow>
+</dialog>
