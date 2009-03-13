@@ -11,6 +11,7 @@
             persist="lastSelected screenX screenY"
             style="width:52em;"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            ondialogaccept="onDialogAccept(2)"
             xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankutils.js" />
@@ -19,19 +20,15 @@
 
   <script type="application/x-javascript"><![CDATA[
       function updateUI () {
-          var file = document.getElementById('initial-directory-pref').value;
-          if (file) {
-              var fileField = document.getElementById("initial-directory-filefield");
-              fileField.file = file;
-              fileField.label = file.path;
-          }
+          let textbox = document.getElementById('initial-directory-textbox');
+          textbox.value = AnkPixiv.Prefs.get('initialDirectory') || '';
       }
       function selectDir () {
           var filePicker = Components.classes["@mozilla.org/filepicker;1"]
                              .createInstance(Components.interfaces.nsIFilePicker);
           filePicker.init(window, "Choose a folder.", filePicker.modeGetFolder);
           if (filePicker.show() == filePicker.returnOK) {
-              document.getElementById('initial-directory-pref').value = filePicker.file;
+              AnkPixiv.Prefs.set("initialDirectory", filePicker.file.path);
               updateUI();
           }
       }
@@ -45,6 +42,10 @@
           pref.value = as + token + bs;
           let (p = ap + token.length)
             box.setSelectionRange(p, p);
+      }
+      function onDialogAccept () {
+          let textbox = document.getElementById("initial-directory-textbox");
+          AnkPixiv.Prefs.set("initialDirectory", textbox.value, "string");
       }
   ]]></script>
 
@@ -79,7 +80,7 @@
         <label accesskey="I" control="textstringpref">
           &initialDirectory.label;
         </label>
-        <filefield id="initial-directory-filefield" preference="initial-directory-pref" flex="1" />
+        <textbox id="initial-directory-textbox" preference="initial-directory-pref" flex="1" />
         <toolbarbutton id="initial-directory-browse" oncommand="selectDir();"
                        instantApply="true" label="&browse;" />
       </hbox>

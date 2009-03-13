@@ -358,10 +358,10 @@ try {
      *    return: ?
      */
     set: function (name, value, type) {
-      let name = this.prefix + name;
+      name = this.prefix + name;
       switch (type || typeof value) {
         case 'string':
-          let str = this.ccci('@mozilla.org/supports-string;1', Components.interfaces.nsISupportsString);
+          let str = AnkUtils.ccci('@mozilla.org/supports-string;1', Components.interfaces.nsISupportsString);
           str.data = value;
           return this.prefs.setComplexValue(name, Components.interfaces.nsISupportsString, str);
         case 'boolean':
