@@ -479,6 +479,9 @@ try {
     downloadCurrentImage: function (useDialog) {
       try {
 
+        if (useDialog === undefined)
+          useDialog = this.Prefs.get('showSaveDialog', true);
+
         if (!this.enabled)
           return false;
 
@@ -676,7 +679,7 @@ try {
           while (elem = iter.iterateNext()) {
             let m = elem.className.match(/r(\d{1,2})-unit/);
             if (m && (point <= parseInt(m[1]))) {
-              elem.addEventListener('click', function(){$.downloadCurrentImage();}, true);
+              elem.addEventListener('click', function() $.downloadCurrentImage(), true);
             }
           }
         })();
