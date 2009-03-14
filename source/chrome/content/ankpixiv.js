@@ -888,8 +888,8 @@ try {
 
   //AnkPixiv.fixStorageEncode();
   //AnkPixiv.exchangeFilename();
-  window.addEventListener("focus", function() { AnkPixiv.onFocus(); }, true);
-  window.addEventListener("load", function() { AnkPixiv.onLoad(); }, true);
+  window.addEventListener("focus", function() AnkPixiv.onFocus(), true);
+  window.addEventListener("load", function() AnkPixiv.onLoad(), true);
 
 
 } catch (error) {
