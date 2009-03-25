@@ -575,7 +575,7 @@ try {
         let onComplete = function (orig_args, local_path) {
           let caption = this.Locale('finishedDownload');
           let text = filenames[0];
-          let local_path = decodeURIComponent(local_path);
+          local_path = decodeURIComponent(local_path);
 
           if (this.Prefs.get('saveHistory', true)) {
             try {
