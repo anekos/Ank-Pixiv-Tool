@@ -26,7 +26,8 @@
           ['save-history',        'saveHistory',      'boolean', 'checked'],
           ['download-when-rate',  'downloadWhenRate', 'boolean', 'checked'],
           ['download-rate',       'downloadRate',     'number'],
-          ['default-filename',    'defaultFilename', 'string'],
+          ['default-filename',    'defaultFilename',  'string'],
+          ['large-on-middle',     'largeOnMiddle',    'boolean', 'checked'],
         ];
       }
       function selectDir () {
@@ -95,6 +96,7 @@
       </hbox>
 
       <checkbox id="save-history" label="&saveHistory.label;" />
+      <checkbox id="large-on-middle" label="&largeOnMiddle;" />
     </groupbox>
 
     <groupbox orient="vertical">

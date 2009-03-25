@@ -634,7 +634,7 @@ try {
           return delay("delay installation by null");
 
         // 大画像関係
-        {
+        if ($.Prefs.get('largeOnMiddle', true)) {
           let div = doc.createElement('div');
           div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
 

@@ -7,3 +7,4 @@
 <!ENTITY downloadRate.label "点以上つけたとき、イラストをダウンロードする。">
 <!ENTITY browse "参照">
 <!ENTITY defaultFilename "保存時ファイル名">
+<!ENTITY largeOnMiddle "中サイズ画像をクリックで、同一タブに大サイズ画像を表示する。">
