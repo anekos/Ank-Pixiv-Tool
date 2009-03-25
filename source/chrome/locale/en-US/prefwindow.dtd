@@ -4,6 +4,6 @@
 <!ENTITY initialDirectory.path "">
 <!ENTITY showSaveDialog.label "Use save dialog when downloading illustration">
 <!ENTITY saveHistory.label "Save download history">
-<!ENTITY downloadRate.label "Download the illustration when you put this point or more.">
+<!ENTITY downloadRate.label "Downloads the illustration when you give it a score rating this number or beyond.">
 <!ENTITY browse "Browse...">
 <!ENTITY defaultFilename "Default filename">
