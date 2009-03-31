@@ -28,6 +28,7 @@
           ['download-rate',       'downloadRate',     'number'],
           ['default-filename',    'defaultFilename',  'string'],
           ['large-on-middle',     'largeOnMiddle',    'boolean', 'checked'],
+          ['open-comment',        'openComment',      'boolean', 'checked'],
         ];
       }
       function selectDir () {
@@ -97,6 +98,7 @@
 
       <checkbox id="save-history" label="&saveHistory.label;" />
       <checkbox id="large-on-middle" label="&largeOnMiddle;" />
+      <checkbox id="open-comment" label="&openComment;" />
     </groupbox>
 
     <groupbox orient="vertical">

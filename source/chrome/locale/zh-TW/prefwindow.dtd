@@ -8,3 +8,4 @@
 <!ENTITY browse "瀏覽">
 <!ENTITY defaultFilename "儲存時的檔案名稱">
 <!ENTITY largeOnMiddle "點擊中尺寸預覽圖時，在同分頁顯示大尺寸原始圖。">
+<!ENTITY openComment "Automatically open the comment box.">
