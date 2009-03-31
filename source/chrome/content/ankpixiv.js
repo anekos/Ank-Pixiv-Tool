@@ -22,6 +22,7 @@ try {
       bigImage: '//div[@id="illust_contents"]/a/img',
       authorIconLink: '//div[@id="profile"]/div/a',
       tags: '//span[@id="tags"]/a',
+      // openComment: '//*[@id="one_comment_view"]/a',
     },
 
 
@@ -684,6 +685,9 @@ try {
           }
         })();
 
+        // コメント欄を開く
+        if ($.Prefs.get('openComment', false))
+          setTimeout(function () content.wrappedJSObject.one_comment_view(), 100);
 
         AnkUtils.dump('installed');
       };
