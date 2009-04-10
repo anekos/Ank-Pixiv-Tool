@@ -21,6 +21,7 @@ try {
       mediumImageLink: '//div[@id="content2"]/div/a',
       bigImage: '//div[@id="illust_contents"]/a/img',
       authorIconLink: '//div[@id="profile"]/div/a',
+      authorIconImage:'//div[@id="profile"]/div/a/img',
       tags: '//span[@id="tags"]/a',
       // openComment: '//*[@id="one_comment_view"]/a',
     },
@@ -219,8 +220,8 @@ try {
           return m && m[1];
         },
         get memberName () {
-          let node = AnkUtils.findNodeByXPath('//*[@id="profile"]/div');
-          return AnkUtils.trim(node.textContent);
+          let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.authorIconImage);
+          return AnkUtils.trim(node.getAttribute('alt'));
         },
       };
     })(),
@@ -474,10 +475,11 @@ try {
     /*
      * downloadCurrentImage
      *    useDialog:  保存ダイアログを使うか？
+     *    debug:      トークンのテストを行う
      *    return:     成功？
      * 現在表示されている画像を保存する
      */
-    downloadCurrentImage: function (useDialog) {
+    downloadCurrentImage: function (useDialog, debug) {
       try {
 
         if (useDialog === undefined)
@@ -560,7 +562,33 @@ try {
           } else {
             filenames.push(repl(defaultFilename, null));
           }
+          if (debug) {
+            let tokens = <><![CDATA[
+title         = ?title?
+member-id     = ?member-id?
+member-name   = ?member-name?
+tags          = ?tags?
+short-tags    = ?short-tags?
+tools         = ?tools?
+pixiv-id      = ?pixiv-id?
+illust-id     = ?illust-id?
+illust-year   = ?illust-year?
+illust-month  = ?illust-month?
+illust-day    = ?illust-day?
+illust-hour   = ?illust-hour?
+illust-minute = ?illust-minute?
+saved-year    = ?saved-year?
+saved-month   = ?saved-month?
+saved-day     = ?saved-day?
+saved-hour    = ?saved-hour?
+saved-minute  = ?saved-minute?
+                ]]></>.toString();
+            alert(repl(tokens, title));
+          }
         })();
+
+        if (debug)
+          return;
 
         let record = {
           member_id: member_id,
