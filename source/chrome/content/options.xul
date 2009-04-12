@@ -63,6 +63,19 @@
         return true;
       }
       function onSave (event) {
+        // check for nonexistent path
+        {
+          let path = document.getElementById('initial-directory').value;
+          let initdir = AnkUtils.ccci("@mozilla.org/file/local;1", Components.interfaces.nsILocalFile);
+          initdir.initWithPath(path);
+          if (
+            !initdir.exists()
+            &&
+            !confirm(AnkPixiv.Locale('notifyNonexistentDirectory'))
+          )
+            return false;
+        }
+        // save
         settings().forEach(function ([id, name, type, prop]) {
           if (!prop)
             prop = 'value';
