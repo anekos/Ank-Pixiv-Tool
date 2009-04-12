@@ -32,41 +32,41 @@
         ];
       }
       function selectDir () {
-          var filePicker = Components.classes['@mozilla.org/filepicker;1']
-                             .createInstance(Components.interfaces.nsIFilePicker);
-          filePicker.init(window, "Choose a folder.", filePicker.modeGetFolder);
-          if (filePicker.show() == filePicker.returnOK) {
-              AnkPixiv.Prefs.set("initialDirectory", filePicker.file.path);
-              onLoad();
-          }
+        var filePicker = Components.classes['@mozilla.org/filepicker;1']
+                           .createInstance(Components.interfaces.nsIFilePicker);
+        filePicker.init(window, "Choose a folder.", filePicker.modeGetFolder);
+        if (filePicker.show() == filePicker.returnOK) {
+            AnkPixiv.Prefs.set("initialDirectory", filePicker.file.path);
+            onLoad();
+        }
       }
       function pushToken (elem) {
-          let token = elem.selectedItem.label
-          let box = document.getElementById('default-filename');
-          let now = box.value;
-          let [ap, bp] = [box.selectionStart, box.selectionEnd];
-          let [as, bs] = [now.slice(0, ap), now.slice(bp, now.length)];
-          box.value = as + token + bs;
-          let (p = ap + token.length)
-            box.setSelectionRange(p, p);
+        let token = elem.selectedItem.label
+        let box = document.getElementById('default-filename');
+        let now = box.value;
+        let [ap, bp] = [box.selectionStart, box.selectionEnd];
+        let [as, bs] = [now.slice(0, ap), now.slice(bp, now.length)];
+        box.value = as + token + bs;
+        let (p = ap + token.length)
+          box.setSelectionRange(p, p);
       }
       function onLoad () {
-          settings().forEach(function ([id, name, type, prop]) {
-            if (!prop)
-              prop = 'value';
-            let elem = document.getElementById(id);
-            elem[prop] = AnkPixiv.Prefs.get(name, elem[prop]);
-          });
-          return true;
+        settings().forEach(function ([id, name, type, prop]) {
+          if (!prop)
+            prop = 'value';
+          let elem = document.getElementById(id);
+          elem[prop] = AnkPixiv.Prefs.get(name, elem[prop]);
+        });
+        return true;
       }
       function onSave (event) {
-          settings().forEach(function ([id, name, type, prop]) {
-            if (!prop)
-              prop = 'value';
-            let elem = document.getElementById(id);
-            AnkPixiv.Prefs.set(name, elem[prop], type);
-          });
-          return true;
+        settings().forEach(function ([id, name, type, prop]) {
+          if (!prop)
+            prop = 'value';
+          let elem = document.getElementById(id);
+          AnkPixiv.Prefs.set(name, elem[prop], type);
+        });
+        return true;
       }
   ]]></script>
 
