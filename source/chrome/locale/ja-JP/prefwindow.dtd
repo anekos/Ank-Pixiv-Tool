@@ -9,3 +9,4 @@
 <!ENTITY defaultFilename "保存時ファイル名">
 <!ENTITY largeOnMiddle "中サイズ画像をクリックで、同一タブに大サイズ画像を表示する。">
 <!ENTITY openComment "コメント欄を自動で開く">
+<!ENTITY alternateFilename "代替ファイル名">

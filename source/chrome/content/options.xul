@@ -19,16 +19,19 @@
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankpixiv.js" />
 
   <script type="application/x-javascript"><![CDATA[
+      let currentFilenameElement = document.getElementById('default-filename');
+
       function settings () {
         return [
-          ['initial-directory',   'initialDirectory', 'string'],
-          ['show-save-dialog',    'showSaveDialog',   'boolean', 'checked'],
-          ['save-history',        'saveHistory',      'boolean', 'checked'],
-          ['download-when-rate',  'downloadWhenRate', 'boolean', 'checked'],
-          ['download-rate',       'downloadRate',     'number'],
-          ['default-filename',    'defaultFilename',  'string'],
-          ['large-on-middle',     'largeOnMiddle',    'boolean', 'checked'],
-          ['open-comment',        'openComment',      'boolean', 'checked'],
+          ['initial-directory',   'initialDirectory',  'string'],
+          ['show-save-dialog',    'showSaveDialog',    'boolean', 'checked'],
+          ['save-history',        'saveHistory',       'boolean', 'checked'],
+          ['download-when-rate',  'downloadWhenRate',  'boolean', 'checked'],
+          ['download-rate',       'downloadRate',      'number'],
+          ['default-filename',    'defaultFilename',   'string'],
+          ['alternate-filename',  'alternateFilename', 'string'],
+          ['large-on-middle',     'largeOnMiddle',     'boolean', 'checked'],
+          ['open-comment',        'openComment',       'boolean', 'checked'],
         ];
       }
       function selectDir () {
@@ -42,7 +45,7 @@
       }
       function pushToken (elem) {
         let token = elem.selectedItem.label
-        let box = document.getElementById('default-filename');
+        let box = currentFilenameElement;
         let now = box.value;
         let [ap, bp] = [box.selectionStart, box.selectionEnd];
         let [as, bs] = [now.slice(0, ap), now.slice(bp, now.length)];
@@ -102,8 +105,12 @@
     </groupbox>
 
     <groupbox orient="vertical">
-      <caption label="&defaultFilename;" />
-      <textbox id="default-filename" />
+      <vbox>
+        <caption label="&defaultFilename;" />
+        <textbox id="default-filename" onfocus="currentFilenameElement=event.target" />
+        <caption label="&alternateFilename;" />
+        <textbox id="alternate-filename" onfocus="currentFilenameElement=event.target" />
+      </vbox>
       <groupbox>
         <hbox>
           <listbox id="token-listbox1" rows="7" class="token-listbox" onclick="pushToken(this)">
