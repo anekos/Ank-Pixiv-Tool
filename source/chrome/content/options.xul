@@ -71,7 +71,7 @@
           if (!initdir.exists())
             throw 'Initial directory does not exist';
         } catch (e) {
-          if (confirm(AnkPixiv.Locale('notifyNonexistentDirectory')))
+          if (!confirm(AnkPixiv.Locale('notifyNonexistentDirectory')))
             return false;
         }
         // save
