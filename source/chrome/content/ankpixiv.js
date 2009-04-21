@@ -549,8 +549,8 @@ try {
                      replace('?saved-minute?', savedDateTime.getMinutes()).
                      toString();
           }
-          filenames.push(repl(defaultFilename, null));
-          filenames.push(repl(alternateFilename, null));
+          filenames.push(repl(defaultFilename));
+          filenames.push(repl(alternateFilename));
           if (debug) {
             let tokens = <><![CDATA[
 title         = ?title?
