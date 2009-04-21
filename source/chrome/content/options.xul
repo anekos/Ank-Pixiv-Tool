@@ -64,15 +64,14 @@
       }
       function onSave (event) {
         // check for nonexistent path
-        {
+        try {
           let path = document.getElementById('initial-directory').value;
           let initdir = AnkUtils.ccci("@mozilla.org/file/local;1", Components.interfaces.nsILocalFile);
           initdir.initWithPath(path);
-          if (
-            !initdir.exists()
-            &&
-            !confirm(AnkPixiv.Locale('notifyNonexistentDirectory'))
-          )
+          if (!initdir.exists())
+            throw 'Initial directory does not exist';
+        } catch (e) {
+          if (confirm(AnkPixiv.Locale('notifyNonexistentDirectory')))
             return false;
         }
         // save
