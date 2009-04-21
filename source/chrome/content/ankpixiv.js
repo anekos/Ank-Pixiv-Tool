@@ -494,7 +494,6 @@ try {
         let member_id   = this.currentImageAuthorId;
         let member_name = this.info.memberName || member_id;
         let tags        = this.currentImageTags;
-        let titles      = this.currentImageTags;
         let title       = this.info.illust.title;
         let filenames   = [];
         let shortTags   = (function (len) {
@@ -523,16 +522,11 @@ try {
             return;
         }
 
-        if (title) {
-          titles.unshift(title);
-        } else {
-          titles.push(this.currentImageId);
-        }
-
         let savedDateTime = new Date();
         let defaultFilename = this.Prefs.get('defaultFilename', '?member-name? - ?title?');
+        let alternateFilename = this.Prefs.get('alternateFilename', '?member-name? - ?title? - (?illust-id?)');
         (function () {
-          function repl (s, title) {
+          function repl (s) {
             let i = AnkPixiv.info;
             let ii = i.illust;
             return s.replace('?title?', title).
@@ -555,13 +549,8 @@ try {
                      replace('?saved-minute?', savedDateTime.getMinutes()).
                      toString();
           }
-          if (~defaultFilename.indexOf('?title?')) {
-            for (let i in titles) {
-              filenames.push(repl(defaultFilename, titles[i]));
-            }
-          } else {
-            filenames.push(repl(defaultFilename, null));
-          }
+          filenames.push(repl(defaultFilename, null));
+          filenames.push(repl(alternateFilename, null));
           if (debug) {
             let tokens = <><![CDATA[
 title         = ?title?
