@@ -642,13 +642,14 @@ saved-minute  = ?saved-minute?
           var wrapper = doc.getElementById('wrapper');
           var medImg = AnkUtils.findNodeByXPath($.XPath.mediumImage);
           var bigImgPath = $.currentBigImagePath;
+          var openComment = content.wrappedJSObject.one_comment_view;
         } catch (e) {
           AnkUtils.dumpError(e);
           return delay("delay installation by error");
         }
 
         // 完全に読み込まれて以内っぽいときは、遅延する
-        if (!(body && medImg && bigImgPath && wrapper))
+        if (!(body && medImg && bigImgPath && wrapper && openComment))
           return delay("delay installation by null");
 
         // 大画像関係
@@ -704,7 +705,7 @@ saved-minute  = ?saved-minute?
 
         // コメント欄を開く
         if ($.Prefs.get('openComment', false))
-          setTimeout(function () content.wrappedJSObject.one_comment_view(), 100);
+          setTimeout(openComment, 1000);
 
         AnkUtils.dump('installed');
       };
