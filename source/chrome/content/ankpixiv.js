@@ -642,7 +642,7 @@ saved-minute  = ?saved-minute?
           var wrapper = doc.getElementById('wrapper');
           var medImg = AnkUtils.findNodeByXPath($.XPath.mediumImage);
           var bigImgPath = $.currentBigImagePath;
-          var openComment = content.wrappedJSObject.one_comment_view;
+          var openComment = function () content.wrappedJSObject.one_comment_view();
         } catch (e) {
           AnkUtils.dumpError(e);
           return delay("delay installation by error");
