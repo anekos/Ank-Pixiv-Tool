@@ -227,6 +227,13 @@ try {
       let stmt = this.createStatement(query, function (stmt) {
         return (typeof block == 'function') ? block(stmt) : stmt;
       });
+    },
+
+    count: function (tableName) {
+      query = 'select count(*) from ' + tableName;
+      return this.createStatement(query, function (stmt) {
+        return stmt.executeStep() && stmt.getInt32(0);
+      });
     }
   };
 

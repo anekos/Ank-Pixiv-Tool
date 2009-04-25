@@ -626,6 +626,7 @@ saved-minute  = ?saved-minute?
       let ut = AnkUtils;
       let installInterval = 500;
       let installer = null;
+      let con = content;
       let doc = this.currentDocument;
 
       let delay = function (msg) {
