@@ -10,3 +10,4 @@
 <!ENTITY largeOnMiddle "中サイズ画像をクリックで、同一タブに大サイズ画像を表示する。">
 <!ENTITY openComment "コメント欄を自動で開く">
 <!ENTITY alternateFilename "代替ファイル名">
+<!ENTITY confirmExistingDownload "ダウンロード済みの時に確認をする。">

@@ -5,3 +5,4 @@ pref("extensions.ankpixiv.defaultFilename", '?member-name? - ?title?');
 pref("extensions.ankpixiv.largeOnMiddle", true);
 pref("extensions.ankpixiv.openComment", false);
 pref("extensions.ankpixiv.alternateFilename", '?member-name? - ?title? (?illust-id?)');
+pref("extensions.ankpixiv.confimExistingDownload", true);

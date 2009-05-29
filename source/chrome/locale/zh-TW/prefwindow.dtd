@@ -10,3 +10,4 @@
 <!ENTITY largeOnMiddle "點擊中尺寸預覽圖時，在同分頁顯示大尺寸原始圖。">
 <!ENTITY openComment "自動展開回應欄">
 <!ENTITY alternateFilename "候選檔名（若有同名檔案存在時）">
+<!ENTITY confirmExistingDownload "Confirm, if the image has already downloaded.">

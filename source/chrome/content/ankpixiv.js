@@ -516,10 +516,14 @@ try {
           }
         }
 
-        if (this.Prefs.get('checkExistingDownload') &&
-        this.Storage.exists('histories', 'illust_id = ' + illust_id)) {
-          if (!confirm(this.Locale('downloadExistingImage')))
+        /* ダウンロード済みかの確認 */
+        if (this.Storage.exists('histories', 'illust_id = ' + illust_id)) {
+          if (this.Prefs.get('confirmExistingDownload')) {
+            if (!confirm(this.Locale('downloadExistingImage')))
+              return;
+          } else {
             return;
+          }
         }
 
         let savedDateTime = new Date();

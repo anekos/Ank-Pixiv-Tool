@@ -23,15 +23,16 @@
 
       function settings () {
         return [
-          ['initial-directory',   'initialDirectory',  'string'],
-          ['show-save-dialog',    'showSaveDialog',    'boolean', 'checked'],
-          ['save-history',        'saveHistory',       'boolean', 'checked'],
-          ['download-when-rate',  'downloadWhenRate',  'boolean', 'checked'],
-          ['download-rate',       'downloadRate',      'number'],
-          ['default-filename',    'defaultFilename',   'string'],
-          ['alternate-filename',  'alternateFilename', 'string'],
-          ['large-on-middle',     'largeOnMiddle',     'boolean', 'checked'],
-          ['open-comment',        'openComment',       'boolean', 'checked'],
+          ['initial-directory',   'initialDirectory',         'string'],
+          ['show-save-dialog',    'showSaveDialog',           'boolean', 'checked'],
+          ['save-history',        'saveHistory',              'boolean', 'checked'],
+          ['download-when-rate',  'downloadWhenRate',         'boolean', 'checked'],
+          ['download-rate',       'downloadRate',             'number'],
+          ['default-filename',    'defaultFilename',          'string'],
+          ['alternate-filename',  'alternateFilename',        'string'],
+          ['large-on-middle',     'largeOnMiddle',            'boolean', 'checked'],
+          ['open-comment',        'openComment',              'boolean', 'checked'],
+          ['confirm-existing',    'confirmExistingDownload',  'boolean', 'checked'],
         ];
       }
       function selectDir () {
@@ -114,6 +115,7 @@
       <checkbox id="save-history" label="&saveHistory.label;" />
       <checkbox id="large-on-middle" label="&largeOnMiddle;" />
       <checkbox id="open-comment" label="&openComment;" />
+      <checkbox id="confirm-existing" label="&confirmExistingDownload;" />
     </groupbox>
 
     <groupbox orient="vertical">
