@@ -595,24 +595,32 @@ saved-minute  = ?saved-minute?
         };
 
         let onComplete = function (orig_args, local_path) {
-          let caption = this.Locale('finishedDownload');
-          let text = filenames[0];
-          local_path = decodeURIComponent(local_path);
+          try {
+            let caption = this.Locale('finishedDownload');
+            let text = filenames[0];
+            local_path = decodeURIComponent(local_path);
 
-          if (this.Prefs.get('saveHistory', true)) {
-            try {
-              record['local_path'] = local_path;
-              record['filename'] = AnkUtils.extractFilename(local_path);
-              this.Storage.insert('histories', record);
-            } catch (e) {
-              AnkUtils.dumpError(e);
-              caption = 'Error - onComplete';
-              text = e;
+            if (this.Prefs.get('saveHistory', true)) {
+              try {
+                record['local_path'] = local_path;
+                record['filename'] = AnkUtils.extractFilename(local_path);
+                this.Storage.insert('histories', record);
+              } catch (e) {
+                AnkUtils.dumpError(e);
+                caption = 'Error - onComplete';
+                text = e;
+              }
             }
-          }
 
-          this.popupAlert(caption, text);
-          return true;
+            this.popupAlert(caption, text);
+            return true;
+          } catch (e) {
+            let s = '';
+            for (let n in e) {
+              s += n + ': ' + e[n] + '\n';
+            }
+            alert(s);
+          }
         };
 
         let result = this.downloadFile(url, ref, filenames, this.currentImageExt, useDialog, onComplete);
