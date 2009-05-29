@@ -11,3 +11,4 @@
 <!ENTITY openComment "自動展開回應欄">
 <!ENTITY alternateFilename "候選檔名（若有同名檔案存在時）">
 <!ENTITY confirmExistingDownload "Confirm, if the image has already downloaded.">
+<!ENTITY downloadWhenClickMiddle "Automatically download, when the image is clicked.">

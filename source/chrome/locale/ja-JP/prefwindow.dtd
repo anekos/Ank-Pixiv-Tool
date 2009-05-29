@@ -11,3 +11,4 @@
 <!ENTITY openComment "コメント欄を自動で開く">
 <!ENTITY alternateFilename "代替ファイル名">
 <!ENTITY confirmExistingDownload "ダウンロード済みの時に確認をする。">
+<!ENTITY downloadWhenClickMiddle "中画像クリック時に自動的ダウンロードする。">
