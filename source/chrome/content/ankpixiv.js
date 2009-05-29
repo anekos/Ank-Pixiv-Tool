@@ -665,6 +665,17 @@ saved-minute  = ?saved-minute?
         if (!(body && medImg && bigImgPath && wrapper && openComment))
           return delay("delay installation by null");
 
+        // 中画像クリック時に保存する
+        if ($.Prefs.get('downloadWhenClickMiddle')) {
+          medImg.addEventListener(
+            'click',
+            function (e) {
+              $.downloadCurrentImage();
+            },
+            true
+          );
+        }
+
         // 大画像関係
         if ($.Prefs.get('largeOnMiddle', true)) {
           let div = doc.createElement('div');
