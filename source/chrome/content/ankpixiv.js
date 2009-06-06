@@ -403,6 +403,16 @@ try {
       return this.showFilePicker(this.fixFilename(filenames[0]) + ext);
     },
 
+    /*
+     * isDownloaded
+     *    illust_id:     イラストID
+     *    return:        ダウンロード済み？
+     */
+    isDownloaded: function (illust_id) {
+      if (!/^\d+$/.test(illust_id))
+        throw "Invalid illust_id";
+      return this.Storage.exists('histories', 'illust_id = ' + illust_id);
+    },
 
     /*
      * downloadFile
@@ -411,8 +421,8 @@ try {
      *    filenames:      ファイル名の候補リスト
      *    ext:            拡張子
      *    useDialog:      保存ダイアログを使うか？
-     *    return:         成功?
      *    onComplete      終了時のアラート
+     *    return:         成功?
      * ファイルをダウンロードする
      */
     downloadFile: function (url, referer, filenames, ext, useDialog, onComplete) {
@@ -517,7 +527,7 @@ try {
         }
 
         /* ダウンロード済みかの確認 */
-        if (this.Storage.exists('histories', 'illust_id = ' + illust_id)) {
+        if (this.isDownloaded(illust_id)) {
           if (this.Prefs.get('confirmExistingDownload')) {
             if (!confirm(this.Locale('downloadExistingImage')))
               return;
