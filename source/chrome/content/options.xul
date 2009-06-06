@@ -98,8 +98,7 @@
                            .createInstance(Components.interfaces.nsIFilePicker);
         filePicker.init(window, "Choose a folder.", filePicker.modeGetFolder);
         if (filePicker.show() == filePicker.returnOK) {
-            AnkPixiv.Prefs.set("initialDirectory", filePicker.file.path);
-            onLoad();
+          document.getElementById('initial-directory').value = filePicker.file.path;
         }
       }
       function pushToken (elem) {
