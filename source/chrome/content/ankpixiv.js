@@ -23,6 +23,7 @@ try {
       authorIconLink: '//div[@id="profile"]/div/a',
       authorIconImage:'//div[@id="profile"]/div/a/img',
       tags: '//span[@id="tags"]/a',
+      ad: '//*[@id="header"]/div[2]',
       // openComment: '//*[@id="one_comment_view"]/a',
     },
 
@@ -709,15 +710,19 @@ saved-minute  = ?saved-minute?
           let bigMode = false;
 
           let changeImageSize = function () {
+            let ad = AnkUtils.findNodeByXPath($.XPath.ad);
             if (bigMode) {
               div.style.display = 'none';
               wrapper.setAttribute('style', '-moz-opacity: 1;');
+              ad.style.display = ad.__ank_pixiv__style_display;
             } else {
               bigImg.setAttribute('src', bigImgPath);
               window.content.scrollTo(0, 0);
               div.style.display = '';
               wrapper.setAttribute('style', '-moz-opacity: 0.1;');
               bigImg.style['-moz-opacity'] = '1 !important;';
+              ad.__ank_pixiv__style_display = ad.style.display;
+              ad.style.display = 'none';
             }
             bigMode = !bigMode;
           };
@@ -907,6 +912,7 @@ saved-minute  = ?saved-minute?
 
 
     onDownloadButtonClick: function (event) {
+      event.preventDefault();
       let useDialog = this.Prefs.get('showSaveDialog', true);
       if (this.enabled) {
         switch(event.button) {
@@ -928,7 +934,6 @@ saved-minute  = ?saved-minute?
           case 2: this.openPrefWindow(); break;
         }
       }
-      event.preventDefault();
     },
 
 
