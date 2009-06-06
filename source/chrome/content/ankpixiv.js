@@ -651,7 +651,7 @@ saved-minute  = ?saved-minute?
      * 自動的にダウンロードする場合はこっちを使う
      */
     downloadCurrentImageAuto: function () {
-      this.downloadCurrentImage(undefined, this.Prefs('confirmExistingDownloadWhenAuto'));
+      this.downloadCurrentImage(undefined, this.Prefs.get('confirmExistingDownloadWhenAuto'));
     },
 
     get functionsInstaller function () {
