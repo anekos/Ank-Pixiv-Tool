@@ -484,16 +484,20 @@ try {
 
     /*
      * downloadCurrentImage
-     *    useDialog:  保存ダイアログを使うか？
-     *    debug:      トークンのテストを行う
-     *    return:     成功？
+     *    useDialog:            保存ダイアログを使うか？
+     *    confirmDownloaded:    ダウンロード済みの場合の確認を行うか？
+     *    debug:                トークンのテストを行う
+     *    return:               成功？
      * 現在表示されている画像を保存する
      */
-    downloadCurrentImage: function (useDialog, debug) {
+    downloadCurrentImage: function (useDialog, confirmDownloaded, debug) {
       try {
 
-        if (useDialog === undefined)
+        if (typeof useDialog === 'undefined')
           useDialog = this.Prefs.get('showSaveDialog', true);
+
+        if (typeof confirmDownloaded === 'undefined')
+          confirmDownloaded = this.Prefs.get('confirmExistingDownload');
 
         if (!this.enabled)
           return false;
@@ -528,7 +532,7 @@ try {
 
         /* ダウンロード済みかの確認 */
         if (this.isDownloaded(illust_id)) {
-          if (this.Prefs.get('confirmExistingDownload')) {
+          if (confirmDownloaded) {
             if (!confirm(this.Locale('downloadExistingImage')))
               return;
           } else {
@@ -642,6 +646,13 @@ saved-minute  = ?saved-minute?
       }
     },
 
+    /*
+     * downloadCurrentImageAuto
+     * 自動的にダウンロードする場合はこっちを使う
+     */
+    downloadCurrentImageAuto: function () {
+      this.downloadCurrentImage(undefined, this.Prefs('confirmExistingDownloadWhenAuto'));
+    },
 
     get functionsInstaller function () {
       let $ = this;
@@ -680,7 +691,7 @@ saved-minute  = ?saved-minute?
           medImg.addEventListener(
             'click',
             function (e) {
-              $.downloadCurrentImage();
+              $.downloadCurrentImageAuto();
             },
             true
           );
@@ -732,7 +743,7 @@ saved-minute  = ?saved-minute?
           while (elem = iter.iterateNext()) {
             let m = elem.className.match(/r(\d{1,2})-unit/);
             if (m && (point <= parseInt(m[1]))) {
-              elem.addEventListener('click', function() $.downloadCurrentImage(), true);
+              elem.addEventListener('click', function() $.downloadCurrentImageAuto(), true);
             }
           }
         })();

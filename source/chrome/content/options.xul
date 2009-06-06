@@ -23,17 +23,74 @@
 
       function settings () {
         return [
-          ['initial-directory',     'initialDirectory',         'string'],
-          ['show-save-dialog',      'showSaveDialog',           'boolean', 'checked'],
-          ['save-history',          'saveHistory',              'boolean', 'checked'],
-          ['download-when-rate',    'downloadWhenRate',         'boolean', 'checked'],
-          ['download-rate',         'downloadRate',             'number'],
-          ['default-filename',      'defaultFilename',          'string'],
-          ['alternate-filename',    'alternateFilename',        'string'],
-          ['large-on-middle',       'largeOnMiddle',            'boolean', 'checked'],
-          ['open-comment',          'openComment',              'boolean', 'checked'],
-          ['confirm-existing',      'confirmExistingDownload',  'boolean', 'checked'],
-          ['download-when-middle',  'downloadWhenClickMiddle',  'boolean', 'checked'],
+          [
+            'initial-directory',
+            'initialDirectory',
+            'string'
+          ],
+          [
+            'show-save-dialog',
+            'showSaveDialog',
+            'boolean',
+            'checked'
+          ],
+          [
+            'save-history',
+            'saveHistory',
+            'boolean',
+            'checked'
+          ],
+          [
+            'download-when-rate',
+            'downloadWhenRate',
+            'boolean',
+            'checked'
+          ],
+          [
+            'download-rate',
+            'downloadRate',
+            'number'
+          ],
+          [
+            'default-filename',
+            'defaultFilename',
+            'string'
+          ],
+          [
+            'alternate-filename',
+            'alternateFilename',
+            'string'
+          ],
+          [
+            'large-on-middle',
+            'largeOnMiddle',
+            'boolean',
+            'checked'
+          ],
+          [
+            'open-comment',
+            'openComment',
+            'boolean',
+            'checked'
+          ],
+          [
+            'confirm-existing',
+            'confirmExistingDownload',
+            'boolean',
+            'checked'
+          ],
+          [
+            'confirm-existing-when-auto',
+            'confirmExistingDownloadWhenAuto',
+            'boolean',
+            'checked'
+          ],
+          [
+            'download-when-middle',
+            'downloadWhenClickMiddle',
+            'boolean',
+            'checked'
+          ],
         ];
       }
       function selectDir () {
@@ -62,6 +119,8 @@
           let elem = document.getElementById(id);
           elem[prop] = AnkPixiv.Prefs.get(name, elem[prop]);
         });
+        document.getElementById('confirm-existing-when-auto').disabled =
+          !AnkPixiv.Prefs.get('confirmExistingDownload');
         return true;
       }
       function onSave (event) {
@@ -84,6 +143,10 @@
           AnkPixiv.Prefs.set(name, elem[prop], type);
         });
         return true;
+      }
+
+      function onConfirmExistingDownloadClick (event) {
+        document.getElementById('confirm-existing-when-auto').disabled = event.target.checked;
       }
   ]]></script>
 
@@ -116,7 +179,9 @@
       <checkbox id="save-history" label="&saveHistory.label;" />
       <checkbox id="large-on-middle" label="&largeOnMiddle;" />
       <checkbox id="open-comment" label="&openComment;" />
-      <checkbox id="confirm-existing" label="&confirmExistingDownload;" />
+      <checkbox id="confirm-existing" label="&confirmExistingDownload;"
+                onclick="onConfirmExistingDownloadClick(event)"/>
+      <checkbox id="confirm-existing-when-auto" label="&confirmExistingDownloadWhenAuto;" />
       <checkbox id="download-when-middle" label="&downloadWhenClickMiddle;" />
     </groupbox>
 
