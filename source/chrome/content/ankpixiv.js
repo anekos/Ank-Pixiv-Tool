@@ -912,6 +912,7 @@ saved-minute  = ?saved-minute?
 
 
     onDownloadButtonClick: function (event) {
+      event.stopPropagation();
       event.preventDefault();
       let useDialog = this.Prefs.get('showSaveDialog', true);
       if (this.enabled) {
