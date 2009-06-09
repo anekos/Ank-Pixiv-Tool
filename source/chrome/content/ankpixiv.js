@@ -713,14 +713,14 @@ saved-minute  = ?saved-minute?
             let ad = AnkUtils.findNodeByXPath($.XPath.ad);
             if (bigMode) {
               div.style.display = 'none';
-              wrapper.setAttribute('style', '-moz-opacity: 1;');
+              wrapper.setAttribute('style', 'opacity: 1;');
               ad.style.display = ad.__ank_pixiv__style_display;
             } else {
               bigImg.setAttribute('src', bigImgPath);
               window.content.scrollTo(0, 0);
               div.style.display = '';
-              wrapper.setAttribute('style', '-moz-opacity: 0.1;');
-              bigImg.style['-moz-opacity'] = '1 !important;';
+              wrapper.setAttribute('style', 'opacity: 0.1;');
+              bigImg.style['opacity'] = '1 !important;';
               ad.__ank_pixiv__style_display = ad.style.display;
               ad.style.display = 'none';
             }
