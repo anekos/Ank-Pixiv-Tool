@@ -7,7 +7,7 @@
 
     <em:id>ankpixiv@snca.net</em:id>
     <em:name>Ank Pixiv Tool</em:name>
-    <em:version>1.5.0</em:version>
+    <em:version>1.6.0</em:version>
     <em:description>Easy Pixiv-illustraion downloader</em:description>
     <em:creator>anekos</em:creator>
     <em:homepageURL>http://d.hatena.ne.jp/nokturnalmortum/20080617/1213645393</em:homepageURL>
@@ -22,7 +22,7 @@
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
         <em:minVersion>3.0</em:minVersion>
-        <em:maxVersion>3.1b3pre</em:maxVersion>
+        <em:maxVersion>3.5b4</em:maxVersion>
       </Description>
     </em:targetApplication>
 
