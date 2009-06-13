@@ -11,7 +11,7 @@
     <em:description>Easy Pixiv-illustraion downloader</em:description>
     <em:creator>anekos</em:creator>
     <em:homepageURL>http://d.hatena.ne.jp/nokturnalmortum/20080617/1213645393</em:homepageURL>
-    <em:iconURL>chrome://ankpixiv/skin/ankpixiv-icon.png</em:iconURL>
+    <em:iconURL>chrome://ankpixiv/content/icon.png</em:iconURL>
     <em:optionsURL>chrome://ankpixiv/content/options.xul</em:optionsURL>
     <em:type>2</em:type>
 
