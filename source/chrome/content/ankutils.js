@@ -190,9 +190,13 @@ try {
     ********************************************************************************/
 
     popupAlert: function (iconPath, title, text, buttonEnabled, a, b) {
-      const ALERT_SVC = AnkUtils.ccgs("@mozilla.org/alerts-service;1",
-                                      Components.interfaces.nsIAlertsService);
-      return ALERT_SVC.showAlertNotification.apply(ALERT_SVC, arguments);
+      try {
+        const ALERT_SVC = AnkUtils.ccgs("@mozilla.org/alerts-service;1",
+                                        Components.interfaces.nsIAlertsService);
+        return ALERT_SVC.showAlertNotification.apply(ALERT_SVC, arguments);
+      } catch (e) {
+        return;
+      }
     },
 
 
