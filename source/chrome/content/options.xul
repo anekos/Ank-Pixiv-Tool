@@ -91,6 +91,18 @@
             'boolean',
             'checked'
           ],
+          [
+            'show-complete-popup',
+            'showCompletePopup',
+            'boolean',
+            'checked'
+          ],
+          [
+            'display-downloaded',
+            'displayDownloaded',
+            'boolean',
+            'checked'
+          ],
         ];
       }
       function selectDir () {
@@ -182,6 +194,8 @@
                 onclick="onConfirmExistingDownloadClick(event)"/>
       <checkbox id="confirm-existing-when-auto" label="&confirmExistingDownloadWhenAuto;" />
       <checkbox id="download-when-middle" label="&downloadWhenClickMiddle;" />
+      <checkbox id="show-complete-popup" label="&showCompletePopup;" />
+      <checkbox id="display-downloaded" label="&displayDownloaded;" />
     </groupbox>
 
     <groupbox orient="vertical">

@@ -637,8 +637,8 @@ saved-minute  = ?saved-minute?
                 text = e;
               }
             }
-
-            this.popupAlert(caption, text);
+            if (this.Prefs.get('showCompletePopup', true))
+              this.popupAlert(caption, text);
             return true;
           } catch (e) {
             let s = '';
@@ -763,6 +763,19 @@ saved-minute  = ?saved-minute?
             }
           }
         })();
+
+        // ダウンロード済みの表示
+        if ($.Prefs.get('displayDownloaded', true)) {
+          if ($.isDownloaded($.currentImageId)) {
+            let div = doc.createElement('div');
+            div.textContent = $.Locale('downloaded');
+            div.setAttribute('style', $.Prefs.get('downloadedDisplayStyle', ''));
+            div.setAttribute('id', 'ankpixiv-downloaded-display');
+            let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.title);
+            if (node)
+              node.parentNode.insertBefore(div, node);
+          }
+        }
 
         // コメント欄を開く
         if ($.Prefs.get('openComment', false))

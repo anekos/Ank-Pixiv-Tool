@@ -13,3 +13,6 @@
 <!ENTITY confirmExistingDownload "再ダウンロードの確認">
 <!ENTITY confirmExistingDownloadWhenAuto "再ダウンロードの確認(自動ダウンロード時)">
 <!ENTITY downloadWhenClickMiddle "中画像クリック時に自動的ダウンロードする。">
+<!ENTITY showCompletePopup "ダウンロード終了時にポップアップ表示">
+<!ENTITY displayDownloaded "「保存済み」の表示">
+

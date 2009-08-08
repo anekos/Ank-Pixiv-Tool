@@ -13,3 +13,5 @@
 <!ENTITY confirmExistingDownload "手動下載時若有重複就跳出確認視窗。">
 <!ENTITY confirmExistingDownloadWhenAuto "自動下載時若有重複就跳出確認視窗。">
 <!ENTITY downloadWhenClickMiddle "點擊中尺寸預覽圖時，自動下載圖片。">
+<!ENTITY showCompletePopup "Show popup, when download ends.">
+<!ENTITY displayDownloaded "Display \"Already downloaded\"">

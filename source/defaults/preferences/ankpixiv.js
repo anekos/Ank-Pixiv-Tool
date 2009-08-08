@@ -8,3 +8,6 @@ pref("extensions.ankpixiv.alternateFilename", '?member-name? - ?title? (?illust-
 pref("extensions.ankpixiv.confirmExistingDownload", true);
 pref("extensions.ankpixiv.downloadWhenClickMiddle", false);
 pref("extensions.ankpixiv.confirmExistingDownloadWhenAuto", false);
+pref("extensions.ankpixiv.showCompletePopup", true);
+pref("extensions.ankpixiv.displayDownloaded", true);
+pref("extensions.ankpixiv.downloadedDisplayStyle", "color: red; font-weight: bold");

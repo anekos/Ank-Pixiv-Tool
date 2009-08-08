@@ -13,3 +13,5 @@
 <!ENTITY confirmExistingDownload "Confirmation of re-download.">
 <!ENTITY confirmExistingDownloadWhenAuto "Confirmation of re-download when automatic download.">
 <!ENTITY downloadWhenClickMiddle "Automatically download, when you click the middle image.">
+<!ENTITY showCompletePopup "Show popup, when download ends.">
+<!ENTITY displayDownloaded "Display \"Already downloaded\"">
