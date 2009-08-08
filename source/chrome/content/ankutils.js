@@ -108,22 +108,22 @@ try {
       return str;
     },
 
+    zeroPad: function(s, n) {
+      return s.toString().replace(new RegExp('^(.{0,'+(n-1)+'})$'),
+                                  function(s) { return AnkUtils.zeroPad('0'+s, n); });
+    },
 
     toSQLDateTimeString: function (datetime) {
       if (!datetime)
         datetime = new Date();
       let $ = this;
-      let zeroPad = function(s, n) {
-        return s.toString().replace(new RegExp('^(.{0,'+(n-1)+'})$'),
-                         function(s) { return zeroPad('0'+s, n); });
-      };
-      let dy = zeroPad(datetime.getFullYear(),      4);
-      let dm = zeroPad(datetime.getMonth() + 1,     2);
-      let dd = zeroPad(datetime.getDate(),          2);
-      let th = zeroPad(datetime.getHours(),         2);
-      let tm = zeroPad(datetime.getMinutes(),       2);
-      let ts = zeroPad(datetime.getSeconds(),       2);
-      let ms = zeroPad(datetime.getMilliseconds(),  3);
+      let dy = AnkUtils.zeroPad(datetime.getFullYear(),      4);
+      let dm = AnkUtils.zeroPad(datetime.getMonth() + 1,     2);
+      let dd = AnkUtils.zeroPad(datetime.getDate(),          2);
+      let th = AnkUtils.zeroPad(datetime.getHours(),         2);
+      let tm = AnkUtils.zeroPad(datetime.getMinutes(),       2);
+      let ts = AnkUtils.zeroPad(datetime.getSeconds(),       2);
+      let ms = AnkUtils.zeroPad(datetime.getMilliseconds(),  3);
       return dy + '-' + dm + '-' + dd + ' ' + th + ':' + tm + ':' + ts + '.' + ms;
     },
 

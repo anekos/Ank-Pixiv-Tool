@@ -572,10 +572,10 @@ try {
                      replace('?illust-hour?', ii.hour).
                      replace('?illust-minute?', ii.minute).
                      replace('?saved-year?', savedDateTime.getFullYear()).
-                     replace('?saved-month?', savedDateTime.getMonth() + 1).
-                     replace('?saved-day?', savedDateTime.getDate()).
-                     replace('?saved-hour?', savedDateTime.getHours()).
-                     replace('?saved-minute?', savedDateTime.getMinutes()).
+                     replace('?saved-month?', AnkUtils.zeroPad(savedDateTime.getMonth() + 1, 2)).
+                     replace('?saved-day?', AnkUtils.zeroPad(savedDateTime.getDate(), 2)).
+                     replace('?saved-hour?', AnkUtils.zeroPad(savedDateTime.getHours(), 2)).
+                     replace('?saved-minute?', AnkUtils.zeroPad(savedDateTime.getMinutes(), 2)).
                      toString();
           }
           filenames.push(repl(defaultFilename));
