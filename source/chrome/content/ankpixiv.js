@@ -25,6 +25,8 @@ try {
       tags: '//span[@id="tags"]/a',
       ad: '//*[@id="header"]/div[2]',
       comment: 'id("illust_comment")',
+      dateTime: 'id("content2")/div[1]/table/tbody/tr/td[1]/div[1]',
+      title: 'id("content2")/div[1]/table/tbody/tr/td[1]/div[2]',
       // openComment: '//*[@id="one_comment_view"]/a',
     },
 
@@ -167,7 +169,7 @@ try {
     info: (function () {
       let illust = {
         get dateTime () {
-          let node = AnkUtils.findNodeByXPath('//*[@id="content2"]/div/table/tbody/tr/td/div[1]');
+          let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.dateTime);
           let m = node.textContent.match(/(\d+)年(\d+)月(\d+)日 (\d+):(\d+)/);
           return {
             year: m[1],
@@ -207,7 +209,7 @@ try {
           AnkPixiv.currentImagePath.match(/^http:\/\/([^\/\.]+)\./i)[1],
 
         get title () {
-          let node = AnkUtils.findNodeByXPath('//*[@id="content2"]/div/table/tbody/tr/td/div[2]');
+          let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.title);
           return AnkUtils.trim(node.textContent);
         },
 
