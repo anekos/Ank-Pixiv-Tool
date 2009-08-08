@@ -7,7 +7,7 @@ try {
     * 定数
     ********************************************************************************/
 
-    DB_VERSION: 1,
+    DB_VERSION: 2,
 
     VERSION: AnkUtils.getVersion('ankpixiv@snca.net'),
 
@@ -24,6 +24,7 @@ try {
       authorIconImage:'//div[@id="profile"]/div/a/img',
       tags: '//span[@id="tags"]/a',
       ad: '//*[@id="header"]/div[2]',
+      comment: 'id("illust_comment")',
       // openComment: '//*[@id="one_comment_view"]/a',
     },
 
@@ -41,6 +42,7 @@ try {
           saved: "boolean",
           filename: "string",
           version: "integer",
+          comment: "string",
         },
         members: {
           id: "integer",
@@ -207,6 +209,11 @@ try {
         get title () {
           let node = AnkUtils.findNodeByXPath('//*[@id="content2"]/div/table/tbody/tr/td/div[2]');
           return AnkUtils.trim(node.textContent);
+        },
+
+        get comment () {
+          let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.comment);
+          return node ? AnkUtils.trim(node.textContent) :  '';
         },
       };
       'year month day hour minute'.split(/\s+/).forEach(function (name) {
@@ -510,6 +517,7 @@ try {
         let member_name = this.info.memberName || member_id;
         let tags        = this.currentImageTags;
         let title       = this.info.illust.title;
+        let comment     = this.info.illust.comment;
         let filenames   = [];
         let shortTags   = (function (len) {
                             let result = [];
@@ -606,6 +614,7 @@ saved-minute  = ?saved-minute?
           server: this.info.illust.server,
           saved: true,
           datetime: AnkUtils.toSQLDateTimeString(savedDateTime),
+          comment: comment,
           version: AnkPixiv.DB_VERSION,
         };
 
