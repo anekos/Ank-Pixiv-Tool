@@ -410,7 +410,7 @@ try {
         dump(e);
       }
 
-      return this.showFilePicker(this.fixFilename(filenames[0]) + ext);
+      return this.showFilePicker(filenames[0] + ext);
     },
 
     /*
