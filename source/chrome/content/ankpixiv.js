@@ -388,10 +388,10 @@ try {
         let initDir = this.newLocalFile('file://' + prefInitDir);
 
         if (!initDir.exists())
-          return this.showFilePicker(this.fixFilename(filenames[0]) + ext);
+          return this.showFilePicker(filenames[0] + ext);
 
         for (let i in filenames) {
-          let filename = this.fixFilename(filenames[i]) + ext;
+          let filename = filenames[i] + ext;
           let url = 'file://' + prefInitDir + AnkUtils.SYS_SLASH + filename;
           let localfile = this.newLocalFile(url);
 
@@ -402,7 +402,7 @@ try {
             return this.showFilePicker(filename);
           } else {
             let res = IOService.newFileURI(localfile);
-            return {fileURL: res, file: res};
+            return {fileURL: res, file: localfile};
           }
         }
       } catch (e) {
@@ -440,6 +440,10 @@ try {
       let filePicker = this.getSaveFilePath(filenames, ext, useDialog);
       if (!filePicker)
         return;
+
+      // ディレクトリ作成
+      let (dir = filePicker.file.parent)
+        dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
 
       // 各種オブジェクトの生成
       let sourceURI = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService).
@@ -479,7 +483,6 @@ try {
         onSecurityChange: function (_webProgress, _request, _state) {},
       }
 
-
       // 保存開始
       wbpersist.progressListener = progressListener;
       wbpersist.persistFlags = Components.interfaces.nsIWebBrowserPersist.
@@ -490,7 +493,6 @@ try {
       // 成功
       return filePicker.fileURL.path;
     },
-
 
     /*
      * downloadCurrentImage
@@ -555,28 +557,31 @@ try {
         let defaultFilename = this.Prefs.get('defaultFilename', '?member-name? - ?title?');
         let alternateFilename = this.Prefs.get('alternateFilename', '?member-name? - ?title? - (?illust-id?)');
         (function () {
+          let i = AnkPixiv.info;
+          let ii = i.illust;
+          let ps = [
+            [/\?title\?/g, title],
+            [/\?member-id\?/g, member_id],
+            [/\?member-name\?/g, member_name],
+            [/\?tags\?/g, AnkUtils.join(tags, ' ')],
+            [/\?short-tags\?/g, AnkUtils.join(shortTags, ' ')],
+            [/\?tools\?/g, ii.tools],
+            [/\?pixiv-id\?/g, i.pixivId],
+            [/\?illust-id\?/g, illust_id],
+            [/\?illust-year\?/g, ii.year],
+            [/\?illust-month\?/g, ii.month],
+            [/\?illust-day\?/g, ii.day],
+            [/\?illust-hour\?/g, ii.hour],
+            [/\?illust-minute\?/g, ii.minute],
+            [/\?saved-year\?/g, savedDateTime.getFullYear()],
+            [/\?saved-month\?/g, AnkUtils.zeroPad(savedDateTime.getMonth() + 1, 2)],
+            [/\?saved-day\?/g, AnkUtils.zeroPad(savedDateTime.getDate(), 2)],
+            [/\?saved-hour\?/g, AnkUtils.zeroPad(savedDateTime.getHours(), 2)],
+            [/\?saved-minute\?/g, AnkUtils.zeroPad(savedDateTime.getMinutes(), 2)]
+          ].map(function ([re, val]) [re, AnkPixiv.fixFilename(val.toString())]);
           function repl (s) {
-            let i = AnkPixiv.info;
-            let ii = i.illust;
-            return s.replace('?title?', title).
-                     replace('?member-id?', member_id).
-                     replace('?member-name?', member_name).
-                     replace('?tags?', AnkUtils.join(tags, ' ')).
-                     replace('?short-tags?', AnkUtils.join(shortTags, ' ')).
-                     replace('?tools?', ii.tools).
-                     replace('?pixiv-id?', i.pixivId).
-                     replace('?illust-id?', illust_id).
-                     replace('?illust-year?', ii.year).
-                     replace('?illust-month?', ii.month).
-                     replace('?illust-day?', ii.day).
-                     replace('?illust-hour?', ii.hour).
-                     replace('?illust-minute?', ii.minute).
-                     replace('?saved-year?', savedDateTime.getFullYear()).
-                     replace('?saved-month?', AnkUtils.zeroPad(savedDateTime.getMonth() + 1, 2)).
-                     replace('?saved-day?', AnkUtils.zeroPad(savedDateTime.getDate(), 2)).
-                     replace('?saved-hour?', AnkUtils.zeroPad(savedDateTime.getHours(), 2)).
-                     replace('?saved-minute?', AnkUtils.zeroPad(savedDateTime.getMinutes(), 2)).
-                     toString();
+            ps.forEach(function ([re, val]) (s = s.replace(re, val)))
+            return s;
           }
           filenames.push(repl(defaultFilename));
           filenames.push(repl(alternateFilename));
