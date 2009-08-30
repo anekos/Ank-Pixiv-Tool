@@ -4,7 +4,7 @@
 <!ENTITY initialDirectory.path "">
 <!ENTITY showSaveDialog.label "儲存時顯示對話視窗（取消這選項時會自動存到你設定好的儲存路徑）">
 <!ENTITY saveHistory.label "記錄下載歷程">
-<!ENTITY downloadRate.label "分評價（你給的）以上的圖自動下載。">
+<!ENTITY downloadRate.label "分評價（由你給的）以上的圖自動下載。">
 <!ENTITY browse "瀏覽">
 <!ENTITY defaultFilename "儲存時的檔案名稱">
 <!ENTITY largeOnMiddle "點擊中尺寸預覽圖時，在同分頁顯示大尺寸原始圖。">
@@ -13,5 +13,5 @@
 <!ENTITY confirmExistingDownload "手動下載時若有重複就跳出確認視窗。">
 <!ENTITY confirmExistingDownloadWhenAuto "自動下載時若有重複就跳出確認視窗。">
 <!ENTITY downloadWhenClickMiddle "點擊中尺寸預覽圖時，自動下載圖片。">
-<!ENTITY showCompletePopup "Show popup, when download ends.">
-<!ENTITY displayDownloaded "Display \"Already downloaded\"">
+<!ENTITY showCompletePopup "下載完成時，顯示快顯視窗。">
+<!ENTITY displayDownloaded "顯示「已下載過了」的文字訊息">
