@@ -1,17 +1,10 @@
 #!/usr/bin/zsh
 
-version=$1
-xpi=ank_pixiv_tool-$version.xpi
-reldir=release/$version
-relxpi=$reldir/$xpi
-
-cd /root/project/AnkPixivTools/build
-
-cp -r "release/$version/install.rdf" ../source/
+xpi=ank_pixiv_tool.xpi
 
 cd ../source
-rm ../build/$relxpi
-zip -r ../build/$relxpi *
+rm ../build/$xpi
+zip -r ../build/$xpi *
 
 cd ../build
 
