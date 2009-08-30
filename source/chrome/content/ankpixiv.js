@@ -771,9 +771,9 @@ saved-minute  = ?saved-minute?
             div.textContent = $.Locale('downloaded');
             div.setAttribute('style', $.Prefs.get('downloadedDisplayStyle', ''));
             div.setAttribute('id', 'ankpixiv-downloaded-display');
-            let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.title);
+            let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.dateTime);
             if (node)
-              node.parentNode.insertBefore(div, node);
+              node.appendChild(div);
           }
         }
 
