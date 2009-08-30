@@ -327,10 +327,9 @@ try {
      *    return:   boolean
      * 同じファイル名が存在するか？
      */
-    // FIXME
     filenameExists: function (filename)
       AnkPixiv.Storage.exists('histories',
-                              'filename like ?',
+                              'filename = ?',
                               function (stmt) stmt.bindUTF8StringParameter(0, filename)),
 
 
