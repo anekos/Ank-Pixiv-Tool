@@ -171,7 +171,8 @@ try {
         get dateTime () {
           let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.dateTime);
           let m = node.textContent.match(/(\d+)[^\d]+(\d+)[^\d]+(\d+)[^\d]+(\d+):(\d+)/);
-          if(!m) throw "regex erorr";
+          if (!m)
+            throw 'regex erorr';
           return {
             year: m[1],
             month: m[2],
@@ -228,10 +229,10 @@ try {
         get pixivId () {
           let node = AnkUtils.findNodeByXPath('//*[@id="profile"]/div/a/img');
           let m = node.src.match(/\/profile\/([^\/]+)\//);
-         if(!m){
+          if (!m) {
             node = content.document.querySelector("img[src*='_m.'][src*='/img/']");
             m = node.src.match(/\/img\/([^\/]+)\//);
-         }
+          }
           return m && m[1];
         },
         get memberName () {
