@@ -17,6 +17,10 @@
 
     <em:translator>anekos</em:translator>
     <em:translator>winiah</em:translator>
+    <em:translator>erglo</em:translator>
+    <em:translator>Leszek(teo)Życzkowski</em:translator>
+    <em:translator>yfdyh000</em:translator>
+    <em:translator>Marcelo Ghelman (ghelman.net)</em:translator>
 
     <em:targetApplication>
       <Description>
@@ -25,6 +29,22 @@
         <em:maxVersion>3.5.*</em:maxVersion>
       </Description>
     </em:targetApplication>
+    
+    <em:localized>
+        <Description>
+          <em:locale>de-DE</em:locale>
+          <em:name>Ank Pixiv Tool</em:name>
+          <em:description>Pixiv-Bilder einfacher herunterladen</em:description>
+      </Description>
+    </em:localized>
+    
+   <em:localized>
+        <Description>
+          <em:locale>jja-JP</em:locale>
+          <em:name>Ank Pixiv Tool</em:name>
+          <em:description>Pixiv のイラストを簡単にダウンロードするための拡張</em:description>
+      </Description>
+    </em:localized>
 
   </Description>
 

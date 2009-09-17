@@ -1,7 +1,6 @@
 <!ENTITY prefwindow.title "Ank Pixiv Tool 設定">
 <!ENTITY mainpane.title "Ank Pixiv Tool 設定">
 <!ENTITY initialDirectory.label "儲存路徑">
-<!ENTITY initialDirectory.path "">
 <!ENTITY showSaveDialog.label "儲存時顯示對話視窗（取消這選項時會自動存到你設定好的儲存路徑）">
 <!ENTITY saveHistory.label "記錄下載歷程">
 <!ENTITY downloadRate.label "分評價（由你給的）以上的圖自動下載。">

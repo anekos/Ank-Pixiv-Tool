@@ -1,7 +1,6 @@
 <!ENTITY prefwindow.title "Ank Pixiv Tool preferences">
 <!ENTITY mainpane.title "Ank Pixiv Tool preferences">
 <!ENTITY initialDirectory.label "Save illustration to:">
-<!ENTITY initialDirectory.path "">
 <!ENTITY showSaveDialog.label "Use save dialog when downloading illustration">
 <!ENTITY saveHistory.label "Save download history">
 <!ENTITY downloadRate.label "Download the illustration when you give it a score rating this number or beyond.">
