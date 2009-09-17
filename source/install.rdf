@@ -7,20 +7,48 @@
 
     <em:id>ankpixiv@snca.net</em:id>
     <em:name>Ank Pixiv Tool</em:name>
-    <em:version>1.8.2</em:version>
-    <em:description>Easy Pixiv-illustration downloader</em:description>
-    <em:creator>anekos</em:creator>
-    <em:homepageURL>http://d.hatena.ne.jp/nokturnalmortum/20080617/1213645393</em:homepageURL>
+    <em:version>1.8.3</em:version>
+    <em:localized>
+      <Description>
+        <em:name>Ank Pixiv Tool</em:name>
+        <em:locale>en-US</em:locale>
+        <em:description>Easy Pixiv-illustration downloader</em:description>
+        <em:creator>anekos</em:creator>
+        <em:homepageURL>http://d.hatena.ne.jp/nokturnalmortum/20080617/1213645393</em:homepageURL>
+        <em:translator>winiah</em:translator>
+        <em:translator>erglo</em:translator>
+        <em:translator>Leszek(teo)Życzkowski</em:translator>
+        <em:translator>yfdyh000</em:translator>
+        <em:translator>Marcelo Ghelman (ghelman.net)</em:translator>
+      </Description>
+      <Description>
+        <em:name>Ank Pixiv Tool</em:name>
+        <em:locale>ja-JP</em:locale>
+        <em:description>簡単Pixivイラストダウンローダ</em:description>
+        <em:creator>anekos</em:creator>
+        <em:homepageURL>http://d.hatena.ne.jp/nokturnalmortum/20080617/1213645393</em:homepageURL>
+        <em:translator>winiah</em:translator>
+        <em:translator>erglo</em:translator>
+        <em:translator>Leszek(teo)Życzkowski</em:translator>
+        <em:translator>yfdyh000</em:translator>
+        <em:translator>Marcelo Ghelman (ghelman.net)</em:translator>
+      </Description>
+      <Description>
+        <em:name>Ank Pixiv Tool</em:name>
+        <em:locale>de-DE</em:locale>
+        <em:description>Pixiv-Bilder einfacher herunterladen</em:description>
+        <em:creator>anekos</em:creator>
+        <em:homepageURL>http://d.hatena.ne.jp/nokturnalmortum/20080617/1213645393</em:homepageURL>
+        <em:translator>winiah</em:translator>
+        <em:translator>erglo</em:translator>
+        <em:translator>Leszek(teo)Życzkowski</em:translator>
+        <em:translator>yfdyh000</em:translator>
+        <em:translator>Marcelo Ghelman (ghelman.net)</em:translator>
+      </Description>
+    </em:localized>
     <em:iconURL>chrome://ankpixiv/content/icon.png</em:iconURL>
     <em:optionsURL>chrome://ankpixiv/content/options.xul</em:optionsURL>
     <em:type>2</em:type>
-
-    <em:translator>anekos</em:translator>
-    <em:translator>winiah</em:translator>
-    <em:translator>erglo</em:translator>
-    <em:translator>Leszek(teo)Życzkowski</em:translator>
-    <em:translator>yfdyh000</em:translator>
-    <em:translator>Marcelo Ghelman (ghelman.net)</em:translator>
 
     <em:targetApplication>
       <Description>
@@ -29,22 +57,6 @@
         <em:maxVersion>3.5.*</em:maxVersion>
       </Description>
     </em:targetApplication>
-    
-    <em:localized>
-        <Description>
-          <em:locale>de-DE</em:locale>
-          <em:name>Ank Pixiv Tool</em:name>
-          <em:description>Pixiv-Bilder einfacher herunterladen</em:description>
-      </Description>
-    </em:localized>
-    
-   <em:localized>
-        <Description>
-          <em:locale>jja-JP</em:locale>
-          <em:name>Ank Pixiv Tool</em:name>
-          <em:description>Pixiv のイラストを簡単にダウンロードするための拡張</em:description>
-      </Description>
-    </em:localized>
 
   </Description>
 
