@@ -20,6 +20,8 @@
         <em:translator>Leszek(teo)Życzkowski</em:translator>
         <em:translator>yfdyh000</em:translator>
         <em:translator>Marcelo Ghelman (ghelman.net)</em:translator>
+        <em:translator>saudi.linux</em:translator>
+        <em:translator>Jojaba - BabelZilla</em:translator>
       </Description>
       <Description>
         <em:name>Ank Pixiv Tool</em:name>
@@ -32,6 +34,8 @@
         <em:translator>Leszek(teo)Życzkowski</em:translator>
         <em:translator>yfdyh000</em:translator>
         <em:translator>Marcelo Ghelman (ghelman.net)</em:translator>
+        <em:translator>saudi.linux</em:translator>
+        <em:translator>Jojaba - BabelZilla</em:translator>
       </Description>
       <Description>
         <em:name>Ank Pixiv Tool</em:name>
@@ -44,6 +48,22 @@
         <em:translator>Leszek(teo)Życzkowski</em:translator>
         <em:translator>yfdyh000</em:translator>
         <em:translator>Marcelo Ghelman (ghelman.net)</em:translator>
+        <em:translator>saudi.linux</em:translator>
+        <em:translator>Jojaba - BabelZilla</em:translator>
+      </Description>
+      <Description>
+        <em:name>Ank Pixiv Tool</em:name>
+        <em:locale>fr</em:locale>
+        <em:description>Télécharger plus facilement les illustrations pixiv</em:description>
+        <em:creator>anekos</em:creator>
+        <em:homepageURL>http://d.hatena.ne.jp/nokturnalmortum/20080617/1213645393</em:homepageURL>
+        <em:translator>winiah</em:translator>
+        <em:translator>erglo</em:translator>
+        <em:translator>Leszek(teo)Życzkowski</em:translator>
+        <em:translator>yfdyh000</em:translator>
+        <em:translator>Marcelo Ghelman (ghelman.net)</em:translator>
+        <em:translator>saudi.linux</em:translator>
+        <em:translator>Jojaba - BabelZilla</em:translator>
       </Description>
     </em:localized>
     <em:iconURL>chrome://ankpixiv/content/icon.png</em:iconURL>
