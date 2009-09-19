@@ -18,7 +18,7 @@ try {
       // xpathImgAnchor = '//div[@id="pixiv"]/div/div/a/img/parent::*/self::*';
       // xpathImg = '//div[@id="pixiv"]/div/div/a/img';
       mediumImage: '//div[@id="content2"]/div/a/img',
-      mediumImageLink: '//div[@id="content2"]/div/a',
+      mediumImageLink: '//div[@id="content2"]/div/a/img/parent::a',
       bigImage: '//div[@id="illust_contents"]/a/img',
       authorIconLink: '//div[@id="profile"]/div/a',
       authorIconImage:'//div[@id="profile"]/div/a/img',
@@ -92,6 +92,10 @@ try {
     get currentLocation ()
       window.content.document.location.href,
 
+    get isManga () {
+      let node = AnkUtils.findNodeByXPath(this.XPath.mediumImageLink);
+      return node && ~node.href.indexOf('?mode=manga&');
+    },
 
     get inPixiv ()
       this.currentLocation.match(/^http:\/\/[^\.\/]+\.pixiv\.net\//i),
@@ -720,7 +724,7 @@ saved-minute  = ?saved-minute?
         }
 
         // 大画像関係
-        if ($.Prefs.get('largeOnMiddle', true)) {
+        if ($.Prefs.get('largeOnMiddle', true) && !$.isManga) {
           let div = doc.createElement('div');
           div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
 
