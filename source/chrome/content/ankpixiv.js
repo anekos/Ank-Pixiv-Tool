@@ -519,6 +519,9 @@ try {
     downloadCurrentImage: function (useDialog, confirmDownloaded, debug) {
       try {
 
+        if (this.manga)
+          return alert('Sorry!\nManga downloading function has not yet been implemented.');
+
         if (typeof useDialog === 'undefined')
           useDialog = this.Prefs.get('showSaveDialog', true);
 
