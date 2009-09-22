@@ -92,7 +92,7 @@ try {
     get currentLocation ()
       window.content.document.location.href,
 
-    get isManga () {
+    get manga () {
       let node = AnkUtils.findNodeByXPath(this.XPath.mediumImageLink);
       return node && ~node.href.indexOf('?mode=manga&');
     },
@@ -118,7 +118,12 @@ try {
 
 
     get currentBigImagePath ()
-      this.currentImagePath.replace(/_m\./, '.'),
+      (this.manga ? this.getCurrentBigMangaImagePath() : this.currentImagePath.replace(/_m\./, '.')),
+
+
+    getCurrentBigMangaImagePath:
+      function getCurrentBigMangaImagePath (n)
+        this.currentImagePath.replace(/\.[^\.]+$/, function (m) (('_' + (n || 0)) + m)),
 
 
     get currentImageExt ()
@@ -681,12 +686,16 @@ saved-minute  = ?saved-minute?
     },
 
     get functionsInstaller function () {
+      const DUMMY_LAST_PAGE = 616;
       let $ = this;
       let ut = AnkUtils;
       let installInterval = 500;
       let installer = null;
       let con = content;
       let doc = this.currentDocument;
+      let lastMangaPage = DUMMY_LAST_PAGE;
+      let currentMangaPage = 0;
+      let doLoop = false;
 
       let delay = function (msg) {
         AnkUtils.dump(msg);
@@ -724,14 +733,41 @@ saved-minute  = ?saved-minute?
         }
 
         // 大画像関係
-        if ($.Prefs.get('largeOnMiddle', true) && !$.isManga) {
+        if ($.Prefs.get('largeOnMiddle', true)) {
           let div = doc.createElement('div');
-          div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
-
           let bigImg = doc.createElement('img');
+          let imgPanel = doc.createElement('div');
+          let buttonPanel = doc.createElement('div');
+          let prevButton = doc.createElement('button');
+          let nextButton = doc.createElement('button');
 
-          div.appendChild(bigImg);
+          div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
+          prevButton.innerHTML = '<<';
+          nextButton.innerHTML = '>>';
+          buttonPanel.setAttribute('style', 'display: block; margin: 0 auto; text-align: center; ');
+
+          [prevButton, nextButton].forEach(function (button) {
+            button.setAttribute('class', 'submit_btn');
+            button.setAttribute('style', 'width: 100px !important');
+          });
+
+          /*
+           * div
+           *    - imgPanel
+           *      - bigImg
+           *    - buttonPanel
+           *      - prevButton
+           *      - nextButton
+           */
+          div.appendChild(imgPanel);
+          imgPanel.appendChild(bigImg);
+          if ($.manga) {
+            div.appendChild(buttonPanel);
+            buttonPanel.appendChild(prevButton);
+            buttonPanel.appendChild(nextButton);
+          }
           body.appendChild(div);
+
           let bigMode = false;
 
           let changeImageSize = function () {
@@ -741,6 +777,7 @@ saved-minute  = ?saved-minute?
               wrapper.setAttribute('style', 'opacity: 1;');
               ad.style.display = ad.__ank_pixiv__style_display;
             } else {
+              currentMangaPage = 0;
               bigImg.setAttribute('src', bigImgPath);
               window.content.scrollTo(0, 0);
               div.style.display = '';
@@ -752,14 +789,79 @@ saved-minute  = ?saved-minute?
             bigMode = !bigMode;
           };
 
+          let (reloadLimit = 10, reloadInterval = 1000, prevTimeout) {
+            bigImg.addEventListener('error',
+              function () {
+                // XXX 画像はあるけど、サーバのエラーのときはどうなんの？
+                if (bigImg instanceof Ci.nsIImageLoadingContent && bigImg.currentURI) {
+                  let req = bigImg.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+                  Application.console.log('AnkPixiv: imageStatus = ' + req.imageStatus.toString(2));
+                  //if(reloadLimit && req && !(req.imageStatus & req.STATUS_LOAD_COMPLETE)) {
+                  //  if (prevTimeout) {
+                  //    clearTimeout(prevTimeout);
+                  //    prevTimeout = null;
+                  //  }
+                  //  setTimeout(function () bigImg.forceReload(), reloadInterval);
+                  //  reloadInterval *= 2;
+                  //  reloadLimit--;
+                  //  return;
+                  //}
+                }
+                changeImageSize(false);
+              },
+              true
+            );
+          }
+
+          let goNextPage = function (d, _doLoop) {
+            doLoop = _doLoop;
+            currentMangaPage += (d || 1);
+            // TODO Implement me!
+            // if (doLoop) {
+            //   if (currentMangaPage >= lastMangaPage)
+            //     currentMangaPage = 0;
+            //   if (currentMangaPage < 0 && lastMangaPage != DUMMY_LAST_PAGE)
+            //     currentMangaPage = lastMangaPage;
+            // }
+            Application.console.log('goto ' + currentMangaPage + ' page');
+            bigImg.setAttribute('src', $.getCurrentBigMangaImagePath(currentMangaPage));
+          };
+
           doc.changeImageSize = changeImageSize;
 
           doc.addEventListener('click', function (e) {
+            function preventCall (f) {
+              e.preventDefault();
+              f();
+            }
+
             if (e.button)
               return;
-            if (bigMode || (e.target.src == medImg.src)) {
-              e.preventDefault();
-              changeImageSize();
+
+            /* for debug
+            Application.console.log(
+              (e.target == bigImg) ? 'bigImg' :
+              (e.target == prevButton) ? 'prev' :
+              (e.target == nextButton) ? 'next' :
+              'other'
+            );
+            */
+
+            if (bigMode) {
+              if (e.target == bigImg) {
+                if($.manga && currentMangaPage < lastMangaPage)
+                  return preventCall(goNextPage);
+                else
+                  return preventCall(changeImageSize);
+              }
+              if ($.manga && e.target == prevButton)
+                return preventCall(function () goNextPage(-1, true));
+              if ($.manga && e.target == nextButton)
+                return preventCall(function () goNextPage(1, true));
+              return preventCall(changeImageSize);
+            } else {
+              if (e.target.src == medImg.src)
+                return preventCall(changeImageSize);
             }
           }, true);
         }
