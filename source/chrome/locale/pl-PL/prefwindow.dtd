@@ -1,0 +1,16 @@
+<!ENTITY prefwindow.title "Ank Pixiv Tool – ustawienia">
+<!ENTITY mainpane.title "Ank Pixiv Tool – ustawienia">
+<!ENTITY initialDirectory.label "Zapisuj obrazki w:">
+<!ENTITY showSaveDialog.label "Wyświetlaj okno pobierania w czasie pobierania obrazka">
+<!ENTITY saveHistory.label "Zapisuj historię pobierania">
+<!ENTITY downloadRate.label "Pobieraj obrazek po wystawieniu tej lub wyższej oceny">
+<!ENTITY browse "Przeglądaj…">
+<!ENTITY defaultFilename "Domyślna nazwa pliku">
+<!ENTITY largeOnMiddle "Po kliknięciu średniego powiększenia, wyświetlaj duże powiększenie w tej samej karcie">
+<!ENTITY openComment "Otwieraj automatycznie pole komentarza">
+<!ENTITY alternateFilename "Alternatywna nazwa pliku">
+<!ENTITY confirmExistingDownload "Potwierdzaj ponowne pobieranie">
+<!ENTITY confirmExistingDownloadWhenAuto "Potwierdzaj ponowne pobieranie w trybie automatycznego pobierania">
+<!ENTITY downloadWhenClickMiddle "Pobieraj automatycznie po kliknięciu średniego powiększenia">
+<!ENTITY showCompletePopup "Wyświetlaj powiadomienie po zakończeniu pobierania">
+<!ENTITY displayDownloaded "Wyświetlaj informację „Już był pobierany”">

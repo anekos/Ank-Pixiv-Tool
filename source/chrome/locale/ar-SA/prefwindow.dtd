@@ -1,0 +1,16 @@
+<!ENTITY prefwindow.title "خصائص أداة Ank Pixiv">
+<!ENTITY mainpane.title "خصائص أداة Ank Pixiv">
+<!ENTITY initialDirectory.label "Save illustration to:">
+<!ENTITY showSaveDialog.label "Use save dialog when downloading illustration">
+<!ENTITY saveHistory.label "Save download history">
+<!ENTITY downloadRate.label "Download the illustration when you give it a score rating this number or beyond.">
+<!ENTITY browse "إستعرض ...">
+<!ENTITY defaultFilename "الإسم الإفتراضي للملف">
+<!ENTITY largeOnMiddle "Show the large image on the same tab when you click the middle image.">
+<!ENTITY openComment "Automatically open the comment box.">
+<!ENTITY alternateFilename "الإسم البديل للملف">
+<!ENTITY confirmExistingDownload "Confirmation of re-download.">
+<!ENTITY confirmExistingDownloadWhenAuto "Confirmation of re-download when automatic download.">
+<!ENTITY downloadWhenClickMiddle "Automatically download, when you click the middle image.">
+<!ENTITY showCompletePopup "Show popup, when download ends.">
+<!ENTITY displayDownloaded "Display &quot;Already downloaded&quot;">

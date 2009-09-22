@@ -1,0 +1,16 @@
+<!ENTITY prefwindow.title "Ank Pixiv Tool - Einstellungen">
+<!ENTITY mainpane.title "Ank Pixiv Tool - Einstellungen">
+<!ENTITY initialDirectory.label "Bild speichern in:">
+<!ENTITY showSaveDialog.label "Speichern-Dialog zum Herunterladen von Bildern verwenden">
+<!ENTITY saveHistory.label "Download-Chronik speichern">
+<!ENTITY downloadRate.label "Bild herunterladen, wenn die Bewertung diesen oder einen höheren Wert erhält.">
+<!ENTITY browse "Durchsuchen...">
+<!ENTITY defaultFilename "Standard-Dateiname">
+<!ENTITY largeOnMiddle "Durch Klicken auf das mittlere Bild, Originalgröße des Bildes im aktuellen Tab anzeigen.">
+<!ENTITY openComment "Kommentarfeld automatisch öffnen.">
+<!ENTITY alternateFilename "Alternativer Dateiname">
+<!ENTITY confirmExistingDownload "Erneuten Download bestätigen.">
+<!ENTITY confirmExistingDownloadWhenAuto "Bei automatischem Download, einen erneuten Download bestätigen.">
+<!ENTITY downloadWhenClickMiddle "Durch Klicken auf das mittlere Bild, automatisch herunterladen.">
+<!ENTITY showCompletePopup "Wenn ein Download abgeschlossen ist, Benachrichtigung anzeigen.">
+<!ENTITY displayDownloaded "&quot;Bereits heruntergeladen&quot; anzeigen">

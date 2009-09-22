@@ -1,0 +1,16 @@
+<!ENTITY prefwindow.title "Préférences de Ank Pixiv Tool">
+<!ENTITY mainpane.title "Préférences de Ank Pixiv Tool">
+<!ENTITY initialDirectory.label "Enregistrer les illustrations dans :">
+<!ENTITY showSaveDialog.label "Utiliser la boîte de dialogue d'enregistrement lors du téléchargement d'une illustration">
+<!ENTITY saveHistory.label "Enregistrer l'historique de téléchargement">
+<!ENTITY downloadRate.label "Télécharger l'illustration lorsque vous lui octroyez une note égale ou supérieure à celle-ci.">
+<!ENTITY browse "Parcourir…">
+<!ENTITY defaultFilename "Nom de fichier par défaut">
+<!ENTITY largeOnMiddle "Afficher la grande image dans le même onglet lorsque vous cliquez sur l'image du milieu.">
+<!ENTITY openComment "Ouvrir automatiquement la boîte de commentaires.">
+<!ENTITY alternateFilename "Nom de fichier alternatif">
+<!ENTITY confirmExistingDownload "Demande de confirmation du retéléchargement.">
+<!ENTITY confirmExistingDownloadWhenAuto "Demander confirmation pour le retéléchargement lors du téléchargement automatique.">
+<!ENTITY downloadWhenClickMiddle "Télécharger automatiquement lors du clic sur l'image du milieu.">
+<!ENTITY showCompletePopup "Afficher une fenêtre popup lorsque le téléchargement est achevé.">
+<!ENTITY displayDownloaded "Afficher « Déjà téléchargée »">
