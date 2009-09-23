@@ -13,4 +13,4 @@
 <!ENTITY confirmExistingDownloadWhenAuto "Confirmar se deve baixar novamente quando baixar automaticamente.">
 <!ENTITY downloadWhenClickMiddle "Baixar automaticamente quando você clicar na imagem do meio.">
 <!ENTITY showCompletePopup "Exibir aviso quando o download terminar.">
-<!ENTITY displayDownloaded "Mostrar \&quot;Já baixado\&quot;&quot;&gt;">
+<!ENTITY displayDownloaded "Mostrar &quot;Já baixado&quot;">
