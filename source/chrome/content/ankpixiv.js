@@ -725,7 +725,8 @@ saved-minute  = ?saved-minute?
           return delay("delay installation by null");
 
         // 中画像クリック時に保存する
-        if ($.Prefs.get('downloadWhenClickMiddle')) {
+        // FIXME for next version
+        if (!$.manga && $.Prefs.get('downloadWhenClickMiddle')) {
           medImg.addEventListener(
             'click',
             function (e) {
