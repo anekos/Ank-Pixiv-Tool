@@ -513,13 +513,15 @@ try {
      *    useDialog:            保存ダイアログを使うか？
      *    confirmDownloaded:    ダウンロード済みの場合の確認を行うか？
      *    debug:                トークンのテストを行う
+     *    noMangaFix:           FIXME remove me!
      *    return:               成功？
      * 現在表示されている画像を保存する
      */
-    downloadCurrentImage: function (useDialog, confirmDownloaded, debug) {
+    downloadCurrentImage: function (useDialog, confirmDownloaded, debug, noMangaFix) {
       try {
 
-        if (this.manga)
+        // FIXME remove me!
+        if (this.manga && !noMangaFix)
           return alert('Sorry!\nManga downloading function has not yet been implemented.');
 
         if (typeof useDialog === 'undefined')
@@ -685,7 +687,8 @@ saved-minute  = ?saved-minute?
      * 自動的にダウンロードする場合はこっちを使う
      */
     downloadCurrentImageAuto: function () {
-      this.downloadCurrentImage(undefined, this.Prefs.get('confirmExistingDownloadWhenAuto'));
+      // FIXME remove 3rd-4th arg!
+      this.downloadCurrentImage(undefined, this.Prefs.get('confirmExistingDownloadWhenAuto'), false, true);
     },
 
     get functionsInstaller function () {
@@ -725,8 +728,7 @@ saved-minute  = ?saved-minute?
           return delay("delay installation by null");
 
         // 中画像クリック時に保存する
-        // FIXME for next version
-        if (!$.manga && $.Prefs.get('downloadWhenClickMiddle')) {
+        if ($.Prefs.get('downloadWhenClickMiddle')) {
           medImg.addEventListener(
             'click',
             function (e) {
