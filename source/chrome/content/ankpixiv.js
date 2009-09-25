@@ -1095,6 +1095,29 @@ saved-minute  = ?saved-minute?
         }
       }
     },
+
+    /********************************************************************************
+    * 外部向け
+    ********************************************************************************/
+
+    rate: function (pt) {
+      if (!(this.inPixiv && this.inMedium))
+        throw 'not in pixiv';
+      if (pt < 1 || 10 < pt)
+        throw 'out of range';
+      let elem, iter = AnkUtils.findNodesByXPath("//ul[@class='unit-rating']/li/a");
+      while (elem = iter.iterateNext()) {
+        let m = elem.className.match(/r(\d{1,2})-unit/);
+        if (m[1] == pt) {
+          let evt = document.createEvent('MouseEvents');
+          evt.initEvent('click', false, true);
+          elem.dispatchEvent(evt);
+          break;
+        }
+      }
+      return true;
+    },
+
   };
 
 
