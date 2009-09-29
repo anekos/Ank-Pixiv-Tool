@@ -123,7 +123,7 @@ try {
 
     getCurrentBigMangaImagePath:
       function getCurrentBigMangaImagePath (n)
-        this.currentImagePath.replace(/\.[^\.]+$/, function (m) (('_' + (n || 0)) + m)),
+        this.currentImagePath.replace(/\.[^\.]+$/, function (m) (('_p' + (n || 0)) + m)),
 
 
     get currentImageExt ()
