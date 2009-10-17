@@ -121,6 +121,10 @@ try {
       (this.manga ? this.getCurrentBigMangaImagePath() : this.currentImagePath.replace(/_m\./, '.')),
 
 
+    get currentMangaIndexPath ()
+      this.currentLocation.replace(/\?mode=medium/, '?mode=manga'),
+
+
     getCurrentBigMangaImagePath:
       function getCurrentBigMangaImagePath (n)
         this.currentImagePath.replace(/\.[^\.]+$/, function (m) (('_p' + (n || 0)) + m)),
@@ -904,6 +908,20 @@ saved-minute  = ?saved-minute?
       };
 
       return installer;
+    },
+
+
+    getMangaLastPage: function (result) {
+      const reLastPage = new RegExp('</a></span>\\s*\\d\\s*/\\s*(\\d+)<br />', 'i');
+
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', this.currentMangaIndexPath, true);
+      xhr.onreadystatechange = function (e) {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+          result(reLastPage.test(xhr.responseText) && RegExp.$1);
+        }
+      };
+      xhr.send(null);
     },
 
 
