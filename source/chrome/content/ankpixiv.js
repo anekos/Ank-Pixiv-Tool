@@ -747,6 +747,11 @@ saved-minute  = ?saved-minute?
           let prevButton = doc.createElement('button');
           let nextButton = doc.createElement('button');
 
+          let updateNextButton = function (v) {
+            nextButton.innerHTML =
+              (lastMangaPage === undefined || (currentMangaPage < lastMangaPage - 1)) ? '>>' : '\xD7';
+          };
+
           div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
           prevButton.innerHTML = '<<';
           nextButton.innerHTML = '>>';
@@ -785,7 +790,10 @@ saved-minute  = ?saved-minute?
             } else {
               currentMangaPage = 0;
               if (lastMangaPage === undefined) {
-                $.getLastMangaPage(function (v) lastMangaPage = v);
+                $.getLastMangaPage(function (v) {
+                  liberator.log('recv last manga page: ' + v);
+                  lastMangaPage = v
+                });
               }
               bigImg.setAttribute('src', bigImgPath);
               window.content.scrollTo(0, 0);
@@ -794,6 +802,7 @@ saved-minute  = ?saved-minute?
               bigImg.style['opacity'] = '1 !important;';
               ad.__ank_pixiv__style_display = ad.style.display;
               ad.style.display = 'none';
+              updateNextButton();
             }
             bigMode = !bigMode;
           };
@@ -825,13 +834,16 @@ saved-minute  = ?saved-minute?
           let goNextPage = function (d, _doLoop) {
             doLoop = _doLoop;
             currentMangaPage += (d || 1);
-            // TODO Implement me!
-            // if (doLoop) {
-            //   if (currentMangaPage >= lastMangaPage)
-            //     currentMangaPage = 0;
-            //   if (currentMangaPage < 0 && lastMangaPage !== undefined)
-            //     currentMangaPage = lastMangaPage;
-            // }
+            if (lastMangaPage !== undefined) {
+              liberator.log('has next page: ' + (currentMangaPage < lastMangaPage - 1));
+              if (doLoop) {
+                if (currentMangaPage >= lastMangaPage)
+                  currentMangaPage = 0;
+                if (currentMangaPage < 0)
+                  currentMangaPage = lastMangaPage;
+              }
+            }
+            updateNextButton();
             Application.console.log('goto ' + currentMangaPage + ' page');
             bigImg.setAttribute('src', $.getCurrentBigMangaImagePath(currentMangaPage));
           };
@@ -858,15 +870,15 @@ saved-minute  = ?saved-minute?
 
             if (bigMode) {
               if (e.target == bigImg) {
-                if($.manga && currentMangaPage < lastMangaPage)
-                  return preventCall(goNextPage);
+                if ($.manga && (currentMangaPage < lastMangaPage || lastMangaPage === undefined))
+                  return preventCall(function () goNextPage(1, true));
                 else
                   return preventCall(changeImageSize);
               }
               if ($.manga && e.target == prevButton)
                 return preventCall(function () goNextPage(-1, true));
               if ($.manga && e.target == nextButton)
-                return preventCall(function () goNextPage(1, true));
+                return preventCall(function () goNextPage(1, false));
               return preventCall(changeImageSize);
             } else {
               if (e.target.src == medImg.src)
