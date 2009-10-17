@@ -693,14 +693,13 @@ saved-minute  = ?saved-minute?
     },
 
     get functionsInstaller function () {
-      const DUMMY_LAST_PAGE = 616;
       let $ = this;
       let ut = AnkUtils;
       let installInterval = 500;
       let installer = null;
       let con = content;
       let doc = this.currentDocument;
-      let lastMangaPage = DUMMY_LAST_PAGE;
+      let lastMangaPage = undefined;
       let currentMangaPage = 0;
       let doLoop = false;
 
@@ -785,6 +784,9 @@ saved-minute  = ?saved-minute?
               ad.style.display = ad.__ank_pixiv__style_display;
             } else {
               currentMangaPage = 0;
+              if (lastMangaPage === undefined) {
+                $.getLastMangaPage(function (v) lastMangaPage = v);
+              }
               bigImg.setAttribute('src', bigImgPath);
               window.content.scrollTo(0, 0);
               div.style.display = '';
@@ -827,7 +829,7 @@ saved-minute  = ?saved-minute?
             // if (doLoop) {
             //   if (currentMangaPage >= lastMangaPage)
             //     currentMangaPage = 0;
-            //   if (currentMangaPage < 0 && lastMangaPage != DUMMY_LAST_PAGE)
+            //   if (currentMangaPage < 0 && lastMangaPage !== undefined)
             //     currentMangaPage = lastMangaPage;
             // }
             Application.console.log('goto ' + currentMangaPage + ' page');
@@ -911,14 +913,14 @@ saved-minute  = ?saved-minute?
     },
 
 
-    getMangaLastPage: function (result) {
+    getLastMangaPage: function (result) {
       const reLastPage = new RegExp('</a></span>\\s*\\d\\s*/\\s*(\\d+)<br />', 'i');
 
       let xhr = new XMLHttpRequest();
       xhr.open('GET', this.currentMangaIndexPath, true);
       xhr.onreadystatechange = function (e) {
         if (xhr.readyState == 4 && xhr.status == 200) {
-          result(reLastPage.test(xhr.responseText) && RegExp.$1);
+          result(reLastPage.test(xhr.responseText) && parseInt(RegExp.$1));
         }
       };
       xhr.send(null);
