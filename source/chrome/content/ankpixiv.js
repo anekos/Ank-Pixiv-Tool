@@ -928,13 +928,18 @@ saved-minute  = ?saved-minute?
 
 
     getLastMangaPage: function (result) {
-      const reLastPage = new RegExp('</a></span>\\s*\\d\\s*/\\s*(\\d+)<br />', 'i');
+      const reLastPage1 = new RegExp('\\d\\s*/\\s*(\\d+) p<span style', 'i');
+      const reLastPage2 = new RegExp('\\d\\s*/\\s*(\\d+)', 'i');
 
       let xhr = new XMLHttpRequest();
       xhr.open('GET', this.currentMangaIndexPath, true);
       xhr.onreadystatechange = function (e) {
         if (xhr.readyState == 4 && xhr.status == 200) {
-          result(reLastPage.test(xhr.responseText) && parseInt(RegExp.$1));
+          result(
+            (reLastPage1.test(xhr.responseText) || reLastPage2.test(xhr.responseText))
+            &&
+            parseInt(RegExp.$1)
+          );
         }
       };
       xhr.send(null);
