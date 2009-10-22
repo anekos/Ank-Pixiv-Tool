@@ -747,9 +747,11 @@ saved-minute  = ?saved-minute?
           let prevButton = doc.createElement('button');
           let nextButton = doc.createElement('button');
 
-          let updateNextButton = function (v) {
+          let updateButtons = function (v) {
             nextButton.innerHTML =
               (lastMangaPage === undefined || (currentMangaPage < lastMangaPage - 1)) ? '>>' : '\xD7';
+            prevHTML =
+              (lastMangaPage === undefined || currentMangaPage > 0) ? '<<' : '\xD7';
           };
 
           div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
@@ -802,7 +804,7 @@ saved-minute  = ?saved-minute?
               bigImg.style['opacity'] = '1 !important;';
               ad.__ank_pixiv__style_display = ad.style.display;
               ad.style.display = 'none';
-              updateNextButton();
+              updateButtons();
             }
             bigMode = !bigMode;
           };
@@ -843,7 +845,7 @@ saved-minute  = ?saved-minute?
                   currentMangaPage = lastMangaPage;
               }
             }
-            updateNextButton();
+            updateButtons();
             Application.console.log('goto ' + currentMangaPage + ' page');
             bigImg.setAttribute('src', $.getCurrentBigMangaImagePath(currentMangaPage));
           };
