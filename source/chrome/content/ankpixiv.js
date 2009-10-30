@@ -118,16 +118,16 @@ try {
 
 
     get currentBigImagePath ()
-      (this.manga ? this.getCurrentBigMangaImagePath() : this.currentImagePath.replace(/_m\./, '.')),
+      (this.manga ? this.getBigMangaImagePath() : this.currentImagePath.replace(/_m\./, '.')),
 
 
     get currentMangaIndexPath ()
       this.currentLocation.replace(/\?mode=medium/, '?mode=manga'),
 
 
-    getCurrentBigMangaImagePath:
-      function getCurrentBigMangaImagePath (n)
-        this.currentImagePath.replace(/\.[^\.]+$/, function (m) (('_p' + (n || 0)) + m)),
+    getBigMangaImagePath:
+      function getBigMangaImagePath (n, base)
+        (base || this.currentImagePath).replace(/\.[^\.]+$/, function (m) (('_p' + (n || 0)) + m)),
 
 
     get currentImageExt ()
@@ -432,6 +432,58 @@ try {
     },
 
     /*
+     * getSaveFilesPath
+     *    filenames:          ファイル名の候補のリスト(一個以上必須)
+     *    number:             ファイル数
+     *    ext:                拡張子
+     *    useDialog:          保存ダイアログを使うか？
+     *    return:             nsIFilePickerかそれもどき
+     * ファイルを保存すべきパスを返す
+     * 設定によっては、ダイアログを表示する
+     */
+    getSaveFilesPath: function (filenames, number, ext, useDialog) {
+      function showFilePicker () {
+        return;
+      }
+
+      try {
+        let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
+        let prefInitDir = this.Prefs.get('initialDirectory');
+        let initDir = this.newLocalFile('file://' + prefInitDir);
+
+        if (!initDir.exists())
+          return this.showFilePicker(filenames[0] + ext);
+
+        outer:
+        for (let i in filenames) {
+          let result = [];
+          for (let n = 0; n < number; n++) {
+            let numbered = filenames[i] + '-' + n; // TODO zero pad
+            let filename = numbered + ext;
+            let url = 'file://' + prefInitDir + AnkUtils.SYS_SLASH + filename;
+            let localfile = this.newLocalFile(url);
+
+            if (localfile.exists() || this.filenameExists(filename))
+              continue outer;
+
+            if (useDialog) {
+              return showFilePicker(filename);
+            } else {
+              let res = IOService.newFileURI(localfile);
+              result.push({fileURL: res, file: localfile});
+            }
+          }
+          return result;
+        }
+      } catch (e) {
+        // FIXME ?
+        Application.console.log('bug!');
+      }
+
+      return showFilePicker(filenames[0] + ext);
+    },
+
+    /*
      * isDownloaded
      *    illust_id:     イラストID
      *    return:        ダウンロード済み？
@@ -440,6 +492,66 @@ try {
       if (!/^\d+$/.test(illust_id))
         throw "Invalid illust_id";
       return this.Storage.exists('histories', 'illust_id = ' + illust_id);
+    },
+
+    /*
+     * downloadTo
+     *    url:            URL
+     *    referer:        リファラ
+     *    filepath:       FilePicker
+     *    onComplete      終了時のアラート
+     *    return:         成功?
+     * ファイルをダウンロードする
+     */
+    downloadTo: function (url, referer, filepath, onComplete) {
+      // ディレクトリ作成
+      let (dir = filepath.file.parent)
+        dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
+
+      // 各種オブジェクトの生成
+      let sourceURI = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService).
+                        newURI(url, null, null);
+      let wbpersist = AnkUtils.ccci('@mozilla.org/embedding/browser/nsWebBrowserPersist;1',
+                                Components.interfaces.nsIWebBrowserPersist);
+      let refererURI = AnkUtils.ccci('@mozilla.org/network/standard-url;1', Components.interfaces.nsIURI);
+      refererURI.spec = referer;
+
+      // キャッシュ
+      let cache = null;
+      try {
+        with (getWebNavigation().sessionHistory)
+          cache = getEntryAtIndex(index, false).QueryInterface(Components.interfaces.nsISHEntry).postData;
+      } catch (e) {
+        /* DO NOTHING */
+      }
+
+      // ダウンロード通知
+      let $ = this;
+      let progressListener = {
+        onStateChange: function (_webProgress, _request, _stateFlags, _status) {
+          if (_stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+            if (onComplete) {
+              let orig_args = arguments;
+              onComplete.call($, orig_args, filepath.fileURL.path);
+            }
+          }
+        },
+        onProgressChange: function (_webProgress, _request, _curSelfProgress, _maxSelfProgress,
+                                    _curTotalProgress, _maxTotalProgress) { },
+        onLocationChange: function (_webProgress, _request, _location) {},
+        onStatusChange  : function (_webProgress, _request, _status, _message) {},
+        onSecurityChange: function (_webProgress, _request, _state) {},
+      }
+
+      // 保存開始
+      wbpersist.progressListener = progressListener;
+      wbpersist.persistFlags = Components.interfaces.nsIWebBrowserPersist.
+                                 PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+      wbpersist.saveURI(sourceURI, cache, refererURI, null, null, filepath.file);
+
+
+      // 成功
+      return filepath.fileURL.path;
     },
 
     /*
@@ -459,57 +571,48 @@ try {
       if (!filePicker)
         return;
 
-      // ディレクトリ作成
-      let (dir = filePicker.file.parent)
-        dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
+      return this.downloadTo(url, referer, filePicker, onComplete);
+    },
 
-      // 各種オブジェクトの生成
-      let sourceURI = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService).
-                        newURI(url, null, null);
-      let wbpersist = AnkUtils.ccci('@mozilla.org/embedding/browser/nsWebBrowserPersist;1',
-                                Components.interfaces.nsIWebBrowserPersist);
-      let refererURI = AnkUtils.ccci('@mozilla.org/network/standard-url;1', Components.interfaces.nsIURI);
-      refererURI.spec = referer;
+    /*
+     * downloadFiles
+     *    urls:            URL
+     *    referer:        リファラ
+     *    filenames:      ファイル名の候補リスト
+     *    ext:            拡張子
+     *    useDialog:      保存ダイアログを使うか？
+     *    onComplete      終了時のアラート
+     *    return:         成功?
+     * 複数のファイルをダウンロードする
+     */
+    downloadFiles: function (urls, referer, filenames, ext, useDialog, onComplete) {
+      // 保存ダイアログ
+      let filepaths = this.getSaveFilesPath(filenames, urls.length, ext, useDialog);
+      if (!filepaths)
+        return;
 
-      // ダウンロードマネジャに追加
-      let label = filenames[0];
-
-      // キャッシュ
-      let cache = null;
-      try {
-        with (getWebNavigation().sessionHistory)
-          cache = getEntryAtIndex(index, false).QueryInterface(Components.interfaces.nsISHEntry).postData;
-      } catch (e) {
-        /* DO NOTHING */
-      }
-
-      // ダウンロード通知
       let $ = this;
-      let progressListener = {
-        onStateChange: function (_webProgress, _request, _stateFlags, _status) {
-          if (_stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-            if (onComplete) {
-              let orig_args = arguments;
-              onComplete.call($, orig_args, filePicker.fileURL.path);
-            }
-          }
-        },
-        onProgressChange: function (_webProgress, _request, _curSelfProgress, _maxSelfProgress,
-                                    _curTotalProgress, _maxTotalProgress) { },
-        onLocationChange: function (_webProgress, _request, _location) {},
-        onStatusChange  : function (_webProgress, _request, _status, _message) {},
-        onSecurityChange: function (_webProgress, _request, _state) {},
+      let index = 0;
+
+      function downloadNext () {
+        let filepath = filepaths[index];
+        let url = urls[index];
+
+        let (dir = filepath.file.parent)
+          dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
+
+        index++;
+
+        $.downloadTo(
+          url,
+          referer,
+          filepath,
+          (index < url.length - 1) ? downloadNext : onComplete
+        );
       }
 
-      // 保存開始
-      wbpersist.progressListener = progressListener;
-      wbpersist.persistFlags = Components.interfaces.nsIWebBrowserPersist.
-                                 PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
-      wbpersist.saveURI(sourceURI, cache, refererURI, null, null, filePicker.file);
-
-
-      // 成功
-      return filePicker.fileURL.path;
+      downloadNext();
+      return;
     },
 
     /*
@@ -521,10 +624,9 @@ try {
      * 現在表示されている画像を保存する
      */
     downloadCurrentImage: function (useDialog, confirmDownloaded, debug) {
-      try {
+      let $ = this;
 
-        if (this.manga)
-          return alert('Sorry!\nManga downloading function has not yet been implemented.');
+      try {
 
         if (typeof useDialog === 'undefined')
           useDialog = this.Prefs.get('showSaveDialog', true);
@@ -537,6 +639,7 @@ try {
 
         let url         = this.currentImagePath;
         let illust_id   = this.currentImageId;
+        let ext         = this.currentImageExt;
         let ref         = this.currentLocation.replace(/mode=medium/, 'mode=big');
         let member_id   = this.currentImageAuthorId;
         let member_name = this.info.memberName || member_id;
@@ -675,9 +778,18 @@ saved-minute  = ?saved-minute?
           }
         };
 
-        let result = this.downloadFile(url, ref, filenames, this.currentImageExt, useDialog, onComplete);
+        if (this.manga) {
+          this.getLastMangaPage(function (v) {
+            let urls = [];
+            for (let i = 0; i < v; i++)
+              urls.push($.getBigMangaImagePath(i, url));
+            $.downloadFiles(urls, ref, filenames, ext, useDialog, onComplete);
+          });
+        } else {
+          this.downloadFile(url, ref, filenames, ext, useDialog, onComplete);
+        }
 
-        return result;
+        return;
 
       } catch (e) {
         AnkUtils.dumpError(e);
@@ -847,7 +959,7 @@ saved-minute  = ?saved-minute?
             }
             updateButtons();
             Application.console.log('goto ' + currentMangaPage + ' page');
-            bigImg.setAttribute('src', $.getCurrentBigMangaImagePath(currentMangaPage));
+            bigImg.setAttribute('src', $.getBigMangaImagePath(currentMangaPage));
           };
 
           doc.changeImageSize = changeImageSize;
