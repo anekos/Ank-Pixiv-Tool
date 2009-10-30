@@ -14,3 +14,5 @@
 <!ENTITY downloadWhenClickMiddle "中画像クリック時に自動的ダウンロードする。">
 <!ENTITY showCompletePopup "ダウンロード終了時にポップアップ表示">
 <!ENTITY displayDownloaded "「保存済み」の表示">
+<!ENTITY defaultMangaFilename "保存時ファイル名(漫画)">
+<!ENTITY alternateMangaFilename "代替ファイル名(漫画)">

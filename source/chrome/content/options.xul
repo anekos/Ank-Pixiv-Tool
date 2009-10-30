@@ -62,6 +62,16 @@
             'string'
           ],
           [
+            'default-manga-filename',
+            'defaultMangaFilename',
+            'string'
+          ],
+          [
+            'alternate-manga-filename',
+            'alternateMangaFilename',
+            'string'
+          ],
+          [
             'large-on-middle',
             'largeOnMiddle',
             'boolean',
@@ -204,6 +214,10 @@
         <textbox id="default-filename" onfocus="currentFilenameElement=event.target" />
         <caption label="&alternateFilename;" />
         <textbox id="alternate-filename" onfocus="currentFilenameElement=event.target" />
+        <caption label="&defaultMangaFilename;" />
+        <textbox id="default-manga-filename" onfocus="currentFilenameElement=event.target" />
+        <caption label="&alternateMangaFilename;" />
+        <textbox id="alternate-manga-filename" onfocus="currentFilenameElement=event.target" />
       </vbox>
       <groupbox>
         <hbox>
