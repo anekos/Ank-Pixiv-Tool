@@ -19,7 +19,7 @@
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankpixiv.js" />
 
   <script type="application/x-javascript"><![CDATA[
-      let currentFilenameElement = document.getElementById('default-filename');
+      let currentFilenameElement;
 
       function settings () {
         return [
@@ -132,6 +132,7 @@
         box.value = as + token + bs;
         let (p = ap + token.length)
           box.setSelectionRange(p, p);
+        box.focus();
       }
       function onLoad () {
         settings().forEach(function ([id, name, type, prop]) {
@@ -249,5 +250,9 @@
          </hbox>
       </groupbox>
     </groupbox>
+
+    <script type="application/x-javascript"><![CDATA[
+        currentFilenameElement = document.getElementById('default-filename');
+    ]]></script>
 
 </dialog>
