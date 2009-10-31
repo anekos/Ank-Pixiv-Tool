@@ -458,7 +458,7 @@ try {
         for (let i in filenames) {
           let result = [];
           for (let n = 0; n < number; n++) {
-            let numbered = filenames[i] + '-' + n; // TODO zero pad
+            let numbered = filenames[i] + n; // TODO zero pad
             let filename = numbered + ext;
             let url = 'file://' + prefInitDir + AnkUtils.SYS_SLASH + filename;
             let localfile = this.newLocalFile(url);
