@@ -446,6 +446,10 @@ try {
         return;
       }
 
+      function replacePageNumber (filename, n) {
+        return filename.replace(/\?page-number\?/g, AnkUtils.zeroPad(n + 1, 2));
+      }
+
       try {
         let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
         let prefInitDir = this.Prefs.get('initialDirectory');
@@ -458,7 +462,7 @@ try {
         for (let i in filenames) {
           let result = [];
           for (let n = 0; n < number; n++) {
-            let numbered = filenames[i] + n; // TODO zero pad
+            let numbered = replacePageNumber(filenames[i], n); // TODO zero pad
             let filename = numbered + ext;
             let url = 'file://' + prefInitDir + AnkUtils.SYS_SLASH + filename;
             let localfile = this.newLocalFile(url);
