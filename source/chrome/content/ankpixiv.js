@@ -718,7 +718,7 @@ try {
             filenames =
               filenames.map(
                 function (filename)
-                  (filename.match(/\?page-number\?/) ? filename + '?page-number?' : filename)
+                  (filename.match(/\?page-number\?/) ? filename : filename + '?page-number?')
               );
           } else {
             filenames = filenames.map(function (filename) filename.replace(/\?page-number\?/g, ''));
