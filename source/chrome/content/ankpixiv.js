@@ -708,6 +708,12 @@ try {
             ps.forEach(function ([re, val]) (s = s.replace(re, val)))
             return s;
           }
+          if ($.manga)
+            filenames =
+              filenames.map(
+                function (filename)
+                  (filename.match(/\?page-number\?/) ? filename + '?page-number?' : filename)
+              );
           filenames.push(repl(defaultFilename));
           filenames.push(repl(alternateFilename));
           if (debug) {
