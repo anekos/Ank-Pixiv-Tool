@@ -611,7 +611,7 @@ try {
           url,
           referer,
           filepath,
-          (index < urls.length - 1) ? downloadNext : onComplete
+          (index < urls.length) ? downloadNext : onComplete
         );
       }
 
