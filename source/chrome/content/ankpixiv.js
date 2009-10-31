@@ -712,6 +712,8 @@ try {
             ps.forEach(function ([re, val]) (s = s.replace(re, val)))
             return s;
           }
+          filenames.push(repl(defaultFilename));
+          filenames.push(repl(alternateFilename));
           if ($.manga) {
             filenames =
               filenames.map(
@@ -721,8 +723,6 @@ try {
           } else {
             filenames = filenames.map(function (filename) filename.replace(/\?page-number\?/g, ''));
           }
-          filenames.push(repl(defaultFilename));
-          filenames.push(repl(alternateFilename));
           if (debug) {
             let tokens = <><![CDATA[
 title         = ?title?
