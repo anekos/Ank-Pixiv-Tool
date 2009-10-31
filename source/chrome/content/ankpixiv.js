@@ -712,12 +712,15 @@ try {
             ps.forEach(function ([re, val]) (s = s.replace(re, val)))
             return s;
           }
-          if ($.manga)
+          if ($.manga) {
             filenames =
               filenames.map(
                 function (filename)
                   (filename.match(/\?page-number\?/) ? filename + '?page-number?' : filename)
               );
+          } else {
+            filenames = filenames.map(function (filename) filename.replace(/\?page-number\?/g, ''));
+          }
           filenames.push(repl(defaultFilename));
           filenames.push(repl(alternateFilename));
           if (debug) {
