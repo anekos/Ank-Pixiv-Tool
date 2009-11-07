@@ -456,7 +456,7 @@ try {
         let initDir = this.newLocalFile('file://' + prefInitDir);
 
         if (!initDir.exists())
-          return this.showFilePicker(filenames[0] + ext);
+          return showFilePicker(filenames[0] + ext);
 
         outer:
         for (let i in filenames) {
@@ -919,7 +919,6 @@ saved-minute  = ?saved-minute?
               currentMangaPage = 0;
               if (lastMangaPage === undefined) {
                 $.getLastMangaPage(function (v) {
-                  liberator.log('recv last manga page: ' + v);
                   lastMangaPage = v
                 });
               }
@@ -963,7 +962,6 @@ saved-minute  = ?saved-minute?
             doLoop = _doLoop;
             currentMangaPage += (d || 1);
             if (lastMangaPage !== undefined) {
-              liberator.log('has next page: ' + (currentMangaPage < lastMangaPage - 1));
               if (doLoop) {
                 if (currentMangaPage >= lastMangaPage)
                   currentMangaPage = 0;
