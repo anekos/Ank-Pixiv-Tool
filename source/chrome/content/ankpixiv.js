@@ -546,6 +546,11 @@ try {
       // XXX ディレクトリは勝手にできるっぽい
       //dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
 
+      function _onComplete () {
+        arguments[1] = dir.path;
+        return onComplete.apply(this, arguments);
+      }
+
       function downloadNext () {
         let url = urls[index];
         let file = dir.clone();
@@ -558,7 +563,7 @@ try {
           url,
           referer,
           file,
-          (index < urls.length) ? downloadNext : onComplete
+          (index < urls.length) ? downloadNext : _onComplete
         );
       }
 
