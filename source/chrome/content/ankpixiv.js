@@ -535,26 +535,29 @@ try {
      */
     downloadFiles: function (urls, referer, filenames, ext, useDialog, onComplete) {
       // 保存ダイアログ
-      let filepaths = this.getSaveFilesPath(filenames, urls.length, ext, useDialog);
-      if (!filepaths)
+      let filePicker = this.getSaveFilePath(filenames, '', useDialog);
+      if (!filePicker)
         return;
 
+      let dir = filePicker.file;
       let $ = this;
       let index = 0;
 
-      function downloadNext () {
-        let filepath = filepaths[index];
-        let url = urls[index];
+      // XXX ディレクトリは勝手にできるっぽい
+      //dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
 
-        let (dir = filepath.file.parent)
-          dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
+      function downloadNext () {
+        let url = urls[index];
+        let file = dir.clone();
+        let ext = url.match(/\.\w+$/)[0] || '.jpg';
+        file.append(AnkUtils.zeroPad(index, 2) + ext);
 
         index++;
 
         $.downloadTo(
           url,
           referer,
-          filepath,
+          file,
           (index < urls.length) ? downloadNext : onComplete
         );
       }
