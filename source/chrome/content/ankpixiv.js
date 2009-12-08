@@ -502,14 +502,14 @@ try {
      * downloadTo
      *    url:            URL
      *    referer:        リファラ
-     *    filepath:       FilePicker
+     *    file:           nsIFile
      *    onComplete      終了時のアラート
      *    return:         成功?
      * ファイルをダウンロードする
      */
-    downloadTo: function (url, referer, filepath, onComplete) {
+    downloadTo: function (url, referer, file, onComplete) {
       // ディレクトリ作成
-      let (dir = filepath.file.parent)
+      let (dir = file.parent)
         dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
 
       // 各種オブジェクトの生成
@@ -536,7 +536,7 @@ try {
           if (_stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
             if (onComplete) {
               let orig_args = arguments;
-              onComplete.call($, orig_args, filepath.fileURL.path);
+              onComplete.call($, orig_args, file.path);
             }
           }
         },
@@ -551,11 +551,11 @@ try {
       wbpersist.progressListener = progressListener;
       wbpersist.persistFlags = Components.interfaces.nsIWebBrowserPersist.
                                  PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
-      wbpersist.saveURI(sourceURI, cache, refererURI, null, null, filepath.file);
+      wbpersist.saveURI(sourceURI, cache, refererURI, null, null, file);
 
 
       // 成功
-      return filepath.fileURL.path;
+      return file;
     },
 
     /*
@@ -575,7 +575,7 @@ try {
       if (!filePicker)
         return;
 
-      return this.downloadTo(url, referer, filePicker, onComplete);
+      return this.downloadTo(url, referer, filePicker.file, onComplete);
     },
 
     /*
