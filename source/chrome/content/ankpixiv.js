@@ -432,62 +432,6 @@ try {
     },
 
     /*
-     * getSaveFilesPath
-     *    filenames:          ファイル名の候補のリスト(一個以上必須)
-     *    number:             ファイル数
-     *    ext:                拡張子
-     *    useDialog:          保存ダイアログを使うか？
-     *    return:             nsIFilePickerかそれもどき
-     * ファイルを保存すべきパスを返す
-     * 設定によっては、ダイアログを表示する
-     */
-    getSaveFilesPath: function (filenames, number, ext, useDialog) {
-      function showFilePicker () {
-        return;
-      }
-
-      function replacePageNumber (filename, n) {
-        return filename.replace(/\?page-number\?/g, AnkUtils.zeroPad(n + 1, 2));
-      }
-
-      try {
-        let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
-        let prefInitDir = this.Prefs.get('initialDirectory');
-        let initDir = this.newLocalFile('file://' + prefInitDir);
-
-        if (!initDir.exists())
-          return showFilePicker(filenames[0] + ext);
-
-        outer:
-        for (let i in filenames) {
-          let result = [];
-          for (let n = 0; n < number; n++) {
-            let numbered = replacePageNumber(filenames[i], n); // TODO zero pad
-            let filename = numbered + ext;
-            let url = 'file://' + prefInitDir + AnkUtils.SYS_SLASH + filename;
-            let localfile = this.newLocalFile(url);
-
-            if (localfile.exists() || this.filenameExists(filename))
-              continue outer;
-
-            if (useDialog) {
-              return showFilePicker(filename);
-            } else {
-              let res = IOService.newFileURI(localfile);
-              result.push({fileURL: res, file: localfile});
-            }
-          }
-          return result;
-        }
-      } catch (e) {
-        // FIXME ?
-        Application.console.log('bug!');
-      }
-
-      return showFilePicker(filenames[0] + ext);
-    },
-
-    /*
      * isDownloaded
      *    illust_id:     イラストID
      *    return:        ダウンロード済み？
