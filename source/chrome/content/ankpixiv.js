@@ -550,7 +550,7 @@ try {
         let url = urls[index];
         let file = dir.clone();
         let ext = url.match(/\.\w+$/)[0] || '.jpg';
-        file.append(AnkUtils.zeroPad(index, 2) + ext);
+        file.append(AnkUtils.zeroPad(index + 1, 2) + ext);
 
         index++;
 
