@@ -215,10 +215,6 @@
         <textbox id="default-filename" onfocus="currentFilenameElement=event.target" />
         <caption label="&alternateFilename;" />
         <textbox id="alternate-filename" onfocus="currentFilenameElement=event.target" />
-        <caption label="&defaultMangaFilename;" />
-        <textbox id="default-manga-filename" onfocus="currentFilenameElement=event.target" />
-        <caption label="&alternateMangaFilename;" />
-        <textbox id="alternate-manga-filename" onfocus="currentFilenameElement=event.target" />
       </vbox>
       <groupbox>
         <hbox>
@@ -230,7 +226,6 @@
             <listitem label="?short-tags?"></listitem>
             <listitem label="?tools?"></listitem>
             <listitem label="?pixiv-id?"></listitem>
-            <listitem label="?page-number?"></listitem>
           </listbox>
           <listbox id="token-listbox2" rows="8" class="token-listbox" onclick="pushToken(this)">
             <listitem label="?illust-id?"></listitem>

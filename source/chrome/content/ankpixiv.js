@@ -658,15 +658,7 @@ try {
           }
           filenames.push(repl(defaultFilename));
           filenames.push(repl(alternateFilename));
-          if ($.manga) {
-            filenames =
-              filenames.map(
-                function (filename)
-                  (filename.match(/\?page-number\?/) ? filename : filename + '?page-number?')
-              );
-          } else {
-            filenames = filenames.map(function (filename) filename.replace(/\?page-number\?/g, ''));
-          }
+          filenames = filenames.map(function (filename) filename.replace(/\s*\?page-number\?\s*/g, ''));
           if (debug) {
             let tokens = <><![CDATA[
 title         = ?title?
