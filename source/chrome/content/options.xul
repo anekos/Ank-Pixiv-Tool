@@ -62,16 +62,6 @@
             'string'
           ],
           [
-            'default-manga-filename',
-            'defaultMangaFilename',
-            'string'
-          ],
-          [
-            'alternate-manga-filename',
-            'alternateMangaFilename',
-            'string'
-          ],
-          [
             'large-on-middle',
             'largeOnMiddle',
             'boolean',
