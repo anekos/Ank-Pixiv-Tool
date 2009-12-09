@@ -634,9 +634,8 @@ try {
         }
 
         let savedDateTime = new Date();
-        let _filename = (this.manga ? 'Manga' : '') + 'Filename';
-        let defaultFilename = this.Prefs.get('default' + _filename, '?member-name? - ?title?');
-        let alternateFilename = this.Prefs.get('alternate' + _filename, '?member-name? - ?title? - (?illust-id?)');
+        let defaultFilename = this.Prefs.get('defaultFilename', '?member-name? - ?title?');
+        let alternateFilename = this.Prefs.get('alternateFilename', '?member-name? - ?title? - (?illust-id?)');
         (function () {
           let i = AnkPixiv.info;
           let ii = i.illust;
