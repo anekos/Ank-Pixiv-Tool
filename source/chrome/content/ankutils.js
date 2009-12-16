@@ -289,9 +289,17 @@ try {
      *    xpath:
      *    return: nodes
      */
-    findNodesByXPath: function (xpath)
-      let (doc = this.currentDocument)
-        doc.evaluate(xpath, doc, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null),
+    findNodesByXPath: function (xpath, array) {
+      let nodes =
+        let (doc = this.currentDocument)
+          doc.evaluate(xpath, doc, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+      if (!array)
+        return nodes;
+      let elem, result = [];
+      while (elem = nodes.iterateNext())
+        result.push(elem);
+      return result;
+    }
 
   };
 

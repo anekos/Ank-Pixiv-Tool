@@ -23,7 +23,7 @@ try {
       authorIconLink: '//div[@id="profile"]/div/a',
       authorIconImage:'//div[@id="profile"]/div/a/img',
       tags: '//span[@id="tags"]/a',
-      ad: '//*[@id="header"]/div[2]',
+      ad: '//object|//iframe', //'//*[@id="header"]/div[2]',
       comment: 'id("illust_comment")',
       dateTime: 'id("content2")/div[1]/table/tbody/tr/td[1]/div[1]',
       title: 'id("content2")/div[1]/table/tbody/tr/td[1]/div[2]',
@@ -853,11 +853,11 @@ saved-minute  = ?saved-minute?
           let bigMode = false;
 
           let changeImageSize = function () {
-            let ad = AnkUtils.findNodeByXPath($.XPath.ad);
+            let ads = AnkUtils.findNodesByXPath($.XPath.ad, true);
             if (bigMode) {
               div.style.display = 'none';
               wrapper.setAttribute('style', 'opacity: 1;');
-              ad.style.display = ad.__ank_pixiv__style_display;
+              ads.forEach(function (ad) (ad.style.display = ad.__ank_pixiv__style_display));
             } else {
               currentMangaPage = 0;
               if (lastMangaPage === undefined) {
@@ -870,8 +870,12 @@ saved-minute  = ?saved-minute?
               div.style.display = '';
               wrapper.setAttribute('style', 'opacity: 0.1;');
               bigImg.style['opacity'] = '1 !important;';
-              ad.__ank_pixiv__style_display = ad.style.display;
-              ad.style.display = 'none';
+              ads.forEach(
+                function (ad) {
+                  ad.__ank_pixiv__style_display = ad.style.display;
+                  ad.style.display = 'none';
+                }
+              );
               updateButtons();
             }
             bigMode = !bigMode;
