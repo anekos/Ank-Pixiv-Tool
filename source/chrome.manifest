@@ -6,10 +6,13 @@ style chrome://global/content/customizeToolbar.xul  chrome://ankpixiv/content/an
 locale ankpixiv ar-SA chrome/locale/ar-SA/
 locale ankpixiv de-DE chrome/locale/de-DE/
 locale ankpixiv en-US chrome/locale/en-US/
+locale ankpixiv es-ES chrome/locale/es-ES/
 locale ankpixiv fr chrome/locale/fr/
+locale ankpixiv id-ID chrome/locale/id-ID/
 locale ankpixiv ja-JP chrome/locale/ja-JP/
 locale ankpixiv pl-PL chrome/locale/pl-PL/
 locale ankpixiv pt-BR chrome/locale/pt-BR/
+locale ankpixiv ru-RU chrome/locale/ru-RU/
+locale ankpixiv tr-TR chrome/locale/tr-TR/
 locale ankpixiv zh-CN chrome/locale/zh-CN/
 locale ankpixiv zh-TW chrome/locale/zh-TW/
-

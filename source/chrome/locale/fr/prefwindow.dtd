@@ -14,3 +14,5 @@
 <!ENTITY downloadWhenClickMiddle "Télécharger automatiquement lors du clic sur l'image du milieu.">
 <!ENTITY showCompletePopup "Afficher une fenêtre popup lorsque le téléchargement est achevé.">
 <!ENTITY displayDownloaded "Afficher « Déjà téléchargée »">
+<!ENTITY defaultMangaFilename "Nom de fichier de Manga (BD) par défaut">
+<!ENTITY alternateMangaFilename "Nom de fichier de Manga (BD) alternatif">

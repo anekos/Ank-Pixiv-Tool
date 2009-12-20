@@ -14,3 +14,5 @@
 <!ENTITY downloadWhenClickMiddle "Baixar automaticamente quando você clicar na imagem do meio.">
 <!ENTITY showCompletePopup "Exibir aviso quando o download terminar.">
 <!ENTITY displayDownloaded "Mostrar &quot;Já baixado&quot;">
+<!ENTITY defaultMangaFilename "Nome de arquivo padrão para Mangá (Comic)">
+<!ENTITY alternateMangaFilename "Nome de arquivo alternativo para Mangá (Comic)">

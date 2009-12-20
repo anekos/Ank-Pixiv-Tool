@@ -1,0 +1,18 @@
+<!ENTITY prefwindow.title "Preferencias de la herramienta Ank Pixiv">
+<!ENTITY mainpane.title "Preferencias de la herramienta Ank Pixiv">
+<!ENTITY initialDirectory.label "Guardar ilustración en:">
+<!ENTITY showSaveDialog.label "Usar diálogo de guardar cuando descargue ilustraciones">
+<!ENTITY saveHistory.label "Guardar historial de descargas">
+<!ENTITY downloadRate.label "Descargar la ilustración cuando obtenga una puntuación igual o superior.">
+<!ENTITY browse "Buscar...">
+<!ENTITY defaultFilename "Nombre predeterminado">
+<!ENTITY largeOnMiddle "Mostrar la imagen grande en la misma pestaña cuando pulses con el ratón central.">
+<!ENTITY openComment "Abrir automáticamente la caja de comentario.">
+<!ENTITY alternateFilename "Nombre alternativo">
+<!ENTITY confirmExistingDownload "Confirmar descargar de nuevo.">
+<!ENTITY confirmExistingDownloadWhenAuto "Confirmar descargar de nuevo con la descarga automática.">
+<!ENTITY downloadWhenClickMiddle "Descarga automática cuando pulse con el botón central.">
+<!ENTITY showCompletePopup "Mostrar ventana emergente cuando finalice la descarga.">
+<!ENTITY displayDownloaded "Mostrar &quot;Ya descargado&quot;">
+<!ENTITY defaultMangaFilename "Nombre de Manga (Comic) predeterminado">
+<!ENTITY alternateMangaFilename "Nombre de Manga (Comic) alternativo">

@@ -1,10 +1,10 @@
 <!ENTITY prefwindow.title "Ank Pixiv Tool 設定">
 <!ENTITY mainpane.title "Ank Pixiv Tool 設定">
-<!ENTITY initialDirectory.label "儲存路徑">
+<!ENTITY initialDirectory.label "儲存路徑:">
 <!ENTITY showSaveDialog.label "儲存時顯示對話視窗（取消這選項時會自動存到你設定好的儲存路徑）">
 <!ENTITY saveHistory.label "記錄下載歷程">
 <!ENTITY downloadRate.label "分評價（由你給的）以上的圖自動下載。">
-<!ENTITY browse "瀏覽">
+<!ENTITY browse "瀏覽...">
 <!ENTITY defaultFilename "儲存時的檔案名稱">
 <!ENTITY largeOnMiddle "點擊中尺寸預覽圖時，在同分頁顯示大尺寸原始圖。">
 <!ENTITY openComment "自動展開回應欄">
@@ -14,3 +14,5 @@
 <!ENTITY downloadWhenClickMiddle "點擊中尺寸預覽圖時，自動下載圖片。">
 <!ENTITY showCompletePopup "下載完成時，顯示快顯視窗。">
 <!ENTITY displayDownloaded "顯示「已下載過了」的文字訊息">
+<!ENTITY defaultMangaFilename "儲存漫畫時的檔案名稱">
+<!ENTITY alternateMangaFilename "候選檔名（若有漫畫的同名檔案存在時）">
