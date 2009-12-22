@@ -710,7 +710,6 @@ saved-minute  = ?saved-minute?
           try {
             let caption = this.Locale('finishedDownload');
             let text = filenames[0];
-            local_path = decodeURIComponent(local_path);
 
             if (this.Prefs.get('saveHistory', true)) {
               try {
