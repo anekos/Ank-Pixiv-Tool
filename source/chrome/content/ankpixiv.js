@@ -7,7 +7,7 @@ try {
     * 定数
     ********************************************************************************/
 
-    DB_VERSION: 3,
+    DB_VERSION: 4,
 
     VERSION: AnkUtils.getVersion('ankpixiv@snca.net'),
 
@@ -710,11 +710,14 @@ saved-minute  = ?saved-minute?
           try {
             let caption = this.Locale('finishedDownload');
             let text = filenames[0];
+            let prefInitDir = this.Prefs.get('initialDirectory');
+            let relPath = prefInitDir ? AnkUtils.getRelativePath(local_path, prefInitDir)
+                                      : AnkUtils.extractFilename(local_path);
 
             if (this.Prefs.get('saveHistory', true)) {
               try {
                 record['local_path'] = local_path;
-                record['filename'] = AnkUtils.extractFilename(local_path);
+                record['filename'] = relPath;
                 this.Storage.insert('histories', record);
               } catch (e) {
                 AnkUtils.dumpError(e);

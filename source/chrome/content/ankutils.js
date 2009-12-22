@@ -66,9 +66,15 @@ try {
      */
     extractFilename: function (filepath) {
       try {
-        return filepath.match(/[\\\/]([^\\\/]+)$/)[1] || filepath;
+        return AnkUtils.makeLocalFile(filepath).leafName;
       } catch (e) {
-        return filepath;
+        AnkUtils.dumpError(e);
+        try {
+          return filepath.match(/[\\\/]([^\\\/]+)$/)[1] || filepath;
+        } catch (e) {
+          AnkUtils.dumpError(e);
+          return filepath;
+        }
       }
     },
 
@@ -143,6 +149,16 @@ try {
           return key;
         }
       };
+    },
+
+
+    fromUTF8Octets: function (s) {
+      let conv = AnkUtils.ccgs(
+        '@mozilla.org/intl/scriptableunicodeconverter',
+        Components.interfaces.nsIScriptableUnicodeConverter
+      );
+      conv.charset = 'UTF-8';
+      return conv.ConvertToUnicode(s);
     },
 
 
@@ -244,6 +260,11 @@ try {
       }
     },
 
+    // teramako Thanks! http://twitter.com/teramako/status/6926877707
+    getRelativePath:  function (target, base) {
+      return AnkUtils.fromUTF8Octets(AnkUtils.makeLocalFile(target).getRelativeDescriptor(AnkUtils.makeLocalFile(base)));
+    },
+
 
     /********************************************************************************
     * 手抜き用関数
@@ -269,6 +290,17 @@ try {
       Components.classes[klass].createInstance(_interface),
 
 
+    /*
+     * makeLocalFile
+     *    path:   プラットフォームに依ったパス
+     *    return: nsILocalFile
+     */
+    makeLocalFile: function (path) {
+      let file = Components.classes['@mozilla.org/file/local;1']
+                           .createInstance(Components.interfaces.nsILocalFile);
+      file.initWithPath(path);
+      return file;
+    },
 
     /********************************************************************************
     * DOM関数
