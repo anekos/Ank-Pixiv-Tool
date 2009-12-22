@@ -303,7 +303,7 @@ try {
         }
       }
       catch (e) {
-        alert(e);
+        window.alert(e);
       }
     },
 
@@ -687,7 +687,7 @@ saved-day     = ?saved-day?
 saved-hour    = ?saved-hour?
 saved-minute  = ?saved-minute?
                 ]]></>.toString();
-            alert(repl(tokens, title));
+            window.alert(repl(tokens, title));
           }
         })();
 
@@ -730,7 +730,7 @@ saved-minute  = ?saved-minute?
             for (let n in e) {
               s += n + ': ' + e[n] + '\n';
             }
-            alert(s);
+            window.alert(s);
           }
         };
 
@@ -1200,7 +1200,7 @@ saved-minute  = ?saved-minute?
                               "`datetime` = datetime('" + dt + "', '1 months'), version = 2",
                               'rowid = ' + old.rowid);
         } catch (e) {
-          //liberator.log(e);
+          Application.console.log(e);
         }
       }
 
