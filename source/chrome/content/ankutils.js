@@ -66,7 +66,7 @@ try {
      */
     extractFilename: function (filepath) {
       try {
-        return filepath.match(/\/([^\/]+)$/)[1] || filepath;
+        return filepath.match(/[\\\/]([^\\\/]+)$/)[1] || filepath;
       } catch (e) {
         return filepath;
       }

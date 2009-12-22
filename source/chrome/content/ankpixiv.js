@@ -7,7 +7,7 @@ try {
     * 定数
     ********************************************************************************/
 
-    DB_VERSION: 2,
+    DB_VERSION: 3,
 
     VERSION: AnkUtils.getVersion('ankpixiv@snca.net'),
 
@@ -1197,12 +1197,15 @@ saved-minute  = ?saved-minute?
         try {
           let dt = AnkUtils.toSQLDateTimeString(new Date(old.datetime));
           this.Storage.update('histories',
-                              "`datetime` = datetime('" + dt + "', '1 months'), version = " + AnkPixiv.DB_VERSION,
+                              "`datetime` = datetime('" + dt + "', '1 months'), version = 2",
                               'rowid = ' + old.rowid);
         } catch (e) {
           //liberator.log(e);
         }
       }
+
+      // version 2
+      // TODO
     },
 
     /********************************************************************************
