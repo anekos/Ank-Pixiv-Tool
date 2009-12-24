@@ -4,7 +4,7 @@
 
 <!DOCTYPE prefwindow SYSTEM "chrome://ankpixiv/locale/prefwindow.dtd">
 
-<dialog id="ankpixivPreferences"
+<prefwindow id="ankpixivPreferences"
             title="&prefwindow.title;"
             persist="lastSelected screenX screenY"
             buttons="accept,cancel"
@@ -21,90 +21,6 @@
   <script type="application/x-javascript"><![CDATA[
       let currentFilenameElement;
 
-      function settings () {
-        return [
-          [
-            'initial-directory',
-            'initialDirectory',
-            'string'
-          ],
-          [
-            'show-save-dialog',
-            'showSaveDialog',
-            'boolean',
-            'checked'
-          ],
-          [
-            'save-history',
-            'saveHistory',
-            'boolean',
-            'checked'
-          ],
-          [
-            'download-when-rate',
-            'downloadWhenRate',
-            'boolean',
-            'checked'
-          ],
-          [
-            'download-rate',
-            'downloadRate',
-            'number'
-          ],
-          [
-            'default-filename',
-            'defaultFilename',
-            'string'
-          ],
-          [
-            'alternate-filename',
-            'alternateFilename',
-            'string'
-          ],
-          [
-            'large-on-middle',
-            'largeOnMiddle',
-            'boolean',
-            'checked'
-          ],
-          [
-            'open-comment',
-            'openComment',
-            'boolean',
-            'checked'
-          ],
-          [
-            'confirm-existing',
-            'confirmExistingDownload',
-            'boolean',
-            'checked'
-          ],
-          [
-            'confirm-existing-when-auto',
-            'confirmExistingDownloadWhenAuto',
-            'boolean',
-            'checked'
-          ],
-          [
-            'download-when-middle',
-            'downloadWhenClickMiddle',
-            'boolean',
-            'checked'
-          ],
-          [
-            'show-complete-popup',
-            'showCompletePopup',
-            'boolean',
-            'checked'
-          ],
-          [
-            'display-downloaded',
-            'displayDownloaded',
-            'boolean',
-            'checked'
-          ],
-        ];
-      }
       function selectDir () {
         var filePicker = Components.classes['@mozilla.org/filepicker;1']
                            .createInstance(Components.interfaces.nsIFilePicker);
@@ -113,6 +29,7 @@
           document.getElementById('initial-directory').value = filePicker.file.path;
         }
       }
+
       function pushToken (elem) {
         let token = elem.selectedItem.label
         let box = currentFilenameElement;
@@ -124,13 +41,8 @@
           box.setSelectionRange(p, p);
         box.focus();
       }
+
       function onLoad () {
-        settings().forEach(function ([id, name, type, prop]) {
-          if (!prop)
-            prop = 'value';
-          let elem = document.getElementById(id);
-          elem[prop] = AnkPixiv.Prefs.get(name, elem[prop]);
-        });
         document.getElementById('confirm-existing-when-auto').disabled =
           !AnkPixiv.Prefs.get('confirmExistingDownload');
         return true;
@@ -139,21 +51,16 @@
         // check for nonexistent path
         try {
           let path = document.getElementById('initial-directory').value;
-          let initdir = AnkUtils.ccci("@mozilla.org/file/local;1", Components.interfaces.nsILocalFile);
-          initdir.initWithPath(path);
-          if (!initdir.exists())
-            throw 'Initial directory does not exist';
+          if (path) {
+            let initdir = AnkUtils.ccci("@mozilla.org/file/local;1", Components.interfaces.nsILocalFile);
+            initdir.initWithPath(path);
+            if (!initdir.exists())
+              throw 'Initial directory does not exist';
+          }
         } catch (e) {
           if (!confirm(AnkPixiv.Locale('notifyNonexistentDirectory')))
             return false;
         }
-        // save
-        settings().forEach(function ([id, name, type, prop]) {
-          if (!prop)
-            prop = 'value';
-          let elem = document.getElementById(id);
-          AnkPixiv.Prefs.set(name, elem[prop], type);
-        });
         return true;
       }
 
@@ -162,82 +69,103 @@
       }
   ]]></script>
 
-    <groupbox>
-      <checkbox id="show-save-dialog" label="&showSaveDialog.label;"/>
+    <prefpane>
 
-      <hbox align="center">
-        <checkbox id="download-when-rate" />
-        <menulist id="download-rate">
-          <menupopup>
-            <menuitem label="6" value="6"/>
-            <menuitem label="7" value="7"/>
-            <menuitem label="8" value="8"/>
-            <menuitem label="9" value="9"/>
-            <menuitem label="10" value="10"/>
-          </menupopup>
-        </menulist>
-        <label value="&downloadRate.label;"/>
-      </hbox>
+      <preferences>
+         <preference id="show-save-dialog" name="extensions.ankpixiv.showSaveDialog" type="bool"/>
+         <preference id="download-when-rate" name="extensions.ankpixiv.downloadWhenRate" type="bool"/>
+         <preference id="download-rate" name="extensions.ankpixiv.downloadRate" type="int"/>
+         <preference id="save-history" name="extensions.ankpixiv.saveHistory" type="bool" />
+         <preference id="large-on-middle" name="extensions.ankpixiv.largeOnMiddle" type="bool" />
+         <preference id="open-comment" name="extensions.ankpixiv.openComment" type="bool" />
+         <preference id="confirm-existing" name="extensions.ankpixiv.confirmExistingDownload" type="bool" />
+         <preference id="confirm-existing-when-auto" name="extensions.ankpixiv.confirmExistingDownloadWhenAuto" type="bool" />
+         <preference id="download-when-middle" name="extensions.ankpixiv.downloadWhenClickMiddle" type="bool" />
+         <preference id="show-complete-popup" name="extensions.ankpixiv.showCompletePopup" type="bool" />
+         <preference id="display-downloaded" name="extensions.ankpixiv.displayDownloaded" type="bool" />
+         <preference id="default-filename" name="extensions.ankpixiv.defaultFilename" type="string" />
+         <preference id="alternate-filename" name="extensions.ankpixiv.alternateFilename" type="string" />
+         <preference id="initial-directory" name="extensions.ankpixiv.initialDirectory" type="string" />
+       </preferences>
 
-      <hbox align="center">
-        <label accesskey="I" control="textstringpref">
-          &initialDirectory.label;
-        </label>
-        <textbox id="initial-directory" flex="1" />
-        <toolbarbutton id="initial-directory-browse" oncommand="selectDir();"
-                       instantApply="true" label="&browse;" />
-      </hbox>
-
-      <checkbox id="save-history" label="&saveHistory.label;" />
-      <checkbox id="large-on-middle" label="&largeOnMiddle;" />
-      <checkbox id="open-comment" label="&openComment;" />
-      <checkbox id="confirm-existing" label="&confirmExistingDownload;"
-                onclick="onConfirmExistingDownloadClick(event)"/>
-      <checkbox id="confirm-existing-when-auto" label="&confirmExistingDownloadWhenAuto;" />
-      <checkbox id="download-when-middle" label="&downloadWhenClickMiddle;" />
-      <checkbox id="show-complete-popup" label="&showCompletePopup;" />
-      <checkbox id="display-downloaded" label="&displayDownloaded;" />
-    </groupbox>
-
-    <groupbox orient="vertical">
-      <vbox>
-        <caption label="&defaultFilename;" />
-        <textbox id="default-filename" onfocus="currentFilenameElement=event.target" />
-        <caption label="&alternateFilename;" />
-        <textbox id="alternate-filename" onfocus="currentFilenameElement=event.target" />
-      </vbox>
       <groupbox>
-        <hbox>
-          <listbox id="token-listbox1" rows="8" class="token-listbox" onclick="pushToken(this)">
-            <listitem label="?title?"></listitem>
-            <listitem label="?member-id?"></listitem>
-            <listitem label="?member-name?"></listitem>
-            <listitem label="?tags?"></listitem>
-            <listitem label="?short-tags?"></listitem>
-            <listitem label="?tools?"></listitem>
-            <listitem label="?pixiv-id?"></listitem>
-          </listbox>
-          <listbox id="token-listbox2" rows="8" class="token-listbox" onclick="pushToken(this)">
-            <listitem label="?illust-id?"></listitem>
-            <listitem label="?illust-year?"></listitem>
-            <listitem label="?illust-month?"></listitem>
-            <listitem label="?illust-day?"></listitem>
-            <listitem label="?illust-hour?"></listitem>
-            <listitem label="?illust-minute?"></listitem>
-          </listbox>
-          <listbox id="token-listbox3" rows="8" class="token-listbox" onclick="pushToken(this)">
-            <listitem label="?saved-year?"></listitem>
-            <listitem label="?saved-month?"></listitem>
-            <listitem label="?saved-day?"></listitem>
-            <listitem label="?saved-hour?"></listitem>
-            <listitem label="?saved-minute?"></listitem>
-          </listbox>
-         </hbox>
+        <checkbox preference="show-save-dialog" label="&showSaveDialog.label;"/>
+
+        <hbox align="center">
+          <checkbox preference="download-when-rate" />
+          <menulist preference="download-rate">
+            <menupopup>
+              <menuitem label="6" value="6"/>
+              <menuitem label="7" value="7"/>
+              <menuitem label="8" value="8"/>
+              <menuitem label="9" value="9"/>
+              <menuitem label="10" value="10"/>
+            </menupopup>
+          </menulist>
+          <label value="&downloadRate.label;"/>
+        </hbox>
+
+        <hbox align="center">
+          <label accesskey="I" control="textstringpref">
+            &initialDirectory.label;
+          </label>
+          <textbox preference="initial-directory" flex="1" />
+          <toolbarbutton id="initial-directory-browse" oncommand="selectDir();"
+                         instantApply="true" label="&browse;" />
+        </hbox>
+
+        <checkbox preference="save-history" label="&saveHistory.label;" />
+        <checkbox preference="large-on-middle" label="&largeOnMiddle;" />
+        <checkbox preference="open-comment" label="&openComment;" />
+        <checkbox preference="confirm-existing" label="&confirmExistingDownload;"
+                  onclick="onConfirmExistingDownloadClick(event)"/>
+        <checkbox preference="confirm-existing-when-auto" label="&confirmExistingDownloadWhenAuto;" />
+        <checkbox preference="download-when-middle" label="&downloadWhenClickMiddle;" />
+        <checkbox preference="show-complete-popup" label="&showCompletePopup;" />
+        <checkbox preference="display-downloaded" label="&displayDownloaded;" />
       </groupbox>
-    </groupbox>
+
+      <groupbox orient="vertical">
+        <vbox>
+          <caption label="&defaultFilename;" />
+          <textbox preference="default-filename" onfocus="currentFilenameElement=event.target" />
+          <caption label="&alternateFilename;" />
+          <textbox preference="alternate-filename" onfocus="currentFilenameElement=event.target" />
+        </vbox>
+        <groupbox>
+          <hbox>
+            <listbox id="token-listbox1" rows="8" class="token-listbox" onclick="pushToken(this)">
+              <listitem label="?title?"></listitem>
+              <listitem label="?member-id?"></listitem>
+              <listitem label="?member-name?"></listitem>
+              <listitem label="?tags?"></listitem>
+              <listitem label="?short-tags?"></listitem>
+              <listitem label="?tools?"></listitem>
+              <listitem label="?pixiv-id?"></listitem>
+            </listbox>
+            <listbox id="token-listbox2" rows="8" class="token-listbox" onclick="pushToken(this)">
+              <listitem label="?illust-id?"></listitem>
+              <listitem label="?illust-year?"></listitem>
+              <listitem label="?illust-month?"></listitem>
+              <listitem label="?illust-day?"></listitem>
+              <listitem label="?illust-hour?"></listitem>
+              <listitem label="?illust-minute?"></listitem>
+            </listbox>
+            <listbox id="token-listbox3" rows="8" class="token-listbox" onclick="pushToken(this)">
+              <listitem label="?saved-year?"></listitem>
+              <listitem label="?saved-month?"></listitem>
+              <listitem label="?saved-day?"></listitem>
+              <listitem label="?saved-hour?"></listitem>
+              <listitem label="?saved-minute?"></listitem>
+            </listbox>
+           </hbox>
+        </groupbox>
+      </groupbox>
+
+    </prefpane>
 
     <script type="application/x-javascript"><![CDATA[
         currentFilenameElement = document.getElementById('default-filename');
     ]]></script>
 
-</dialog>
+</prefwindow>
