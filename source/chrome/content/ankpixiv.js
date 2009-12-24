@@ -1170,8 +1170,9 @@ saved-minute  = ?saved-minute?
       event.stopPropagation();
       event.preventDefault();
       let useDialog = this.Prefs.get('showSaveDialog', true);
+      let button = (typeof event.button == 'undefined') ? 0 : event.button;
       if (this.enabled) {
-        switch(event.button) {
+        switch(button) {
           case 0: this.downloadCurrentImage(useDialog); break;
           case 1: this.downloadCurrentImage(!useDialog); break;
           case 2: this.openPrefWindow(); break;
@@ -1184,7 +1185,7 @@ saved-minute  = ?saved-minute?
           else
             AnkUtils.openTab(AnkPixiv.URL.Pixiv);
         };
-        switch(event.button) {
+        switch(button) {
           case 0: open(true); break;
           case 1: open(false); break;
           case 2: this.openPrefWindow(); break;
