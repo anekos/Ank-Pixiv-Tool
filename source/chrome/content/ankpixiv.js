@@ -126,8 +126,8 @@ try {
 
 
     getBigMangaImagePath:
-      function getBigMangaImagePath (n, base)
-        (base || this.currentImagePath).replace(/\.[^\.]+$/, function (m) (('_p' + (n || 0)) + m)),
+      function getBigMangaImagePath (n, base, ext)
+        (base || this.currentImagePath).replace(/\.[^\.]+$/, function (m) (('_p' + (n || 0)) + (ext || m))),
 
 
     get currentImageExt ()
@@ -483,7 +483,7 @@ try {
           if (_stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
             if (onComplete) {
               let orig_args = arguments;
-              onComplete.call($, orig_args, file.path);
+              onComplete.call($, orig_args, file.path, _request.responseStatus);
             }
           }
         },
@@ -545,29 +545,46 @@ try {
       let dir = filePicker.file;
       let $ = this;
       let index = 0;
+      let lastFile = null;
 
       // XXX ディレクトリは勝手にできるっぽい
       //dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
 
-      function _onComplete () {
-        arguments[1] = dir.path;
-        return onComplete.apply(this, arguments);
-      }
-
-      function downloadNext () {
+      function downloadNext (_orignalArgs, _filePath, status) {
         let url = urls[index];
         let file = dir.clone();
         let ext = url.match(/\.\w+$/)[0] || '.jpg';
         file.append(AnkUtils.zeroPad(index + 1, 2) + ext);
 
+        let needNext = (index < urls.length);
+
+        if (lastFile) {
+          if (lastFile && !lastFile.exists)
+            needNext = false;
+
+          if (status != 200) { // XXX || (lastFile.exists() && lastFile.fileSize < 1000)) {
+            needNext = false;
+            if (lastFile.exists()) {
+              try {
+                lastFile.remove(false);
+                Application.console.log('非正規ファイルを削除しました。 => ' + lastFile.path);
+              } catch (e) {
+                Application.console.log('非正規ファイルの削除に失敗 => ' + e);
+              }
+            }
+          }
+        }
+
+        lastFile = file;
         index++;
 
-        $.downloadTo(
-          url,
-          referer,
-          file,
-          (index < urls.length) ? downloadNext : _onComplete
-        );
+        if (needNext) {
+          Application.console.log('DL => ' + file.path);
+          return $.downloadTo(url, referer, file, downloadNext);
+        } else {
+          arguments[1] = dir.path;
+          return onComplete.apply($, arguments);
+        }
       }
 
       downloadNext();
@@ -741,10 +758,10 @@ saved-minute  = ?saved-minute?
         };
 
         if (this.manga) {
-          this.getLastMangaPage(function (v) {
+          this.getLastMangaPage(function (v, ext) {
             let urls = [];
             for (let i = 0; i < v; i++)
-              urls.push($.getBigMangaImagePath(i, url));
+              urls.push($.getBigMangaImagePath(i, url, ext));
             $.downloadFiles(urls, ref, filenames, ext, useDialog, onComplete);
           });
         } else {
@@ -1006,6 +1023,8 @@ saved-minute  = ?saved-minute?
     getLastMangaPage: function (result) {
       const reLastPage1 = new RegExp('\\d\\s*/\\s*(\\d+) p<span style', 'i');
       const reLastPage2 = new RegExp('\\d\\s*/\\s*(\\d+)', 'i');
+      const reImage1 = new RegExp('<a href="#page\\d+"><img src="http://img\\d+\\.pixiv\\.net/img/.+/\\d+_p\\d+(\\.\\w+)"></a>');
+      const reImage2 = new RegExp('<a href="#page\\d+"><img src="http://.*.pixiv.net/img/.+/.+(\\..+)"></a>');
 
       let xhr = new XMLHttpRequest();
       xhr.open('GET', this.currentMangaIndexPath, true);
@@ -1014,7 +1033,10 @@ saved-minute  = ?saved-minute?
           result(
             (reLastPage1.test(xhr.responseText) || reLastPage2.test(xhr.responseText))
             &&
-            parseInt(RegExp.$1)
+            parseInt(RegExp.$1),
+            (reImage1.test(xhr.responseText) || reImage2.test(xhr.responseText))
+            &&
+            RegExp.$1
           );
         }
       };
