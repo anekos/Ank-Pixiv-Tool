@@ -477,6 +477,9 @@ try {
       let $ = this;
       let progressListener = {
         onStateChange: function (_webProgress, _request, _stateFlags, _status) {
+          _request.QueryInterface(Components.interfaces.nsIHttpChannel);
+          // XXX pixiv のアホサーバは、PNG にも image/jpeg を返してくるぞ！！
+          // Application.console.log(_request.getResponseHeader('Content-Type'));
           if (_stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
             if (onComplete) {
               let orig_args = arguments;
