@@ -572,9 +572,9 @@ try {
             if (lastFile.exists()) {
               try {
                 lastFile.remove(false);
-                Application.console.log('非正規ファイルを削除しました。 => ' + lastFile.path);
+                Application.console.log('Delete invalid file. => ' + lastFile.path);
               } catch (e) {
-                Application.console.log('非正規ファイルの削除に失敗 => ' + e);
+                Application.console.log('Failed to delete invalid file. => ' + e);
               }
             }
             return _onComplete.apply($, arguments);
