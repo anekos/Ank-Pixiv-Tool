@@ -556,18 +556,16 @@ try {
       }
 
       function downloadNext (_orignalArgs, _filePath, status) {
-        if (index >= urls.length)
-          return _onComplete.apply($, arguments);
 
-        let url = urls[index];
-        let file = dir.clone();
-        let fileExt = url.match(/\.\w+$/)[0] || '.jpg';
-        file.append(AnkUtils.zeroPad(index + 1, 2) + fileExt);
-
+        // 前ファイルの処理
         if (lastFile) {
-          if (lastFile && !lastFile.exists)
+          // ダウンロードに失敗していたら、そこで終了さ！
+          if (!lastFile.exists) {
+            Application.console.log('Strange error! file not found!');
             return _onComplete.apply($, arguments);
+          }
 
+          // 404 の時も終了。ついでにゴミファイルを消す。
           if (status != 200) { // XXX || (lastFile.exists() && lastFile.fileSize < 1000)) {
             if (lastFile.exists()) {
               try {
@@ -579,7 +577,24 @@ try {
             }
             return _onComplete.apply($, arguments);
           }
+
+          // ファイル名の修正
+          try {
+            if (AnkPixiv.fixFileExt(lastFile))
+              Application.console.log('Fix file ext: ' + lastFile.path);
+          } catch (e) {
+            Application.console.log('Failed to fix file ext. => ' + e);
+          }
         }
+
+        // 最後のファイル
+        if (index >= urls.length)
+          return _onComplete.apply($, arguments);
+
+        let url = urls[index];
+        let file = dir.clone();
+        let fileExt = url.match(/\.\w+$/)[0] || '.jpg';
+        file.append(AnkUtils.zeroPad(index + 1, 2) + fileExt);
 
         lastFile = file;
         index++;
@@ -1064,6 +1079,59 @@ saved-minute  = ?saved-minute?
         }
       }
     },
+
+
+    /*
+     * getValidFileExt
+     *    file:       nsILocalFile
+     *    return:     拡張子
+     * ファイルタイプを検出して、正当な拡張子を返す。
+     */
+    getValidFileExt: function (file) {
+      let fstream = AnkUtils.ccci("@mozilla.org/network/file-input-stream;1",
+                                  Components.interfaces.nsIFileInputStream);
+      let sstream = AnkUtils.ccci("@mozilla.org/scriptableinputstream;1",
+                                  Components.interfaces.nsIScriptableInputStream);
+      fstream.init(file, -1, 0, 0);
+      sstream.init(fstream);
+      let header = sstream.read(10);
+      sstream.close();
+      fstream.close();
+
+      if (header.match(/^\x89PNG/))
+        return '.png';
+
+      if (header.match(/^GIF8/))
+        return '.gif';
+
+      if (header.match(/JFIF|^\xFF\xD8/))
+        return '.jpg';
+
+      return;
+    },
+
+
+    /*
+     * fixFileExt
+     *    file:     nsILocalFile
+     *    return:   修正した時は真
+     * 正しい拡張子に修正する。
+     */
+    fixFileExt:  function (file) {
+      const reExt = /\.[^\.]+$/;
+      let ext = AnkPixiv.getValidFileExt(file);
+      let originalExt =
+        let (m = file.path.match(reExt))
+          (m && m.toString().toLowerCase());
+
+      if (ext == originalExt)
+        return false;
+
+      let newFile = AnkUtils.makeLocalFile(file.path.replace(reExt, ext));
+      file.moveTo(newFile.parent, newFile.leafName);
+      return true;
+    },
+
 
     /********************************************************************************
     * データ修正など
