@@ -745,9 +745,14 @@ saved-minute  = ?saved-minute?
                 text = e;
               }
             }
+
             if (this.Prefs.get('showCompletePopup', true))
               this.popupAlert(caption, text);
+
+            this.insertDownloadedDisplay();
+
             return true;
+
           } catch (e) {
             let s = '';
             for (let n in e) {
@@ -996,18 +1001,7 @@ saved-minute  = ?saved-minute?
           }
         })();
 
-        // ダウンロード済みの表示
-        if ($.Prefs.get('displayDownloaded', true)) {
-          if ($.isDownloaded($.currentImageId)) {
-            let div = doc.createElement('div');
-            div.textContent = $.Locale('downloaded');
-            div.setAttribute('style', $.Prefs.get('downloadedDisplayStyle', ''));
-            div.setAttribute('id', 'ankpixiv-downloaded-display');
-            let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.dateTime);
-            if (node)
-              node.appendChild(div);
-          }
-        }
+        $.insertDownloadedDisplay();
 
         // コメント欄を開く
         if ($.Prefs.get('openComment', false))
@@ -1053,6 +1047,22 @@ saved-minute  = ?saved-minute?
         this.functionsInstaller();
     },
 
+
+    // ダウンロード済みの表示
+    insertDownloadedDisplay: function () {
+      if (this.Prefs.get('displayDownloaded', true)) {
+        if (this.isDownloaded(this.currentImageId)) {
+          let doc = this.currentDocument;
+          let div = doc.createElement('div');
+          div.textContent = this.Locale('downloaded');
+          div.setAttribute('style', this.Prefs.get('downloadedDisplayStyle', ''));
+          div.setAttribute('id', 'ankpixiv-downloaded-display');
+          let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.dateTime);
+          if (node)
+            node.appendChild(div);
+        }
+      }
+    },
 
     /********************************************************************************
     * データ修正など
