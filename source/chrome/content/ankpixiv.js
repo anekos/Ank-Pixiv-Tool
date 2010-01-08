@@ -550,20 +550,25 @@ try {
       // XXX ディレクトリは勝手にできるっぽい
       //dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
 
+      function _onComplete () {
+        arguments[1] = dir.path;
+        return onComplete.apply($, arguments);
+      }
+
       function downloadNext (_orignalArgs, _filePath, status) {
+        if (index >= urls.length)
+          return _onComplete.apply($, arguments);
+
         let url = urls[index];
         let file = dir.clone();
-        let ext = url.match(/\.\w+$/)[0] || '.jpg';
-        file.append(AnkUtils.zeroPad(index + 1, 2) + ext);
-
-        let needNext = (index < urls.length);
+        let fileExt = url.match(/\.\w+$/)[0] || '.jpg';
+        file.append(AnkUtils.zeroPad(index + 1, 2) + fileExt);
 
         if (lastFile) {
           if (lastFile && !lastFile.exists)
-            needNext = false;
+            return _onComplete.apply($, arguments);
 
           if (status != 200) { // XXX || (lastFile.exists() && lastFile.fileSize < 1000)) {
-            needNext = false;
             if (lastFile.exists()) {
               try {
                 lastFile.remove(false);
@@ -572,19 +577,15 @@ try {
                 Application.console.log('非正規ファイルの削除に失敗 => ' + e);
               }
             }
+            return _onComplete.apply($, arguments);
           }
         }
 
         lastFile = file;
         index++;
 
-        if (needNext) {
-          Application.console.log('DL => ' + file.path);
-          return $.downloadTo(url, referer, file, downloadNext);
-        } else {
-          arguments[1] = dir.path;
-          return onComplete.apply($, arguments);
-        }
+        Application.console.log('DL => ' + file.path);
+        return $.downloadTo(url, referer, file, downloadNext);
       }
 
       downloadNext();
