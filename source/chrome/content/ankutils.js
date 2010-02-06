@@ -311,8 +311,8 @@ try {
      *    xpath:
      *    return: node
      */
-    findNodeByXPath: function (xpath)
-      let (doc = this.currentDocument)
+    findNodeByXPath: function (xpath, _doc)
+      let (doc = _doc || this.currentDocument)
         doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue,
 
 
@@ -321,9 +321,9 @@ try {
      *    xpath:
      *    return: nodes
      */
-    findNodesByXPath: function (xpath, array) {
+    findNodesByXPath: function (xpath, array, _doc) {
       let nodes =
-        let (doc = this.currentDocument)
+        let (doc = _doc || this.currentDocument)
           doc.evaluate(xpath, doc, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
       if (!array)
         return nodes;
