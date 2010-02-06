@@ -1029,25 +1029,22 @@ saved-minute  = ?saved-minute?
       return installer;
     },
 
-
     getLastMangaPage: function (result) {
-      const reLastPage1 = new RegExp('\\d\\s*/\\s*(\\d+) p<span style', 'i');
-      const reLastPage2 = new RegExp('\\d\\s*/\\s*(\\d+)', 'i');
-      const reImage1 = new RegExp('<a href="#page\\d+"><img src="http://img\\d+\\.pixiv\\.net/img/.+/\\d+_p\\d+(\\.\\w+)"></a>');
-      const reImage2 = new RegExp('<a href="#page\\d+"><img src="http://.*.pixiv.net/img/.+/.+(\\..+)"></a>');
+      function get (source) {
+        let doc = AnkUtils.createHTMLDocument(source);
+        let pages = AnkUtils.findNodeByXPath('id("page0")/tbody/tr/td/span/span', doc)
+                    ||
+                    AnkUtils.findNodeByXPath('id("page0")//span[@style="padding: 0pt 20px;"]', doc);
+        if (!pages)
+          return 0;
+        return parseInt(pages.textContent.replace(/^.*\//, '').replace(/\s+/g, ''), 10) || 0;
+      }
 
       let xhr = new XMLHttpRequest();
       xhr.open('GET', this.currentMangaIndexPath, true);
       xhr.onreadystatechange = function (e) {
         if (xhr.readyState == 4 && xhr.status == 200) {
-          result(
-            (reLastPage1.test(xhr.responseText) || reLastPage2.test(xhr.responseText))
-            &&
-            parseInt(RegExp.$1),
-            (reImage1.test(xhr.responseText) || reImage2.test(xhr.responseText))
-            &&
-            RegExp.$1
-          );
+          result(get(xhr.responseText));
         }
       };
       xhr.send(null);
