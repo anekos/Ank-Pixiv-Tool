@@ -143,15 +143,6 @@ try {
       this.currentDocumentTitle.replace(' [pixiv]', ''),
 
 
-    get currentImageAuthorId () {
-      try {
-        return AnkUtils.findNodeByXPath(this.XPath.authorIconLink).getAttribute('href').replace(/^.*id=/, '');
-      } catch (e) {
-        return 0;
-      }
-    },
-
-
     get currentImageId () {
       try {
         return parseInt(this.currentImagePath.match(/\/(\d+)(_m)?\.\w{2,4}$/)[1]);
@@ -237,8 +228,15 @@ try {
         illust.__defineGetter__(name, function () illust.dateTime[name]);
       });
 
-      return {
-        illust: illust,
+      let member = {
+        get id () {
+          try {
+            return AnkUtils.findNodeByXPath(AnkPixiv.XPath.authorIconLink).getAttribute('href').replace(/^.*id=/, '');
+          } catch (e) {
+            return 0;
+          }
+        },
+
         get pixivId () {
           let node = AnkUtils.findNodeByXPath('//*[@id="profile"]/div/a/img');
           let m = node.src.match(/\/profile\/([^\/]+)\//);
@@ -248,10 +246,31 @@ try {
           }
           return m && m[1];
         },
-        get memberName () {
+
+        get name () {
           let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.authorIconImage);
           return AnkUtils.trim(node.getAttribute('alt'));
         },
+
+        get memoizedName () {
+          let result = AnkPixiv.Storage.select(
+            'members',
+            'id = ?1',
+            function (stmt){
+              let result = [];
+              stmt.bindUTF8StringParameter(0, member.id);
+              while (stmt.executeStep())
+                result.push(AnkStorage.statementToObject(stmt));
+              return result;
+            }
+          );
+          return result && result.length && result[0].name;
+        },
+      };
+
+      return {
+        illust: illust,
+        member: member
       };
     })(),
 
@@ -629,24 +648,25 @@ try {
         if (!this.enabled)
           return false;
 
-        let url         = this.currentImagePath;
-        let illust_id   = this.currentImageId;
-        let ext         = this.currentImageExt;
-        let ref         = this.currentLocation.replace(/mode=medium/, 'mode=big');
-        let member_id   = this.currentImageAuthorId;
-        let member_name = this.info.memberName || member_id;
-        let tags        = this.currentImageTags;
-        let title       = this.info.illust.title;
-        let comment     = this.info.illust.comment;
-        let filenames   = [];
-        let shortTags   = (function (len) {
-                            let result = [];
-                            for (let i in tags) {
-                              if (tags[i].length <= len)
-                                result.push(tags[i]);
-                            }
-                            return result;
-                          })(8);
+        let url           = this.currentImagePath;
+        let illust_id     = this.currentImageId;
+        let ext           = this.currentImageExt;
+        let ref           = this.currentLocation.replace(/mode=medium/, 'mode=big');
+        let member_id     = this.info.member.id;
+        let member_name   = this.info.member.name || member_id;
+        let memoized_name = this.info.member.memoizedName || member_name;
+        let tags          = this.currentImageTags;
+        let title         = this.info.illust.title;
+        let comment       = this.info.illust.comment;
+        let filenames     = [];
+        let shortTags     = (function (len) {
+                              let result = [];
+                              for (let i in tags) {
+                                if (tags[i].length <= len)
+                                  result.push(tags[i]);
+                              }
+                              return result;
+                            })(8);
 
         if (this.Prefs.get('saveHistory', true)) {
           try {
@@ -675,14 +695,16 @@ try {
         (function () {
           let i = AnkPixiv.info;
           let ii = i.illust;
+          let im = i.member;
           let ps = [
             [/\?title\?/g, title],
             [/\?member-id\?/g, member_id],
             [/\?member-name\?/g, member_name],
+            [/\?memoized-name\?/g, memoized_name],
             [/\?tags\?/g, AnkUtils.join(tags, ' ')],
             [/\?short-tags\?/g, AnkUtils.join(shortTags, ' ')],
             [/\?tools\?/g, ii.tools],
-            [/\?pixiv-id\?/g, i.pixivId],
+            [/\?pixiv-id\?/g, im.pixivId],
             [/\?illust-id\?/g, illust_id],
             [/\?illust-year\?/g, ii.year],
             [/\?illust-month\?/g, ii.month],
@@ -707,6 +729,7 @@ try {
 title         = ?title?
 member-id     = ?member-id?
 member-name   = ?member-name?
+memoized-name = ?memoized-name?
 tags          = ?tags?
 short-tags    = ?short-tags?
 tools         = ?tools?

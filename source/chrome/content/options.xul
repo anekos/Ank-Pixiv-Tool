@@ -140,6 +140,7 @@
               <listitem label="?title?"></listitem>
               <listitem label="?member-id?"></listitem>
               <listitem label="?member-name?"></listitem>
+              <listitem label="?memoized-name?"></listitem>
               <listitem label="?tags?"></listitem>
               <listitem label="?short-tags?"></listitem>
               <listitem label="?tools?"></listitem>
