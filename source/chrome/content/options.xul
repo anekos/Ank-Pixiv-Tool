@@ -33,10 +33,12 @@
       function pushToken (elem) {
         let token = elem.selectedItem.label
         let box = currentFilenameElement;
+        let pref = document.getElementById(box.getAttribute('preference'));
         let now = box.value;
         let [ap, bp] = [box.selectionStart, box.selectionEnd];
         let [as, bs] = [now.slice(0, ap), now.slice(bp, now.length)];
         box.value = as + token + bs;
+        pref.value = box.value;
         let (p = ap + token.length)
           box.setSelectionRange(p, p);
         box.focus();
@@ -128,7 +130,7 @@
       <groupbox orient="vertical">
         <vbox>
           <caption label="&defaultFilename;" />
-          <textbox preference="default-filename" onfocus="currentFilenameElement=event.target" />
+          <textbox id="default-filename-box" preference="default-filename" onfocus="currentFilenameElement=event.target" />
           <caption label="&alternateFilename;" />
           <textbox preference="alternate-filename" onfocus="currentFilenameElement=event.target" />
         </vbox>
@@ -165,7 +167,7 @@
     </prefpane>
 
     <script type="application/x-javascript"><![CDATA[
-        currentFilenameElement = document.getElementById('default-filename');
+        currentFilenameElement = document.getElementById('default-filename-box');
     ]]></script>
 
 </prefwindow>
