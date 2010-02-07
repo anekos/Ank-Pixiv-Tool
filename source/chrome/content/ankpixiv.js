@@ -364,39 +364,26 @@ try {
 
     /*
      * newLocalFile
-     *    url:      String パスURL
+     *    url:      String パス
      *    return:   nsILocalFile
      * nsILocalFileを作成
      */
-    newLocalFile: function (url) {
-      let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
-      // バージョン毎に場合分け(いらないかも)
-      let temp;
-      try {
-        let fileHandler = IOService.getProtocolHandler('file').
-                            QueryInterface(Components.interfaces.nsIFileProtocolHandler);
-        temp = fileHandler.getFileFromURLSpec(url);
-      } catch (ex) {
-        try {
-          temp = IOService.getFileFromURLSpec(url);
-        } catch(ex) {
-          temp = AnkUtils.ccci('@mozilla.org/file/local;1', Components.interfaces.nsILocalFile);
-          IOService.initFileFromURLSpec(temp, url);
-        }
-      }
+    newLocalFile: function (path) {
+      let temp = AnkUtils.ccci('@mozilla.org/file/local;1', Components.interfaces.nsILocalFile);
+      temp.initWithPath(path);
       return temp;
     },
 
 
     /*
      * newFileURI
-     *    url:      String パスURL
+     *    url:      String パス
      *    return:   nsILocalFile
      * nsILocalFileを作成
      */
-    newFileURI: function (url) {
+    newFileURI: function (path) {
       let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
-      return IOService.newFileURI(this.newLocalFile(url));
+      return IOService.newFileURI(this.newLocalFile(path));
     },
 
 
@@ -413,14 +400,14 @@ try {
       try {
         let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
         let prefInitDir = this.Prefs.get('initialDirectory');
-        let initDir = this.newLocalFile('file://' + prefInitDir);
+        let initDir = this.newLocalFile(prefInitDir);
 
         if (!initDir.exists())
           return this.showFilePicker(filenames[0] + ext);
 
         for (let i in filenames) {
           let filename = filenames[i] + ext;
-          let url = 'file://' + prefInitDir + AnkUtils.SYS_SLASH + filename;
+          let url = prefInitDir + AnkUtils.SYS_SLASH + filename;
           let localfile = this.newLocalFile(url);
 
           if (localfile.exists() || this.filenameExists(filename))
