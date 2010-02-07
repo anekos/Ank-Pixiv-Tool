@@ -422,7 +422,7 @@ try {
         }
       } catch (e) {
         // FIXME ?
-        dump(e);
+        Application.console.log(e);
       }
 
       return this.showFilePicker(filenames[0] + ext);
@@ -725,6 +725,7 @@ saved-hour    = ?saved-hour?
 saved-minute  = ?saved-minute?
                 ]]></>.toString();
             window.alert(repl(tokens, title));
+            window.alert(filenames);
           }
         })();
 
