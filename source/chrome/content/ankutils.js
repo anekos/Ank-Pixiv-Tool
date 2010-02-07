@@ -356,8 +356,15 @@ try {
       while (elem = nodes.iterateNext())
         result.push(elem);
       return result;
-    }
+    },
 
+    createTempFile: function (name) {
+      let ds = AnkUtils.ccgs("@mozilla.org/file/directory_service;1", Ci.nsIProperties);
+      let file = ds.get("TmpD", Ci.nsIFile);
+      file.append('ankpixivtool-' + name);
+      file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+      return file;
+    }
   };
 
 
