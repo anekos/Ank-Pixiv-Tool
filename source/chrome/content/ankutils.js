@@ -48,15 +48,17 @@ try {
     /*
      * fixFilename
      *    filename: ファイル名
+     *    opts:     オプション
      *    return:   ファイル名
      * ファイル名として使えない文字を除去する。
      */
-    fixFilename: function (filename, trPattern) {
-      const badChars = /[\\\/:;\*\?\"\<\>\|\#]/g;
-      if (trPattern) {
-        return filename.replace(badChars, function (c) (trPattern[c] || '_'));
-      }
-      return filename.replace(badChars, '_');
+    fixFilename: function (filename, opts) {
+      opts = opts || {};
+      if (!opts.file)
+        filename = filename.replace(/[\\\/]/g, '_');
+      if (!opts.token)
+        filename = filename.replace(/[\?]/g, '_');
+      return filename.replace(/[:;\*\"\<\>\|\#]/g, '_');
     },
 
 

@@ -351,15 +351,6 @@ try {
     ********************************************************************************/
 
     /*
-     * fixFilename
-     *    filename:   String ファイル名
-     * 設定を考慮して、ファイル名を修正する
-     */
-    fixFilename: function (filename) {
-      return AnkUtils.fixFilename(filename);
-    },
-
-    /*
      * filenameExists
      *    filename:      String パスfilename
      *    return:   boolean
@@ -716,7 +707,7 @@ try {
             [/\?saved-day\?/g, AnkUtils.zeroPad(savedDateTime.getDate(), 2)],
             [/\?saved-hour\?/g, AnkUtils.zeroPad(savedDateTime.getHours(), 2)],
             [/\?saved-minute\?/g, AnkUtils.zeroPad(savedDateTime.getMinutes(), 2)]
-          ].map(function ([re, val]) [re, AnkPixiv.fixFilename(val.toString())]);
+          ].map(function ([re, val]) [re, AnkUtils.fixFilename(val.toString())]);
           function repl (s) {
             ps.forEach(function ([re, val]) (s = s.replace(re, val)))
             return s;
