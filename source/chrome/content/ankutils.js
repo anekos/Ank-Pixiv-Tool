@@ -364,7 +364,14 @@ try {
       file.append('ankpixivtool-' + name);
       file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
       return file;
-    }
+    },
+
+    // Vim 風に返す
+    platform: (function () {
+      if (navigator.platform.match(/^win\d+$/i))
+        return 'Win32';
+      return 'other';
+    })()
   };
 
 

@@ -370,6 +370,8 @@ try {
      */
     newLocalFile: function (path) {
       let temp = AnkUtils.ccci('@mozilla.org/file/local;1', Components.interfaces.nsILocalFile);
+      if (AnkUtils.platform === 'Win32')
+        path = path.replace(/\//g, '\\');
       temp.initWithPath(path);
       return temp;
     },
