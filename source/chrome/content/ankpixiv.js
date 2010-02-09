@@ -1072,11 +1072,14 @@ saved-minute  = ?saved-minute?
     insertDownloadedDisplay: function () {
       if (this.Prefs.get('displayDownloaded', true)) {
         if (this.isDownloaded(this.currentImageId)) {
+          let R18 = AnkPixiv.info.illust.R18;
           let doc = this.currentDocument;
           let div = doc.createElement('div');
-          div.textContent = this.Locale(AnkPixiv.info.illust.R18 ? 'used' : 'downloaded');
+          let textNode = doc.createElement(R18 ? 'blink' : 'textnode');
+          textNode.textContent = this.Locale(R18 ? 'used' : 'downloaded');
           div.setAttribute('style', this.Prefs.get('downloadedDisplayStyle', ''));
           div.setAttribute('id', 'ankpixiv-downloaded-display');
+          div.appendChild(textNode);
           let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.dateTime);
           if (node)
             node.appendChild(div);
