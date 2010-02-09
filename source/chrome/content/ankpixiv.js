@@ -223,6 +223,9 @@ try {
           let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.comment);
           return node ? AnkUtils.trim(node.textContent) :  '';
         },
+
+        get R18 ()
+          AnkPixiv.currentImageTags.some(function (v) 'R-18' == v)
       };
       'year month day hour minute'.split(/\s+/).forEach(function (name) {
         illust.__defineGetter__(name, function () illust.dateTime[name]);
@@ -1071,7 +1074,7 @@ saved-minute  = ?saved-minute?
         if (this.isDownloaded(this.currentImageId)) {
           let doc = this.currentDocument;
           let div = doc.createElement('div');
-          div.textContent = this.Locale('downloaded');
+          div.textContent = this.Locale(AnkPixiv.info.illust.R18 ? 'used' : 'downloaded');
           div.setAttribute('style', this.Prefs.get('downloadedDisplayStyle', ''));
           div.setAttribute('id', 'ankpixiv-downloaded-display');
           let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.dateTime);
