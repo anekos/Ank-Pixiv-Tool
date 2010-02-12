@@ -113,7 +113,7 @@ try {
     get currentImagePath () {
       let elem = /mode=medium/.test(this.currentLocation) ? AnkUtils.findNodeByXPath(this.XPath.mediumImage)
                                                           : AnkUtils.findNodeByXPath(this.XPath.bigImage);
-      return elem && elem.src.replace(/_m\./, '.');
+      return elem && elem.src.replace(/_m\./, '.').replace(/\?.*$/, '');
     },
 
 
