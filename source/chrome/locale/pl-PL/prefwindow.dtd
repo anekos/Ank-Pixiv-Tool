@@ -14,5 +14,5 @@
 <!ENTITY downloadWhenClickMiddle "Pobieraj automatycznie po kliknięciu średniego powiększenia">
 <!ENTITY showCompletePopup "Wyświetlaj powiadomienie po zakończeniu pobierania">
 <!ENTITY displayDownloaded "Wyświetlaj informację „Już był pobierany”">
-<!ENTITY defaultMangaFilename "Default Manga (Comic) filename">
-<!ENTITY alternateMangaFilename "Alternate Manga (Comic) filename">
+<!ENTITY defaultMangaFilename "Nazwa pliku Default Manga (Comic)">
+<!ENTITY alternateMangaFilename "Nazwa pliku Alternate Manga (Comic)">

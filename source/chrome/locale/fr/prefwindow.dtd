@@ -9,8 +9,8 @@
 <!ENTITY largeOnMiddle "Afficher la grande image dans le même onglet lorsque vous cliquez sur l'image du milieu.">
 <!ENTITY openComment "Ouvrir automatiquement la boîte de commentaires.">
 <!ENTITY alternateFilename "Nom de fichier alternatif">
-<!ENTITY confirmExistingDownload "Demande de confirmation du retéléchargement.">
-<!ENTITY confirmExistingDownloadWhenAuto "Demander confirmation pour le retéléchargement lors du téléchargement automatique.">
+<!ENTITY confirmExistingDownload "Demande de confirmation de reprise de téléchargement.">
+<!ENTITY confirmExistingDownloadWhenAuto "Demander confirmation pour la reprise de téléchargement lors du téléchargement automatique.">
 <!ENTITY downloadWhenClickMiddle "Télécharger automatiquement lors du clic sur l'image du milieu.">
 <!ENTITY showCompletePopup "Afficher une fenêtre popup lorsque le téléchargement est achevé.">
 <!ENTITY displayDownloaded "Afficher « Déjà téléchargée »">
