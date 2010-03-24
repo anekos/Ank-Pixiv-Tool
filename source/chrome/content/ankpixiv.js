@@ -701,7 +701,7 @@ try {
             [/\?saved-minute\?/g, AnkUtils.zeroPad(savedDateTime.getMinutes(), 2)]
           ].map(function ([re, val]) [re, AnkUtils.fixFilename(val.toString())]);
           function repl (s) {
-            ps.forEach(function ([re, val]) (s = s.replace(re, val)))
+            ps.forEach(function ([re, val]) (s = s.replace(re, val).trim()))
             return s;
           }
           filenames.push(repl(defaultFilename));
