@@ -544,6 +544,8 @@ try {
       if (!filePicker)
         return;
 
+      const MAX_FILE = 1000;
+
       let dir = filePicker.file;
       let $ = this;
       let index = 0;
@@ -590,7 +592,7 @@ try {
         }
 
         // 最後のファイル
-        if (index >= urls.length)
+        if (index >= Math.min(urls.length, MAX_FILE))
           return _onComplete.apply($, arguments);
 
         let url = urls[index];
