@@ -279,6 +279,12 @@ try {
 
 
     /********************************************************************************
+    * 状態
+    ********************************************************************************/
+
+    downloadings: {},
+
+    /********************************************************************************
     * ダイアログ関連
     ********************************************************************************/
 
@@ -668,6 +674,11 @@ try {
                               return result;
                             })(8);
 
+        if (this.downloadings[pageUrl]) {
+          return window.alert(this.Locale('alreadyDownloading'));
+        }
+        this.downloadings[pageUrl] = new Date();
+
         if (this.Prefs.get('saveHistory', true)) {
           try {
             if (this.Storage.exists('members', 'id = ' + parseInt(member_id))) {
@@ -766,8 +777,14 @@ saved-minute  = ?saved-minute?
           version: AnkPixiv.DB_VERSION,
         };
 
+        let removeDownloading = function () {
+          delete $.downloadings[pageUrl];
+        };
+
         let onComplete = function (orig_args, local_path) {
           try {
+            removeDownloading();
+
             let caption = this.Locale('finishedDownload');
             let text = filenames[0];
             let prefInitDir = this.Prefs.get('initialDirectory');
@@ -803,6 +820,8 @@ saved-minute  = ?saved-minute?
         };
 
         let onError = function (origArgs, filepath, responseStatus) {
+          removeDownloading();
+
           let desc = '\n' + title + ' / ' + memoized_name + '\n' + pageUrl + '\n';
           let msg =
             $.Locale('downloadFailed') + '\n' +
