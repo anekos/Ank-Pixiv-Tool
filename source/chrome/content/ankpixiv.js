@@ -693,7 +693,7 @@ try {
         /* ダウンロード済みかの確認 */
         if (this.isDownloaded(illust_id)) {
           if (confirmDownloaded) {
-            if (!confirm(this.Locale('downloadExistingImage')))
+            if (!window.confirm(this.Locale('downloadExistingImage')))
               return;
           } else {
             return;
