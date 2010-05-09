@@ -803,12 +803,20 @@ saved-minute  = ?saved-minute?
         };
 
         let onError = function (origArgs, filepath, responseStatus) {
-          let msg = $.Locale('downloadFailed') + '\n';
-          if (responseStatus)
-            msg += 'Status: ' + responseStatus + '\n';
+          let desc = '\n' + title + ' / ' + memoized_name + '\n' + pageUrl + '\n';
+          let msg =
+            $.Locale('downloadFailed') + '\n' +
+            (responseStatus ? 'Status: ' + responseStatus + '\n' : '') +
+            desc;
+
           window.alert(msg);
           Application.console.log(msg);
-          if (window.confirm($.Locale('confirmOpenIllustrationPage')))
+
+          let confirmMsg =
+            $.Locale('confirmOpenIllustrationPage') + '\n' +
+            desc;
+
+          if (window.confirm(confirmMsg))
             AnkUtils.openTab(pageUrl);
         };
 
