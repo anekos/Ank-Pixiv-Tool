@@ -22,6 +22,7 @@
   <statusbar id="status-bar">
     <statusbarpanel class="statusbarpanel-iconic" id="ankpixiv-statusbarpanel"
                     label="&downloadCurrentImage;" onclick="AnkPixiv.onDownloadButtonClick(event)"/>
+    <statusbarpanel id="ankpixiv-statusbar-text" />
   </statusbar>
 
   <toolbarpalette id="BrowserToolbarPalette">

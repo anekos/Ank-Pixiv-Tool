@@ -277,6 +277,11 @@ try {
       };
     })(),
 
+    set statusbarText (text) {
+      let elem = document.getElementById('ankpixiv-statusbar-text');
+      elem.textContent = text;
+      return text;
+    },
 
     /********************************************************************************
     * 状態
@@ -774,6 +779,7 @@ saved-minute  = ?saved-minute?
 
         let removeDownloading = function () {
           delete $.downloadings[pageUrl];
+          $.updateStatusBarText();
         };
 
         let onComplete = function (orig_args, local_path) {
@@ -839,6 +845,7 @@ saved-minute  = ?saved-minute?
           return window.alert(this.Locale('alreadyDownloading'));
         }
         this.downloadings[pageUrl] = new Date();
+        this.updateStatusBarText();
 
         if (this.manga) {
           this.getLastMangaPage(function (v, ext) {
@@ -1277,6 +1284,15 @@ saved-minute  = ?saved-minute?
       }
     },
 
+
+    /********************************************************************************
+    * ステータスバー
+    ********************************************************************************/
+
+    updateStatusBarText: function () {
+      let text = [k for (k in this.downloadings)].length;
+      this.statusbarText = text ? text : '';
+    },
 
     /********************************************************************************
     * イベント
