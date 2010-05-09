@@ -674,11 +674,6 @@ try {
                               return result;
                             })(8);
 
-        if (this.downloadings[pageUrl]) {
-          return window.alert(this.Locale('alreadyDownloading'));
-        }
-        this.downloadings[pageUrl] = new Date();
-
         if (this.Prefs.get('saveHistory', true)) {
           try {
             if (this.Storage.exists('members', 'id = ' + parseInt(member_id))) {
@@ -838,6 +833,12 @@ saved-minute  = ?saved-minute?
           if (window.confirm(confirmMsg))
             AnkUtils.openTab(pageUrl);
         };
+
+        // ダウンロード中だったらやめようぜ！
+        if (this.downloadings[pageUrl]) {
+          return window.alert(this.Locale('alreadyDownloading'));
+        }
+        this.downloadings[pageUrl] = new Date();
 
         if (this.manga) {
           this.getLastMangaPage(function (v, ext) {
