@@ -647,6 +647,7 @@ try {
         if (!this.enabled)
           return false;
 
+        let pageUrl       = this.currentLocation;
         let url           = this.currentImagePath;
         let illust_id     = this.currentImageId;
         let ext           = this.currentImageExt;
@@ -801,15 +802,25 @@ saved-minute  = ?saved-minute?
           }
         };
 
+        let onError = function (origArgs, filepath, responseStatus) {
+          let msg = $.Locale('downloadFailed') + '\n';
+          if (responseStatus)
+            msg += 'Status: ' + responseStatus + '\n';
+          window.alert(msg);
+          Application.console.log(msg);
+          if (window.confirm($.Locale('confirmOpenIllustrationPage')))
+            AnkUtils.openTab(pageUrl);
+        };
+
         if (this.manga) {
           this.getLastMangaPage(function (v, ext) {
             let urls = [];
             for (let i = 0; i < v; i++)
               urls.push($.getBigMangaImagePath(i, url, ext));
-            $.downloadFiles(urls, ref, filenames, ext, useDialog, onComplete);
+            $.downloadFiles(urls, ref, filenames, ext, useDialog, onComplete, onError);
           });
         } else {
-          this.downloadFile(url, ref, filenames, ext, useDialog, onComplete);
+          this.downloadFile(url, ref, filenames, ext, useDialog, onComplete, onError);
         }
 
         return;
