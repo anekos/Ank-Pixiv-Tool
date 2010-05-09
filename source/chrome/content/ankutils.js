@@ -178,6 +178,9 @@ try {
 
 
     dumpError: function (error) {
+      Application.console.log(e);
+      Application.console.log(e.stack);
+
       let msg = "\n<<ANK<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
       msg += this.errorToString(error) ;
       msg += ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
