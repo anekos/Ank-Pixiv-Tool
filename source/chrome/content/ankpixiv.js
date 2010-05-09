@@ -198,7 +198,7 @@ try {
         },
 
         get tools () {
-          let node = AnkUtils.findNodeByXPath('//*[@id="content2"]/div[6]/span');
+          let node = AnkPixiv.currentDocument.querySelector('#bookmark_edit ~ div > span');
           let m = node.textContent.match(/\|\s*(.+)/);
           if (!m)
             return [];
