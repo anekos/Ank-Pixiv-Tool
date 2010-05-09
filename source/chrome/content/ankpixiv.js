@@ -850,8 +850,6 @@ saved-minute  = ?saved-minute?
           this.downloadFile(url, ref, filenames, ext, useDialog, onComplete, onError);
         }
 
-        return;
-
       } catch (e) {
         AnkUtils.dumpError(e);
       }
