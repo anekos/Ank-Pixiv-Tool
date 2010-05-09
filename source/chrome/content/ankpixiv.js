@@ -244,7 +244,7 @@ try {
           let node = AnkUtils.findNodeByXPath('//*[@id="profile"]/div/a/img');
           let m = node.src.match(/\/profile\/([^\/]+)\//);
           if (!m) {
-            node = content.document.querySelector("img[src*='_m.'][src*='/img/']");
+            node = AnkPixiv.currentDocument.querySelector("img[src*='_m.'][src*='/img/']");
             m = node.src.match(/\/img\/([^\/]+)\//);
           }
           return m && m[1];
