@@ -449,11 +449,16 @@ try {
      *    url:            URL
      *    referer:        リファラ
      *    file:           nsIFile
-     *    onComplete      終了時のアラート
+     *    onComplete      終了時に呼ばれる関数
+     *    onError         エラー時に呼ばれる関数
      *    return:         成功?
      * ファイルをダウンロードする
      */
-    downloadTo: function (url, referer, file, onComplete) {
+    downloadTo: function (url, referer, file, onComplete, onError) {
+      // 何もしなーい
+      if (!onError)
+        onError = function () void 0;
+
       // ディレクトリ作成
       let (dir = file.parent)
         dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
@@ -483,10 +488,19 @@ try {
           // XXX pixiv のアホサーバは、PNG にも image/jpeg を返してくるぞ！！
           // Application.console.log(_request.getResponseHeader('Content-Type'));
           if (_stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-            if (onComplete) {
-              let orig_args = arguments;
-              onComplete.call($, orig_args, file.path, _request.responseStatus);
+            let responseStatus, orig_args = arguments;
+
+            try {
+              responseStatus = _request.responseStatus
+            } catch (e) {
+              return onError.call($, orig_args, file.path, 0);
             }
+
+            if (responseStatus != 200)
+              return onError.call($, orig_args, file.path, responseStatus);
+
+            if (onComplete)
+              return onComplete.call($, orig_args, file.path, responseStatus);
           }
         },
         onProgressChange: function (_webProgress, _request, _curSelfProgress, _maxSelfProgress,
@@ -518,13 +532,13 @@ try {
      *    return:         成功?
      * ファイルをダウンロードする
      */
-    downloadFile: function (url, referer, filenames, ext, useDialog, onComplete) {
+    downloadFile: function (url, referer, filenames, ext, useDialog, onComplete, onError) {
       // 保存ダイアログ
       let filePicker = this.getSaveFilePath(filenames, ext, useDialog);
       if (!filePicker)
         return;
 
-      return this.downloadTo(url, referer, filePicker.file, onComplete);
+      return this.downloadTo(url, referer, filePicker.file, onComplete, onError);
     },
 
     /*
@@ -538,7 +552,7 @@ try {
      *    return:         成功?
      * 複数のファイルをダウンロードする
      */
-    downloadFiles: function (urls, referer, filenames, ext, useDialog, onComplete) {
+    downloadFiles: function (urls, referer, filenames, ext, useDialog, onComplete, onError) {
       // 保存ダイアログ
       let filePicker = this.getSaveFilePath(filenames, '', useDialog);
       if (!filePicker)
@@ -604,7 +618,7 @@ try {
         index++;
 
         Application.console.log('DL => ' + file.path);
-        return $.downloadTo(url, referer, file, downloadNext);
+        return $.downloadTo(url, referer, file, downloadNext, onError);
       }
 
       downloadNext();
