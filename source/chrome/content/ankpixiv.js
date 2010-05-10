@@ -1191,6 +1191,11 @@ saved-minute  = ?saved-minute?
         let (m = file.path.match(reExt))
           (m && m.toString().toLowerCase());
 
+      if (!ext) {
+        Application.console.log('fixFileExt: failed for unknown file type.');
+        return false;
+      }
+
       if (ext == originalExt)
         return false;
 
