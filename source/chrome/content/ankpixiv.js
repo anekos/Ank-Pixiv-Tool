@@ -540,7 +540,7 @@ try {
      *    ext:            拡張子
      *    useDialog:      保存ダイアログを使うか？
      *    onComplete      終了時のアラート
-     *    return:         成功?
+     *    return:         キャンセルなどがされなければ、true
      * ファイルをダウンロードする
      */
     downloadFile: function (url, referer, filenames, ext, useDialog, onComplete, onError) {
@@ -549,7 +549,8 @@ try {
       if (!filePicker)
         return;
 
-      return this.downloadTo(url, referer, filePicker.file, onComplete, onError);
+      this.downloadTo(url, referer, filePicker.file, onComplete, onError);
+      return true;
     },
 
     /*
@@ -560,7 +561,7 @@ try {
      *    ext:            拡張子
      *    useDialog:      保存ダイアログを使うか？
      *    onComplete      終了時のアラート
-     *    return:         成功?
+     *    return:         キャンセルなどがされなければ、true
      * 複数のファイルをダウンロードする
      */
     downloadFiles: function (urls, referer, filenames, ext, useDialog, onComplete, onError) {
@@ -633,7 +634,7 @@ try {
       }
 
       downloadNext();
-      return;
+      return true;
     },
 
     /*
@@ -782,6 +783,11 @@ saved-minute  = ?saved-minute?
           $.updateStatusBarText();
         };
 
+        let addDownloading = function () {
+          $.downloadings[pageUrl] = new Date();
+          $.updateStatusBarText();
+        };
+
         let onComplete = function (orig_args, local_path) {
           try {
             removeDownloading();
@@ -844,18 +850,18 @@ saved-minute  = ?saved-minute?
         if (this.downloadings[pageUrl]) {
           return window.alert(this.Locale('alreadyDownloading'));
         }
-        this.downloadings[pageUrl] = new Date();
-        this.updateStatusBarText();
 
         if (this.manga) {
           this.getLastMangaPage(function (v, ext) {
             let urls = [];
             for (let i = 0; i < v; i++)
               urls.push($.getBigMangaImagePath(i, url, ext));
-            $.downloadFiles(urls, ref, filenames, ext, useDialog, onComplete, onError);
+            if ($.downloadFiles(urls, ref, filenames, ext, useDialog, onComplete, onError))
+              addDownloading();
           });
         } else {
-          this.downloadFile(url, ref, filenames, ext, useDialog, onComplete, onError);
+          if (this.downloadFile(url, ref, filenames, ext, useDialog, onComplete, onError))
+            addDownloading();
         }
 
       } catch (e) {
