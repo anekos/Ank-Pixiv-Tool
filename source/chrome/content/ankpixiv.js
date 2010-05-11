@@ -865,6 +865,7 @@ saved-minute  = ?saved-minute?
         }
 
       } catch (e) {
+        window.alert('Oh my cat! Error!\n\n' + e.stack);
         AnkUtils.dumpError(e);
       }
     },
