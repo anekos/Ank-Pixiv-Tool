@@ -792,17 +792,17 @@ saved-minute  = ?saved-minute?
           try {
             removeDownloading();
 
-            let caption = this.Locale('finishedDownload');
+            let caption = $.Locale('finishedDownload');
             let text = filenames[0];
-            let prefInitDir = this.Prefs.get('initialDirectory');
+            let prefInitDir = $.Prefs.get('initialDirectory');
             let relPath = prefInitDir ? AnkUtils.getRelativePath(local_path, prefInitDir)
                                       : AnkUtils.extractFilename(local_path);
 
-            if (this.Prefs.get('saveHistory', true)) {
+            if ($.Prefs.get('saveHistory', true)) {
               try {
                 record['local_path'] = local_path;
                 record['filename'] = relPath;
-                this.Storage.insert('histories', record);
+                $.Storage.insert('histories', record);
               } catch (e) {
                 AnkUtils.dumpError(e);
                 caption = 'Error - onComplete';
@@ -810,10 +810,10 @@ saved-minute  = ?saved-minute?
               }
             }
 
-            if (this.Prefs.get('showCompletePopup', true))
-              this.popupAlert(caption, text);
+            if ($.Prefs.get('showCompletePopup', true))
+              $.popupAlert(caption, text);
 
-            this.insertDownloadedDisplay();
+            $.insertDownloadedDisplay();
 
             return true;
 
