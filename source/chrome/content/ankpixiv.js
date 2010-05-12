@@ -438,7 +438,7 @@ try {
         }
       } catch (e) {
         // FIXME ?
-        Application.console.log(e);
+        AnkUtils.dump(e);
       }
 
       return this.showFilePicker(filenames[0] + ext);
@@ -497,7 +497,7 @@ try {
         onStateChange: function (_webProgress, _request, _stateFlags, _status) {
           _request.QueryInterface(Components.interfaces.nsIHttpChannel);
           // XXX pixiv のアホサーバは、PNG にも image/jpeg を返してくるぞ！！
-          // Application.console.log(_request.getResponseHeader('Content-Type'));
+          // AnkUtils.dump(_request.getResponseHeader('Content-Type'));
           if (_stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
             let responseStatus, orig_args = arguments;
 
@@ -591,7 +591,7 @@ try {
         if (lastFile) {
           // ダウンロードに失敗していたら、そこで終了さ！
           if (!lastFile.exists) {
-            Application.console.log('Strange error! file not found!');
+            AnkUtils.dump('Strange error! file not found!');
             return _onComplete.apply($, arguments);
           }
 
@@ -600,9 +600,9 @@ try {
             if (lastFile.exists()) {
               try {
                 lastFile.remove(false);
-                Application.console.log('Delete invalid file. => ' + lastFile.path);
+                AnkUtils.dump('Delete invalid file. => ' + lastFile.path);
               } catch (e) {
-                Application.console.log('Failed to delete invalid file. => ' + e);
+                AnkUtils.dump('Failed to delete invalid file. => ' + e);
               }
             }
             return _onComplete.apply($, arguments);
@@ -611,9 +611,9 @@ try {
           // ファイル名の修正
           try {
             if (AnkPixiv.fixFileExt(lastFile))
-              Application.console.log('Fix file ext: ' + lastFile.path);
+              AnkUtils.dump('Fix file ext: ' + lastFile.path);
           } catch (e) {
-            Application.console.log('Failed to fix file ext. => ' + e);
+            AnkUtils.dump('Failed to fix file ext. => ' + e);
           }
         }
 
@@ -629,7 +629,7 @@ try {
         lastFile = file;
         index++;
 
-        Application.console.log('DL => ' + file.path);
+        AnkUtils.dump('DL => ' + file.path);
         return $.downloadTo(url, referer, file, downloadNext, onError);
       }
 
@@ -836,7 +836,7 @@ saved-minute  = ?saved-minute?
             desc;
 
           window.alert(msg);
-          Application.console.log(msg);
+          AnkUtils.dump(msg);
 
           let confirmMsg =
             $.Locale('confirmOpenIllustrationPage') + '\n' +
@@ -1004,7 +1004,7 @@ saved-minute  = ?saved-minute?
                 // XXX 画像はあるけど、サーバのエラーのときはどうなんの？
                 if (bigImg instanceof Ci.nsIImageLoadingContent && bigImg.currentURI) {
                   let req = bigImg.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
-                  Application.console.log('AnkPixiv: imageStatus = ' + req.imageStatus.toString(2));
+                  AnkUtils.dump('AnkPixiv: imageStatus = ' + req.imageStatus.toString(2));
                   //if(reloadLimit && req && !(req.imageStatus & req.STATUS_LOAD_COMPLETE)) {
                   //  if (prevTimeout) {
                   //    clearTimeout(prevTimeout);
@@ -1034,7 +1034,7 @@ saved-minute  = ?saved-minute?
               }
             }
             updateButtons();
-            Application.console.log('goto ' + currentMangaPage + ' page');
+            AnkUtils.dump('goto ' + currentMangaPage + ' page');
             bigImg.setAttribute('src', $.getBigMangaImagePath(currentMangaPage));
           };
 
@@ -1050,7 +1050,7 @@ saved-minute  = ?saved-minute?
               return;
 
             /* for debug
-            Application.console.log(
+            AnkUtils.dump(
               (e.target == bigImg) ? 'bigImg' :
               (e.target == prevButton) ? 'prev' :
               (e.target == nextButton) ? 'next' :
@@ -1199,7 +1199,7 @@ saved-minute  = ?saved-minute?
           (m && m.toString().toLowerCase());
 
       if (!ext) {
-        Application.console.log('fixFileExt: failed for unknown file type.');
+        AnkUtils.dump('fixFileExt: failed for unknown file type.');
         return false;
       }
 
@@ -1396,7 +1396,7 @@ saved-minute  = ?saved-minute?
                               "`datetime` = datetime('" + dt + "', '1 months'), version = 2",
                               'rowid = ' + old.rowid);
         } catch (e) {
-          Application.console.log(e);
+          AnkUtils.dump(e);
         }
       }
 
