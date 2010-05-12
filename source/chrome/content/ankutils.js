@@ -190,19 +190,19 @@ try {
 
 
     dump: function () {
+      let msg = "";
       if (arguments.length <= 1) {
-        let msg = "\n<<ANK " + arguments[0] + " >>\n";
-        dump(msg);
-        return msg;
+        msg = "\n<<ANK " + arguments[0] + " >>\n";
       } else {
-        let msg = "\n<<ANK<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
+        msg = "\n<<ANK<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
         for (let i = 0; i < arguments.length; i++) {
           msg += "  " + arguments[i] + "\n";
         }
         msg += ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
-        dump(msg);
-        return msg;
       }
+      dump(msg);
+      Application.console.log(msg);
+      return msg;
     },
 
 
