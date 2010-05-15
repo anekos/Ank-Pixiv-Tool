@@ -184,7 +184,8 @@ try {
 
       dump(msg);
       Application.console.log(msg);
-      window.alert(msg);
+      if (!noAlert)
+        window.alert(msg);
 
       return msg;
     },
