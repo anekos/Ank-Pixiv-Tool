@@ -670,6 +670,8 @@ try {
         let tags          = this.currentImageTags;
         let title         = this.info.illust.title;
         let comment       = this.info.illust.comment;
+        let R18           = this.info.illust.R18;
+        let doc           = this.currentDocument;
         let filenames     = [];
         let shortTags     = (function (len) {
                               let result = [];
@@ -813,7 +815,7 @@ saved-minute  = ?saved-minute?
             if ($.Prefs.get('showCompletePopup', true))
               $.popupAlert(caption, text);
 
-            $.insertDownloadedDisplay();
+            $.insertDownloadedDisplay(doc, R18);
 
             return true;
 
@@ -905,6 +907,7 @@ saved-minute  = ?saved-minute?
             var medImg = AnkUtils.findNodeByXPath($.XPath.mediumImage);
             var bigImgPath = $.currentBigImagePath;
             var openComment = function () content.wrappedJSObject.one_comment_view();
+            var dateTime = AnkUtils.findNodeByXPath(AnkPixiv.XPath.dateTime);
           } catch (e) {
             // 何度やってもできなさそうなときはダイアログを出す
             AnkUtils.dumpError(e, installTryed != 20);
@@ -912,7 +915,7 @@ saved-minute  = ?saved-minute?
           }
 
           // 完全に読み込まれて以内っぽいときは、遅延する
-          if (!(body && medImg && bigImgPath && wrapper && openComment))
+          if (!(body && medImg && bigImgPath && wrapper && openComment && dateTime))
             return delay("delay installation by null");
 
           // 中画像クリック時に保存する
@@ -1093,7 +1096,9 @@ saved-minute  = ?saved-minute?
             }
           })();
 
-          $.insertDownloadedDisplay();
+          // 保存済み表示
+          if ($.isDownloaded($.currentImageId))
+            $.insertDownloadedDisplay($.currentDocument, AnkPixiv.info.illust.R18);
 
           // コメント欄を開く
           if ($.Prefs.get('openComment', false))
@@ -1146,35 +1151,24 @@ saved-minute  = ?saved-minute?
 
 
     // ダウンロード済みの表示
-    insertDownloadedDisplay: function () {
-      let $ = this;
-      let tryed = 20;
+    insertDownloadedDisplay: function (doc, R18) {
+      if (!this.Prefs.get('displayDownloaded', true))
+        return;
 
-      function insert () {
-        const ElementID = 'ankpixiv-downloaded-display';
+      const ElementID = 'ankpixiv-downloaded-display';
 
-        let doc = $.currentDocument;
+      if (doc.getElementById(ElementID))
+        return;
 
-        if (doc.getElementById(ElementID))
-          return;
-
-        let R18 = AnkPixiv.info.illust.R18;
-        let div = doc.createElement('div');
-        let textNode = doc.createElement(R18 ? 'blink' : 'textnode');
-        textNode.textContent = $.Locale(R18 ? 'used' : 'downloaded');
-        div.setAttribute('style', $.Prefs.get('downloadedDisplayStyle', ''));
-        div.setAttribute('id', ElementID);
-        div.appendChild(textNode);
-        let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.dateTime);
-        if (node)
-          node.appendChild(div);
-
-        if (--tryed)
-          setTimeout(insert, 1000);
-      }
-
-      if (this.Prefs.get('displayDownloaded', true) && this.isDownloaded(this.currentImageId))
-        insert();
+      let div = doc.createElement('div');
+      let textNode = doc.createElement(R18 ? 'blink' : 'textnode');
+      textNode.textContent = AnkPixiv.Locale(R18 ? 'used' : 'downloaded');
+      div.setAttribute('style', AnkPixiv.Prefs.get('downloadedDisplayStyle', ''));
+      div.setAttribute('id', ElementID);
+      div.appendChild(textNode);
+      let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.dateTime, doc);
+      if (node)
+        node.appendChild(div);
     },
 
 
