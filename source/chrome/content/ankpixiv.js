@@ -1451,17 +1451,6 @@ saved-minute  = ?saved-minute?
 
   };
 
-
-  /********************************************************************************
-  * イベント設定
-  ********************************************************************************/
-
-  //AnkPixiv.fixStorageEncode();
-  //AnkPixiv.exchangeFilename();
-  window.addEventListener("focus", function() AnkPixiv.onFocus(), true);
-  window.addEventListener("load", function() AnkPixiv.onLoad(), true);
-
-
 } catch (error) {
  dump("[" + error.name + "]\n" +
       "  message: " + error.message + "\n" +
