@@ -907,7 +907,7 @@ saved-minute  = ?saved-minute?
             var openComment = function () content.wrappedJSObject.one_comment_view();
           } catch (e) {
             // 何度やってもできなさそうなときはダイアログを出す
-            AnkUtils.dumpError(e, installTryed > 20);
+            AnkUtils.dumpError(e, installTryed != 20);
             return delay("delay installation by error");
           }
 
