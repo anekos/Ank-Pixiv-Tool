@@ -177,14 +177,15 @@ try {
     },
 
 
-    dumpError: function (error) {
-      Application.console.log(e);
-      Application.console.log(e.stack);
-
+    dumpError: function (error, noAlert) {
       let msg = "\n<<ANK<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
       msg += this.errorToString(error) ;
       msg += ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
+
       dump(msg);
+      Application.console.log(msg);
+      window.alert(msg);
+
       return msg;
     },
 

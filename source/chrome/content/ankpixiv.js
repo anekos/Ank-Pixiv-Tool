@@ -336,7 +336,7 @@ try {
         }
       }
       catch (e) {
-        window.alert(e);
+        AnkUtils.dumpError(e);
       }
     },
 
@@ -865,7 +865,6 @@ saved-minute  = ?saved-minute?
         }
 
       } catch (e) {
-        window.alert('Oh my cat! Error!\n\n' + e.stack);
         AnkUtils.dumpError(e);
       }
     },
@@ -882,6 +881,7 @@ saved-minute  = ?saved-minute?
       let $ = this;
       let ut = AnkUtils;
       let installInterval = 500;
+      let installTryed = 0;
       let installer = null;
       let con = content;
       let doc = this.currentDocument;
@@ -892,212 +892,218 @@ saved-minute  = ?saved-minute?
       let delay = function (msg) {
         AnkUtils.dump(msg);
         setTimeout(installer, installInterval);
-        installInterval += 500;
+        installTryed++;
       };
 
       installer = function () {
 
-        // 完全に読み込まれて以内っぽいときは、遅延する
         try {
-          var body = doc.getElementsByTagName('body')[0];
-          var wrapper = doc.getElementById('wrapper');
-          var medImg = AnkUtils.findNodeByXPath($.XPath.mediumImage);
-          var bigImgPath = $.currentBigImagePath;
-          var openComment = function () content.wrappedJSObject.one_comment_view();
-        } catch (e) {
-          AnkUtils.dumpError(e);
-          return delay("delay installation by error");
-        }
-
-        // 完全に読み込まれて以内っぽいときは、遅延する
-        if (!(body && medImg && bigImgPath && wrapper && openComment))
-          return delay("delay installation by null");
-
-        // 中画像クリック時に保存する
-        if ($.Prefs.get('downloadWhenClickMiddle')) {
-          medImg.addEventListener(
-            'click',
-            function (e) {
-              $.downloadCurrentImageAuto();
-            },
-            true
-          );
-        }
-
-        // 大画像関係
-        if ($.Prefs.get('largeOnMiddle', true)) {
-          let div = doc.createElement('div');
-          let bigImg = doc.createElement('img');
-          let imgPanel = doc.createElement('div');
-          let buttonPanel = doc.createElement('div');
-          let prevButton = doc.createElement('button');
-          let nextButton = doc.createElement('button');
-
-          let updateButtons = function (v) {
-            nextButton.innerHTML =
-              (lastMangaPage === undefined || (currentMangaPage < lastMangaPage - 1)) ? '>>' : '\xD7';
-            prevHTML =
-              (lastMangaPage === undefined || currentMangaPage > 0) ? '<<' : '\xD7';
-          };
-
-          div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
-          prevButton.innerHTML = '<<';
-          nextButton.innerHTML = '>>';
-          buttonPanel.setAttribute('style', 'display: block; margin: 0 auto; text-align: center; ');
-
-          [prevButton, nextButton].forEach(function (button) {
-            button.setAttribute('class', 'submit_btn');
-            button.setAttribute('style', 'width: 100px !important');
-          });
-
-          /*
-           * div
-           *    - imgPanel
-           *      - bigImg
-           *    - buttonPanel
-           *      - prevButton
-           *      - nextButton
-           */
-          div.appendChild(imgPanel);
-          imgPanel.appendChild(bigImg);
-          if ($.manga) {
-            div.appendChild(buttonPanel);
-            buttonPanel.appendChild(prevButton);
-            buttonPanel.appendChild(nextButton);
+          // 完全に読み込まれて以内っぽいときは、遅延する
+          try {
+            var body = doc.getElementsByTagName('body')[0];
+            var wrapper = doc.getElementById('wrapper');
+            var medImg = AnkUtils.findNodeByXPath($.XPath.mediumImage);
+            var bigImgPath = $.currentBigImagePath;
+            var openComment = function () content.wrappedJSObject.one_comment_view();
+          } catch (e) {
+            // 何度やってもできなさそうなときはダイアログを出す
+            AnkUtils.dumpError(e, installTryed > 20);
+            return delay("delay installation by error");
           }
-          body.appendChild(div);
 
-          let bigMode = false;
+          // 完全に読み込まれて以内っぽいときは、遅延する
+          if (!(body && medImg && bigImgPath && wrapper && openComment))
+            return delay("delay installation by null");
 
-          let changeImageSize = function () {
-            let ads = AnkUtils.findNodesByXPath($.XPath.ad, true);
-            if (bigMode) {
-              div.style.display = 'none';
-              wrapper.setAttribute('style', 'opacity: 1;');
-              ads.forEach(function (ad) (ad.style.display = ad.__ank_pixiv__style_display));
-            } else {
-              currentMangaPage = 0;
-              if (lastMangaPage === undefined) {
-                $.getLastMangaPage(function (v) {
-                  lastMangaPage = v
-                });
-              }
-              bigImg.setAttribute('src', bigImgPath);
-              window.content.scrollTo(0, 0);
-              div.style.display = '';
-              wrapper.setAttribute('style', 'opacity: 0.1;');
-              bigImg.style['opacity'] = '1 !important;';
-              ads.forEach(
-                function (ad) {
-                  ad.__ank_pixiv__style_display = ad.style.display;
-                  ad.style.display = 'none';
-                }
-              );
-              updateButtons();
-            }
-            bigMode = !bigMode;
-          };
-
-          let (reloadLimit = 10, reloadInterval = 1000, prevTimeout) {
-            bigImg.addEventListener('error',
-              function () {
-                // XXX 画像はあるけど、サーバのエラーのときはどうなんの？
-                if (bigImg instanceof Ci.nsIImageLoadingContent && bigImg.currentURI) {
-                  let req = bigImg.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
-                  AnkUtils.dump('AnkPixiv: imageStatus = ' + req.imageStatus.toString(2));
-                  //if(reloadLimit && req && !(req.imageStatus & req.STATUS_LOAD_COMPLETE)) {
-                  //  if (prevTimeout) {
-                  //    clearTimeout(prevTimeout);
-                  //    prevTimeout = null;
-                  //  }
-                  //  setTimeout(function () bigImg.forceReload(), reloadInterval);
-                  //  reloadInterval *= 2;
-                  //  reloadLimit--;
-                  //  return;
-                  //}
-                }
-                changeImageSize(false);
+          // 中画像クリック時に保存する
+          if ($.Prefs.get('downloadWhenClickMiddle')) {
+            medImg.addEventListener(
+              'click',
+              function (e) {
+                $.downloadCurrentImageAuto();
               },
               true
             );
           }
 
-          let goNextPage = function (d, _doLoop) {
-            doLoop = _doLoop;
-            currentMangaPage += (d || 1);
-            if (lastMangaPage !== undefined) {
-              if (doLoop) {
-                if (currentMangaPage >= lastMangaPage)
-                  currentMangaPage = 0;
-                if (currentMangaPage < 0)
-                  currentMangaPage = lastMangaPage;
+          // 大画像関係
+          if ($.Prefs.get('largeOnMiddle', true)) {
+            let div = doc.createElement('div');
+            let bigImg = doc.createElement('img');
+            let imgPanel = doc.createElement('div');
+            let buttonPanel = doc.createElement('div');
+            let prevButton = doc.createElement('button');
+            let nextButton = doc.createElement('button');
+
+            let updateButtons = function (v) {
+              nextButton.innerHTML =
+                (lastMangaPage === undefined || (currentMangaPage < lastMangaPage - 1)) ? '>>' : '\xD7';
+              prevHTML =
+                (lastMangaPage === undefined || currentMangaPage > 0) ? '<<' : '\xD7';
+            };
+
+            div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
+            prevButton.innerHTML = '<<';
+            nextButton.innerHTML = '>>';
+            buttonPanel.setAttribute('style', 'display: block; margin: 0 auto; text-align: center; ');
+
+            [prevButton, nextButton].forEach(function (button) {
+              button.setAttribute('class', 'submit_btn');
+              button.setAttribute('style', 'width: 100px !important');
+            });
+
+            /*
+             * div
+             *    - imgPanel
+             *      - bigImg
+             *    - buttonPanel
+             *      - prevButton
+             *      - nextButton
+             */
+            div.appendChild(imgPanel);
+            imgPanel.appendChild(bigImg);
+            if ($.manga) {
+              div.appendChild(buttonPanel);
+              buttonPanel.appendChild(prevButton);
+              buttonPanel.appendChild(nextButton);
+            }
+            body.appendChild(div);
+
+            let bigMode = false;
+
+            let changeImageSize = function () {
+              let ads = AnkUtils.findNodesByXPath($.XPath.ad, true);
+              if (bigMode) {
+                div.style.display = 'none';
+                wrapper.setAttribute('style', 'opacity: 1;');
+                ads.forEach(function (ad) (ad.style.display = ad.__ank_pixiv__style_display));
+              } else {
+                currentMangaPage = 0;
+                if (lastMangaPage === undefined) {
+                  $.getLastMangaPage(function (v) {
+                    lastMangaPage = v
+                  });
+                }
+                bigImg.setAttribute('src', bigImgPath);
+                window.content.scrollTo(0, 0);
+                div.style.display = '';
+                wrapper.setAttribute('style', 'opacity: 0.1;');
+                bigImg.style['opacity'] = '1 !important;';
+                ads.forEach(
+                  function (ad) {
+                    ad.__ank_pixiv__style_display = ad.style.display;
+                    ad.style.display = 'none';
+                  }
+                );
+                updateButtons();
               }
+              bigMode = !bigMode;
+            };
+
+            let (reloadLimit = 10, reloadInterval = 1000, prevTimeout) {
+              bigImg.addEventListener('error',
+                function () {
+                  // XXX 画像はあるけど、サーバのエラーのときはどうなんの？
+                  if (bigImg instanceof Ci.nsIImageLoadingContent && bigImg.currentURI) {
+                    let req = bigImg.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+                    AnkUtils.dump('AnkPixiv: imageStatus = ' + req.imageStatus.toString(2));
+                    //if(reloadLimit && req && !(req.imageStatus & req.STATUS_LOAD_COMPLETE)) {
+                    //  if (prevTimeout) {
+                    //    clearTimeout(prevTimeout);
+                    //    prevTimeout = null;
+                    //  }
+                    //  setTimeout(function () bigImg.forceReload(), reloadInterval);
+                    //  reloadInterval *= 2;
+                    //  reloadLimit--;
+                    //  return;
+                    //}
+                  }
+                  changeImageSize(false);
+                },
+                true
+              );
             }
-            updateButtons();
-            AnkUtils.dump('goto ' + currentMangaPage + ' page');
-            bigImg.setAttribute('src', $.getBigMangaImagePath(currentMangaPage));
-          };
 
-          doc.changeImageSize = changeImageSize;
+            let goNextPage = function (d, _doLoop) {
+              doLoop = _doLoop;
+              currentMangaPage += (d || 1);
+              if (lastMangaPage !== undefined) {
+                if (doLoop) {
+                  if (currentMangaPage >= lastMangaPage)
+                    currentMangaPage = 0;
+                  if (currentMangaPage < 0)
+                    currentMangaPage = lastMangaPage;
+                }
+              }
+              updateButtons();
+              AnkUtils.dump('goto ' + currentMangaPage + ' page');
+              bigImg.setAttribute('src', $.getBigMangaImagePath(currentMangaPage));
+            };
 
-          doc.addEventListener('click', function (e) {
-            function preventCall (f) {
-              e.preventDefault();
-              f();
-            }
+            doc.changeImageSize = changeImageSize;
 
-            if (e.button)
-              return;
+            doc.addEventListener('click', function (e) {
+              function preventCall (f) {
+                e.preventDefault();
+                f();
+              }
 
-            /* for debug
-            AnkUtils.dump(
-              (e.target == bigImg) ? 'bigImg' :
-              (e.target == prevButton) ? 'prev' :
-              (e.target == nextButton) ? 'next' :
-              'other'
-            );
-            */
+              if (e.button)
+                return;
 
-            if (bigMode) {
-              if (e.target == bigImg) {
-                if ($.manga && (currentMangaPage < lastMangaPage || lastMangaPage === undefined))
-                  return preventCall(function () goNextPage(1, true));
-                else
+              /* for debug
+              AnkUtils.dump(
+                (e.target == bigImg) ? 'bigImg' :
+                (e.target == prevButton) ? 'prev' :
+                (e.target == nextButton) ? 'next' :
+                'other'
+              );
+              */
+
+              if (bigMode) {
+                if (e.target == bigImg) {
+                  if ($.manga && (currentMangaPage < lastMangaPage || lastMangaPage === undefined))
+                    return preventCall(function () goNextPage(1, true));
+                  else
+                    return preventCall(changeImageSize);
+                }
+                if ($.manga && e.target == prevButton)
+                  return preventCall(function () goNextPage(-1, true));
+                if ($.manga && e.target == nextButton)
+                  return preventCall(function () goNextPage(1, false));
+                return preventCall(changeImageSize);
+              } else {
+                if (e.target.src == medImg.src)
                   return preventCall(changeImageSize);
               }
-              if ($.manga && e.target == prevButton)
-                return preventCall(function () goNextPage(-1, true));
-              if ($.manga && e.target == nextButton)
-                return preventCall(function () goNextPage(1, false));
-              return preventCall(changeImageSize);
-            } else {
-              if (e.target.src == medImg.src)
-                return preventCall(changeImageSize);
-            }
-          }, true);
-        }
-
-        // レイティングによるダウンロード
-        (function () {
-          if (!$.Prefs.get('downloadWhenRate', false))
-            return;
-          let point = $.Prefs.get('downloadRate', 10);
-          let elem, iter = AnkUtils.findNodesByXPath("//ul[@class='unit-rating']/li/a");
-          while (elem = iter.iterateNext()) {
-            let m = elem.className.match(/r(\d{1,2})-unit/);
-            if (m && (point <= parseInt(m[1]))) {
-              elem.addEventListener('click', function() $.downloadCurrentImageAuto(), true);
-            }
+            }, true);
           }
-        })();
 
-        $.insertDownloadedDisplay();
+          // レイティングによるダウンロード
+          (function () {
+            if (!$.Prefs.get('downloadWhenRate', false))
+              return;
+            let point = $.Prefs.get('downloadRate', 10);
+            let elem, iter = AnkUtils.findNodesByXPath("//ul[@class='unit-rating']/li/a");
+            while (elem = iter.iterateNext()) {
+              let m = elem.className.match(/r(\d{1,2})-unit/);
+              if (m && (point <= parseInt(m[1]))) {
+                elem.addEventListener('click', function() $.downloadCurrentImageAuto(), true);
+              }
+            }
+          })();
 
-        // コメント欄を開く
-        if ($.Prefs.get('openComment', false))
-          setTimeout(openComment, 1000);
+          $.insertDownloadedDisplay();
 
-        AnkUtils.dump('installed');
+          // コメント欄を開く
+          if ($.Prefs.get('openComment', false))
+            setTimeout(openComment, 1000);
+
+          AnkUtils.dump('installed');
+
+        } catch (e) {
+          AnkUtils.dumpError(e);
+        }
       };
 
       return installer;
@@ -1126,12 +1132,16 @@ saved-minute  = ?saved-minute?
 
 
     installFunctions: function () {
-      let doc = this.currentDocument;
-      if (doc.ankpixivFunctionsIntalled)
-        return;
-      doc.ankpixivFunctionsIntalled = true;
-      if (this.inMedium)
-        this.functionsInstaller();
+      try {
+        let doc = this.currentDocument;
+        if (doc.ankpixivFunctionsIntalled)
+          return;
+        doc.ankpixivFunctionsIntalled = true;
+        if (this.inMedium)
+          this.functionsInstaller();
+      } catch (e) {
+        AnkUtils.dumpError(e);
+      }
     },
 
 
@@ -1340,7 +1350,7 @@ saved-minute  = ?saved-minute?
         //window.addEventListener("DOMContentLoaded", function(){ AnkPixiv.installFunctions(); }, false);
         window.addEventListener("domready", function(){ AnkPixiv.installFunctions(); }, false);
       } catch (e) {
-        //AnkUtils.dumpError(e);
+        AnkUtils.dumpError(e);
       }
     },
 
