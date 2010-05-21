@@ -143,15 +143,6 @@ try {
       this.currentDocumentTitle.replace(' [pixiv]', ''),
 
 
-    get currentImageId () {
-      try {
-        return parseInt(this.currentImagePath.match(/\/(\d+)(_m)?\.\w{2,4}$/)[1]);
-      } catch (e) {
-        return 0;
-      }
-    },
-
-
     get currentImageTags () {
       let as = AnkUtils.findNodesByXPath(this.XPath.tags);
       let node, res = [];
@@ -172,6 +163,9 @@ try {
 
     info: (function () {
       let illust = {
+        get id ()
+          parseInt(AnkPixiv.currentImagePath.match(/\/(\d+)(_(m|[^\.]+))?\.\w{2,4}$/)[1]),
+
         get dateTime () {
           let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.dateTime);
           let m = node.textContent.match(/(\d+)[^\d]+(\d+)[^\d]+(\d+)[^\d]+(\d+):(\d+)/);
@@ -661,7 +655,7 @@ try {
 
         let pageUrl       = this.currentLocation;
         let url           = this.currentImagePath;
-        let illust_id     = this.currentImageId;
+        let illust_id     = this.info.illust.id;
         let ext           = this.currentImageExt;
         let ref           = this.currentLocation.replace(/mode=medium/, 'mode=big');
         let member_id     = this.info.member.id;
@@ -1097,7 +1091,7 @@ saved-minute  = ?saved-minute?
           })();
 
           // 保存済み表示
-          if ($.isDownloaded($.currentImageId))
+          if ($.isDownloaded($.info.illust.id))
             $.insertDownloadedDisplay($.currentDocument, AnkPixiv.info.illust.R18);
 
           // コメント欄を開く
@@ -1364,7 +1358,7 @@ saved-minute  = ?saved-minute?
 
         if (this.enabled) {
           this.installFunctions();
-          let illust_id = this.currentImageId;
+          let illust_id = this.info.illust.id;
           if (this.Prefs.get('maxIllustId', this.MAX_ILLUST_ID) < illust_id) {
             this.Prefs.set('maxIllustId', illust_id);
           }
