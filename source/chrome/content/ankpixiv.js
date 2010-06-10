@@ -1226,6 +1226,56 @@ saved-minute  = ?saved-minute?
 
 
     /********************************************************************************
+    * データベース統計
+    ********************************************************************************/
+
+    getYourFantasy: function () {
+      try {
+        function R18 (s)
+          (s == 'R-18');
+
+        function ignore (s)
+          (!s || (/^(R-18|\u30AA\u30EA\u30B8\u30CA\u30EB)$/i(s)));
+
+        function inc (name)
+          (name && !ignore(name) && (typeof stat[name] === 'number' ? stat[name]++ : stat[name] = 1));
+
+        let storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
+                                           Components.interfaces.mozIStorageStatementWrapper);
+        let db = this.Storage.database;
+
+        let stat = {};
+        let stmt = db.createStatement('select rowid, * from histories');
+        stmt.reset();
+        storageWrapper.initialize(stmt);
+        while (storageWrapper.step()) {
+          let rowid = storageWrapper.row["rowid"];
+          let tags = storageWrapper.row["tags"];
+          if (!tags)
+            continue;
+          tags = tags.split(/\s+/);
+          if (tags.some(R18))
+            tags.forEach(inc);
+        }
+
+        let nums = [];
+        for (let [n, v] in Iterator(stat))
+          if (v > 2)
+            nums.push(v);
+
+        nums.sort(function (a, b) (a - b));
+        let low = nums[nums.length - 3];
+
+        for (let [n, v] in Iterator(stat))
+          ((v >= low) && AnkUtils.dump(n + ': ' + v));
+
+      } catch (e) {
+        AnkUtils.dumpError(e);
+      }
+
+    },
+
+    /********************************************************************************
     * データ修正など
     ********************************************************************************/
 
