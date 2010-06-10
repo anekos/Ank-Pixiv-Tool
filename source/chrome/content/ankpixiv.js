@@ -885,8 +885,11 @@ saved-minute  = ?saved-minute?
       let currentMangaPage = 0;
       let doLoop = false;
 
-      let delay = function (msg) {
-        AnkUtils.dump(msg);
+      let delay = function (msg, e) {
+        if (installTryed == 20) {
+          AnkUtils.dump(msg);
+          AnkUtils.dumpError(e);
+        }
         setTimeout(installer, installInterval);
         installTryed++;
       };
@@ -904,8 +907,7 @@ saved-minute  = ?saved-minute?
             var dateTime = AnkUtils.findNodeByXPath(AnkPixiv.XPath.dateTime);
           } catch (e) {
             // 何度やってもできなさそうなときはダイアログを出す
-            AnkUtils.dumpError(e, installTryed != 20);
-            return delay("delay installation by error");
+            return delay("delay installation by error", e);
           }
 
           // 完全に読み込まれて以内っぽいときは、遅延する
