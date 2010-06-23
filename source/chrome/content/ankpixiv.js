@@ -888,7 +888,7 @@ saved-minute  = ?saved-minute?
       let delay = function (msg, e) {
         if (installTryed == 20) {
           AnkUtils.dump(msg);
-          AnkUtils.dumpError(e);
+          AnkUtils.dumpError(e, $.Pref.get('showErrorDialog'));
         }
         setTimeout(installer, installInterval);
         installTryed++;
@@ -906,7 +906,6 @@ saved-minute  = ?saved-minute?
             var openComment = function () content.wrappedJSObject.one_comment_view();
             var dateTime = AnkUtils.findNodeByXPath(AnkPixiv.XPath.dateTime);
           } catch (e) {
-            // 何度やってもできなさそうなときはダイアログを出す
             return delay("delay installation by error", e);
           }
 
