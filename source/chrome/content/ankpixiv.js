@@ -330,7 +330,7 @@ try {
         }
       }
       catch (e) {
-        AnkUtils.dumpError(e);
+        AnkUtils.dumpError(e, true);
       }
     },
 
@@ -683,7 +683,7 @@ try {
               this.Storage.insert('members', {id: member_id, name: member_name, version: AnkPixiv.DB_VERSION});
             }
           } catch (e) {
-            AnkUtils.dumpError(e);
+            AnkUtils.dumpError(e, true);
           }
         }
 
@@ -800,7 +800,7 @@ saved-minute  = ?saved-minute?
                 record['filename'] = relPath;
                 $.Storage.insert('histories', record);
               } catch (e) {
-                AnkUtils.dumpError(e);
+                AnkUtils.dumpError(e, true);
                 caption = 'Error - onComplete';
                 text = e;
               }
@@ -861,7 +861,7 @@ saved-minute  = ?saved-minute?
         }
 
       } catch (e) {
-        AnkUtils.dumpError(e);
+        AnkUtils.dumpError(e, true);
       }
     },
 
@@ -1274,7 +1274,7 @@ saved-minute  = ?saved-minute?
         AnkUtils.dump(liberator.modules.util.objectToString(result));
 
       } catch (e) {
-        AnkUtils.dumpError(e);
+        AnkUtils.dumpError(e, true);
       }
 
     },
@@ -1320,7 +1320,7 @@ saved-minute  = ?saved-minute?
           (updates[i])();
         }
       } catch (e) {
-        AnkUtils.dumpError(e);
+        AnkUtils.dumpError(e, true);
       }
     },
 
@@ -1359,7 +1359,7 @@ saved-minute  = ?saved-minute?
           (updates[i])();
         }
       } catch (e) {
-        AnkUtils.dumpError(e);
+        AnkUtils.dumpError(e, true);
       }
     },
 
@@ -1420,7 +1420,7 @@ saved-minute  = ?saved-minute?
           }
         }
       } catch (e) {
-        //AnkUtils.dumpError(e);
+        AnkUtils.dumpError(e);
       }
     },
 

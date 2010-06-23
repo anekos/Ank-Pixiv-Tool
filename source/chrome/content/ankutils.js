@@ -70,11 +70,11 @@ try {
       try {
         return AnkUtils.makeLocalFile(filepath).leafName;
       } catch (e) {
-        AnkUtils.dumpError(e);
+        AnkUtils.dumpError(e, true);
         try {
           return filepath.match(/[\\\/]([^\\\/]+)$/)[1] || filepath;
         } catch (e) {
-          AnkUtils.dumpError(e);
+          AnkUtils.dumpError(e, true);
           return filepath;
         }
       }
@@ -177,14 +177,14 @@ try {
     },
 
 
-    dumpError: function (error, noAlert) {
+    dumpError: function (error, doAlert) {
       let msg = "\n<<ANK<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
       msg += this.errorToString(error) ;
       msg += ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
 
       dump(msg);
       Application.console.log(msg);
-      if (!noAlert)
+      if (doAlert)
         window.alert(msg);
 
       return msg;
