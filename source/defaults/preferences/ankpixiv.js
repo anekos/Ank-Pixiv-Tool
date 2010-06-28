@@ -13,3 +13,4 @@ pref("extensions.ankpixiv.confirmExistingDownloadWhenAuto", false);
 pref("extensions.ankpixiv.showCompletePopup", true);
 pref("extensions.ankpixiv.displayDownloaded", true);
 pref("extensions.ankpixiv.downloadedDisplayStyle", "color: red; font-weight: bold");
+pref("extensions.ankpixiv.infoText.ignore",  "illust.width, illust.height, illust.year, illust.month, illust.day, illust.hour, illust.minute");

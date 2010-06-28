@@ -271,6 +271,34 @@ try {
       };
     })(),
 
+    get infoText () {
+      let ignore =
+        let (pref = this.Prefs.get('infoText.ignore', 'illust.dateTime.'))
+          (pref ? pref.split(/[,\s]+/) : []);
+
+      function indent (s)
+        (typeof s === 'undefined' ? '---' : s).toString().split(/\n/).map(function (v) "\t" + v).join("\n");
+
+      function textize (names, value) {
+        let name = names.join('.');
+
+        if (ignore.some(function (v) name.indexOf(v) == 0))
+          return '';
+
+        if (typeof value === 'object') {
+          let result = '';
+          for (let [n, v] in Iterator(value)) {
+            result += textize(names.concat([n]), v);
+          }
+          return result;
+        } else {
+          return value ? name + "\n" + indent(value) + "\n" : '';
+        }
+      }
+
+      return textize([], this.info);
+    },
+
     set statusbarText (text) {
       let elem = document.getElementById('ankpixiv-statusbar-text');
       elem.textContent = text;
@@ -1492,6 +1520,11 @@ saved-minute  = ?saved-minute?
       }
       return true;
     },
+
+
+    /********************************************************************************
+    * テスト用
+    ********************************************************************************/
 
   };
 
