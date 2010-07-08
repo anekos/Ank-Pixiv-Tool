@@ -144,14 +144,11 @@ try {
       this.currentDocumentTitle.replace(' [pixiv]', ''),
 
 
-    get currentImageTags () {
-      let as = AnkUtils.findNodesByXPath(this.XPath.tags);
-      let node, res = [];
-      while (node = as.iterateNext()) {
-        res.push(AnkUtils.trim(node.textContent));
-      }
-      return res;
-    },
+    get currentImageTags () (
+      AnkUtils.A(AnkPixiv.currentDocument.querySelectorAll('span[id=tags] > a'))
+        .map(function (e) AnkUtils.trim(e.textContent))
+        .filter(function (s) s && s.length)
+    ),
 
 
     get currentDocument ()
