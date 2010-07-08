@@ -1323,6 +1323,39 @@ saved-minute  = ?saved-minute?
         return elem;
       }
 
+      function showThumbnailsByTag (tag) {
+        function illustURL (id)
+          ('member_illust.php?mode=medium&amp;illust_id=' + id);
+
+        function thumbnailURL (id, server, member_id)
+          ('http://' + server + '.pixiv.net/img/' + member_id + '/' + id + '_s.jpg')
+
+        let cnt = doc.querySelector('#content').wrappedJSObject;
+        cnt.innerHTML = '';
+
+        let illusts = [];
+        let db =
+          AnkPixiv.Storage.createStatement(
+            'select illust_id, local_path from histories where' +
+            '(tags like "%R-18%") and' +
+            '((tags like ?1) or (tags like ?2) or (tags like ?3))',
+            function (stmt) {
+              stmt.bindUTF8StringParameter(0, '% ' + tag + ' %');
+              stmt.bindUTF8StringParameter(1, '% ' + tag);
+              stmt.bindUTF8StringParameter(2, tag + ' %');
+              while (stmt.executeStep()) {
+                illusts.push({
+                  id: stmt.getInt32(0),
+                  local_path: stmt.getUTF8String(1)
+                });
+              }
+            }
+          );
+
+        cnt.appendChild(inner);
+      }
+      return showThumbnailsByTag('\u304A\u3063\u3071\u3044');
+
       let {sum, table} = AnkPixiv.getYourFantasy();
       if (sum < 100)
         return;
@@ -1358,6 +1391,7 @@ saved-minute  = ?saved-minute?
       }
 
       profile.appendChild(body);
+
     },
 
 
