@@ -7,7 +7,7 @@ try {
     * 定数
     ********************************************************************************/
 
-    DB_VERSION: 4,
+    DB_VERSION: 5,
 
     VERSION: AnkUtils.getVersion('ankpixiv@snca.net'),
 
@@ -49,6 +49,7 @@ try {
         members: {
           id: "integer",
           name: "string",
+          pixiv_id: "string",
           version: "integer",
         }
       }
@@ -688,6 +689,7 @@ try {
         let ref           = this.currentLocation.replace(/mode=medium/, 'mode=big');
         let member_id     = this.info.member.id;
         let member_name   = this.info.member.name || member_id;
+        let pixiv_id      = this.info.member.pixivId;
         let memoized_name = this.info.member.memoizedName || member_name;
         let tags          = this.currentImageTags;
         let title         = this.info.illust.title;
@@ -707,8 +709,26 @@ try {
         if (this.Prefs.get('saveHistory', true)) {
           try {
             if (this.Storage.exists('members', 'id = ' + parseInt(member_id))) {
+              // 古いデータには pixiv_id がついていなかったら付加する
+              // (DB_VERSION = 5 で pixiv_id がついた
+              this.Storage.createStatement(
+                'update members set pixiv_id = ?1, version = ?2 where (id = ?3) and (pixiv_id is null)',
+                function (stmt) {
+                  stmt.bindUTF8StringParameter(0, pixiv_id);
+                  stmt.bindInt32Parameter(1, AnkPixiv.DB_VERSION);
+                  stmt.bindInt32Parameter(2, member_id);
+                  stmt.executeStep();
+                }
+              );
             } else {
-              this.Storage.insert('members', {id: member_id, name: member_name, version: AnkPixiv.DB_VERSION});
+              this.Storage.insert(
+                'members', {
+                  id: member_id,
+                  name: member_name,
+                  pixiv_id: pixiv_id,
+                  version: AnkPixiv.DB_VERSION
+                }
+              );
             }
           } catch (e) {
             AnkUtils.dumpError(e, true);
