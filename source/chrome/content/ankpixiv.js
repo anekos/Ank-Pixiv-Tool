@@ -1292,13 +1292,15 @@ saved-minute  = ?saved-minute?
         nums.sort(function (a, b) (a - b));
         let low = nums[nums.length - 3];
 
-        let result = {}, sum = 0;
+        let table = {}, sum = 0;
         for (let [n, v] in Iterator(stat)) {
           if (v >= low) {
-            result[n] = v;
+            table[n] = v;
             sum += v;
           }
         }
+        return {table: table, sum: sum};
+
         AnkUtils.dump(liberator.modules.util.objectToString(result));
 
       } catch (e) {
@@ -1306,6 +1308,58 @@ saved-minute  = ?saved-minute?
       }
 
     },
+
+    displayYourFantasy: function () {
+      let doc = AnkPixiv.currentDocument;
+
+      function append ({parent, name, text, style}) {
+        let elem = doc.createElement(name);
+        if (text)
+          elem.textContent = text;
+        if (style)
+          elem.setAttribute('style', style);
+        if (parent)
+          parent.appendChild(elem);
+        return elem;
+      }
+
+      let {sum, table} = AnkPixiv.getYourFantasy();
+      if (sum < 100)
+        return;
+
+      let profile = AnkPixiv.currentDocument.querySelector('#profile');
+
+      append({
+        parent: profile,
+        name: 'div',
+        text: 'Your Fantasy',
+        style: 'border-top: 1px solid rgb(183, 183, 183);'
+      });
+
+      let body = append({
+        name: 'table',
+        style: 'width: 90%; margin-left: 10px; border-top: 1px dashed #b7b7b7;'
+      });
+
+      for (let [n, v] in Iterator(table)) {
+        let tr = append({parent: body, name: 'tr'});
+        append({
+          parent: tr,
+          name: 'td',
+          text: n,
+          style: 'text-align: left;'
+        });
+        append({
+          parent: tr,
+          name: 'td',
+          text: v + 'hp',
+          style: 'text-align: right;'
+        });
+      }
+
+      profile.appendChild(body);
+    },
+
 
     /********************************************************************************
     * データ修正など
