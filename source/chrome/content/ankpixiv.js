@@ -316,7 +316,7 @@ try {
     /*
      * showFilePicker
      *    defaultFilename: 初期ファイル名
-     *    return:          選択されたファイルのパス(nsIFilePicker)
+     *    return:          選択されたファイルのパス(nsILocalFile)
      * ファイル保存ダイアログを開く
      */
     showFilePicker: function (defaultFilename) {
@@ -334,7 +334,7 @@ try {
         filePicker.displayDirectory = initdir;
       }
 
-      return (filePicker.show() == nsIFilePicker.returnOK) && filePicker;
+      return (filePicker.show() == nsIFilePicker.returnOK) && filePicker && filePicker.file;
     },
 
 
@@ -428,7 +428,7 @@ try {
      *    filenames:          ファイル名の候補のリスト(一個以上必須)
      *    ext:                拡張子
      *    useDialog:          保存ダイアログを使うか？
-     *    return:             nsIFilePickerかそれもどき
+     *    return:             nsILocalFile
      * ファイルを保存すべきパスを返す
      * 設定によっては、ダイアログを表示する
      */
@@ -453,7 +453,7 @@ try {
             return this.showFilePicker(filename);
           } else {
             let res = IOService.newFileURI(localfile);
-            return {fileURL: res, file: localfile};
+            return localfile;
           }
         }
       } catch (e) {
@@ -565,11 +565,11 @@ try {
      */
     downloadFile: function (url, referer, filenames, ext, useDialog, onComplete, onError) {
       // 保存ダイアログ
-      let filePicker = this.getSaveFilePath(filenames, ext, useDialog);
-      if (!filePicker)
+      let localfile = this.getSaveFilePath(filenames, ext, useDialog);
+      if (!localfile)
         return;
 
-      this.downloadTo(url, referer, filePicker.file, onComplete, onError);
+      this.downloadTo(url, referer, localfile, onComplete, onError);
       return true;
     },
 
@@ -586,13 +586,13 @@ try {
      */
     downloadFiles: function (urls, referer, filenames, ext, useDialog, onComplete, onError) {
       // 保存ダイアログ
-      let filePicker = this.getSaveFilePath(filenames, '', useDialog);
-      if (!filePicker)
+      let localfile = this.getSaveFilePath(filenames, '', useDialog);
+      if (!localfile)
         return;
 
       const MAX_FILE = 1000;
 
-      let dir = filePicker.file;
+      let dir = localfile;
       let $ = this;
       let index = 0;
       let lastFile = null;
