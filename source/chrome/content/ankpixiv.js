@@ -339,6 +339,29 @@ try {
 
 
     /*
+     * showFilePickerWithMeta
+     *    basename:        初期ファイル名
+     *    ext:             拡張子
+     *    return:          {image: nsILocalFile, meta: nsILocalFile}
+     * ファイル保存ダイアログを開く
+     */
+    showFilePickerWithMeta: function (basename, ext, isFile) {
+      let image = AnkPixiv.showFilePicker(basename + ext);
+      if (!image)
+        return;
+
+      let meta = isFile ? AnkPixiv.newLocalFile(image.path + '.txt') // XXX path or nativePath
+                        : let (file = image.clone())
+                            (file.append('meta.txt'), file);
+
+      return {
+        image: image,
+        meta: meta
+      };
+    },
+
+
+    /*
      * showDirectoryPicker
      *    defaultPath: 初期表示ディレクトリ
      *    return:      選択されたディレクトリ(nsIFilePicker)
@@ -428,32 +451,44 @@ try {
      *    filenames:          ファイル名の候補のリスト(一個以上必須)
      *    ext:                拡張子
      *    useDialog:          保存ダイアログを使うか？
-     *    return:             nsILocalFile
+     *    isFile:             ディレクトリの時は false
+     *    return:             {image: nsILocalFile, meta: nsILocalFile}
      * ファイルを保存すべきパスを返す
      * 設定によっては、ダイアログを表示する
      */
-    getSaveFilePath: function (filenames, ext, useDialog) {
+    getSaveFilePath: function (filenames, ext, useDialog, isFile) {
+      function _file (initDir, basename, ext) {
+        let filename = basename + ext;
+        let url = initDir + AnkUtils.SYS_SLASH + filename; // TODO
+        return {
+          filename: filename,
+          url: url,
+          file: AnkPixiv.newLocalFile(url)
+        };
+      };
+
+      function _exists (file)
+        (file.file.exists() || AnkPixiv.filenameExists(file.filename));
+
       try {
         let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
         let prefInitDir = this.Prefs.get('initialDirectory');
         let initDir = this.newLocalFile(prefInitDir);
 
         if (!initDir.exists())
-          return this.showFilePicker(filenames[0] + ext);
+          return this.showFilePickerWithMeta(filenames[0], ext, isFile);
 
         for (let i in filenames) {
-          let filename = filenames[i] + ext;
-          let url = prefInitDir + AnkUtils.SYS_SLASH + filename;
-          let localfile = this.newLocalFile(url);
+          let image = _file(prefInitDir, filenames[i], ext);
+          let meta = _file(prefInitDir, filenames[i], '.txt');
 
-          if (localfile.exists() || this.filenameExists(filename))
+          if (_exists(image) || _exists(meta))
             continue;
 
           if (useDialog) {
-            return this.showFilePicker(filename);
+            return this.showFilePickerWithMeta(filenames[i], ext, isFile);
           } else {
-            let res = IOService.newFileURI(localfile);
-            return localfile;
+            return {image: image.file, meta: meta.file};
           }
         }
       } catch (e) {
@@ -461,7 +496,7 @@ try {
         AnkUtils.dump(e);
       }
 
-      return this.showFilePicker(filenames[0] + ext);
+      return this.showFilePickerWithMeta(filenames[0], ext, isFile);
     },
 
     /*
@@ -552,56 +587,60 @@ try {
       return file;
     },
 
+
+    /*
+     * saveTextFile
+     *    file:           nsILocalFile
+     *    text:           String
+     * テキストをローカルに保存します。
+     */
+    saveTextFile: function (file, text) {
+      let out = AnkUtils.ccci('@mozilla.org/network/file-output-stream;1', Ci.nsIFileOutputStream);
+      let conv = AnkUtils.ccci('@mozilla.org/intl/converter-output-stream;1', Ci.nsIConverterOutputStream);
+      out.init(file, 0x02 | 0x10 | 0x08, 0664, 0);
+      conv.init(out, 'UTF-8', text.length, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+      conv.writeString(text);
+      conv.close();
+      out.close();
+    },
+
+
     /*
      * downloadFile
      *    url:            URL
      *    referer:        リファラ
-     *    filenames:      ファイル名の候補リスト
-     *    ext:            拡張子
-     *    useDialog:      保存ダイアログを使うか？
+     *    localfile:      出力先ファイル nsilocalFile
      *    onComplete      終了時のアラート
      *    return:         キャンセルなどがされなければ、true
      * ファイルをダウンロードする
      */
-    downloadFile: function (url, referer, filenames, ext, useDialog, onComplete, onError) {
-      // 保存ダイアログ
-      let localfile = this.getSaveFilePath(filenames, ext, useDialog);
-      if (!localfile)
-        return;
-
+    downloadFile: function (url, referer, localfile, onComplete, onError) {
       this.downloadTo(url, referer, localfile, onComplete, onError);
       return true;
     },
 
+
     /*
      * downloadFiles
-     *    urls:            URL
+     *    urls:           URL
      *    referer:        リファラ
-     *    filenames:      ファイル名の候補リスト
-     *    ext:            拡張子
-     *    useDialog:      保存ダイアログを使うか？
+     *    localdir:       出力先ディレクトリ nsilocalFile
      *    onComplete      終了時のアラート
      *    return:         キャンセルなどがされなければ、true
      * 複数のファイルをダウンロードする
      */
-    downloadFiles: function (urls, referer, filenames, ext, useDialog, onComplete, onError) {
-      // 保存ダイアログ
-      let localfile = this.getSaveFilePath(filenames, '', useDialog);
-      if (!localfile)
-        return;
-
+    downloadFiles: function (urls, referer, localdir, onComplete, onError) {
       const MAX_FILE = 1000;
 
-      let dir = localfile;
       let $ = this;
       let index = 0;
       let lastFile = null;
 
       // XXX ディレクトリは勝手にできるっぽい
-      //dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
+      //localdir.exists() || localdir.create(localdir.DIRECTORY_TYPE, 0755);
 
       function _onComplete () {
-        arguments[1] = dir.path;
+        arguments[1] = localdir.path;
         return onComplete.apply($, arguments);
       }
 
@@ -642,7 +681,7 @@ try {
           return _onComplete.apply($, arguments);
 
         let url = urls[index];
-        let file = dir.clone();
+        let file = localdir.clone();
         let fileExt = url.match(/\.\w+$/)[0] || '.jpg';
         file.append(AnkUtils.zeroPad(index + 1, 2) + fileExt);
 
@@ -679,6 +718,8 @@ try {
         if (!this.enabled)
           return false;
 
+        let destFiles;
+        let metaText      = this.infoText;
         let pageUrl       = this.currentLocation;
         let url           = this.currentImagePath;
         let illust_id     = this.info.illust.id;
@@ -851,6 +892,9 @@ saved-minute  = ?saved-minute?
               }
             }
 
+            if ($.Prefs.get('saveMeta', true))
+              AnkPixiv.saveTextFile(destFiles.meta, metaText);
+
             if ($.Prefs.get('showCompletePopup', true))
               $.popupAlert(caption, text);
 
@@ -892,16 +936,21 @@ saved-minute  = ?saved-minute?
           return window.alert(this.Locale('alreadyDownloading'));
         }
 
+        // XXX 前方で宣言済み
+        destFiles = AnkPixiv.getSaveFilePath(filenames, this.manga ? '' : ext, useDialog, !this.manga);
+        if (!destFiles)
+          return;
+
         if (this.manga) {
           this.getLastMangaPage(function (v, ext) {
             let urls = [];
             for (let i = 0; i < v; i++)
               urls.push($.getBigMangaImagePath(i, url, ext));
-            if ($.downloadFiles(urls, ref, filenames, ext, useDialog, onComplete, onError))
+            if ($.downloadFiles(urls, ref, destFiles.image, onComplete, onError))
               addDownloading();
           });
         } else {
-          if (this.downloadFile(url, ref, filenames, ext, useDialog, onComplete, onError))
+          if (this.downloadFile(url, ref, destFiles.image, onComplete, onError))
             addDownloading();
         }
 
