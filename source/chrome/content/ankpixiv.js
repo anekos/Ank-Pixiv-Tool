@@ -13,6 +13,8 @@ try {
 
     PREF_PREFIX: 'extensions.ankpixiv.',
 
+    ID_FANTASY_DISPLAY: 'ankpixiv-fantasy-display',
+
     XPath: {
       // xpathFavLink = '//div[@id="pixiv"]/div/div/a/img/parent::*/parent::*/preceding-sibling::div[1]';
       // xpathImgAnchor = '//div[@id="pixiv"]/div/div/a/img/parent::*/self::*';
@@ -155,9 +157,11 @@ try {
       window.content.document,
 
 
-    get enabled ()
+    get inIllustPage ()
       this.currentLocation.match(/\.pixiv\.net\/member_illust.php\?.*illust_id=/),
 
+    get inMyPage ()
+      (this.currentLocation == 'http://www.pixiv.net/mypage.php'),
 
     info: (function () {
       let illust = {
@@ -715,7 +719,7 @@ try {
         if (typeof confirmDownloaded === 'undefined')
           confirmDownloaded = this.Prefs.get('confirmExistingDownload');
 
-        if (!this.enabled)
+        if (!this.inIllustPage)
           return false;
 
         let destFiles;
@@ -1423,6 +1427,7 @@ saved-minute  = ?saved-minute?
         });
       }
 
+      body.setAttribute('id', AnkPixiv.ID_FANTASY_DISPLAY);
       profile.appendChild(body);
     },
 
@@ -1553,20 +1558,24 @@ saved-minute  = ?saved-minute?
           let elem = document.getElementById(id);
           if (!elem)
             return;
-          elem.setAttribute('dark', !this.enabled);
+          elem.setAttribute('dark', !this.inIllustPage);
         };
 
         changeEnabled.call(this, 'ankpixiv-toolbar-button');
         changeEnabled.call(this, 'ankpixiv-statusbarpanel');
         changeEnabled.call(this, 'ankpixiv-menu-download');
 
-        if (this.enabled) {
+        if (this.inIllustPage) {
           this.installFunctions();
           let illust_id = this.info.illust.id;
           if (this.Prefs.get('maxIllustId', this.MAX_ILLUST_ID) < illust_id) {
             this.Prefs.set('maxIllustId', illust_id);
           }
         }
+
+        if (this.inMyPage && !this.currentDocument.querySelector('#' + AnkPixiv.ID_FANTASY_DISPLAY))
+          this.displayYourFantasy();
+
       } catch (e) {
         AnkUtils.dumpError(e);
       }
@@ -1578,7 +1587,7 @@ saved-minute  = ?saved-minute?
       event.preventDefault();
       let useDialog = this.Prefs.get('showSaveDialog', true);
       let button = (typeof event.button == 'undefined') ? 0 : event.button;
-      if (this.enabled) {
+      if (this.inIllustPage) {
         switch(button) {
           case 0: this.downloadCurrentImage(useDialog); break;
           case 1: this.downloadCurrentImage(!useDialog); break;
