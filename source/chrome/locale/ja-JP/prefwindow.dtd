@@ -16,3 +16,4 @@
 <!ENTITY displayDownloaded "「保存済み」の表示">
 <!ENTITY defaultMangaFilename "保存時ファイル名(漫画)">
 <!ENTITY alternateMangaFilename "代替ファイル名(漫画)">
+<!ENTITY saveMeta "メタテキストの保存">
