@@ -108,6 +108,14 @@ try {
       this.inPixiv && this.currentLocation.match(/member_illust\.php\?mode=medium&illust_id=\d+/),
 
 
+    get inIllustPage ()
+      this.currentLocation.match(/\.pixiv\.net\/member_illust.php\?.*illust_id=/),
+
+
+    get inMyPage ()
+      (this.currentLocation == 'http://www.pixiv.net/mypage.php'),
+
+
     get randomImagePageURL ()
       let (id = parseInt(Math.random() * this.Prefs.get('maxIllustId', this.MAX_ILLUST_ID)))
         ('http://www.pixiv.net/member_illust.php?mode=medium&illust_id=' + id),
@@ -156,12 +164,6 @@ try {
     get currentDocument ()
       window.content.document,
 
-
-    get inIllustPage ()
-      this.currentLocation.match(/\.pixiv\.net\/member_illust.php\?.*illust_id=/),
-
-    get inMyPage ()
-      (this.currentLocation == 'http://www.pixiv.net/mypage.php'),
 
     info: (function () {
       let illust = {
