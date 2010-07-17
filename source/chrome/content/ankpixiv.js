@@ -1372,8 +1372,6 @@ saved-minute  = ?saved-minute?
         }
         return {table: table, sum: sum};
 
-        AnkUtils.dump(liberator.modules.util.objectToString(result));
-
       } catch (e) {
         AnkUtils.dumpError(e, true);
       }
