@@ -101,7 +101,7 @@ try {
     },
 
     get inPixiv ()
-      this.currentLocation.match(/^http:\/\/[^\.\/]+\.pixiv\.net\//i),
+      (this.currentDocument.location.hostname === 'www.pixiv.net'),
 
 
     get inMedium ()
