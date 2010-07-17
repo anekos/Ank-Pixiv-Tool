@@ -1434,6 +1434,22 @@ saved-minute  = ?saved-minute?
     },
 
 
+    markDownloaded: function () {
+      const IsIllust = /&illust_id=(\d+)/;
+
+      AnkUtils.A(AnkPixiv.currentDocument.links) .
+        map(function (link) link.href && let (m = IsIllust(link.href)) m && [link, m]) .
+        filter(function (m) m) .
+        map(function ([link, m]) [link, parseInt(m[1], 10)]) .
+        forEach(function ([link, id]) {
+          if (!AnkPixiv.isDownloaded(id))
+            return;
+          link.style.border = 'medium solid #ff00ff !important';
+          link.style.opacity = '0.2';
+        });
+    },
+
+
     /********************************************************************************
     * データ修正など
     ********************************************************************************/
