@@ -799,6 +799,7 @@ try {
             [/\?member-id\?/g, member_id],
             [/\?member-name\?/g, member_name],
             [/\?memoized-name\?/g, memoized_name],
+            [/\?memorized-name\?/g, memoized_name],
             [/\?tags\?/g, AnkUtils.join(tags, ' ')],
             [/\?short-tags\?/g, AnkUtils.join(shortTags, ' ')],
             [/\?tools\?/g, ii.tools],
