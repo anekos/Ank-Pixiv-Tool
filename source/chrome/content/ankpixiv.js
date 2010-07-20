@@ -59,6 +59,14 @@ try {
     AllPrefs: new AnkPref(),
 
 
+    Store: (function () {
+      return {
+        get document ()
+          (AnkPixiv.elements.doc.__ank_pixiv_store || (AnkPixiv.elements.doc.__ank_pixiv_store = {}))
+      };
+    })(),
+
+
     Locale: AnkUtils.getLocale('chrome://ankpixiv/locale/ankpixiv.properties'),
 
 
@@ -1585,16 +1593,20 @@ saved-minute  = ?saved-minute?
         changeEnabled.call(this, 'ankpixiv-statusbarpanel');
         changeEnabled.call(this, 'ankpixiv-menu-download');
 
-        if (this.inIllustPage) {
-          this.installFunctions();
-          let illust_id = this.info.illust.id;
-          if (this.Prefs.get('maxIllustId', this.MAX_ILLUST_ID) < illust_id) {
-            this.Prefs.set('maxIllustId', illust_id);
-          }
-        }
+        if (AnkPixiv.inPixiv && !AnkPixiv.Store.document.onFocusDone) {
+          AnkPixiv.Store.document.onFocusDone = true;
 
-        if (this.inMyPage && !this.currentDocument.querySelector('#' + AnkPixiv.ID_FANTASY_DISPLAY))
-          this.displayYourFantasy();
+          if (this.inIllustPage) {
+            this.installFunctions();
+            let illust_id = this.info.illust.id;
+            if (this.Prefs.get('maxIllustId', this.MAX_ILLUST_ID) < illust_id) {
+              this.Prefs.set('maxIllustId', illust_id);
+            }
+          }
+
+          if (AnkPixiv.inMyPage && !this.currentDocument.querySelector('#' + AnkPixiv.ID_FANTASY_DISPLAY))
+            this.displayYourFantasy();
+        }
 
       } catch (e) {
         AnkUtils.dumpError(e);
