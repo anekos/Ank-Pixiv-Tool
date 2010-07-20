@@ -149,11 +149,18 @@ try {
         }
       };
 
+      let mypage = {
+        get fantasyDisplay ()
+          AnkPixiv.elements.doc.querySelector('#' + AnkPixiv.ID_FANTASY_DISPLAY),
+
+        get fantasyDisplayNext ()
+          AnkPixiv.elements.doc.querySelector('#contents > div > div.area_pixivmobile'),
+      };
+
       return {
         illust: illust,
-
-        get doc ()
-          window.content.document
+        mypage: mypage,
+        get doc () window.content.document
       };
     })(),
 
@@ -1410,12 +1417,14 @@ saved-minute  = ?saved-minute?
     displayYourFantasy: function () {
       let doc = AnkPixiv.currentDocument;
 
-      function append ({parent, name, text, style}) {
+      function append ({parent, name, text, style, class}) {
         let elem = doc.createElement(name);
         if (text)
           elem.textContent = text;
         if (style)
           elem.setAttribute('style', style);
+        if (class)
+          elem.setAttribute('class', class);
         if (parent)
           parent.appendChild(elem);
         return elem;
@@ -1425,18 +1434,29 @@ saved-minute  = ?saved-minute?
       if (sum < 100)
         return;
 
-      let profile = AnkPixiv.currentDocument.querySelector('#profile');
+      let nextElem = AnkPixiv.elements.mypage.fantasyDisplayNext;
 
-      append({
-        parent: profile,
+      let area = append({
         name: 'div',
-        text: 'Your Fantasy',
-        style: 'border-top: 1px solid rgb(183, 183, 183);'
+        class: 'area'
+      });
+
+      let areaSpace = append({
+        parent: area,
+        name: 'div',
+        class: 'area_space',
+      });
+
+      let header = append({
+        parent: areaSpace,
+        name: 'div',
+        text: 'You Fantasy'
       });
 
       let body = append({
+        parent: areaSpace,
         name: 'table',
-        style: 'width: 90%; margin-left: 10px; border-top: 1px dashed #b7b7b7;'
+        style: 'margin-top: 10px; width: 90% !important'
       });
 
       for (let [n, v] in Iterator(table)) {
@@ -1455,8 +1475,13 @@ saved-minute  = ?saved-minute?
         });
       }
 
-      body.setAttribute('id', AnkPixiv.ID_FANTASY_DISPLAY);
-      profile.appendChild(body);
+      area.setAttribute('id', AnkPixiv.ID_FANTASY_DISPLAY);
+
+      nextElem.parentNode.insertBefore(area, nextElem);
+      ['areaBottom', 'area_bottom'].forEach(function (klass) {
+        nextElem.parentNode.insertBefore(append({name: 'div', class: klass, text: ''}), nextElem);
+      });
+
     },
 
 
@@ -1604,7 +1629,7 @@ saved-minute  = ?saved-minute?
             }
           }
 
-          if (AnkPixiv.inMyPage && !this.currentDocument.querySelector('#' + AnkPixiv.ID_FANTASY_DISPLAY))
+          if (AnkPixiv.inMyPage && !AnkPixiv.elements.mypage.fantasyDisplay)
             this.displayYourFantasy();
         }
 
