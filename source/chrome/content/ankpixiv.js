@@ -194,6 +194,7 @@ try {
           let items = AnkPixiv.elements.illust.worksData.textContent.split(/\uFF5C/).map(String.trim);
           let result = {};
           items.forEach(function (item) {
+            item = item.replace(/\[ \u30DE\u30A4\u30D4\u30AF\u9650\u5B9A \]/, '').trim();
             let m;
             if (m = item.match(/(\d+)[^\d]+(\d+)[^\d]+(\d+)[^\d]+(\d+):(\d+)/)) {
               result.dateTime = {
