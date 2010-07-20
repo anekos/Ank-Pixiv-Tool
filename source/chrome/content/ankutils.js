@@ -383,7 +383,19 @@ try {
       if (navigator.platform.match(/^win\d+$/i))
         return 'Win32';
       return 'other';
-    })()
+    })(),
+
+    /*
+     * br を改行として認識する textContent
+     *    elem:     要素
+     *    return:   String;
+     */
+    textContent: function (elem) {
+      let doc = elem.ownerDocument;
+      let elem = doc.createElement('div');
+      elem.innerHTML = doc.querySelector('#illust_comment').innerHTML.replace(/<br[\s\/]*>/g, '\n');
+      return elem.textContent;
+    }
   };
 
 

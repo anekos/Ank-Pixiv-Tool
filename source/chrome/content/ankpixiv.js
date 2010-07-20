@@ -215,10 +215,8 @@ try {
           return AnkUtils.trim(node.textContent);
         },
 
-        get comment () {
-          let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.comment);
-          return node ? AnkUtils.trim(node.textContent) :  '';
-        },
+        get comment ()
+          AnkUtils.textContent(AnkPixiv.currentDocument.querySelector('#illust_comment')),
 
         get R18 ()
           AnkPixiv.currentImageTags.some(function (v) 'R-18' == v)
