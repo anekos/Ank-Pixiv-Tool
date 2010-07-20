@@ -115,6 +115,9 @@ try {
         get title ()
           AnkPixiv.elements.doc.querySelector('.works_data > h3'),
 
+        get comment ()
+          AnkPixiv.elements.doc.querySelector('.works_area > p'),
+
         get avatar ()
           AnkPixiv.elements.doc.querySelector('.avatar_m > img'),
 
@@ -178,7 +181,8 @@ try {
           AnkUtils.trim(AnkPixiv.elements.illust.title.textContent),
 
         get comment ()
-          AnkUtils.textContent(AnkPixiv.elements.doc.querySelector('.works_area > p')),
+          let (node = AnkPixiv.elements.doc.querySelector('.works_area > p'))
+            (node && AnkUtils.textContent(node)),
 
         get R18 ()
           AnkPixiv.info.illust.tags.some(function (v) 'R-18' == v),
@@ -291,7 +295,7 @@ try {
         if (typeof value === 'object') {
           let result = '';
           for (let [n, v] in Iterator(value)) {
-            if (typeof v !== 'function')
+            if (v && typeof v !== 'function')
               result += textize(names.concat([n]), v);
           }
           return result;
