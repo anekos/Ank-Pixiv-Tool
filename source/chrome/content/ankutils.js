@@ -392,9 +392,9 @@ try {
      */
     textContent: function (elem) {
       let doc = elem.ownerDocument;
-      let elem = doc.createElement('div');
-      elem.innerHTML = doc.querySelector('#illust_comment').innerHTML.replace(/<br[\s\/]*>/g, '\n');
-      return elem.textContent;
+      let temp = doc.createElement('div');
+      temp.innerHTML = elem.innerHTML.replace(/<br[\s\/]*>/g, '\n');
+      return temp.textContent;
     }
   };
 

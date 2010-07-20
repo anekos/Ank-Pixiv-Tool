@@ -15,24 +15,6 @@ try {
 
     ID_FANTASY_DISPLAY: 'ankpixiv-fantasy-display',
 
-    XPath: {
-      // xpathFavLink = '//div[@id="pixiv"]/div/div/a/img/parent::*/parent::*/preceding-sibling::div[1]';
-      // xpathImgAnchor = '//div[@id="pixiv"]/div/div/a/img/parent::*/self::*';
-      // xpathImg = '//div[@id="pixiv"]/div/div/a/img';
-      mediumImage: '//div[@id="content2"]/div/a/img',
-      mediumImageLink: '//div[@id="content2"]/div/a/img/parent::a',
-      bigImage: '//div[@id="illust_contents"]/a/img',
-      authorIconLink: '//div[@id="profile"]/div/a',
-      authorIconImage:'//div[@id="profile"]/div/a/img',
-      tags: '//span[@id="tags"]/a',
-      ad: '//object|//iframe', //'//*[@id="header"]/div[2]',
-      comment: 'id("illust_comment")',
-      dateTime: 'id("content2")/div[1]/table/tbody/tr/td[1]/div[1]',
-      title: 'id("content2")/div[1]/table/tbody/tr/td[1]/div[2]',
-      // openComment: '//*[@id="one_comment_view"]/a',
-    },
-
-
     Storage: new AnkStorage("ankpixiv.sqlite",
       {
         histories: {
@@ -96,66 +78,22 @@ try {
       window.content.document.location.href,
 
     get manga () {
-      let node = AnkUtils.findNodeByXPath(this.XPath.mediumImageLink);
+      let node = AnkPixiv.elements.illust.largeLink;
       return node && ~node.href.indexOf('?mode=manga&');
     },
 
     get inPixiv ()
       this.currentLocation.match(/^http:\/\/[^\.\/]+\.pixiv\.net\//i),
 
-
     get inMedium ()
       this.inPixiv && this.currentLocation.match(/member_illust\.php\?mode=medium&illust_id=\d+/),
-
 
     get randomImagePageURL ()
       let (id = parseInt(Math.random() * this.Prefs.get('maxIllustId', this.MAX_ILLUST_ID)))
         ('http://www.pixiv.net/member_illust.php?mode=medium&illust_id=' + id),
 
-
-    get currentImagePath () {
-      let elem = /mode=medium/.test(this.currentLocation) ? AnkUtils.findNodeByXPath(this.XPath.mediumImage)
-                                                          : AnkUtils.findNodeByXPath(this.XPath.bigImage);
-      return elem && elem.src.replace(/_m\./, '.').replace(/\?.*$/, '');
-    },
-
-
-    get currentBigImagePath ()
-      (this.manga ? this.getBigMangaImagePath() : this.currentImagePath.replace(/_m\./, '.')),
-
-
-    get currentMangaIndexPath ()
-      this.currentLocation.replace(/\?mode=medium/, '?mode=manga'),
-
-
-    getBigMangaImagePath:
-      function getBigMangaImagePath (n, base, ext)
-        (base || this.currentImagePath).replace(/\.[^\.]+$/, function (m) (('_p' + (n || 0)) + (ext || m))),
-
-
-    get currentImageExt ()
-      (this.currentImagePath.match(/\.\w+$/)[0] || '.jpg'),
-
-
-    // XXX Pixiv のバグに対応するためのコード
-    get currentDocumentTitle ()
-      AnkUtils.decodeHtmlSpChars(this.currentDocument.getElementsByTagName('title')[0].textContent),
-
-
-    get currentImageTitleAndAuthor ()
-      this.currentDocumentTitle.replace(' [pixiv]', ''),
-
-
-    get currentImageTags () (
-      AnkUtils.A(AnkPixiv.currentDocument.querySelectorAll('span[id=tags] > a'))
-        .map(function (e) AnkUtils.trim(e.textContent))
-        .filter(function (s) s && s.length)
-    ),
-
-
     get currentDocument ()
       window.content.document,
-
 
     get inIllustPage ()
       this.currentLocation.match(/\.pixiv\.net\/member_illust.php\?.*illust_id=/),
@@ -163,43 +101,69 @@ try {
     get inMyPage ()
       (this.currentLocation == 'http://www.pixiv.net/mypage.php'),
 
+    elements: (function () {
+      let illust =  {
+        get mediumImage ()
+          AnkPixiv.elements.doc.querySelector('.works_display > a > img'),
+
+        get largeLink ()
+          AnkPixiv.elements.doc.querySelector('.works_display > a'),
+
+        get worksData ()
+          AnkPixiv.elements.doc.querySelector('.works_data > p'),
+
+        get title ()
+          AnkPixiv.elements.doc.querySelector('.works_data > h3'),
+
+        get avatar ()
+          AnkPixiv.elements.doc.querySelector('.avatar_m > img'),
+
+        get memberLink ()
+          AnkPixiv.elements.doc.querySelector('a.avatar_m'),
+
+        get tags ()
+          AnkPixiv.elements.doc.querySelector('#tags'),
+
+        get downloadedDisplayParent ()
+          AnkPixiv.elements.doc.querySelector('.works_data'),
+
+        get ads () {
+          let obj = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('object'));
+          let iframe = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('iframe'));
+          let search = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('.pixivSearch'));
+          // searchSub は現時点で存在しないが search がリネームされそうなので書いておく
+          let searchSub = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('.pixiv-search'));
+
+          return ([]).concat(obj, iframe, search, searchSub);
+        }
+      };
+
+      return {
+        illust: illust,
+
+        get doc ()
+          window.content.document
+      };
+    })(),
+
     info: (function () {
       let illust = {
         get id ()
-          parseInt(AnkPixiv.currentImagePath.match(/\/(\d+)(_(m|[^\.]+))?\.\w{2,4}$/)[1]),
+          parseInt(AnkPixiv.info.path.largeStandardImage.match(/\/(\d+)(_(m|[^\.]+))?\.\w{2,4}$/)[1]),
 
-        get dateTime () {
-          let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.dateTime);
-          let m = node.textContent.match(/(\d+)[^\d]+(\d+)[^\d]+(\d+)[^\d]+(\d+):(\d+)/);
-          if (!m)
-            throw 'regex erorr';
-          return {
-            year: m[1],
-            month: m[2],
-            day: m[3],
-            hour: m[4],
-            minute: m[5],
-          };
-        },
+        get dateTime ()
+          AnkPixiv.info.illust.worksData.dateTime,
 
-        get size () {
-          let node = AnkPixiv.currentDocument.querySelector('#bookmark_edit ~ div > span');
-          let m = node.textContent.match(/(\d+)×(\d+)/);
-          if (!m)
-            return;
-          return {
-            width: parseInt(m[1], 10),
-            height: parseInt(m[1], 10),
-          };
-        },
+        get size ()
+          AnkPixiv.info.illust.worksData.size,
 
-        get tools () {
-          let node = AnkPixiv.currentDocument.querySelector('#bookmark_edit ~ div > span');
-          let m = node.textContent.match(/\|\s*(.+)/);
-          if (!m)
-            return [];
-          return m[1].split(/[\s　]+/);
-        },
+        get tags ()
+          AnkUtils.A(AnkPixiv.elements.illust.tags.querySelectorAll('a'))
+            .map(function (e) AnkUtils.trim(e.textContent))
+            .filter(function (s) s && s.length),
+
+        get tools ()
+          AnkPixiv.info.illust.worksData.tools,
 
         get width ()
           let (sz = illust.size) (sz && sz.width),
@@ -208,18 +172,46 @@ try {
           let (sz = illust.size) (sz && sz.height),
 
         get server ()
-          AnkPixiv.currentImagePath.match(/^http:\/\/([^\/\.]+)\./i)[1],
+          AnkPixiv.info.path.largeStandardImage.match(/^http:\/\/([^\/\.]+)\./i)[1],
 
-        get title () {
-          let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.title);
-          return AnkUtils.trim(node.textContent);
-        },
+        get title ()
+          AnkUtils.trim(AnkPixiv.elements.illust.title.textContent),
 
         get comment ()
-          AnkUtils.textContent(AnkPixiv.currentDocument.querySelector('#illust_comment')),
+          AnkUtils.textContent(AnkPixiv.elements.doc.querySelector('.works_area > p')),
 
         get R18 ()
-          AnkPixiv.currentImageTags.some(function (v) 'R-18' == v)
+          AnkPixiv.info.illust.tags.some(function (v) 'R-18' == v),
+
+        get mangaPages ()
+          AnkPixiv.info.illust.worksData.mangaPages,
+
+        get worksData () {
+          let items = AnkPixiv.elements.illust.worksData.textContent.split(/\uFF5C/).map(String.trim);
+          let result = {};
+          items.forEach(function (item) {
+            let m;
+            if (m = item.match(/(\d+)[^\d]+(\d+)[^\d]+(\d+)[^\d]+(\d+):(\d+)/)) {
+              result.dateTime = {
+                year: m[1],
+                month: m[2],
+                day: m[3],
+                hour: m[4],
+                minute: m[5],
+              };
+            } else if (m = item.match(/\u6F2B\u753B\s*(\d+)P/)) {
+              result.mangaPages = parseInt(m[1], 10);
+            } else if (m = item.match(/(\d+)\uD7(\d+)/)) {
+              result.size = {
+                width: parseInt(m[1], 10),
+                height: parseInt(m[2], 10),
+              };
+            } else {
+              result.tools = item;
+            }
+          });
+          return result;
+        }
       };
       'year month day hour minute'.split(/\s+/).forEach(function (name) {
         illust.__defineGetter__(name, function () illust.dateTime[name]);
@@ -228,26 +220,17 @@ try {
       let member = {
         get id () {
           try {
-            return AnkUtils.findNodeByXPath(AnkPixiv.XPath.authorIconLink).getAttribute('href').replace(/^.*id=/, '');
+            return AnkPixiv.elements.illust.memberLink.getAttribute('href').replace(/^.*id=/, '');
           } catch (e) {
             return 0;
           }
         },
 
-        get pixivId () {
-          let node = AnkUtils.findNodeByXPath('//*[@id="profile"]/div/a/img');
-          let m = node.src.match(/\/profile\/([^\/]+)\//);
-          if (!m) {
-            node = AnkPixiv.currentDocument.querySelector("img[src*='_m.'][src*='/img/']");
-            m = node.src.match(/\/img\/([^\/]+)\//);
-          }
-          return m && m[1];
-        },
+        get pixivId ()
+          AnkPixiv.elements.illust.avatar.src.match(/\/profile\/([^\/]+)\//)[1],
 
-        get name () {
-          let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.authorIconImage);
-          return AnkUtils.trim(node.getAttribute('alt'));
-        },
+        get name ()
+          AnkUtils.trim(AnkPixiv.elements.illust.avatar.getAttribute('alt')),
 
         get memoizedName () {
           let result = AnkPixiv.Storage.select(
@@ -265,9 +248,28 @@ try {
         },
       };
 
+      let path = {
+        get ext ()
+          (AnkPixiv.info.path.largeStandardImage.match(/\.\w+$/)[0] || '.jpg'),
+
+        get mangaIndexPage ()
+          AnkPixiv.currentLocation.replace(/\?mode=medium/, '?mode=manga'),
+
+        get largeImage ()
+          let (i = AnkPixiv.info.path)
+            AnkPixiv.manga ? i.getLargeMangaImage() : i.largeStandardImage,
+
+        get largeStandardImage ()
+          AnkPixiv.elements.illust.mediumImage.src.replace(/_m\./, '.').replace(/\?.*$/, ''),
+
+        getLargeMangaImage: function (n, base, ext)
+          (base || AnkPixiv.info.path.largeStandardImage).replace(/\.[^\.]+$/, function (m) (('_p' + (n || 0)) + (ext || m))),
+      };
+
       return {
         illust: illust,
-        member: member
+        member: member,
+        path: path
       };
     })(),
 
@@ -276,6 +278,7 @@ try {
         let (pref = this.Prefs.get('infoText.ignore', 'illust.dateTime.'))
           (pref ? pref.split(/[,\s]+/) : []);
 
+      ignore = [];
       function indent (s)
         (typeof s === 'undefined' ? '---' : s).toString().split(/\n/).map(function (v) "\t" + v).join("\n");
 
@@ -288,7 +291,8 @@ try {
         if (typeof value === 'object') {
           let result = '';
           for (let [n, v] in Iterator(value)) {
-            result += textize(names.concat([n]), v);
+            if (typeof v !== 'function')
+              result += textize(names.concat([n]), v);
           }
           return result;
         } else {
@@ -459,9 +463,10 @@ try {
      * 設定によっては、ダイアログを表示する
      */
     getSaveFilePath: function (filenames, ext, useDialog, isFile) {
-      function _file (initDir, basename, ext) {
-        let filename = basename + ext;
-        let url = initDir + AnkUtils.SYS_SLASH + filename; // TODO
+      function _file (initDir, basename, ext, isMeta) {
+        // TODO File#join
+        let filename = (isMeta && !isFile) ? basename + AnkUtils.SYS_SLASH + 'meta.txt' : basename + ext;
+        let url =   initDir + AnkUtils.SYS_SLASH + filename;
         return {
           filename: filename,
           url: url,
@@ -482,7 +487,7 @@ try {
 
         for (let i in filenames) {
           let image = _file(prefInitDir, filenames[i], ext);
-          let meta = _file(prefInitDir, filenames[i], '.txt');
+          let meta = _file(prefInitDir, filenames[i], '.txt', true);
 
           if (_exists(image) || _exists(meta))
             continue;
@@ -597,6 +602,9 @@ try {
      * テキストをローカルに保存します。
      */
     saveTextFile: function (file, text) {
+      let dir = file.parent;
+      dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
+
       let out = AnkUtils.ccci('@mozilla.org/network/file-output-stream;1', Ci.nsIFileOutputStream);
       let conv = AnkUtils.ccci('@mozilla.org/intl/converter-output-stream;1', Ci.nsIConverterOutputStream);
       out.init(file, 0x02 | 0x10 | 0x08, 0664, 0);
@@ -723,15 +731,15 @@ try {
         let destFiles;
         let metaText      = this.infoText;
         let pageUrl       = this.currentLocation;
-        let url           = this.currentImagePath;
+        let url           = this.info.path.largeStandardImage;
         let illust_id     = this.info.illust.id;
-        let ext           = this.currentImageExt;
+        let ext           = this.info.path.ext;
         let ref           = this.currentLocation.replace(/mode=medium/, 'mode=big');
         let member_id     = this.info.member.id;
         let member_name   = this.info.member.name || member_id;
         let pixiv_id      = this.info.member.pixivId;
         let memoized_name = this.info.member.memoizedName || member_name;
-        let tags          = this.currentImageTags;
+        let tags          = this.info.illust.tags;
         let title         = this.info.illust.title;
         let comment       = this.info.illust.comment;
         let R18           = this.info.illust.R18;
@@ -813,7 +821,14 @@ try {
             [/\?saved-day\?/g, AnkUtils.zeroPad(savedDateTime.getDate(), 2)],
             [/\?saved-hour\?/g, AnkUtils.zeroPad(savedDateTime.getHours(), 2)],
             [/\?saved-minute\?/g, AnkUtils.zeroPad(savedDateTime.getMinutes(), 2)]
-          ].map(function ([re, val]) [re, AnkUtils.fixFilename(val.toString())]);
+          ].map(function ([re, val]) {
+            try {
+              return [re, AnkUtils.fixFilename((val || '-').toString())];
+            } catch (e) {
+              AnkUtils.dump(re + ' is not found');
+              throw e;
+            }
+          });
           function repl (s) {
             ps.forEach(function ([re, val]) (s = s.replace(re, val).trim()))
             return s;
@@ -948,7 +963,7 @@ saved-minute  = ?saved-minute?
           this.getLastMangaPage(function (v, ext) {
             let urls = [];
             for (let i = 0; i < v; i++)
-              urls.push($.getBigMangaImagePath(i, url, ext));
+              urls.push(AnkPixiv.info.path.getLargeMangaImage(i, url, ext));
             if ($.downloadFiles(urls, ref, destFiles.image, onComplete, onError))
               addDownloading();
           });
@@ -985,7 +1000,8 @@ saved-minute  = ?saved-minute?
       let delay = function (msg, e) {
         if (installTryed == 20) {
           AnkUtils.dump(msg);
-          AnkUtils.dumpError(e, $.Pref.get('showErrorDialog'));
+          if (e)
+            AnkUtils.dumpError(e, AnkPixiv.Prefs.get('showErrorDialog'));
         }
         setTimeout(installer, installInterval);
         installTryed++;
@@ -998,16 +1014,16 @@ saved-minute  = ?saved-minute?
           try {
             var body = doc.getElementsByTagName('body')[0];
             var wrapper = doc.getElementById('wrapper');
-            var medImg = AnkUtils.findNodeByXPath($.XPath.mediumImage);
-            var bigImgPath = $.currentBigImagePath;
+            var medImg = AnkPixiv.elements.illust.mediumImage;
+            var bigImgPath = AnkPixiv.info.path.largeImage;
             var openComment = function () content.wrappedJSObject.one_comment_view();
-            var dateTime = AnkUtils.findNodeByXPath(AnkPixiv.XPath.dateTime);
+            var worksData = AnkPixiv.elements.illust.worksData;
           } catch (e) {
             return delay("delay installation by error", e);
           }
 
           // 完全に読み込まれて以内っぽいときは、遅延する
-          if (!(body && medImg && bigImgPath && wrapper && openComment && dateTime))
+          if (!(body && medImg && bigImgPath && wrapper && openComment && worksData))
             return delay("delay installation by null");
 
           // 中画像クリック時に保存する
@@ -1067,7 +1083,7 @@ saved-minute  = ?saved-minute?
             let bigMode = false;
 
             let changeImageSize = function () {
-              let ads = AnkUtils.findNodesByXPath($.XPath.ad, true);
+              let ads = AnkPixiv.elements.illust.ads;
               if (bigMode) {
                 div.style.display = 'none';
                 wrapper.setAttribute('style', 'opacity: 1;');
@@ -1132,7 +1148,7 @@ saved-minute  = ?saved-minute?
               }
               updateButtons();
               AnkUtils.dump('goto ' + currentMangaPage + ' page');
-              bigImg.setAttribute('src', $.getBigMangaImagePath(currentMangaPage));
+              bigImg.setAttribute('src', AnkPixiv.info.path.getLargeMangaImage(currentMangaPage));
             };
 
             doc.changeImageSize = changeImageSize;
@@ -1208,17 +1224,17 @@ saved-minute  = ?saved-minute?
 
     getLastMangaPage: function (result) {
       function get (source) {
+        const MAX = 1000;
         let doc = AnkUtils.createHTMLDocument(source);
-        let pages = AnkUtils.findNodeByXPath('id("page0")/tbody/tr/td/span/span', doc)
-                    ||
-                    AnkUtils.findNodeByXPath('id("page0")//span[@style="padding: 0pt 20px;"]', doc);
-        if (!pages)
-          return 0;
-        return parseInt(pages.textContent.replace(/^.*\//, '').replace(/\s+/g, ''), 10) || 0;
+        for (let n = 0; n < MAX; n++) {
+          if (!doc.getElementById('page' + n))
+            return n;
+        }
+        throw 'not found page elements';
       }
 
       let xhr = new XMLHttpRequest();
-      xhr.open('GET', this.currentMangaIndexPath, true);
+      xhr.open('GET', AnkPixiv.info.path.mangaIndexPage, true);
       xhr.onreadystatechange = function (e) {
         if (xhr.readyState == 4 && xhr.status == 200) {
           result(get(xhr.responseText));
@@ -1258,7 +1274,7 @@ saved-minute  = ?saved-minute?
       div.setAttribute('style', AnkPixiv.Prefs.get('downloadedDisplayStyle', ''));
       div.setAttribute('id', ElementID);
       div.appendChild(textNode);
-      let node = AnkUtils.findNodeByXPath(AnkPixiv.XPath.dateTime, doc);
+      let node = AnkPixiv.elements.illust.downloadedDisplayParent;
       if (node)
         node.appendChild(div);
     },
