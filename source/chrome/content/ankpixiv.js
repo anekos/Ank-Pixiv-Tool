@@ -1368,7 +1368,7 @@ saved-minute  = ?saved-minute?
           let tags = storageWrapper.row["tags"];
           if (!tags)
             continue;
-          tags = tags.split(/\s+/);
+          tags = tags.toString().split(/\s+/);
           if (tags.some(R18))
             tags.forEach(inc);
         }
