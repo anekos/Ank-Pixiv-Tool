@@ -231,7 +231,9 @@ try {
         },
 
         get pixivId ()
-          AnkPixiv.elements.illust.avatar.src.match(/\/profile\/([^\/]+)\//)[1],
+          (AnkPixiv.elements.illust.avatar.src.match(/\/profile\/([^\/]+)\//)
+           ||
+           AnkPixiv.info.path.largeImage.match(/^https?:\/\/[^\.]+\.pixiv\.net\/img\/([^\/]+)\//))[1],
 
         get name ()
           AnkUtils.trim(AnkPixiv.elements.illust.avatar.getAttribute('alt')),
@@ -1368,7 +1370,7 @@ saved-minute  = ?saved-minute?
           let tags = storageWrapper.row["tags"];
           if (!tags)
             continue;
-          tags = tags.toString().split(/\s+/);
+          tags = tags.split(/\s+/);
           if (tags.some(R18))
             tags.forEach(inc);
         }
@@ -1391,7 +1393,7 @@ saved-minute  = ?saved-minute?
         return {table: table, sum: sum};
 
       } catch (e) {
-        AnkUtils.dumpError(e, true);
+        AnkUtils.dumpError(e, false);
       }
 
     },
