@@ -1,5 +1,5 @@
-<!ENTITY prefwindow.title "Ank Pixiv Tool подешавања">
-<!ENTITY mainpane.title "Ank Pixiv Tool подешавања">
+<!ENTITY prefwindow.title "Ank Pixiv Tool - подешавања">
+<!ENTITY mainpane.title "Ank Pixiv Tool - подешавања">
 <!ENTITY initialDirectory.label "Сачувај илустрацију у:">
 <!ENTITY showSaveDialog.label "Користи прозор за чување када се преузима илустрација">
 <!ENTITY saveHistory.label "Сачувај историјат преузимања">
@@ -14,5 +14,6 @@
 <!ENTITY downloadWhenClickMiddle "Аутоматски преузми када кликнем на средњу слику.">
 <!ENTITY showCompletePopup "Прикажи искачући прозор кад се преузимање заврши.">
 <!ENTITY displayDownloaded "Прикажи „већ преузето”">
-<!ENTITY defaultMangaFilename "Користи манга (смешне) називе датотека">
+<!ENTITY defaultMangaFilename "Манга (смешни) називи датотека">
 <!ENTITY alternateMangaFilename "Алтернативни манга (смешни) називи датотека">
+<!ENTITY saveMeta "Сачувај текст са мета информацијама">

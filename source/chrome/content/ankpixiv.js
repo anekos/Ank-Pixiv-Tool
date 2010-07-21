@@ -1244,13 +1244,24 @@ saved-minute  = ?saved-minute?
       return installer;
     },
 
+    /*
+     * マンガの最終ページを取得する。
+     * この関数は、非同期に呼び出してはいけない。
+     * (pagesFromIllustPage のため)
+     *
+     *    result:     コールバック関数 function (ページ数)
+     */
     getLastMangaPage: function (result) {
+      const PAGE_LIMIT = 50 - 5;
+
+      let pagesFromIllustPage = AnkPixiv.info.illust.mangaPages;
+
       function get (source) {
         const MAX = 1000;
         let doc = AnkUtils.createHTMLDocument(source);
         for (let n = 0; n < MAX; n++) {
           if (!doc.getElementById('page' + n))
-            return n;
+            return (n < PAGE_LIMIT) ? n : pagesFromIllustPage;
         }
         throw 'not found page elements';
       }

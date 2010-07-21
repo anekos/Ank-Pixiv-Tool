@@ -16,3 +16,4 @@
 <!ENTITY displayDownloaded "Показывать &quot;Уже загруженное&quot;">
 <!ENTITY defaultMangaFilename "Название файла по-умолчанию">
 <!ENTITY alternateMangaFilename "Альтернативное название файла">
+<!ENTITY saveMeta "Save meta information text">
