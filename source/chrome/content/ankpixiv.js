@@ -167,7 +167,7 @@ try {
     info: (function () {
       let illust = {
         get id ()
-          parseInt(AnkPixiv.info.path.largeStandardImage.match(/\/(\d+)(_(m|[^\.]+))?\.\w{2,4}$/)[1]),
+          parseInt(AnkPixiv.elements.doc.querySelector('#rpc_i_id').textContent, 10),
 
         get dateTime ()
           AnkPixiv.info.illust.worksData.dateTime,
