@@ -1026,12 +1026,21 @@ saved-minute  = ?saved-minute?
 
           // 大画像関係
           if ($.Prefs.get('largeOnMiddle', true)) {
-            let div = doc.createElement('div');
-            let bigImg = doc.createElement('img');
-            let imgPanel = doc.createElement('div');
-            let buttonPanel = doc.createElement('div');
-            let prevButton = doc.createElement('button');
-            let nextButton = doc.createElement('button');
+            let IDPrefix =
+              function (id)
+                ('ank-pixiv-large-viewer-' + id);
+
+            let createElement =
+              function (tagName, id)
+                let (elem = doc.createElement(tagName))
+                  (id && elem.setAttribute('id', IDPrefix(id)), elem);
+
+            let viewer = createElement('div', 'panel');
+            let bigImg = createElement('img', 'image');
+            let imgPanel = createElement('div', 'image-panel');
+            let buttonPanel = createElement('div', 'button-panel');
+            let prevButton = createElement('button', 'previous-button');
+            let nextButton = createElement('button', 'next-button');
 
             let updateButtons = function (v) {
               nextButton.innerHTML =
@@ -1040,7 +1049,7 @@ saved-minute  = ?saved-minute?
                 (lastMangaPage === undefined || currentMangaPage > 0) ? '<<' : '\xD7';
             };
 
-            div.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
+            viewer.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
             prevButton.innerHTML = '<<';
             nextButton.innerHTML = '>>';
             buttonPanel.setAttribute('style', 'display: block; margin: 0 auto; text-align: center; ');
@@ -1051,28 +1060,28 @@ saved-minute  = ?saved-minute?
             });
 
             /*
-             * div
+             * viewer
              *    - imgPanel
              *      - bigImg
              *    - buttonPanel
              *      - prevButton
              *      - nextButton
              */
-            div.appendChild(imgPanel);
+            viewer.appendChild(imgPanel);
             imgPanel.appendChild(bigImg);
             if ($.manga) {
-              div.appendChild(buttonPanel);
+              viewer.appendChild(buttonPanel);
               buttonPanel.appendChild(prevButton);
               buttonPanel.appendChild(nextButton);
             }
-            body.appendChild(div);
+            body.appendChild(viewer);
 
             let bigMode = false;
 
             let changeImageSize = function () {
               let ads = AnkUtils.findNodesByXPath($.XPath.ad, true);
               if (bigMode) {
-                div.style.display = 'none';
+                viewer.style.display = 'none';
                 wrapper.setAttribute('style', 'opacity: 1;');
                 ads.forEach(function (ad) (ad.style.display = ad.__ank_pixiv__style_display));
               } else {
@@ -1084,7 +1093,7 @@ saved-minute  = ?saved-minute?
                 }
                 bigImg.setAttribute('src', bigImgPath);
                 window.content.scrollTo(0, 0);
-                div.style.display = '';
+                viewer.style.display = '';
                 wrapper.setAttribute('style', 'opacity: 0.1;');
                 bigImg.style['opacity'] = '1 !important;';
                 ads.forEach(
