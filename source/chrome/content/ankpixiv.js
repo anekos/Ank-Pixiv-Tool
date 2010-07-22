@@ -106,6 +106,9 @@ try {
     get inIllustPage ()
       this.currentLocation.match(/\.pixiv\.net\/member_illust.php\?.*illust_id=/),
 
+    get inMyIllust ()
+      !AnkPixiv.elements.illust.avatar,
+
     get inMyPage ()
       (this.currentLocation == 'http://www.pixiv.net/mypage.php'),
 
@@ -740,6 +743,10 @@ try {
       let $ = this;
 
       try {
+
+        // 自分のページのは構成が違い、問題となるのでダウンロードしないようにする。
+        if (AnkPixiv.inMyIllust)
+          return false;
 
         if (typeof useDialog === 'undefined')
           useDialog = this.Prefs.get('showSaveDialog', true);
