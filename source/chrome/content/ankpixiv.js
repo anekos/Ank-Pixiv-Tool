@@ -1041,6 +1041,7 @@ saved-minute  = ?saved-minute?
             var bigImgPath = AnkPixiv.info.path.largeImage;
             var openComment = function () content.wrappedJSObject.one_comment_view();
             var worksData = AnkPixiv.elements.illust.worksData;
+            var bgImage = doc.defaultView.getComputedStyle(doc.body, '').backgroundImage;
           } catch (e) {
             return delay("delay installation by error", e);
           }
@@ -1108,6 +1109,7 @@ saved-minute  = ?saved-minute?
             let changeImageSize = function () {
               let ads = AnkPixiv.elements.illust.ads;
               if (bigMode) {
+                body.style.backgroundImage = bgImage;
                 div.style.display = 'none';
                 wrapper.setAttribute('style', 'opacity: 1;');
                 ads.forEach(function (ad) (ad.style.display = ad.__ank_pixiv__style_display));
@@ -1118,6 +1120,7 @@ saved-minute  = ?saved-minute?
                     lastMangaPage = v
                   });
                 }
+                body.style.backgroundImage = 'none';
                 bigImg.setAttribute('src', bigImgPath);
                 window.content.scrollTo(0, 0);
                 div.style.display = '';
