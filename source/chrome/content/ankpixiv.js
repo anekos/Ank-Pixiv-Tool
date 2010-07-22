@@ -766,6 +766,7 @@ try {
         let comment       = this.info.illust.comment;
         let R18           = this.info.illust.R18;
         let doc           = this.currentDocument;
+        let dlDispPoint   = AnkPixiv.elements.illust.downloadedDisplayParent;
         let filenames     = [];
         let shortTags     = (function (len) {
                               let result = [];
@@ -938,7 +939,7 @@ saved-minute  = ?saved-minute?
             if ($.Prefs.get('showCompletePopup', true))
               $.popupAlert(caption, text);
 
-            $.insertDownloadedDisplay(doc, R18);
+            $.insertDownloadedDisplay(dlDispPoint, R18);
 
             return true;
 
@@ -1228,7 +1229,10 @@ saved-minute  = ?saved-minute?
 
           // 保存済み表示
           if ($.isDownloaded($.info.illust.id))
-            $.insertDownloadedDisplay($.currentDocument, AnkPixiv.info.illust.R18);
+            $.insertDownloadedDisplay(
+                AnkPixiv.elements.illust.downloadedDisplayParent,
+                AnkPixiv.info.illust.R18
+            );
 
           // コメント欄を開く
           if ($.Prefs.get('openComment', false))
@@ -1292,11 +1296,13 @@ saved-minute  = ?saved-minute?
 
 
     // ダウンロード済みの表示
-    insertDownloadedDisplay: function (doc, R18) {
+    insertDownloadedDisplay: function (appendTo, R18) {
       if (!this.Prefs.get('displayDownloaded', true))
         return;
 
       const ElementID = 'ankpixiv-downloaded-display';
+
+      let doc = appendTo.ownerDocument;
 
       if (doc.getElementById(ElementID))
         return;
@@ -1307,9 +1313,8 @@ saved-minute  = ?saved-minute?
       div.setAttribute('style', AnkPixiv.Prefs.get('downloadedDisplayStyle', ''));
       div.setAttribute('id', ElementID);
       div.appendChild(textNode);
-      let node = AnkPixiv.elements.illust.downloadedDisplayParent;
-      if (node)
-        node.appendChild(div);
+      if (appendTo)
+        appendTo.appendChild(div);
     },
 
 
