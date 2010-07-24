@@ -3,16 +3,17 @@
 <!ENTITY initialDirectory.label "保存说明到：">
 <!ENTITY showSaveDialog.label "下载说明时使用保存对话框">
 <!ENTITY saveHistory.label "保存下载历史">
-<!ENTITY downloadRate.label "在你给它一个评分等级或超出这个数目时下载说明。">
+<!ENTITY downloadRate.label "当你给它评级后或评级超出这个数字时下载说明。">
 <!ENTITY browse "浏览...">
 <!ENTITY defaultFilename "默认文件名">
 <!ENTITY largeOnMiddle "当您点击中间的图片时在同一个标签显示大图片。">
 <!ENTITY openComment "自动打开评论框。">
-<!ENTITY alternateFilename "备用文件">
+<!ENTITY alternateFilename "备用文件名">
 <!ENTITY confirmExistingDownload "在重新下载时询问。">
-<!ENTITY confirmExistingDownloadWhenAuto "在自动下载的重新下载时询问。">
+<!ENTITY confirmExistingDownloadWhenAuto "当自动下载时确认重新下载。">
 <!ENTITY downloadWhenClickMiddle "当你点击中间的图片时自动下载">
 <!ENTITY showCompletePopup "当下载结束时显示弹出提示。">
-<!ENTITY displayDownloaded "显示 &quot;已经下载&quot;">
+<!ENTITY displayDownloaded "显示 “已经下载”">
 <!ENTITY defaultMangaFilename "默认漫画文件名">
 <!ENTITY alternateMangaFilename "备用漫画文件名">
+<!ENTITY saveMeta "保存元信息文本">
