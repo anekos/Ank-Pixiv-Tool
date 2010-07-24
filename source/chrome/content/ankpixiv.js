@@ -9,8 +9,6 @@ try {
 
     DB_VERSION: 5,
 
-    VERSION: AnkUtils.getVersion('ankpixiv@snca.net'),
-
     PREF_PREFIX: 'extensions.ankpixiv.',
 
     ID_FANTASY_DISPLAY: 'ankpixiv-fantasy-display',
@@ -1015,7 +1013,7 @@ saved-minute  = ?saved-minute?
       this.downloadCurrentImage(undefined, this.Prefs.get('confirmExistingDownloadWhenAuto'));
     },
 
-    get functionsInstaller function () {
+    get functionsInstaller () {
       let $ = this;
       let ut = AnkUtils;
       let installInterval = 500;

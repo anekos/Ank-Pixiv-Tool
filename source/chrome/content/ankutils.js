@@ -16,14 +16,6 @@ try {
     })(),
 
 
-    getVersion:  function (id) {
-      const ext = Components.classes["@mozilla.org/extensions/manager;1"]
-                    .getService(Components.interfaces.nsIExtensionManager)
-                    .getItemForID(id);
-      return ext.version;
-    },
-
-
     get currentDocument ()
       window.content.document,
 
