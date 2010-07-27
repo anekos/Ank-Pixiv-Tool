@@ -90,8 +90,13 @@ try {
       return node && ~node.href.indexOf('?mode=manga&');
     },
 
-    get inPixiv ()
-      (this.currentDocument.location.hostname === 'www.pixiv.net'),
+    get inPixiv () {
+      try {
+        return this.currentDocument.location.hostname === 'www.pixiv.net';
+      } catch (e) {
+        return false;
+      }
+    },
 
     get inMedium ()
       this.inPixiv && this.currentLocation.match(/member_illust\.php\?mode=medium&illust_id=\d+/),
