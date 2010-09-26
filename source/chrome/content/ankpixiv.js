@@ -285,10 +285,13 @@ try {
             AnkPixiv.manga ? i.getLargeMangaImage() : i.largeStandardImage,
 
         get largeStandardImage ()
-          AnkPixiv.elements.illust.mediumImage.src.replace(/_m\./, '.').replace(/\?.*$/, ''),
+          AnkPixiv.info.path.mediumImage.replace(/_m\./, '.'),
 
         getLargeMangaImage: function (n, base, ext)
           (base || AnkPixiv.info.path.largeStandardImage).replace(/\.[^\.]+$/, function (m) (('_p' + (n || 0)) + (ext || m))),
+
+        get mediumImage ()
+          AnkPixiv.elements.illust.mediumImage.src.replace(/\?.*$/, ''),
       };
 
       return {
