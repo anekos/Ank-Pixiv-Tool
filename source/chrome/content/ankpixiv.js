@@ -334,6 +334,7 @@ try {
     set statusbarText (text) {
       let elem = document.getElementById('ankpixiv-statusbar-text');
       elem.textContent = text;
+      elem.collapsed = text.length == 0;
       return text;
     },
 
