@@ -152,8 +152,12 @@ try {
           let search = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('.pixivSearch'));
           // searchSub は現時点で存在しないが search がリネームされそうなので書いておく
           let searchSub = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('.pixiv-search'));
+          // 検索欄も広告扱いしちゃうぞ
+          let findbox = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('form.search.head'));
+          // ldrize
+          let ldrize = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('#gm_ldrize'));
 
-          return ([]).concat(obj, iframe, search, searchSub);
+          return ([]).concat(obj, iframe, search, searchSub, findbox, ldrize);
         }
       };
 
@@ -290,10 +294,13 @@ try {
             AnkPixiv.manga ? i.getLargeMangaImage() : i.largeStandardImage,
 
         get largeStandardImage ()
-          AnkPixiv.elements.illust.mediumImage.src.replace(/_m\./, '.').replace(/\?.*$/, ''),
+          AnkPixiv.info.path.mediumImage.replace(/_m\./, '.'),
 
         getLargeMangaImage: function (n, base, ext)
           (base || AnkPixiv.info.path.largeStandardImage).replace(/\.[^\.]+$/, function (m) (('_p' + (n || 0)) + (ext || m))),
+
+        get mediumImage ()
+          AnkPixiv.elements.illust.mediumImage.src.replace(/\?.*$/, ''),
       };
 
       return {
@@ -336,6 +343,7 @@ try {
     set statusbarText (text) {
       let elem = document.getElementById('ankpixiv-statusbar-text');
       elem.textContent = text;
+      elem.collapsed = text.length == 0;
       return text;
     },
 
