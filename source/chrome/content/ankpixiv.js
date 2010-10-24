@@ -1169,20 +1169,13 @@ saved-minute  = ?saved-minute?
             let (reloadLimit = 10, reloadInterval = 1000, prevTimeout) {
               bigImg.addEventListener('error',
                 function () {
-                  // XXX 画像はあるけど、サーバのエラーのときはどうなんの？
                   if (bigImg instanceof Ci.nsIImageLoadingContent && bigImg.currentURI) {
                     let req = bigImg.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
                     AnkUtils.dump('AnkPixiv: imageStatus = ' + req.imageStatus.toString(2));
-                    //if(reloadLimit && req && !(req.imageStatus & req.STATUS_LOAD_COMPLETE)) {
-                    //  if (prevTimeout) {
-                    //    clearTimeout(prevTimeout);
-                    //    prevTimeout = null;
-                    //  }
-                    //  setTimeout(function () bigImg.forceReload(), reloadInterval);
-                    //  reloadInterval *= 2;
-                    //  reloadLimit--;
-                    //  return;
-                    //}
+                    if (confirm(AnkPixiv.Locale('confirmForReloadBigImage'))) {
+                      bigImg.forceReload();
+                      return;
+                    }
                   }
                   changeImageSize(false);
                 },
