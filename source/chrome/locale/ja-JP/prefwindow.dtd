@@ -17,3 +17,4 @@
 <!ENTITY defaultMangaFilename "保存時ファイル名(漫画)">
 <!ENTITY alternateMangaFilename "代替ファイル名(漫画)">
 <!ENTITY saveMeta "メタテキストの保存">
+<!ENTITY markDownloaded "保存済みイラストにマークを付ける">

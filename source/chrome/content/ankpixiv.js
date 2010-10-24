@@ -1711,6 +1711,9 @@ saved-minute  = ?saved-minute?
 
           if (AnkPixiv.inMyPage && !AnkPixiv.elements.mypage.fantasyDisplay)
             this.displayYourFantasy();
+
+          if (!this.inMedium && AnkPixiv.Prefs.get('markDownloaded', false))
+            AnkPixiv.markDownloaded();
         }
 
       } catch (e) {
