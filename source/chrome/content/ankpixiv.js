@@ -1537,16 +1537,30 @@ saved-minute  = ?saved-minute?
 
     markDownloaded: function () {
       const IsIllust = /&illust_id=(\d+)/;
+      const BoxTag = /^(li|div)$/i;
 
-      AnkUtils.A(AnkPixiv.currentDocument.links) .
+      function findBox (e, limit) {
+        if (limit <= 0)
+          return null;
+        if (BoxTag(e.tagName))
+          return e;
+        return findBox(e.parentNode, limit - 1);
+      }
+
+      AnkUtils.A(AnkPixiv.currentDocument.querySelectorAll('a > img')) .
+        map(function (img) img.parentNode) .
         map(function (link) link.href && let (m = IsIllust(link.href)) m && [link, m]) .
         filter(function (m) m) .
         map(function ([link, m]) [link, parseInt(m[1], 10)]) .
         forEach(function ([link, id]) {
           if (!AnkPixiv.isDownloaded(id))
             return;
-          link.style.border = 'medium solid #ff00ff !important';
-          link.style.opacity = '0.2';
+          let box = findBox(link, 3);
+          if (box) {
+            box.style.borderBottom = '4px solid red';
+            //box.style.margin = '-2px';
+            //box.style.opacity = '0.2';
+          }
         });
     },
 
