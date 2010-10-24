@@ -1463,6 +1463,8 @@ saved-minute  = ?saved-minute?
     },
 
     displayYourFantasy: function () {
+      return;
+
       let doc = AnkPixiv.currentDocument;
 
       function append ({parent, name, text, style, class}) {
