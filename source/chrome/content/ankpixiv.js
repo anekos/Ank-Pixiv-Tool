@@ -1308,10 +1308,9 @@ saved-minute  = ?saved-minute?
 
     installFunctions: function () {
       try {
-        let doc = this.currentDocument;
-        if (doc.ankpixivFunctionsIntalled)
+        if (AnkPixiv.Store.document.functionsInstalled)
           return;
-        doc.ankpixivFunctionsIntalled = true;
+        AnkPixiv.Store.document.functionsInstalled = true;
         if (this.inMedium)
           this.functionsInstaller();
       } catch (e) {
