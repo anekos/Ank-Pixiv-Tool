@@ -1528,7 +1528,7 @@ saved-minute  = ?saved-minute?
     },
 
 
-    markDownloaded: function () {
+    markDownloaded: function (force) {
       const IsIllust = /&illust_id=(\d+)/;
       const BoxTag = /^(li|div)$/i;
 
@@ -1539,6 +1539,18 @@ saved-minute  = ?saved-minute?
           return e;
         return findBox(e.parentNode, limit - 1);
       }
+
+      if (!(
+        force
+        ||
+        (
+          AnkPixiv.inPixiv && !AnkPixiv.inMedium && AnkPixiv.Prefs.get('markDownloaded', false) &&
+          !AnkPixiv.Store.document.marked
+        )
+      ))
+        return;
+
+      AnkPixiv.Store.document.marked = true;
 
       AnkUtils.A(AnkPixiv.currentDocument.querySelectorAll('a > img')) .
         map(function (img) img.parentNode) .
@@ -1670,17 +1682,8 @@ saved-minute  = ?saved-minute?
 
 
     onDOMContentLoaded: function (event) {
-      AnkUtils.dump('DOMContentLoaded');
-
       AnkPixiv.installFunctions();
-
-      if (AnkPixiv.inPixiv && !AnkPixiv.inMedium) {
-        let doc = AnkPixiv.currentDocument;
-        if (AnkPixiv.Prefs.get('markDownloaded', false) && (!doc.ankpixivMarked || AnkPixiv.doRemark)) {
-          AnkPixiv.markDownloaded();
-          doc.ankpixivMarked = true;
-        }
-      }
+      AnkPixiv.markDownloaded();
     },
 
 
@@ -1697,6 +1700,8 @@ saved-minute  = ?saved-minute?
         changeEnabled.call(AnkPixiv, 'ankpixiv-statusbarpanel');
         changeEnabled.call(AnkPixiv, 'ankpixiv-menu-download');
 
+        AnkPixiv.markDownloaded();
+
         if (AnkPixiv.inPixiv && !AnkPixiv.Store.document.onFocusDone) {
           AnkPixiv.Store.document.onFocusDone = true;
 
@@ -1710,10 +1715,6 @@ saved-minute  = ?saved-minute?
 
           if (AnkPixiv.inMyPage && !AnkPixiv.elements.mypage.fantasyDisplay)
             AnkPixiv.displayYourFantasy();
-
-          if (!AnkPixiv.inMedium && AnkPixiv.Prefs.get('markDownloaded', false) &&
-          !AnkPixiv.currentDocument.ankpixivMarked)
-            AnkPixiv.markDownloaded();
         }
 
       } catch (e) {
