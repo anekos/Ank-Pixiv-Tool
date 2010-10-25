@@ -1662,18 +1662,24 @@ saved-minute  = ?saved-minute?
     },
 
 
-    onLoad: function (event) {
-      try {
-        if (!(this.inPixiv && this.inMedium))
-          return;
-        let doc = event.originalTarget;
-        if (!doc || doc.nodeName != "#document")
-            return;
-        window.removeEventListener("load", AnkPixiv.onLoad, false);
-        //window.addEventListener("DOMContentLoaded", function(){ AnkPixiv.installFunctions(); }, false);
-        window.addEventListener("domready", function(){ AnkPixiv.installFunctions(); }, false);
-      } catch (e) {
-        AnkUtils.dumpError(e);
+    onInit: function () {
+      window.addEventListener('focus', AnkPixiv.onFocus, true);
+      let appcontent = document.getElementById('appcontent');
+      appcontent.addEventListener('DOMContentLoaded', AnkPixiv.onDOMContentLoaded, false);
+    },
+
+
+    onDOMContentLoaded: function (event) {
+      AnkUtils.dump('DOMContentLoaded');
+
+      AnkPixiv.installFunctions();
+
+      if (AnkPixiv.inPixiv && !AnkPixiv.inMedium) {
+        let doc = AnkPixiv.currentDocument;
+        if (AnkPixiv.Prefs.get('markDownloaded', false) && (!doc.ankpixivMarked || AnkPixiv.doRemark)) {
+          AnkPixiv.markDownloaded();
+          doc.ankpixivMarked = true;
+        }
       }
     },
 
@@ -1684,28 +1690,29 @@ saved-minute  = ?saved-minute?
           let elem = document.getElementById(id);
           if (!elem)
             return;
-          elem.setAttribute('dark', !this.inIllustPage);
+          elem.setAttribute('dark', !AnkPixiv.inIllustPage);
         };
 
-        changeEnabled.call(this, 'ankpixiv-toolbar-button');
-        changeEnabled.call(this, 'ankpixiv-statusbarpanel');
-        changeEnabled.call(this, 'ankpixiv-menu-download');
+        changeEnabled.call(AnkPixiv, 'ankpixiv-toolbar-button');
+        changeEnabled.call(AnkPixiv, 'ankpixiv-statusbarpanel');
+        changeEnabled.call(AnkPixiv, 'ankpixiv-menu-download');
 
         if (AnkPixiv.inPixiv && !AnkPixiv.Store.document.onFocusDone) {
           AnkPixiv.Store.document.onFocusDone = true;
 
-          if (this.inIllustPage) {
-            this.installFunctions();
-            let illust_id = this.info.illust.id;
-            if (this.Prefs.get('maxIllustId', this.MAX_ILLUST_ID) < illust_id) {
-              this.Prefs.set('maxIllustId', illust_id);
+          if (AnkPixiv.inIllustPage) {
+            AnkPixiv.installFunctions();
+            let illust_id = AnkPixiv.info.illust.id;
+            if (AnkPixiv.Prefs.get('maxIllustId', AnkPixiv.MAX_ILLUST_ID) < illust_id) {
+              AnkPixiv.Prefs.set('maxIllustId', illust_id);
             }
           }
 
           if (AnkPixiv.inMyPage && !AnkPixiv.elements.mypage.fantasyDisplay)
-            this.displayYourFantasy();
+            AnkPixiv.displayYourFantasy();
 
-          if (!this.inMedium && AnkPixiv.Prefs.get('markDownloaded', false))
+          if (!AnkPixiv.inMedium && AnkPixiv.Prefs.get('markDownloaded', false) &&
+          !AnkPixiv.currentDocument.ankpixivMarked)
             AnkPixiv.markDownloaded();
         }
 
