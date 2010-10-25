@@ -60,9 +60,13 @@ try {
 
 
     Store: (function () {
+      function getDocStore (doc)
+        (doc.__ank_pixiv_store || (doc.__ank_pixiv_store = {}));
+
       return {
-        get document ()
-          (AnkPixiv.elements.doc.__ank_pixiv_store || (AnkPixiv.elements.doc.__ank_pixiv_store = {}))
+        get document () getDocStore(AnkPixiv.elements.doc),
+        get documents ()
+          AnkUtils.A(window.gBrowser.mTabs).map(function (it) getDocStore(it.linkedBrowser.contentDocument))
       };
     })(),
 
@@ -960,6 +964,9 @@ saved-minute  = ?saved-minute?
               $.popupAlert(caption, text);
 
             $.insertDownloadedDisplay(dlDispPoint, R18);
+
+            $.Store.documents.forEach(function(it) (it.marked = false));
+            AnkPixiv.markDownloaded();
 
             return true;
 
