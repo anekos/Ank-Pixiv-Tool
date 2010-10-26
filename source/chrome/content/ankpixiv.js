@@ -96,7 +96,7 @@ try {
 
     get inPixiv () {
       try {
-        return AnkPixiv.currentDocument.location.hostname === 'www.pixiv.net';
+        return AnkPixiv.elements.doc.location.hostname === 'www.pixiv.net';
       } catch (e) {
         return false;
       }
@@ -117,9 +117,6 @@ try {
     get randomImagePageURL ()
       let (id = parseInt(Math.random() * AnkPixiv.Prefs.get('maxIllustId', AnkPixiv.MAX_ILLUST_ID)))
         ('http://www.pixiv.net/member_illust.php?mode=medium&illust_id=' + id),
-
-    get currentDocument ()
-      window.content.document,
 
     elements: (function () {
       let illust =  {
@@ -785,7 +782,7 @@ try {
         let title         = AnkPixiv.info.illust.title;
         let comment       = AnkPixiv.info.illust.comment;
         let R18           = AnkPixiv.info.illust.R18;
-        let doc           = AnkPixiv.currentDocument;
+        let doc           = AnkPixiv.elements.doc;
         let dlDispPoint   = AnkPixiv.elements.illust.downloadedDisplayParent;
         let filenames     = [];
         let shortTags     = (function (len) {
@@ -1050,7 +1047,7 @@ saved-minute  = ?saved-minute?
       let installInterval = 500;
       let installTryed = 0;
       let con = content;
-      let doc = AnkPixiv.currentDocument;
+      let doc = AnkPixiv.elements.doc;
       let lastMangaPage = undefined;
       let currentMangaPage = 0;
       let doLoop = false;
@@ -1465,7 +1462,7 @@ saved-minute  = ?saved-minute?
     displayYourFantasy: function () {
       return;
 
-      let doc = AnkPixiv.currentDocument;
+      let doc = AnkPixiv.elements.doc;
 
       function append ({parent, name, text, style, class}) {
         let elem = doc.createElement(name);
@@ -1560,7 +1557,7 @@ saved-minute  = ?saved-minute?
       AnkPixiv.Store.document.marked = true;
 
       if (!node)
-        node = AnkPixiv.currentDocument;
+        node = AnkPixiv.elements.doc;
 
       AnkUtils.A(node.querySelectorAll('a > img')) .
         map(function (img) img.parentNode) .
