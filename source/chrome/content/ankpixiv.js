@@ -1213,15 +1213,6 @@ saved-minute  = ?saved-minute?
             if (e.button)
               return;
 
-            /* for debug
-            AnkUtils.dump(
-              (e.target == bigImg) ? 'bigImg' :
-              (e.target == prevButton) ? 'prev' :
-              (e.target == nextButton) ? 'next' :
-              'other'
-            );
-            */
-
             if (bigMode) {
               if (e.target == bigImg) {
                 if (AnkPixiv.manga && (currentMangaPage < lastMangaPage || lastMangaPage === undefined))
