@@ -1103,7 +1103,7 @@ saved-minute  = ?saved-minute?
             nextButton.innerHTML =
               (lastMangaPage === undefined || (currentMangaPage < lastMangaPage - 1)) ? '>>' : '\xD7';
             prevButton.innerHTML =
-              (lastMangaPage === undefined || currentMangaPage > 0) ? '<<' : '\xD7';
+              (currentMangaPage > 0) ? '<<' : '\xD7';
           };
 
           viewer.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
