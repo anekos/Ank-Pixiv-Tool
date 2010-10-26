@@ -1192,6 +1192,9 @@ saved-minute  = ?saved-minute?
                   currentMangaPage = 0;
                 if (currentMangaPage < 0)
                   currentMangaPage = lastMangaPage;
+              } else {
+                if ((currentMangaPage >= lastMangaPage) || (currentMangaPage < 0))
+                  return changeImageSize();
               }
             }
             updateButtons();
