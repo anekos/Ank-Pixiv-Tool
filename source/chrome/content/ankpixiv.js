@@ -1310,8 +1310,17 @@ saved-minute  = ?saved-minute?
         if (AnkPixiv.Store.document.functionsInstalled)
           return;
         AnkPixiv.Store.document.functionsInstalled = true;
-        if (AnkPixiv.inMedium)
-          AnkPixiv.installMediumPageFunctions();
+        if (AnkPixiv.inPixiv) {
+          if (AnkPixiv.inMedium) {
+            AnkPixiv.installMediumPageFunctions();
+          } else {
+            AnkPixiv.elements.doc.addEventListener(
+              'AutoPagerize_DOMNodeInserted',
+              AnkPixiv.markDownloaded,
+              false
+            );
+          }
+        }
       } catch (e) {
         AnkUtils.dumpError(e);
       }
