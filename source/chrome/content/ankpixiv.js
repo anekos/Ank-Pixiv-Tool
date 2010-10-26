@@ -1225,12 +1225,12 @@ saved-minute  = ?saved-minute?
             if (bigMode) {
               if (e.target == bigImg) {
                 if (AnkPixiv.manga && (currentMangaPage < lastMangaPage || lastMangaPage === undefined))
-                  return preventCall(function () goNextPage(1, true));
+                  return preventCall(function () goNextPage(1, false));
                 else
                   return preventCall(changeImageSize);
               }
               if (AnkPixiv.manga && e.target == prevButton)
-                return preventCall(function () goNextPage(-1, true));
+                return preventCall(function () goNextPage(-1, false));
               if (AnkPixiv.manga && e.target == nextButton)
                 return preventCall(function () goNextPage(1, false));
               return preventCall(changeImageSize);
