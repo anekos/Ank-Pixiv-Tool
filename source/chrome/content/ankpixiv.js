@@ -1203,6 +1203,7 @@ saved-minute  = ?saved-minute?
           };
 
           doc.changeImageSize = changeImageSize;
+          doc.goNextMangaPage = goNextPage;
 
           doc.addEventListener('click', function (e) {
             function preventCall (f) {
