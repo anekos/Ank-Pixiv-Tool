@@ -1316,7 +1316,7 @@ saved-minute  = ?saved-minute?
           } else {
             AnkPixiv.elements.doc.addEventListener(
               'AutoPagerize_DOMNodeInserted',
-              AnkPixiv.markDownloaded,
+              function (e) AnkPixiv.markDownloaded(e.target, true),
               false
             );
           }
@@ -1535,7 +1535,7 @@ saved-minute  = ?saved-minute?
     },
 
 
-    markDownloaded: function (force) {
+    markDownloaded: function (node, force) {
       const IsIllust = /&illust_id=(\d+)/;
       const BoxTag = /^(li|div)$/i;
 
@@ -1559,7 +1559,10 @@ saved-minute  = ?saved-minute?
 
       AnkPixiv.Store.document.marked = true;
 
-      AnkUtils.A(AnkPixiv.currentDocument.querySelectorAll('a > img')) .
+      if (!node)
+        node = AnkPixiv.currentDocument;
+
+      AnkUtils.A(node.querySelectorAll('a > img')) .
         map(function (img) img.parentNode) .
         map(function (link) link.href && let (m = IsIllust(link.href)) m && [link, m]) .
         filter(function (m) m) .
