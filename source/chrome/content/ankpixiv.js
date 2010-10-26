@@ -1102,7 +1102,7 @@ saved-minute  = ?saved-minute?
           let updateButtons = function (v) {
             nextButton.innerHTML =
               (lastMangaPage === undefined || (currentMangaPage < lastMangaPage - 1)) ? '>>' : '\xD7';
-            prevHTML =
+            prevButton.innerHTML =
               (lastMangaPage === undefined || currentMangaPage > 0) ? '<<' : '\xD7';
           };
 
