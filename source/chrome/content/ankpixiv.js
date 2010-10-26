@@ -1031,6 +1031,9 @@ saved-minute  = ?saved-minute?
       AnkPixiv.downloadCurrentImage(undefined, AnkPixiv.Prefs.get('confirmExistingDownloadWhenAuto'));
     },
 
+    /*
+     * 遅延インストールのためにクロージャに doc などを保存しておく
+     */
     installMediumPageFunctions: function () {
       function delay (msg, e) {
         if (installTryed == 20) {
@@ -1040,229 +1043,233 @@ saved-minute  = ?saved-minute?
         }
         setTimeout(installer, installInterval);
         installTryed++;
+        AnkUtils.dump('tried: ' + installTryed);
       }
 
       let ut = AnkUtils;
       let installInterval = 500;
       let installTryed = 0;
-      let installer = null;
       let con = content;
       let doc = AnkPixiv.currentDocument;
       let lastMangaPage = undefined;
       let currentMangaPage = 0;
       let doLoop = false;
 
-      try {
-        // 完全に読み込まれて以内っぽいときは、遅延する
+      let installer = function () {
         try {
-          var body = doc.getElementsByTagName('body')[0];
-          var wrapper = doc.getElementById('wrapper');
-          var medImg = AnkPixiv.elements.illust.mediumImage;
-          var bigImgPath = AnkPixiv.info.path.largeImage;
-          var openComment = function () content.wrappedJSObject.one_comment_view();
-          var worksData = AnkPixiv.elements.illust.worksData;
-          var bgImage = doc.defaultView.getComputedStyle(doc.body, '').backgroundImage;
-        } catch (e) {
-          return delay("delay installation by error", e);
-        }
-
-        // 完全に読み込まれて以内っぽいときは、遅延する
-        if (!(body && medImg && bigImgPath && wrapper && openComment && worksData))
-          return delay("delay installation by null");
-
-        // 中画像クリック時に保存する
-        if (AnkPixiv.Prefs.get('downloadWhenClickMiddle')) {
-          medImg.addEventListener(
-            'click',
-            function (e) {
-              AnkPixiv.downloadCurrentImageAuto();
-            },
-            true
-          );
-        }
-
-        // 大画像関係
-        if (AnkPixiv.Prefs.get('largeOnMiddle', true)) {
-          let IDPrefix =
-            function (id)
-              ('ank-pixiv-large-viewer-' + id);
-
-          let createElement =
-            function (tagName, id)
-              let (elem = doc.createElement(tagName))
-                (id && elem.setAttribute('id', IDPrefix(id)), elem);
-
-          let viewer = createElement('div', 'panel');
-          let bigImg = createElement('img', 'image');
-          let imgPanel = createElement('div', 'image-panel');
-          let buttonPanel = createElement('div', 'button-panel');
-          let prevButton = createElement('button', 'previous-button');
-          let nextButton = createElement('button', 'next-button');
-
-          let updateButtons = function (v) {
-            nextButton.innerHTML =
-              (lastMangaPage === undefined || (currentMangaPage < lastMangaPage - 1)) ? '>>' : '\xD7';
-            prevButton.innerHTML =
-              (currentMangaPage > 0) ? '<<' : '\xD7';
-          };
-
-          viewer.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
-          prevButton.innerHTML = '<<';
-          nextButton.innerHTML = '>>';
-          buttonPanel.setAttribute('style', 'display: block; margin: 0 auto; text-align: center; ');
-
-          [prevButton, nextButton].forEach(function (button) {
-            button.setAttribute('class', 'submit_btn');
-            button.setAttribute('style', 'width: 100px !important');
-          });
-
-          /*
-           * viewer
-           *    - imgPanel
-           *      - bigImg
-           *    - buttonPanel
-           *      - prevButton
-           *      - nextButton
-           */
-          viewer.appendChild(imgPanel);
-          imgPanel.appendChild(bigImg);
-          if (AnkPixiv.manga) {
-            viewer.appendChild(buttonPanel);
-            buttonPanel.appendChild(prevButton);
-            buttonPanel.appendChild(nextButton);
+          // 完全に読み込まれて以内っぽいときは、遅延する
+          try {
+            var body = doc.getElementsByTagName('body')[0];
+            var wrapper = doc.getElementById('wrapper');
+            var medImg = AnkPixiv.elements.illust.mediumImage;
+            var bigImgPath = AnkPixiv.info.path.largeImage;
+            var openComment = function () content.wrappedJSObject.one_comment_view();
+            var worksData = AnkPixiv.elements.illust.worksData;
+            var bgImage = doc.defaultView.getComputedStyle(doc.body, '').backgroundImage;
+          } catch (e) {
+            return delay("delay installation by error", e);
           }
-          body.appendChild(viewer);
 
-          let bigMode = false;
+          // 完全に読み込まれて以内っぽいときは、遅延する
+          if (!(body && medImg && bigImgPath && wrapper && openComment && worksData))
+            return delay("delay installation by null");
 
-          let changeImageSize = function () {
-            let ads = AnkPixiv.elements.illust.ads;
-            if (bigMode) {
-              body.style.backgroundImage = bgImage;
-              viewer.style.display = 'none';
-              wrapper.setAttribute('style', 'opacity: 1;');
-              ads.forEach(function (ad) (ad.style.display = ad.__ank_pixiv__style_display));
-            } else {
-              currentMangaPage = 0;
-              if (lastMangaPage === undefined) {
-                AnkPixiv.getLastMangaPage(function (v) {
-                  lastMangaPage = v
-                });
-              }
-              body.style.backgroundImage = 'none';
-              bigImg.setAttribute('src', bigImgPath);
-              window.content.scrollTo(0, 0);
-              viewer.style.display = '';
-              wrapper.setAttribute('style', 'opacity: 0.1;');
-              bigImg.style['opacity'] = '1 !important;';
-              ads.forEach(
-                function (ad) {
-                  ad.__ank_pixiv__style_display = ad.style.display;
-                  ad.style.display = 'none';
-                }
-              );
-              updateButtons();
-            }
-            bigMode = !bigMode;
-          };
-
-          let (reloadLimit = 10, reloadInterval = 1000, prevTimeout) {
-            bigImg.addEventListener('error',
-              function () {
-                if (bigImg instanceof Ci.nsIImageLoadingContent && bigImg.currentURI) {
-                  let req = bigImg.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
-                  AnkUtils.dump('AnkPixiv: imageStatus = ' + req.imageStatus.toString(2));
-                  if (confirm(AnkPixiv.Locale('confirmForReloadBigImage'))) {
-                    bigImg.forceReload();
-                    return;
-                  }
-                }
-                changeImageSize(false);
+          // 中画像クリック時に保存する
+          if (AnkPixiv.Prefs.get('downloadWhenClickMiddle')) {
+            medImg.addEventListener(
+              'click',
+              function (e) {
+                AnkPixiv.downloadCurrentImageAuto();
               },
               true
             );
           }
 
-          let goNextPage = function (d, _doLoop) {
-            doLoop = _doLoop;
-            currentMangaPage += (d || 1);
-            if (lastMangaPage !== undefined) {
-              if (doLoop) {
-                if (currentMangaPage >= lastMangaPage)
-                  currentMangaPage = 0;
-                if (currentMangaPage < 0)
-                  currentMangaPage = lastMangaPage;
+          // 大画像関係
+          if (AnkPixiv.Prefs.get('largeOnMiddle', true)) {
+            let IDPrefix =
+              function (id)
+                ('ank-pixiv-large-viewer-' + id);
+
+            let createElement =
+              function (tagName, id)
+                let (elem = doc.createElement(tagName))
+                  (id && elem.setAttribute('id', IDPrefix(id)), elem);
+
+            let viewer = createElement('div', 'panel');
+            let bigImg = createElement('img', 'image');
+            let imgPanel = createElement('div', 'image-panel');
+            let buttonPanel = createElement('div', 'button-panel');
+            let prevButton = createElement('button', 'previous-button');
+            let nextButton = createElement('button', 'next-button');
+
+            let updateButtons = function (v) {
+              nextButton.innerHTML =
+                (lastMangaPage === undefined || (currentMangaPage < lastMangaPage - 1)) ? '>>' : '\xD7';
+              prevButton.innerHTML =
+                (currentMangaPage > 0) ? '<<' : '\xD7';
+            };
+
+            viewer.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
+            prevButton.innerHTML = '<<';
+            nextButton.innerHTML = '>>';
+            buttonPanel.setAttribute('style', 'display: block; margin: 0 auto; text-align: center; ');
+
+            [prevButton, nextButton].forEach(function (button) {
+              button.setAttribute('class', 'submit_btn');
+              button.setAttribute('style', 'width: 100px !important');
+            });
+
+            /*
+             * viewer
+             *    - imgPanel
+             *      - bigImg
+             *    - buttonPanel
+             *      - prevButton
+             *      - nextButton
+             */
+            viewer.appendChild(imgPanel);
+            imgPanel.appendChild(bigImg);
+            if (AnkPixiv.manga) {
+              viewer.appendChild(buttonPanel);
+              buttonPanel.appendChild(prevButton);
+              buttonPanel.appendChild(nextButton);
+            }
+            body.appendChild(viewer);
+
+            let bigMode = false;
+
+            let changeImageSize = function () {
+              let ads = AnkPixiv.elements.illust.ads;
+              if (bigMode) {
+                body.style.backgroundImage = bgImage;
+                viewer.style.display = 'none';
+                wrapper.setAttribute('style', 'opacity: 1;');
+                ads.forEach(function (ad) (ad.style.display = ad.__ank_pixiv__style_display));
               } else {
-                if ((currentMangaPage >= lastMangaPage) || (currentMangaPage < 0))
-                  return changeImageSize();
+                currentMangaPage = 0;
+                if (lastMangaPage === undefined) {
+                  AnkPixiv.getLastMangaPage(function (v) {
+                    lastMangaPage = v
+                  });
+                }
+                body.style.backgroundImage = 'none';
+                bigImg.setAttribute('src', bigImgPath);
+                window.content.scrollTo(0, 0);
+                viewer.style.display = '';
+                wrapper.setAttribute('style', 'opacity: 0.1;');
+                bigImg.style['opacity'] = '1 !important;';
+                ads.forEach(
+                  function (ad) {
+                    ad.__ank_pixiv__style_display = ad.style.display;
+                    ad.style.display = 'none';
+                  }
+                );
+                updateButtons();
               }
+              bigMode = !bigMode;
+            };
+
+            let (reloadLimit = 10, reloadInterval = 1000, prevTimeout) {
+              bigImg.addEventListener('error',
+                function () {
+                  if (bigImg instanceof Ci.nsIImageLoadingContent && bigImg.currentURI) {
+                    let req = bigImg.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+                    AnkUtils.dump('AnkPixiv: imageStatus = ' + req.imageStatus.toString(2));
+                    if (confirm(AnkPixiv.Locale('confirmForReloadBigImage'))) {
+                      bigImg.forceReload();
+                      return;
+                    }
+                  }
+                  changeImageSize(false);
+                },
+                true
+              );
             }
-            updateButtons();
-            AnkUtils.dump('goto ' + currentMangaPage + ' page');
-            bigImg.setAttribute('src', AnkPixiv.info.path.getLargeMangaImage(currentMangaPage));
-          };
 
-          doc.changeImageSize = changeImageSize;
-          doc.goNextMangaPage = goNextPage;
+            let goNextPage = function (d, _doLoop) {
+              doLoop = _doLoop;
+              currentMangaPage += (d || 1);
+              if (lastMangaPage !== undefined) {
+                if (doLoop) {
+                  if (currentMangaPage >= lastMangaPage)
+                    currentMangaPage = 0;
+                  if (currentMangaPage < 0)
+                    currentMangaPage = lastMangaPage;
+                } else {
+                  if ((currentMangaPage >= lastMangaPage) || (currentMangaPage < 0))
+                    return changeImageSize();
+                }
+              }
+              updateButtons();
+              AnkUtils.dump('goto ' + currentMangaPage + ' page');
+              bigImg.setAttribute('src', AnkPixiv.info.path.getLargeMangaImage(currentMangaPage));
+            };
 
-          doc.addEventListener('click', function (e) {
-            function preventCall (f) {
-              e.preventDefault();
-              f();
-            }
+            doc.changeImageSize = changeImageSize;
+            doc.goNextMangaPage = goNextPage;
 
-            if (e.button)
-              return;
+            doc.addEventListener('click', function (e) {
+              function preventCall (f) {
+                e.preventDefault();
+                f();
+              }
 
-            if (bigMode) {
-              if (e.target == bigImg) {
-                if (AnkPixiv.manga && (currentMangaPage < lastMangaPage || lastMangaPage === undefined))
+              if (e.button)
+                return;
+
+              if (bigMode) {
+                if (e.target == bigImg) {
+                  if (AnkPixiv.manga && (currentMangaPage < lastMangaPage || lastMangaPage === undefined))
+                    return preventCall(function () goNextPage(1, false));
+                  else
+                    return preventCall(changeImageSize);
+                }
+                if (AnkPixiv.manga && e.target == prevButton)
+                  return preventCall(function () goNextPage(-1, false));
+                if (AnkPixiv.manga && e.target == nextButton)
                   return preventCall(function () goNextPage(1, false));
-                else
+                return preventCall(changeImageSize);
+              } else {
+                if (e.target.src == medImg.src)
                   return preventCall(changeImageSize);
               }
-              if (AnkPixiv.manga && e.target == prevButton)
-                return preventCall(function () goNextPage(-1, false));
-              if (AnkPixiv.manga && e.target == nextButton)
-                return preventCall(function () goNextPage(1, false));
-              return preventCall(changeImageSize);
-            } else {
-              if (e.target.src == medImg.src)
-                return preventCall(changeImageSize);
-            }
-          }, true);
-        }
-
-        // レイティングによるダウンロード
-        (function () {
-          if (!AnkPixiv.Prefs.get('downloadWhenRate', false))
-            return;
-          let point = AnkPixiv.Prefs.get('downloadRate', 10);
-          let elem, iter = AnkUtils.findNodesByXPath("//ul[@class='unit-rating']/li/a");
-          while (elem = iter.iterateNext()) {
-            let m = elem.className.match(/r(\d{1,2})-unit/);
-            if (m && (point <= parseInt(m[1]))) {
-              elem.addEventListener('click', function() AnkPixiv.downloadCurrentImageAuto(), true);
-            }
+            }, true);
           }
-        })();
 
-        // 保存済み表示
-        if (AnkPixiv.isDownloaded(AnkPixiv.info.illust.id))
-          AnkPixiv.insertDownloadedDisplay(
-              AnkPixiv.elements.illust.downloadedDisplayParent,
-              AnkPixiv.info.illust.R18
-          );
+          // レイティングによるダウンロード
+          (function () {
+            if (!AnkPixiv.Prefs.get('downloadWhenRate', false))
+              return;
+            let point = AnkPixiv.Prefs.get('downloadRate', 10);
+            let elem, iter = AnkUtils.findNodesByXPath("//ul[@class='unit-rating']/li/a");
+            while (elem = iter.iterateNext()) {
+              let m = elem.className.match(/r(\d{1,2})-unit/);
+              if (m && (point <= parseInt(m[1]))) {
+                elem.addEventListener('click', function() AnkPixiv.downloadCurrentImageAuto(), true);
+              }
+            }
+          })();
 
-        // コメント欄を開く
-        if (AnkPixiv.Prefs.get('openComment', false))
-          setTimeout(openComment, 1000);
+          // 保存済み表示
+          if (AnkPixiv.isDownloaded(AnkPixiv.info.illust.id))
+            AnkPixiv.insertDownloadedDisplay(
+                AnkPixiv.elements.illust.downloadedDisplayParent,
+                AnkPixiv.info.illust.R18
+            );
 
-        AnkUtils.dump('installed');
+          // コメント欄を開く
+          if (AnkPixiv.Prefs.get('openComment', false))
+            setTimeout(openComment, 1000);
 
-      } catch (e) {
-        AnkUtils.dumpError(e);
-      }
+          AnkUtils.dump('installed');
+
+        } catch (e) {
+          AnkUtils.dumpError(e);
+        }
+      };
+
+      return installer();
     },
 
     /*
