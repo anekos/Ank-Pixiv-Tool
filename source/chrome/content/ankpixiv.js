@@ -1178,7 +1178,7 @@ saved-minute  = ?saved-minute?
                       return;
                     }
                   }
-                  changeImageSize(false);
+                  changeImageSize();
                 },
                 true
               );
