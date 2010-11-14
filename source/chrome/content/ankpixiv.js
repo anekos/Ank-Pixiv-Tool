@@ -1185,6 +1185,8 @@ saved-minute  = ?saved-minute?
             }
 
             let goNextPage = function (d, _doLoop) {
+              if (!bigMode)
+                changeImageSize();
               doLoop = _doLoop;
               currentMangaPage += (d || 1);
               if (lastMangaPage !== undefined) {
