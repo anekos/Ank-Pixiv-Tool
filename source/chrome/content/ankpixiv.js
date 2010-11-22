@@ -1261,6 +1261,13 @@ saved-minute  = ?saved-minute?
           if (AnkPixiv.Prefs.get('openComment', false))
             setTimeout(openComment, 1000);
 
+          // 最大イラストIDの変更
+          let (illust_id = AnkPixiv.info.illust.id) {
+            if (AnkPixiv.Prefs.get('maxIllustId', AnkPixiv.MAX_ILLUST_ID) < illust_id) {
+              AnkPixiv.Prefs.set('maxIllustId', illust_id);
+            }
+          }
+
           AnkUtils.dump('installed');
 
         } catch (e) {
@@ -1716,10 +1723,6 @@ saved-minute  = ?saved-minute?
 
           if (AnkPixiv.inIllustPage) {
             AnkPixiv.installFunctions();
-            let illust_id = AnkPixiv.info.illust.id;
-            if (AnkPixiv.Prefs.get('maxIllustId', AnkPixiv.MAX_ILLUST_ID) < illust_id) {
-              AnkPixiv.Prefs.set('maxIllustId', illust_id);
-            }
           }
 
           if (AnkPixiv.inMyPage && !AnkPixiv.elements.mypage.fantasyDisplay)
