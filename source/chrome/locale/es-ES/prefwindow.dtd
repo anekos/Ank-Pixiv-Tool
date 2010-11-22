@@ -17,3 +17,4 @@
 <!ENTITY defaultMangaFilename "Nombre de Manga (Comic) predeterminado">
 <!ENTITY alternateMangaFilename "Nombre de Manga (Comic) alternativo">
 <!ENTITY saveMeta "Guardar meta información">
+<!ENTITY markDownloaded "Marcar ilustraciones descargadas.">

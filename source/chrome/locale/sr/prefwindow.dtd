@@ -14,6 +14,7 @@
 <!ENTITY downloadWhenClickMiddle "Аутоматски преузми када кликнем на средњу слику.">
 <!ENTITY showCompletePopup "Прикажи искачући прозор кад се преузимање заврши.">
 <!ENTITY displayDownloaded "Прикажи „већ преузето”">
-<!ENTITY defaultMangaFilename "Манга (смешни) називи датотека">
-<!ENTITY alternateMangaFilename "Алтернативни манга (смешни) називи датотека">
+<!ENTITY defaultMangaFilename "Манга називи датотека">
+<!ENTITY alternateMangaFilename "Алтернативни манга називи датотека">
 <!ENTITY saveMeta "Сачувај текст са мета информацијама">
+<!ENTITY markDownloaded "Означи преузете илустрације.">

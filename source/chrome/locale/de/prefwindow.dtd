@@ -16,4 +16,5 @@
 <!ENTITY displayDownloaded "&quot;Bereits heruntergeladen&quot;-Hinweis anzeigen">
 <!ENTITY defaultMangaFilename "Standard-Dateiname für Mangas (Comic)">
 <!ENTITY alternateMangaFilename "Alternativer Dateiname für Mangas (Comic)">
-<!ENTITY saveMeta "Metainformationen speichern">
+<!ENTITY saveMeta "Metadaten speichern">
+<!ENTITY markDownloaded "Heruntergeladene Bilder hervorheben.">

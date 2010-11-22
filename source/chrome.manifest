@@ -10,7 +10,7 @@ locale ankpixiv es-ES chrome/locale/es-ES/
 locale ankpixiv fr chrome/locale/fr/
 locale ankpixiv id-ID chrome/locale/id-ID/
 locale ankpixiv ja-JP chrome/locale/ja-JP/
-locale ankpixiv pl-PL chrome/locale/pl-PL/
+locale ankpixiv pl chrome/locale/pl/
 locale ankpixiv pt-BR chrome/locale/pt-BR/
 locale ankpixiv ru-RU chrome/locale/ru-RU/
 locale ankpixiv tr-TR chrome/locale/tr-TR/

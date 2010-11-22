@@ -17,3 +17,4 @@
 <!ENTITY defaultMangaFilename "Название файла по-умолчанию">
 <!ENTITY alternateMangaFilename "Альтернативное название файла">
 <!ENTITY saveMeta "Save meta information text">
+<!ENTITY markDownloaded "Mark downloaded illustrations.">

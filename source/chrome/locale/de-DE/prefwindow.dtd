@@ -1,19 +1,20 @@
-<!ENTITY prefwindow.title "Ank Pixiv Tool - Einstellungen">
-<!ENTITY mainpane.title "Ank Pixiv Tool - Einstellungen">
-<!ENTITY initialDirectory.label "Bild speichern in:">
-<!ENTITY showSaveDialog.label "Speichern-Dialog zum Herunterladen von Bildern verwenden">
-<!ENTITY saveHistory.label "Download-Chronik speichern">
-<!ENTITY downloadRate.label "Ein Bild erst herunterladen, wenn die Bewertung diesen oder einen höheren Wert erhält.">
-<!ENTITY browse "Durchsuchen...">
-<!ENTITY defaultFilename "Standard-Dateiname">
-<!ENTITY largeOnMiddle "Durch Klicken auf das mittlere Bild, Originalgröße des Bildes im aktuellen Tab anzeigen.">
-<!ENTITY openComment "Kommentarfeld automatisch öffnen.">
-<!ENTITY alternateFilename "Alternativer Dateiname">
-<!ENTITY confirmExistingDownload "Doppelte Downloads bestätigen.">
-<!ENTITY confirmExistingDownloadWhenAuto "Bei automatischem Download, einen erneuten Download bestätigen.">
-<!ENTITY downloadWhenClickMiddle "Durch Klicken auf das mittlere Bild, automatisch herunterladen.">
-<!ENTITY showCompletePopup "Wenn ein Download abgeschlossen ist, Benachrichtigung anzeigen.">
-<!ENTITY displayDownloaded "&quot;Bereits heruntergeladen&quot;-Hinweis anzeigen">
-<!ENTITY defaultMangaFilename "Standard-Dateiname für Mangas (Comic)">
-<!ENTITY alternateMangaFilename "Alternativer Dateiname für Mangas (Comic)">
+<!ENTITY prefwindow.title "Ank Pixiv Tool preferences">
+<!ENTITY mainpane.title "Ank Pixiv Tool preferences">
+<!ENTITY initialDirectory.label "Save illustration to:">
+<!ENTITY showSaveDialog.label "Use save dialog when downloading illustration">
+<!ENTITY saveHistory.label "Save download history">
+<!ENTITY downloadRate.label "Download the illustration when you give it a score rating this number or beyond.">
+<!ENTITY browse "Browse...">
+<!ENTITY defaultFilename "Default filename">
+<!ENTITY largeOnMiddle "Show the large image on the same tab when you click the middle image.">
+<!ENTITY openComment "Automatically open the comment box.">
+<!ENTITY alternateFilename "Alternate filename">
+<!ENTITY confirmExistingDownload "Confirmation of re-download.">
+<!ENTITY confirmExistingDownloadWhenAuto "Confirmation of re-download when automatic download.">
+<!ENTITY downloadWhenClickMiddle "Automatically download, when you click the middle image.">
+<!ENTITY showCompletePopup "Show popup, when download ends.">
+<!ENTITY displayDownloaded "Display &quot;Already downloaded&quot;">
+<!ENTITY defaultMangaFilename "Default Manga (Comic) filename">
+<!ENTITY alternateMangaFilename "Alternate Manga (Comic) filename">
 <!ENTITY saveMeta "Save meta information text">
+<!ENTITY markDownloaded "Mark downloaded illustrations.">

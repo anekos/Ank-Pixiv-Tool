@@ -17,3 +17,4 @@
 <!ENTITY defaultMangaFilename "儲存漫畫時的檔案名稱">
 <!ENTITY alternateMangaFilename "候選檔名（若有漫畫的同名檔案存在時）">
 <!ENTITY saveMeta "將圖片 meta 資訊儲存為文字檔（會儲存該頁訪客回應以外的所有資訊）">
+<!ENTITY markDownloaded "在已下載過的圖上標標記。">
