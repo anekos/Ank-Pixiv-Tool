@@ -1204,6 +1204,10 @@ saved-minute  = ?saved-minute?
             doc.changeImageSize = changeImageSize;
             doc.goNextMangaPage = goNextPage;
 
+            pageSelector.addEventListener('change', function (e) {
+              return goPage(parseInt(pageSelector.value, 10));
+            }, true);
+
             doc.addEventListener('click', function (e) {
               function preventCall (f) {
                 e.preventDefault();
@@ -1226,8 +1230,9 @@ saved-minute  = ?saved-minute?
                   return preventCall(function () goNextPage(1, false));
                 if (AnkPixiv.manga && e.target == pageSelector)
                   return;
-                if (AnkPixiv.manga && e.target.parentNode == pageSelector && /^option$/i(e.target.tagName))
-                  return goPage(parseInt(e.target.value, 10));
+                if (AnkPixiv.manga && e.target.parentNode == pageSelector) {
+                  return;
+                }
                 return preventCall(changeImageSize);
               } else {
                 if (e.target.src == medImg.src)
