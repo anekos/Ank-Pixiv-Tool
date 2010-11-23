@@ -9,8 +9,6 @@ try {
 
     DB_VERSION: 5,
 
-    VERSION: AnkUtils.getVersion('ankpixiv@snca.net'),
-
     PREF_PREFIX: 'extensions.ankpixiv.',
 
     ID_FANTASY_DISPLAY: 'ankpixiv-fantasy-display',
