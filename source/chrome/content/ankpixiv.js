@@ -333,12 +333,6 @@ try {
       return textize([], AnkPixiv.info);
     }, // }}}
 
-    set statusbarText (text) { // {{{
-      let elem = document.getElementById('ankpixiv-statusbar-text');
-      elem.textContent = text;
-      elem.collapsed = text.length == 0;
-      return text;
-    }, // }}}
 
     /********************************************************************************
     * 状態
@@ -431,6 +425,10 @@ try {
       return dir;
     }, // }}}
 
+    /*
+     * 右下にでるポップアップメッセージ
+     *    title:    タイトル
+     *    text:     メッセージ内容
     popupAlert: function (title, text) { // {{{
       return AnkUtils.popupAlert("chrome://ankpixiv/content/statusbar-button.ico",
                                  title, text, false, "", null);
@@ -1293,6 +1291,9 @@ saved-minute  = ?saved-minute?
       xhr.send(null);
     }, // }}}
 
+    /*
+     * ページ毎の関数をインストール
+     */
     installFunctions: function () { // {{{
       try {
         if (AnkPixiv.Store.document.functionsInstalled)
@@ -1314,7 +1315,11 @@ saved-minute  = ?saved-minute?
       }
     }, // }}}
 
-    // ダウンロード済みの表示
+    /*
+     * ダウンロード済みの表示をページに挿入する
+     *    appendTo:     追加先の要素
+     *    R18:          イラストはR18か？
+     */
     insertDownloadedDisplay: function (appendTo, R18) { // {{{
       if (!AnkPixiv.Prefs.get('displayDownloaded', true))
         return;
@@ -1389,6 +1394,56 @@ saved-minute  = ?saved-minute?
       let newFile = AnkUtils.makeLocalFile(file.path.replace(reExt, ext));
       file.moveTo(newFile.parent, newFile.leafName);
       return true;
+    }, // }}}
+
+
+    /*
+     * ダウンロード済みイラストにマーカーを付ける
+     *    node:     対象のノード (AutoPagerize などで追加されたノードのみに追加するためにあるよ)
+     *    force:    追加済みであっても、強制的にマークする
+     */
+    markDownloaded: function (node, force) { // {{{
+      const IsIllust = /&illust_id=(\d+)/;
+      const BoxTag = /^(li|div)$/i;
+
+      function findBox (e, limit) {
+        if (limit <= 0)
+          return null;
+        if (BoxTag(e.tagName))
+          return e;
+        return findBox(e.parentNode, limit - 1);
+      }
+
+      if (!(
+        force
+        ||
+        (
+          AnkPixiv.inPixiv && !AnkPixiv.inMedium && AnkPixiv.Prefs.get('markDownloaded', false) &&
+          !AnkPixiv.Store.document.marked
+        )
+      ))
+        return;
+
+      AnkPixiv.Store.document.marked = true;
+
+      if (!node)
+        node = AnkPixiv.elements.doc;
+
+      AnkUtils.A(node.querySelectorAll('a > img')) .
+        map(function (img) img.parentNode) .
+        map(function (link) link.href && let (m = IsIllust(link.href)) m && [link, m]) .
+        filter(function (m) m) .
+        map(function ([link, m]) [link, parseInt(m[1], 10)]) .
+        forEach(function ([link, id]) {
+          if (!AnkPixiv.isDownloaded(id))
+            return;
+          let box = findBox(link, 3);
+          if (box) {
+            box.style.borderBottom = '4px solid red';
+            //box.style.margin = '-2px';
+            //box.style.opacity = '0.2';
+          }
+        });
     }, // }}}
 
 
@@ -1519,54 +1574,28 @@ saved-minute  = ?saved-minute?
 
     }, // }}}
 
-    markDownloaded: function (node, force) { // {{{
-      const IsIllust = /&illust_id=(\d+)/;
-      const BoxTag = /^(li|div)$/i;
-
-      function findBox (e, limit) {
-        if (limit <= 0)
-          return null;
-        if (BoxTag(e.tagName))
-          return e;
-        return findBox(e.parentNode, limit - 1);
-      }
-
-      if (!(
-        force
-        ||
-        (
-          AnkPixiv.inPixiv && !AnkPixiv.inMedium && AnkPixiv.Prefs.get('markDownloaded', false) &&
-          !AnkPixiv.Store.document.marked
-        )
-      ))
-        return;
-
-      AnkPixiv.Store.document.marked = true;
-
-      if (!node)
-        node = AnkPixiv.elements.doc;
-
-      AnkUtils.A(node.querySelectorAll('a > img')) .
-        map(function (img) img.parentNode) .
-        map(function (link) link.href && let (m = IsIllust(link.href)) m && [link, m]) .
-        filter(function (m) m) .
-        map(function ([link, m]) [link, parseInt(m[1], 10)]) .
-        forEach(function ([link, id]) {
-          if (!AnkPixiv.isDownloaded(id))
-            return;
-          let box = findBox(link, 3);
-          if (box) {
-            box.style.borderBottom = '4px solid red';
-            //box.style.margin = '-2px';
-            //box.style.opacity = '0.2';
-          }
-        });
-    }, // }}}
-
 
     /********************************************************************************
-    * データ修正など
+    * データベース関連
     ********************************************************************************/
+
+    updateDatabase: function () { // {{{
+      // version 1
+      let olds = AnkPixiv.Storage.oselect('histories', '(version is null) or (version < 1)');
+      for each (let old in olds) {
+        try {
+          let dt = AnkUtils.toSQLDateTimeString(new Date(old.datetime));
+          AnkPixiv.Storage.update('histories',
+                              "`datetime` = datetime('" + dt + "', '1 months'), version = 2",
+                              'rowid = ' + old.rowid);
+        } catch (e) {
+          AnkUtils.dump(e);
+        }
+      }
+
+      // version 2
+      // TODO
+    }, // }}}
 
     fixStorageEncode: function () { // {{{
       try {
@@ -1652,6 +1681,13 @@ saved-minute  = ?saved-minute?
     * ステータスバー
     ********************************************************************************/
 
+    set statusbarText (text) { // {{{
+      let elem = document.getElementById('ankpixiv-statusbar-text');
+      elem.textContent = text;
+      elem.collapsed = text.length == 0;
+      return text;
+    }, // }}}
+
     updateStatusBarText: function () { // {{{
       let text = [k for (k in AnkPixiv.downloadings)].length;
       AnkPixiv.statusbarText = text ? text : '';
@@ -1736,23 +1772,6 @@ saved-minute  = ?saved-minute?
       }
     }, // }}}
 
-    updateDatabase: function () { // {{{
-      // version 1
-      let olds = AnkPixiv.Storage.oselect('histories', '(version is null) or (version < 1)');
-      for each (let old in olds) {
-        try {
-          let dt = AnkUtils.toSQLDateTimeString(new Date(old.datetime));
-          AnkPixiv.Storage.update('histories',
-                              "`datetime` = datetime('" + dt + "', '1 months'), version = 2",
-                              'rowid = ' + old.rowid);
-        } catch (e) {
-          AnkUtils.dump(e);
-        }
-      }
-
-      // version 2
-      // TODO
-    }, // }}}
 
     /********************************************************************************
     * 外部向け
