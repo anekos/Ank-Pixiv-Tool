@@ -1083,12 +1083,14 @@ saved-minute  = ?saved-minute?
             let buttonPanel = createElement('div', 'button-panel');
             let prevButton = createElement('button', 'previous-button');
             let nextButton = createElement('button', 'next-button');
+            let pageSelector = createElement('select', 'page-selector');
 
             let updateButtons = function (v) {
               nextButton.innerHTML =
                 (lastMangaPage === undefined || (currentMangaPage < lastMangaPage - 1)) ? '>>' : '\xD7';
               prevButton.innerHTML =
                 (currentMangaPage > 0) ? '<<' : '\xD7';
+              pageSelector.value = currentMangaPage;
             };
 
             viewer.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
@@ -1107,6 +1109,7 @@ saved-minute  = ?saved-minute?
              *      - bigImg
              *    - buttonPanel
              *      - prevButton
+             *      - pageSelector
              *      - nextButton
              */
             viewer.appendChild(imgPanel);
@@ -1131,7 +1134,16 @@ saved-minute  = ?saved-minute?
                 currentMangaPage = 0;
                 if (lastMangaPage === undefined) {
                   AnkPixiv.getLastMangaPage(function (v) {
-                    lastMangaPage = v
+                    lastMangaPage = v;
+                    if (v) {
+                      buttonPanel.insertBefore(pageSelector, nextButton);
+                      for (let i = 0; i < v; i++) {
+                        let option = doc.createElement('option');
+                        option.textContent = (i + 1) + '/' + v;
+                        option.value = i;
+                        pageSelector.appendChild(option);
+                      }
+                    }
                   });
                 }
                 body.style.backgroundImage = 'none';
@@ -1168,25 +1180,27 @@ saved-minute  = ?saved-minute?
               );
             }
 
+            let goPage = function (num) {
+              currentMangaPage = num;
+              if (lastMangaPage !== undefined && ((num >= lastMangaPage) || (num < 0)))
+                return changeImageSize();
+              updateButtons();
+              AnkUtils.dump('goto ' + num + ' page');
+              bigImg.setAttribute('src', AnkPixiv.info.path.getLargeMangaImage(num));
+            };
+
             let goNextPage = function (d, _doLoop) {
               if (!bigMode)
                 changeImageSize();
               doLoop = _doLoop;
-              currentMangaPage += (d || 1);
-              if (lastMangaPage !== undefined) {
-                if (doLoop) {
-                  if (currentMangaPage >= lastMangaPage)
-                    currentMangaPage = 0;
-                  if (currentMangaPage < 0)
-                    currentMangaPage = lastMangaPage;
-                } else {
-                  if ((currentMangaPage >= lastMangaPage) || (currentMangaPage < 0))
-                    return changeImageSize();
-                }
-              }
-              updateButtons();
-              AnkUtils.dump('goto ' + currentMangaPage + ' page');
-              bigImg.setAttribute('src', AnkPixiv.info.path.getLargeMangaImage(currentMangaPage));
+              let page = currentMangaPage + (d || 1);
+              goPage(
+                lastMangaPage === undefined ? page :
+                !doLoop                     ? page :
+                page >= lastMangaPage       ? 0 :
+                page < 0                    ? lastMangaPage :
+                page
+              );
             };
 
             doc.changeImageSize = changeImageSize;
@@ -1212,6 +1226,10 @@ saved-minute  = ?saved-minute?
                   return preventCall(function () goNextPage(-1, false));
                 if (AnkPixiv.manga && e.target == nextButton)
                   return preventCall(function () goNextPage(1, false));
+                if (AnkPixiv.manga && e.target == pageSelector)
+                  return;
+                if (AnkPixiv.manga && e.target.parentNode == pageSelector && /^option$/i(e.target.tagName))
+                  return goPage(parseInt(e.target.value, 10));
                 return preventCall(changeImageSize);
               } else {
                 if (e.target.src == medImg.src)
