@@ -2,7 +2,7 @@
 try {
 
 
-  AnkStorage = function (filename, tables) {
+  AnkStorage = function (filename, tables) { // {{{
     this.filename = filename;
     this.tables = {};
 
@@ -21,15 +21,14 @@ try {
     this.createTables();
 
     return this;
-  };
-
+  }; // }}}
 
   /*
    * statementToObject
    *    stmt:
    * statement を JS のオブジェクトに変換する
    */
-  AnkStorage.statementToObject = function (stmt) {
+  AnkStorage.statementToObject = function (stmt) { // {{{
     let res = {}, cl = stmt.columnCount;
     for (let i = 0; i < cl; i++) {
       let val;
@@ -42,8 +41,7 @@ try {
       res[stmt.getColumnName(i)] = val;
     }
     return res;
-  };
-
+  }; // }}}
 
   AnkStorage.prototype = {
 
@@ -51,7 +49,7 @@ try {
      * createStatement
      * 自動的に finalize してくれるラッパー
      */
-    createStatement: function (query, block) {
+    createStatement: function (query, block) { // {{{
       let stmt = this.database.createStatement(query);
       try {
         var res = block(stmt);
@@ -59,13 +57,12 @@ try {
         stmt.finalize && stmt.finalize();
       }
       return res;
-    },
-
+    }, // }}}
 
     /*
      * JSオブジェクトを挿入
      */
-    insert: function (table, values) {
+    insert: function (table, values) { // {{{
       if ('string' == typeof table)
         table = this.tables[table];
 
@@ -108,24 +105,21 @@ try {
         }
         return result;
       });
-    },
-
+    }, // }}}
 
     /*
      * block を指定しない場合は、必ず、result.reset すること。
      */
-    find: function (tableName, conditions, block) {
+    find: function (tableName, conditions, block) { // {{{
       let q = 'select rowid, * from ' + tableName + (conditions ? ' where ' + conditions : '');
       return this.createStatement(q, function (stmt) {
         return (typeof block == 'function') ? block(stmt) : stmt;
       });
-    },
-
+    }, // }}}
 
     select: function () this.find.apply(this, arguments),
 
-
-    oselect: function (tableName, conditions, block) {
+    oselect: function (tableName, conditions, block) { // {{{
       return this.select(tableName, conditions, function (stmt) {
         let r;
         if (typeof block == 'function') {
@@ -138,10 +132,9 @@ try {
         }
         return r;
       });
-    },
+    }, // }}}
 
-
-    update: function (tableName, values, conditions) {
+    update: function (tableName, values, conditions) { // {{{
       let set;
       if (typeof values == 'string') {
         set = values;
@@ -151,9 +144,9 @@ try {
       }
       let q = 'update ' + tableName + ' set ' + set + (conditions ? ' where ' + conditions : '');
       return this.database.executeSimpleSQL(q);
-    },
+    }, // }}}
 
-    exists: function (tableName, conditions, block) {
+    exists: function (tableName, conditions, block) { // {{{
       let _block = function (stmt) {
         if (typeof block == 'function')
           block(stmt);
@@ -162,18 +155,16 @@ try {
         return result;
       };
       return this.find(tableName, conditions, _block);
-    },
+    }, // }}}
 
-
-    createTables: function () {
+    createTables: function () { // {{{
       //データベースのテーブルを作成
       for (let tableName in this.tables) {
         this.createTable(this.tables[tableName]);
       }
-    },
+    }, // }}}
 
-
-    createTable: function (table) {
+    createTable: function (table) { // {{{
       if (this.database.tableExists(table.name))
         return this.updateTable(table);
 
@@ -185,10 +176,9 @@ try {
       }
 
       return this.database.createTable(table.name, AnkUtils.join(fs));
-    },
+    }, // }}}
 
-
-    tableInfo: function (tableName) {
+    tableInfo: function (tableName) { // {{{
       let storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
                                          Components.interfaces.mozIStorageStatementWrapper);
       let q = 'pragma table_info (' + tableName + ')';
@@ -200,10 +190,9 @@ try {
         }
         return result;
       });
-    },
+    }, // }}}
 
-
-    updateTable: function (table) {
+    updateTable: function (table) { // {{{
       try {
         let etable = this.tableInfo(table.name);
         for (let fieldName in table.fields) {
@@ -215,38 +204,35 @@ try {
       } catch(e) {
         AnkUtils.dumpError(e);
       }
-    },
+    }, // }}}
 
-
-    delete: function (table, conditions) {
+    delete: function (table, conditions) { // {{{
       let q = 'delete from ' + table + (conditions ? ' where ' + conditions : '');
       return this.database.executeSimpleSQL(q);
-    },
+    }, // }}}
 
-    execute: function (query, block) {
+    execute: function (query, block) { // {{{
       let stmt = this.createStatement(query, function (stmt) {
         return (typeof block == 'function') ? block(stmt) : stmt;
       });
-    },
+    }, // }}}
 
-    count: function (tableName) {
+    count: function (tableName) { // {{{
       query = 'select count(*) from ' + tableName;
       return this.createStatement(query, function (stmt) {
         return stmt.executeStep() && stmt.getInt32(0);
       });
-    }
+    } // }}}
   };
 
 
-
-  AnkTable = function (name, fields, constraints) {
+  AnkTable = function (name, fields, constraints) { // {{{
     this.name = name;
     this.constraints = constraints || fields.constraints || {};
     delete fields.constraints;
     this.fields = fields;
     return this;
-  };
-
+  }; // }}}
 
 
 } catch (error) {

@@ -13,7 +13,7 @@ try {
 
     ID_FANTASY_DISPLAY: 'ankpixiv-fantasy-display',
 
-    Storage: new AnkStorage("ankpixiv.sqlite",
+    Storage: new AnkStorage("ankpixiv.sqlite", // {{{
       {
         histories: {
           illust_id: "integer",
@@ -35,10 +35,9 @@ try {
           version: "integer",
         }
       }
-    ),
+    ), // }}}
 
-
-    FULL_WIDTH_CHARS: {
+    FULL_WIDTH_CHARS: { // {{{
       "\\": "￥",
       "\/": "／",
       ":":  "：",
@@ -49,15 +48,13 @@ try {
       "<":  "＜",
       ">":  "＞",
       "|":  "｜"
-    },
+    }, // }}}
 
     Prefs: new AnkPref('extensions.ankpixiv'),
 
-
     AllPrefs: new AnkPref(),
 
-
-    Store: (function () {
+    Store: (function () { // {{{
       function getDocStore (doc)
         (doc.__ank_pixiv_store || (doc.__ank_pixiv_store = {}));
 
@@ -66,16 +63,13 @@ try {
         get documents ()
           AnkUtils.A(window.gBrowser.mTabs).map(function (it) getDocStore(it.linkedBrowser.contentDocument))
       };
-    })(),
-
+    })(), // }}}
 
     Locale: AnkUtils.getLocale('chrome://ankpixiv/locale/ankpixiv.properties'),
 
-
-    URL: {
+    URL: { // {{{
       Pixiv: 'http://www.pixiv.net/',
-    },
-
+    }, // }}}
 
     MAX_ILLUST_ID: 12000000,
 
@@ -84,39 +78,39 @@ try {
     * プロパティ
     ********************************************************************************/
 
-    get currentLocation ()
-      window.content.document.location.href,
+    get currentLocation () // {{{
+      window.content.document.location.href, // }}}
 
-    get manga () {
+    get manga () { // {{{
       let node = AnkPixiv.elements.illust.largeLink;
       return node && ~node.href.indexOf('?mode=manga&');
-    },
+    }, // }}}
 
-    get inPixiv () {
+    get inPixiv () { // {{{
       try {
         return AnkPixiv.elements.doc.location.hostname === 'www.pixiv.net';
       } catch (e) {
         return false;
       }
-    },
+    }, // }}}
 
-    get inMedium ()
-      AnkPixiv.inPixiv && AnkPixiv.currentLocation.match(/member_illust\.php\?mode=medium&illust_id=\d+/),
+    get inMedium () // {{{
+      AnkPixiv.inPixiv && AnkPixiv.currentLocation.match(/member_illust\.php\?mode=medium&illust_id=\d+/), // }}}
 
-    get inIllustPage ()
-      AnkPixiv.currentLocation.match(/\.pixiv\.net\/member_illust.php\?.*illust_id=/),
+    get inIllustPage () // {{{
+      AnkPixiv.currentLocation.match(/\.pixiv\.net\/member_illust.php\?.*illust_id=/), // }}}
 
-    get inMyPage ()
-      (AnkPixiv.currentLocation == 'http://www.pixiv.net/mypage.php'),
+    get inMyPage () // {{{
+      (AnkPixiv.currentLocation == 'http://www.pixiv.net/mypage.php'), // }}}
 
-    get inMyIllust ()
-      !AnkPixiv.elements.illust.avatar,
+    get inMyIllust () // {{{
+      !AnkPixiv.elements.illust.avatar, // }}}
 
-    get randomImagePageURL ()
+    get randomImagePageURL () // {{{
       let (id = parseInt(Math.random() * AnkPixiv.Prefs.get('maxIllustId', AnkPixiv.MAX_ILLUST_ID)))
-        ('http://www.pixiv.net/member_illust.php?mode=medium&illust_id=' + id),
+        ('http://www.pixiv.net/member_illust.php?mode=medium&illust_id=' + id), // }}}
 
-    elements: (function () {
+    elements: (function () { // {{{
       let illust =  {
         get mediumImage ()
           AnkPixiv.elements.doc.querySelector('.works_display > a > img'),
@@ -173,9 +167,9 @@ try {
         mypage: mypage,
         get doc () window.content.document
       };
-    })(),
+    })(), // }}}
 
-    info: (function () {
+    info: (function () { // {{{
       let illust = {
         get id ()
           parseInt(AnkPixiv.elements.doc.querySelector('#rpc_i_id').textContent, 10),
@@ -307,9 +301,9 @@ try {
         member: member,
         path: path
       };
-    })(),
+    })(), // }}}
 
-    get infoText () {
+    get infoText () { // {{{
       let ignore =
         let (pref = AnkPixiv.Prefs.get('infoText.ignore', 'illust.dateTime.'))
           (pref ? pref.split(/[,\s]+/) : []);
@@ -337,14 +331,14 @@ try {
       }
 
       return textize([], AnkPixiv.info);
-    },
+    }, // }}}
 
-    set statusbarText (text) {
+    set statusbarText (text) { // {{{
       let elem = document.getElementById('ankpixiv-statusbar-text');
       elem.textContent = text;
       elem.collapsed = text.length == 0;
       return text;
-    },
+    }, // }}}
 
     /********************************************************************************
     * 状態
@@ -362,7 +356,7 @@ try {
      *    return:          選択されたファイルのパス(nsILocalFile)
      * ファイル保存ダイアログを開く
      */
-    showFilePicker: function (defaultFilename) {
+    showFilePicker: function (defaultFilename) { // {{{
       const nsIFilePicker = Components.interfaces.nsIFilePicker;
       let filePicker = AnkUtils.ccci('@mozilla.org/filepicker;1', nsIFilePicker);
 
@@ -378,8 +372,7 @@ try {
       }
 
       return (filePicker.show() == nsIFilePicker.returnOK) && filePicker && filePicker.file;
-    },
-
+    }, // }}}
 
     /*
      * showFilePickerWithMeta
@@ -388,7 +381,7 @@ try {
      *    return:          {image: nsILocalFile, meta: nsILocalFile}
      * ファイル保存ダイアログを開く
      */
-    showFilePickerWithMeta: function (basename, ext, isFile) {
+    showFilePickerWithMeta: function (basename, ext, isFile) { // {{{
       let image = AnkPixiv.showFilePicker(basename + ext);
       if (!image)
         return;
@@ -401,8 +394,7 @@ try {
         image: image,
         meta: meta
       };
-    },
-
+    }, // }}}
 
     /*
      * showDirectoryPicker
@@ -410,7 +402,7 @@ try {
      *    return:      選択されたディレクトリ(nsIFilePicker)
      * ディレクトリ選択ダイアログを表示
      */
-    showDirectoryPicker: function (defaultPath) {
+    showDirectoryPicker: function (defaultPath) { // {{{
       try {
         let nsIFilePicker = Components.interfaces.nsIFilePicker;
         let filePicker = AnkUtils.ccci('@mozilla.org/filepicker;1', nsIFilePicker);
@@ -424,27 +416,26 @@ try {
       catch (e) {
         AnkUtils.dumpError(e, true);
       }
-    },
-
+    }, // }}}
 
     /*
      * TODO
      * queryInitialDirectory
      * ユーザに初期ディレクトリの場所を尋ねる
      */
-    queryInitialDirectory: function () {
+    queryInitialDirectory: function () { // {{{
       let dir = AnkPixiv.showDirectoryPicker(AnkPixiv.Prefs.get('initialDirectory'));
       if (dir) {
         AnkPixiv.Prefs.set('initialDirectory', dir.filePath, 'string');
       }
       return dir;
-    },
+    }, // }}}
 
-
-    popupAlert: function (title, text) {
+    popupAlert: function (title, text) { // {{{
       return AnkUtils.popupAlert("chrome://ankpixiv/content/statusbar-button.ico",
                                  title, text, false, "", null);
-    },
+    }, // }}}
+
 
     /********************************************************************************
     * ダウンロード＆ファイル関連
@@ -456,11 +447,10 @@ try {
      *    return:   boolean
      * 同じファイル名が存在するか？
      */
-    filenameExists: function (filename)
+    filenameExists: function (filename) // {{{
       AnkPixiv.Storage.exists('histories',
                               'filename = ?',
-                              function (stmt) stmt.bindUTF8StringParameter(0, filename)),
-
+                              function (stmt) stmt.bindUTF8StringParameter(0, filename)), // }}}
 
     /*
      * newLocalFile
@@ -468,14 +458,13 @@ try {
      *    return:   nsILocalFile
      * nsILocalFileを作成
      */
-    newLocalFile: function (path) {
+    newLocalFile: function (path) { // {{{
       let temp = AnkUtils.ccci('@mozilla.org/file/local;1', Components.interfaces.nsILocalFile);
       if (AnkUtils.platform === 'Win32')
         path = path.replace(/\//g, '\\');
       temp.initWithPath(path);
       return temp;
-    },
-
+    }, // }}}
 
     /*
      * newFileURI
@@ -483,11 +472,10 @@ try {
      *    return:   nsILocalFile
      * nsILocalFileを作成
      */
-    newFileURI: function (path) {
+    newFileURI: function (path) { // {{{
       let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
       return IOService.newFileURI(AnkPixiv.newLocalFile(path));
-    },
-
+    }, // }}}
 
     /*
      * getSaveFilePath
@@ -499,7 +487,7 @@ try {
      * ファイルを保存すべきパスを返す
      * 設定によっては、ダイアログを表示する
      */
-    getSaveFilePath: function (filenames, ext, useDialog, isFile) {
+    getSaveFilePath: function (filenames, ext, useDialog, isFile) { // {{{
       function _file (initDir, basename, ext, isMeta) {
         // TODO File#join
         let filename = (isMeta && !isFile) ? basename + AnkUtils.SYS_SLASH + 'meta.txt' : basename + ext;
@@ -541,18 +529,18 @@ try {
       }
 
       return AnkPixiv.showFilePickerWithMeta(filenames[0], ext, isFile);
-    },
+    }, // }}}
 
     /*
      * isDownloaded
      *    illust_id:     イラストID
      *    return:        ダウンロード済み？
      */
-    isDownloaded: function (illust_id) {
+    isDownloaded: function (illust_id) { // {{{
       if (!/^\d+$/.test(illust_id))
         throw "Invalid illust_id";
       return AnkPixiv.Storage.exists('histories', 'illust_id = ' + illust_id);
-    },
+    }, // }}}
 
     /*
      * downloadTo
@@ -564,7 +552,7 @@ try {
      *    return:         成功?
      * ファイルをダウンロードする
      */
-    downloadTo: function (url, referer, file, onComplete, onError) {
+    downloadTo: function (url, referer, file, onComplete, onError) { // {{{ // {{{
       // 何もしなーい
       if (!onError)
         onError = function () void 0;
@@ -628,8 +616,7 @@ try {
 
       // 成功
       return file;
-    },
-
+    }, // }}} // }}}
 
     /*
      * saveTextFile
@@ -637,7 +624,7 @@ try {
      *    text:           String
      * テキストをローカルに保存します。
      */
-    saveTextFile: function (file, text) {
+    saveTextFile: function (file, text) { // {{{
       let dir = file.parent;
       dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
 
@@ -648,8 +635,7 @@ try {
       conv.writeString(text);
       conv.close();
       out.close();
-    },
-
+    }, // }}}
 
     /*
      * downloadFile
@@ -660,11 +646,10 @@ try {
      *    return:         キャンセルなどがされなければ、true
      * ファイルをダウンロードする
      */
-    downloadFile: function (url, referer, localfile, onComplete, onError) {
+    downloadFile: function (url, referer, localfile, onComplete, onError) { // {{{
       AnkPixiv.downloadTo(url, referer, localfile, onComplete, onError);
       return true;
-    },
-
+    }, // }}}
 
     /*
      * downloadFiles
@@ -675,7 +660,7 @@ try {
      *    return:         キャンセルなどがされなければ、true
      * 複数のファイルをダウンロードする
      */
-    downloadFiles: function (urls, referer, localdir, onComplete, onError) {
+    downloadFiles: function (urls, referer, localdir, onComplete, onError) { // {{{
       const MAX_FILE = 1000;
 
       let index = 0;
@@ -739,7 +724,7 @@ try {
 
       downloadNext();
       return true;
-    },
+    }, // }}}
 
     /*
      * downloadCurrentImage
@@ -749,7 +734,7 @@ try {
      *    return:               成功？
      * 現在表示されている画像を保存する
      */
-    downloadCurrentImage: function (useDialog, confirmDownloaded, debug) {
+    downloadCurrentImage: function (useDialog, confirmDownloaded, debug) { // {{{
       try {
 
         // 自分のページのは構成が違い、問題となるのでダウンロードしないようにする。
@@ -1016,20 +1001,20 @@ saved-minute  = ?saved-minute?
       } catch (e) {
         AnkUtils.dumpError(e, true);
       }
-    },
+    }, // }}}
 
     /*
      * downloadCurrentImageAuto
      * 自動的にダウンロードする場合はこっちを使う
      */
-    downloadCurrentImageAuto: function () {
+    downloadCurrentImageAuto: function () { // {{{
       AnkPixiv.downloadCurrentImage(undefined, AnkPixiv.Prefs.get('confirmExistingDownloadWhenAuto'));
-    },
+    }, // }}}
 
     /*
      * 遅延インストールのためにクロージャに doc などを保存しておく
      */
-    installMediumPageFunctions: function () {
+    installMediumPageFunctions: function () { // {{{
       function delay (msg, e) {
         if (installTryed == 20) {
           AnkUtils.dump(msg);
@@ -1274,7 +1259,7 @@ saved-minute  = ?saved-minute?
       };
 
       return installer();
-    },
+    }, // }}}
 
     /*
      * マンガの最終ページを取得する。
@@ -1283,7 +1268,7 @@ saved-minute  = ?saved-minute?
      *
      *    result:     コールバック関数 function (ページ数)
      */
-    getLastMangaPage: function (result) {
+    getLastMangaPage: function (result) { // {{{
       const PAGE_LIMIT = 50 - 5;
 
       let pagesFromIllustPage = AnkPixiv.info.illust.mangaPages;
@@ -1306,10 +1291,9 @@ saved-minute  = ?saved-minute?
         }
       };
       xhr.send(null);
-    },
+    }, // }}}
 
-
-    installFunctions: function () {
+    installFunctions: function () { // {{{
       try {
         if (AnkPixiv.Store.document.functionsInstalled)
           return;
@@ -1328,11 +1312,10 @@ saved-minute  = ?saved-minute?
       } catch (e) {
         AnkUtils.dumpError(e);
       }
-    },
-
+    }, // }}}
 
     // ダウンロード済みの表示
-    insertDownloadedDisplay: function (appendTo, R18) {
+    insertDownloadedDisplay: function (appendTo, R18) { // {{{
       if (!AnkPixiv.Prefs.get('displayDownloaded', true))
         return;
 
@@ -1351,8 +1334,7 @@ saved-minute  = ?saved-minute?
       div.appendChild(textNode);
       if (appendTo)
         appendTo.appendChild(div);
-    },
-
+    }, // }}}
 
     /*
      * getValidFileExt
@@ -1360,7 +1342,7 @@ saved-minute  = ?saved-minute?
      *    return:     拡張子
      * ファイルタイプを検出して、正当な拡張子を返す。
      */
-    getValidFileExt: function (file) {
+    getValidFileExt: function (file) { // {{{
       let fstream = AnkUtils.ccci("@mozilla.org/network/file-input-stream;1",
                                   Components.interfaces.nsIFileInputStream);
       let sstream = AnkUtils.ccci("@mozilla.org/scriptableinputstream;1",
@@ -1381,8 +1363,7 @@ saved-minute  = ?saved-minute?
         return '.jpg';
 
       return;
-    },
-
+    }, // }}}
 
     /*
      * fixFileExt
@@ -1390,7 +1371,7 @@ saved-minute  = ?saved-minute?
      *    return:   修正した時は真
      * 正しい拡張子に修正する。
      */
-    fixFileExt:  function (file) {
+    fixFileExt:  function (file) { // {{{
       const reExt = /\.[^\.]+$/;
       let ext = AnkPixiv.getValidFileExt(file);
       let originalExt =
@@ -1408,14 +1389,14 @@ saved-minute  = ?saved-minute?
       let newFile = AnkUtils.makeLocalFile(file.path.replace(reExt, ext));
       file.moveTo(newFile.parent, newFile.leafName);
       return true;
-    },
+    }, // }}}
 
 
     /********************************************************************************
     * データベース統計
     ********************************************************************************/
 
-    getYourFantasy: function () {
+    getYourFantasy: function () { // {{{
       try {
         function R18 (s)
           (s == 'R-18');
@@ -1464,9 +1445,9 @@ saved-minute  = ?saved-minute?
         AnkUtils.dumpError(e, false);
       }
 
-    },
+    }, // }}}
 
-    displayYourFantasy: function () {
+    displayYourFantasy: function () { // {{{
       return;
 
       let doc = AnkPixiv.elements.doc;
@@ -1536,10 +1517,9 @@ saved-minute  = ?saved-minute?
         nextElem.parentNode.insertBefore(append({name: 'div', class: klass, text: ''}), nextElem);
       });
 
-    },
+    }, // }}}
 
-
-    markDownloaded: function (node, force) {
+    markDownloaded: function (node, force) { // {{{
       const IsIllust = /&illust_id=(\d+)/;
       const BoxTag = /^(li|div)$/i;
 
@@ -1581,14 +1561,14 @@ saved-minute  = ?saved-minute?
             //box.style.opacity = '0.2';
           }
         });
-    },
+    }, // }}}
 
 
     /********************************************************************************
     * データ修正など
     ********************************************************************************/
 
-    fixStorageEncode: function () {
+    fixStorageEncode: function () { // {{{
       try {
         let storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
                                            Components.interfaces.mozIStorageStatementWrapper);
@@ -1627,10 +1607,9 @@ saved-minute  = ?saved-minute?
       } catch (e) {
         AnkUtils.dumpError(e, true);
       }
-    },
+    }, // }}}
 
-
-    exchangeFilename: function () {
+    exchangeFilename: function () { // {{{
       try {
         let storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
                                            Components.interfaces.mozIStorageStatementWrapper);
@@ -1666,42 +1645,40 @@ saved-minute  = ?saved-minute?
       } catch (e) {
         AnkUtils.dumpError(e, true);
       }
-    },
+    }, // }}}
 
 
     /********************************************************************************
     * ステータスバー
     ********************************************************************************/
 
-    updateStatusBarText: function () {
+    updateStatusBarText: function () { // {{{
       let text = [k for (k in AnkPixiv.downloadings)].length;
       AnkPixiv.statusbarText = text ? text : '';
-    },
+    }, // }}}
+
 
     /********************************************************************************
     * イベント
     ********************************************************************************/
 
-    openPrefWindow: function () {
+    openPrefWindow: function () { // {{{
       window.openDialog("chrome://ankpixiv/content/options.xul", "Pref Dialog",
                         "centerscreen,chrome,modal", arguments);
-    },
+    }, // }}}
 
-
-    onInit: function () {
+    onInit: function () { // {{{
       window.addEventListener('focus', AnkPixiv.onFocus, true);
       let appcontent = document.getElementById('appcontent');
       appcontent.addEventListener('DOMContentLoaded', AnkPixiv.onDOMContentLoaded, false);
-    },
+    }, // }}}
 
-
-    onDOMContentLoaded: function (event) {
+    onDOMContentLoaded: function (event) { // {{{
       AnkPixiv.installFunctions();
       AnkPixiv.markDownloaded();
-    },
+    }, // }}}
 
-
-    onFocus: function (ev) {
+    onFocus: function (ev) { // {{{
       try {
         let changeEnabled = function (id) {
           let elem = document.getElementById(id);
@@ -1730,10 +1707,9 @@ saved-minute  = ?saved-minute?
       } catch (e) {
         AnkUtils.dumpError(e);
       }
-    },
+    }, // }}}
 
-
-    onDownloadButtonClick: function (event) {
+    onDownloadButtonClick: function (event) { // {{{
       event.stopPropagation();
       event.preventDefault();
       let useDialog = AnkPixiv.Prefs.get('showSaveDialog', true);
@@ -1758,10 +1734,9 @@ saved-minute  = ?saved-minute?
           case 2: AnkPixiv.openPrefWindow(); break;
         }
       }
-    },
+    }, // }}}
 
-
-    updateDatabase: function () {
+    updateDatabase: function () { // {{{
       // version 1
       let olds = AnkPixiv.Storage.oselect('histories', '(version is null) or (version < 1)');
       for each (let old in olds) {
@@ -1777,13 +1752,13 @@ saved-minute  = ?saved-minute?
 
       // version 2
       // TODO
-    },
+    }, // }}}
 
     /********************************************************************************
     * 外部向け
     ********************************************************************************/
 
-    rate: function (pt) {
+    rate: function (pt) { // {{{
       if (!(AnkPixiv.inPixiv && AnkPixiv.inMedium))
         throw 'not in pixiv';
       if (pt < 1 || 10 < pt)
@@ -1799,7 +1774,7 @@ saved-minute  = ?saved-minute?
         }
       }
       return true;
-    },
+    }, // }}}
 
 
     /********************************************************************************
