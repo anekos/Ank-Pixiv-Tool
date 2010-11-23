@@ -1013,7 +1013,7 @@ saved-minute  = ?saved-minute?
      * 遅延インストールのためにクロージャに doc などを保存しておく
      */
     installMediumPageFunctions: function () { // {{{
-      function delay (msg, e) {
+      function delay (msg, e) { // {{{
         if (installTryed == 20) {
           AnkUtils.dump(msg);
           if (e)
@@ -1022,8 +1022,9 @@ saved-minute  = ?saved-minute?
         setTimeout(installer, installInterval);
         installTryed++;
         AnkUtils.dump('tried: ' + installTryed);
-      }
+      } // }}}
 
+      // closure {{{
       let ut = AnkUtils;
       let installInterval = 500;
       let installTryed = 0;
@@ -1032,11 +1033,12 @@ saved-minute  = ?saved-minute?
       let lastMangaPage = undefined;
       let currentMangaPage = 0;
       let doLoop = false;
+      // }}}
 
       let installer = function () {
         try {
-          // 完全に読み込まれて以内っぽいときは、遅延する
-          try {
+          // インストールに必用な各種要素
+          try { // {{{
             var body = doc.getElementsByTagName('body')[0];
             var wrapper = doc.getElementById('wrapper');
             var medImg = AnkPixiv.elements.illust.mediumImage;
@@ -1046,14 +1048,15 @@ saved-minute  = ?saved-minute?
             var bgImage = doc.defaultView.getComputedStyle(doc.body, '').backgroundImage;
           } catch (e) {
             return delay("delay installation by error", e);
-          }
+          } // }}}
 
           // 完全に読み込まれて以内っぽいときは、遅延する
-          if (!(body && medImg && bigImgPath && wrapper && openComment && worksData))
+          if (!(body && medImg && bigImgPath && wrapper && openComment && worksData)) // {{{
             return delay("delay installation by null");
+          // }}}
 
           // 中画像クリック時に保存する
-          if (AnkPixiv.Prefs.get('downloadWhenClickMiddle')) {
+          if (AnkPixiv.Prefs.get('downloadWhenClickMiddle')) { // {{{
             medImg.addEventListener(
               'click',
               function (e) {
@@ -1061,10 +1064,10 @@ saved-minute  = ?saved-minute?
               },
               true
             );
-          }
+          } // }}}
 
           // 大画像関係
-          if (AnkPixiv.Prefs.get('largeOnMiddle', true)) {
+          if (AnkPixiv.Prefs.get('largeOnMiddle', true)) { // {{{
             let IDPrefix =
               function (id)
                 ('ank-pixiv-large-viewer-' + id);
@@ -1215,10 +1218,10 @@ saved-minute  = ?saved-minute?
                   return preventCall(changeImageSize);
               }
             }, true);
-          }
+          } // }}}
 
           // レイティングによるダウンロード
-          (function () {
+          (function () { // {{{
             if (!AnkPixiv.Prefs.get('downloadWhenRate', false))
               return;
             let point = AnkPixiv.Prefs.get('downloadRate', 10);
@@ -1229,25 +1232,27 @@ saved-minute  = ?saved-minute?
                 elem.addEventListener('click', function() AnkPixiv.downloadCurrentImageAuto(), true);
               }
             }
-          })();
+          })(); // }}}
 
           // 保存済み表示
-          if (AnkPixiv.isDownloaded(AnkPixiv.info.illust.id))
+          if (AnkPixiv.isDownloaded(AnkPixiv.info.illust.id)) { // {{{
             AnkPixiv.insertDownloadedDisplay(
                 AnkPixiv.elements.illust.downloadedDisplayParent,
                 AnkPixiv.info.illust.R18
             );
+          } // }}}
 
           // コメント欄を開く
-          if (AnkPixiv.Prefs.get('openComment', false))
+          if (AnkPixiv.Prefs.get('openComment', false)) // {{{
             setTimeout(openComment, 1000);
+          // }}}
 
           // 最大イラストIDの変更
-          let (illust_id = AnkPixiv.info.illust.id) {
+          let (illust_id = AnkPixiv.info.illust.id) { // {{{
             if (AnkPixiv.Prefs.get('maxIllustId', AnkPixiv.MAX_ILLUST_ID) < illust_id) {
               AnkPixiv.Prefs.set('maxIllustId', illust_id);
             }
-          }
+          } // }}}
 
           AnkUtils.dump('installed');
 
