@@ -153,6 +153,7 @@
             <listbox id="token-listbox2" rows="8" class="token-listbox" onclick="pushToken(this)">
               <listitem label="?illust-id?"></listitem>
               <listitem label="?illust-year?"></listitem>
+              <listitem label="?illust-year2?"></listitem>
               <listitem label="?illust-month?"></listitem>
               <listitem label="?illust-day?"></listitem>
               <listitem label="?illust-hour?"></listitem>
@@ -160,6 +161,7 @@
             </listbox>
             <listbox id="token-listbox3" rows="8" class="token-listbox" onclick="pushToken(this)">
               <listitem label="?saved-year?"></listitem>
+              <listitem label="?saved-year2?"></listitem>
               <listitem label="?saved-month?"></listitem>
               <listitem label="?saved-day?"></listitem>
               <listitem label="?saved-hour?"></listitem>

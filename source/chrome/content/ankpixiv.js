@@ -833,11 +833,13 @@ try {
             [/\?pixiv-id\?/g, im.pixivId],
             [/\?illust-id\?/g, illust_id],
             [/\?illust-year\?/g, ii.year],
+            [/\?illust-year2\?/g, ii.year.toString().slice(2, 4)],
             [/\?illust-month\?/g, ii.month],
             [/\?illust-day\?/g, ii.day],
             [/\?illust-hour\?/g, ii.hour],
             [/\?illust-minute\?/g, ii.minute],
             [/\?saved-year\?/g, savedDateTime.getFullYear()],
+            [/\?saved-year2\?/g, savedDateTime.getFullYear().toString().slice(2, 4)],
             [/\?saved-month\?/g, AnkUtils.zeroPad(savedDateTime.getMonth() + 1, 2)],
             [/\?saved-day\?/g, AnkUtils.zeroPad(savedDateTime.getDate(), 2)],
             [/\?saved-hour\?/g, AnkUtils.zeroPad(savedDateTime.getHours(), 2)],
@@ -869,11 +871,13 @@ tools         = ?tools?
 pixiv-id      = ?pixiv-id?
 illust-id     = ?illust-id?
 illust-year   = ?illust-year?
+illust-year2  = ?illust-year2?
 illust-month  = ?illust-month?
 illust-day    = ?illust-day?
 illust-hour   = ?illust-hour?
 illust-minute = ?illust-minute?
 saved-year    = ?saved-year?
+saved-year2   = ?saved-year2?
 saved-month   = ?saved-month?
 saved-day     = ?saved-day?
 saved-hour    = ?saved-hour?
