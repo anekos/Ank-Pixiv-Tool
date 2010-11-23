@@ -1032,7 +1032,6 @@ saved-minute  = ?saved-minute?
       let doc = AnkPixiv.elements.doc;
       let lastMangaPage = undefined;
       let currentMangaPage = 0;
-      let doLoop = false;
       // }}}
 
       let installer = function () {
@@ -1189,10 +1188,9 @@ saved-minute  = ?saved-minute?
               bigImg.setAttribute('src', AnkPixiv.info.path.getLargeMangaImage(num));
             };
 
-            let goNextPage = function (d, _doLoop) {
+            let goNextPage = function (d, doLoop) {
               if (!bigMode)
                 changeImageSize();
-              doLoop = _doLoop;
               let page = currentMangaPage + (d || 1);
               goPage(
                 lastMangaPage === undefined ? page :
