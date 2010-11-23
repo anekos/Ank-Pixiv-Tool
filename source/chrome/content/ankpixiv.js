@@ -1329,11 +1329,14 @@ saved-minute  = ?saved-minute?
           if (AnkPixiv.inMedium) {
             AnkPixiv.installMediumPageFunctions();
           } else {
-            AnkPixiv.elements.doc.addEventListener(
-              'AutoPagerize_DOMNodeInserted',
-              function (e) AnkPixiv.markDownloaded(e.target, true),
-              false
-            );
+            // AutoPagerize 専用コードだよ
+            if (AnkPixiv.Prefs.get('markDownloaded', false)) {
+              AnkPixiv.elements.doc.addEventListener(
+                'AutoPagerize_DOMNodeInserted',
+                function (e) AnkPixiv.markDownloaded(e.target, true),
+                false
+              );
+            }
           }
         }
       } catch (e) {
