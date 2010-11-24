@@ -428,7 +428,7 @@ try {
     /*
      * 右下にでるポップアップメッセージ
      *    title:    タイトル
-     *    text:     メッセージ内容
+     *    text:     メッセージ内容 */
     popupAlert: function (title, text) { // {{{
       return AnkUtils.popupAlert("chrome://ankpixiv/content/statusbar-button.ico",
                                  title, text, false, "", null);
