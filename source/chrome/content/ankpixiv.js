@@ -78,6 +78,23 @@ try {
     * プロパティ
     ********************************************************************************/
 
+    get current () {
+      function clone (obj) {
+        if (obj && typeof obj === 'object' && !(obj instanceof HTMLElement)) {
+          let res = {};
+          for (let [n, v] in Iterator(obj))
+            res[n] = clone(v);
+          return res;
+        }
+        return obj;
+      }
+
+      return 'in info elements'.split(/\s+/).reduce(
+        function (r, name) (r[name] = clone(AnkPixiv[name]), r),
+        {}
+      );
+    },
+
     get currentLocation () // {{{
       window.content.document.location.href, // }}}
 
