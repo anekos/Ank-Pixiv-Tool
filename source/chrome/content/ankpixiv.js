@@ -106,10 +106,6 @@ try {
     get inMyIllust () // {{{
       !AnkPixiv.elements.illust.avatar, // }}}
 
-    get randomImagePageURL () // {{{
-      let (id = parseInt(Math.random() * AnkPixiv.Prefs.get('maxIllustId', AnkPixiv.MAX_ILLUST_ID)))
-        ('http://www.pixiv.net/member_illust.php?mode=medium&illust_id=' + id), // }}}
-
     elements: (function () { // {{{
       let illust =  {
         get mediumImage ()
