@@ -81,30 +81,32 @@ try {
     get currentLocation () // {{{
       window.content.document.location.href, // }}}
 
-    get manga () { // {{{
-      let node = AnkPixiv.elements.illust.largeLink;
-      return node && ~node.href.indexOf('?mode=manga&');
-    }, // }}}
+    in: {
+      get manga () { // {{{
+        let node = AnkPixiv.elements.illust.largeLink;
+        return node && ~node.href.indexOf('?mode=manga&');
+      }, // }}}
 
-    get inPixiv () { // {{{
-      try {
-        return AnkPixiv.elements.doc.location.hostname === 'www.pixiv.net';
-      } catch (e) {
-        return false;
-      }
-    }, // }}}
+      get pixiv () { // {{{
+        try {
+          return AnkPixiv.elements.doc.location.hostname === 'www.pixiv.net';
+        } catch (e) {
+          return false;
+        }
+      }, // }}}
 
-    get inMedium () // {{{
-      AnkPixiv.inPixiv && AnkPixiv.currentLocation.match(/member_illust\.php\?mode=medium&illust_id=\d+/), // }}}
+      get medium () // {{{
+        AnkPixiv.in.pixiv && AnkPixiv.currentLocation.match(/member_illust\.php\?mode=medium&illust_id=\d+/), // }}}
 
-    get inIllustPage () // {{{
-      AnkPixiv.currentLocation.match(/\.pixiv\.net\/member_illust.php\?.*illust_id=/), // }}}
+      get illustPage () // {{{
+        AnkPixiv.currentLocation.match(/\.pixiv\.net\/member_illust.php\?.*illust_id=/), // }}}
 
-    get inMyPage () // {{{
-      (AnkPixiv.currentLocation == 'http://www.pixiv.net/mypage.php'), // }}}
+      get myPage () // {{{
+        (AnkPixiv.currentLocation == 'http://www.pixiv.net/mypage.php'), // }}}
 
-    get inMyIllust () // {{{
-      !AnkPixiv.elements.illust.avatar, // }}}
+      get myIllust () // {{{
+        !AnkPixiv.elements.illust.avatar, // }}}
+    },
 
     elements: (function () { // {{{
       let illust =  {
@@ -283,7 +285,7 @@ try {
 
         get largeImage ()
           let (i = AnkPixiv.info.path)
-            AnkPixiv.manga ? i.getLargeMangaImage() : i.largeStandardImage,
+            AnkPixiv.in.manga ? i.getLargeMangaImage() : i.largeStandardImage,
 
         get largeStandardImage ()
           AnkPixiv.info.path.mediumImage.replace(/_m\./, '.'),
@@ -735,7 +737,7 @@ try {
       try {
 
         // 自分のページのは構成が違い、問題となるのでダウンロードしないようにする。
-        if (AnkPixiv.inMyIllust)
+        if (AnkPixiv.in.myIllust)
           return false;
 
         if (typeof useDialog === 'undefined')
@@ -744,7 +746,7 @@ try {
         if (typeof confirmDownloaded === 'undefined')
           confirmDownloaded = AnkPixiv.Prefs.get('confirmExistingDownload');
 
-        if (!AnkPixiv.inIllustPage)
+        if (!AnkPixiv.in.illustPage)
           return false;
 
         let destFiles;
@@ -975,11 +977,11 @@ saved-minute  = ?saved-minute?
         }
 
         // XXX 前方で宣言済み
-        destFiles = AnkPixiv.getSaveFilePath(filenames, AnkPixiv.manga ? '' : ext, useDialog, !AnkPixiv.manga);
+        destFiles = AnkPixiv.getSaveFilePath(filenames, AnkPixiv.in.manga ? '' : ext, useDialog, !AnkPixiv.in.manga);
         if (!destFiles)
           return;
 
-        if (AnkPixiv.manga) {
+        if (AnkPixiv.in.manga) {
           AnkPixiv.getLastMangaPage(function (v, ext) {
             let urls = [];
             for (let i = 0; i < v; i++)
@@ -1109,7 +1111,7 @@ saved-minute  = ?saved-minute?
              */
             viewer.appendChild(imgPanel);
             imgPanel.appendChild(bigImg);
-            if (AnkPixiv.manga) {
+            if (AnkPixiv.in.manga) {
               viewer.appendChild(buttonPanel);
               buttonPanel.appendChild(prevButton);
               buttonPanel.appendChild(nextButton);
@@ -1215,18 +1217,18 @@ saved-minute  = ?saved-minute?
 
               if (bigMode) {
                 if (e.target == bigImg) {
-                  if (AnkPixiv.manga && (currentMangaPage < lastMangaPage || lastMangaPage === undefined))
+                  if (AnkPixiv.in.manga && (currentMangaPage < lastMangaPage || lastMangaPage === undefined))
                     return preventCall(function () goNextPage(1, false));
                   else
                     return preventCall(changeImageSize);
                 }
-                if (AnkPixiv.manga && e.target == prevButton)
+                if (AnkPixiv.in.manga && e.target == prevButton)
                   return preventCall(function () goNextPage(-1, false));
-                if (AnkPixiv.manga && e.target == nextButton)
+                if (AnkPixiv.in.manga && e.target == nextButton)
                   return preventCall(function () goNextPage(1, false));
-                if (AnkPixiv.manga && e.target == pageSelector)
+                if (AnkPixiv.in.manga && e.target == pageSelector)
                   return;
-                if (AnkPixiv.manga && e.target.parentNode == pageSelector) {
+                if (AnkPixiv.in.manga && e.target.parentNode == pageSelector) {
                   return;
                 }
                 return preventCall(changeImageSize);
@@ -1321,8 +1323,8 @@ saved-minute  = ?saved-minute?
         if (AnkPixiv.Store.document.functionsInstalled)
           return;
         AnkPixiv.Store.document.functionsInstalled = true;
-        if (AnkPixiv.inPixiv) {
-          if (AnkPixiv.inMedium) {
+        if (AnkPixiv.in.pixiv) {
+          if (AnkPixiv.in.medium) {
             AnkPixiv.installMediumPageFunctions();
           } else {
             // AutoPagerize 専用コードだよ
@@ -1443,7 +1445,7 @@ saved-minute  = ?saved-minute?
         force
         ||
         (
-          AnkPixiv.inPixiv && !AnkPixiv.inMedium && AnkPixiv.Prefs.get('markDownloaded', false) &&
+          AnkPixiv.in.pixiv && !AnkPixiv.in.medium && AnkPixiv.Prefs.get('markDownloaded', false) &&
           !AnkPixiv.Store.document.marked
         )
       ))
@@ -1745,7 +1747,7 @@ saved-minute  = ?saved-minute?
           let elem = document.getElementById(id);
           if (!elem)
             return;
-          elem.setAttribute('dark', !AnkPixiv.inIllustPage);
+          elem.setAttribute('dark', !AnkPixiv.in.illustPage);
         };
 
         changeEnabled.call(AnkPixiv, 'ankpixiv-toolbar-button');
@@ -1754,14 +1756,14 @@ saved-minute  = ?saved-minute?
 
         AnkPixiv.markDownloaded();
 
-        if (AnkPixiv.inPixiv && !AnkPixiv.Store.document.onFocusDone) {
+        if (AnkPixiv.in.pixiv && !AnkPixiv.Store.document.onFocusDone) {
           AnkPixiv.Store.document.onFocusDone = true;
 
-          if (AnkPixiv.inIllustPage) {
+          if (AnkPixiv.in.illustPage) {
             AnkPixiv.installFunctions();
           }
 
-          if (AnkPixiv.inMyPage && !AnkPixiv.elements.mypage.fantasyDisplay)
+          if (AnkPixiv.in.myPage && !AnkPixiv.elements.mypage.fantasyDisplay)
             AnkPixiv.displayYourFantasy();
         }
 
@@ -1775,7 +1777,7 @@ saved-minute  = ?saved-minute?
       event.preventDefault();
       let useDialog = AnkPixiv.Prefs.get('showSaveDialog', true);
       let button = (typeof event.button == 'undefined') ? 0 : event.button;
-      if (AnkPixiv.inIllustPage) {
+      if (AnkPixiv.in.illustPage) {
         switch(button) {
           case 0: AnkPixiv.downloadCurrentImage(useDialog); break;
           case 1: AnkPixiv.downloadCurrentImage(!useDialog); break;
@@ -1803,7 +1805,7 @@ saved-minute  = ?saved-minute?
     ********************************************************************************/
 
     rate: function (pt) { // {{{
-      if (!(AnkPixiv.inPixiv && AnkPixiv.inMedium))
+      if (!(AnkPixiv.in.pixiv && AnkPixiv.in.medium))
         throw 'not in pixiv';
       if (pt < 1 || 10 < pt)
         throw 'out of range';
