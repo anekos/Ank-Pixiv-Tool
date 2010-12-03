@@ -78,7 +78,7 @@ try {
     * プロパティ
     ********************************************************************************/
 
-    get current () {
+    get current () { // {{{
       function clone (obj) {
         if (obj && typeof obj === 'object' && !(obj instanceof HTMLElement)) {
           let res = {};
@@ -93,12 +93,12 @@ try {
         function (r, name) (r[name] = clone(AnkPixiv[name]), r),
         {}
       );
-    },
+    }, // }}}
 
     get currentLocation () // {{{
       window.content.document.location.href, // }}}
 
-    in: {
+    in: { // {{{
       get manga () { // {{{
         let node = AnkPixiv.elements.illust.largeLink;
         return node && ~node.href.indexOf('?mode=manga&');
@@ -123,7 +123,7 @@ try {
 
       get myIllust () // {{{
         !AnkPixiv.elements.illust.avatar, // }}}
-    },
+    }, // }}}
 
     elements: (function () { // {{{
       let illust =  {
