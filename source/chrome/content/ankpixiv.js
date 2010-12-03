@@ -244,7 +244,7 @@ try {
               };
             } else if (m = item.match(/\u6F2B\u753B\s*(\d+)P/)) {
               result.mangaPages = parseInt(m[1], 10);
-            } else if (m = item.match(/(\d+)\uD7(\d+)/)) {
+            } else if (m = item.match(/(\d+)\xD7(\d+)/)) {
               result.size = {
                 width: parseInt(m[1], 10),
                 height: parseInt(m[2], 10),
