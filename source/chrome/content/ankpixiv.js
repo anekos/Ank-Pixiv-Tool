@@ -185,6 +185,9 @@ try {
             .map(function (e) AnkUtils.trim(e.textContent))
             .filter(function (s) s && s.length),
 
+        get shortTags ()
+          AnkPixiv.info.illust.tags.filter(function (it) (it.length <= 8)),
+
         get tools ()
           AnkPixiv.info.illust.worksData.tools,
 
@@ -766,14 +769,7 @@ try {
         let doc           = AnkPixiv.elements.doc;
         let dlDispPoint   = AnkPixiv.elements.illust.downloadedDisplayParent;
         let filenames     = [];
-        let shortTags     = (function (len) {
-                              let result = [];
-                              for (let i in tags) {
-                                if (tags[i].length <= len)
-                                  result.push(tags[i]);
-                              }
-                              return result;
-                            })(8);
+        let shortTags     = AnkPixiv.info.illust.shortTags;
 
         if (AnkPixiv.Prefs.get('saveHistory', true)) {
           try {
