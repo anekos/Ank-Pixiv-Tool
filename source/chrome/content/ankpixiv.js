@@ -639,7 +639,7 @@ try {
      * downloadFile
      *    url:            URL
      *    referer:        リファラ
-     *    localfile:      出力先ファイル nsilocalFile
+     *    localfile:      出力先ファイル nsILocalFile
      *    onComplete      終了時のアラート
      *    return:         キャンセルなどがされなければ、true
      * ファイルをダウンロードする
