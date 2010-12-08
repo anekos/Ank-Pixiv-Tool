@@ -123,6 +123,15 @@ try {
 
       get myIllust () // {{{
         !AnkPixiv.elements.illust.avatar, // }}}
+
+      get delayMarkPage () { // {{{
+        const re = RegExp([
+          '^http://www\\.pixiv\\.net/bookmark\\.php\\?tag=',
+          '^http://www\\.pixiv\\.net/bookmark_add\\.php$'
+        ].join('|'));
+        return !!re(AnkPixiv.currentLocation);
+      }, // }}}
+
     }, // }}}
 
     elements: (function () { // {{{
