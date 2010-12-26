@@ -264,6 +264,27 @@ try {
       return AnkUtils.fromUTF8Octets(AnkUtils.makeLocalFile(target).getRelativeDescriptor(AnkUtils.makeLocalFile(base)));
     }, // }}}
 
+    /********************************************************************************
+    * ネットワーク
+    ********************************************************************************/
+
+    /*
+     * remoteFileExists
+     *    url:          チェックする
+     *    callback:     function (exists) 存在していれば exists が真
+     */
+   remoteFileExists: function (url, callback) { // {{{
+      let xhr = new XMLHttpRequest();
+      xhr.open('HEAD', url, !!callback);
+      xhr.onreadystatechange = function (e) {
+        if (xhr.readyState == 4) {
+          callback(xhr.status == 200);
+        }
+      };
+      xhr.send(null);
+      return callback || (xhr.status === 200);
+   }, // }}}
+
 
     /********************************************************************************
     * 手抜き用関数

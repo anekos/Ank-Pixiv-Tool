@@ -316,8 +316,14 @@ try {
         get largeStandardImage ()
           AnkPixiv.info.path.mediumImage.replace(/_m\./, '.'),
 
-        getLargeMangaImage: function (n, base, ext)
-          (base || AnkPixiv.info.path.largeStandardImage).replace(/\.[^\.]+$/, function (m) (('_p' + (n || 0)) + (ext || m))),
+        getLargeMangaImage: function (n, base, ext, originalSize) {
+          let url =
+            (base || AnkPixiv.info.path.largeStandardImage).replace(
+              /\.[^\.]+$/,
+              function (m) (('_p' + (n || 0)) + (ext || m))
+            );
+          return originalSize ? url.replace(/_p(\d+)\./, '_big_p$1.') : url;
+        },
 
         get mediumImage ()
           AnkPixiv.elements.illust.mediumImage.src.replace(/\?.*$/, ''),
@@ -1009,11 +1015,16 @@ saved-minute  = ?saved-minute?
 
         if (AnkPixiv.in.manga) {
           AnkPixiv.getLastMangaPage(function (v, ext) {
-            let urls = [];
-            for (let i = 0; i < v; i++)
-              urls.push(AnkPixiv.info.path.getLargeMangaImage(i, url, ext));
-            if (AnkPixiv.downloadFiles(urls, ref, destFiles.image, onComplete, onError))
-              addDownloading();
+            AnkUtils.remoteFileExists(
+              AnkPixiv.info.path.getLargeMangaImage(0, url, ext, true),
+              function (hasOriginal) {
+                let urls = [];
+                for (let i = 0; i < v; i++)
+                  urls.push(AnkPixiv.info.path.getLargeMangaImage(i, url, ext, hasOriginal));
+                if (AnkPixiv.downloadFiles(urls, ref, destFiles.image, onComplete, onError))
+                  addDownloading();
+              }
+            );
           });
         } else {
           if (AnkPixiv.downloadFile(url, ref, destFiles.image, onComplete, onError))
