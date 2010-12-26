@@ -1018,7 +1018,7 @@ saved-minute  = ?saved-minute?
             function _download (originalSize) {
               let urls = [];
                 for (let i = 0; i < v; i++)
-                  urls.push(AnkPixiv.info.path.getLargeMangaImage(i, url, ext, hasOriginal));
+                  urls.push(AnkPixiv.info.path.getLargeMangaImage(i, url, ext, originalSize));
                 if (AnkPixiv.downloadFiles(urls, ref, destFiles.image, onComplete, onError))
                   addDownloading();
             }
