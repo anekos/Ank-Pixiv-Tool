@@ -1,0 +1,20 @@
+<!ENTITY prefwindow.title "Ank Pixiv Tool voorkeuren">
+<!ENTITY mainpane.title "Ank Pixiv Tool voorkeuren">
+<!ENTITY initialDirectory.label "Bewaar de illustratie in:">
+<!ENTITY showSaveDialog.label "Gebruik een dialoogvenster wanneer de illustratie wordt gedownload">
+<!ENTITY saveHistory.label "Bewaar de download geschiedenis">
+<!ENTITY downloadRate.label "Download de illustratie wanneer u het deze score of hoger geeft.">
+<!ENTITY browse "Zoeken...">
+<!ENTITY defaultFilename "Standaard bestandsnaam">
+<!ENTITY largeOnMiddle "Laat een grotere afbeelding zien in hetzelfde tabblad als u op de middelste afbeelding klikt.">
+<!ENTITY openComment "Automatisch de reacties openen">
+<!ENTITY alternateFilename "Verander bestandsnaam">
+<!ENTITY confirmExistingDownload "Bevestiging van her-download.">
+<!ENTITY confirmExistingDownloadWhenAuto "Bevestiging van her-download automatische download.">
+<!ENTITY downloadWhenClickMiddle "Automatisch downloaden, wanneer u op de middelste afbeelding klikt.">
+<!ENTITY showCompletePopup "Laat een pop-up zien, wanneer de download klaar is.">
+<!ENTITY displayDownloaded "Laat gedownloade afbeeldingen zien.">
+<!ENTITY defaultMangaFilename "Standaard Manga (Comic) bestandsnaam">
+<!ENTITY alternateMangaFilename "Verander Manga (Comic) bestandsnaam">
+<!ENTITY saveMeta "Bewaar meta-informatie tekst">
+<!ENTITY markDownloaded "Markeer gedownloade illustraties.">
