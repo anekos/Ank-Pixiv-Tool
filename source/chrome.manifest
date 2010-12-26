@@ -16,3 +16,6 @@ locale ankpixiv ru-RU chrome/locale/ru-RU/
 locale ankpixiv tr-TR chrome/locale/tr-TR/
 locale ankpixiv zh-CN chrome/locale/zh-CN/
 locale ankpixiv zh-TW chrome/locale/zh-TW/
+locale ankpixiv nl chrome/locale/nl/
+locale ankpixiv de chrome/locale/de/
+locale ankpixiv sr chrome/locale/sr/
