@@ -18,3 +18,6 @@
 <!ENTITY alternateMangaFilename "代替ファイル名(漫画)">
 <!ENTITY saveMeta "メタテキストの保存">
 <!ENTITY markDownloaded "保存済みイラストにマークを付ける">
+<!ENTITY tab.download "ダウンロード">
+<!ENTITY tab.filename "ファイル名">
+<!ENTITY tab.miscellaneous "その他">

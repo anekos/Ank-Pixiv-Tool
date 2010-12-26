@@ -92,85 +92,101 @@
         <preference id="mark-downloaded" name="extensions.ankpixiv.markDownloaded" type="bool" />
       </preferences>
 
-      <groupbox>
-        <checkbox preference="show-save-dialog" label="&showSaveDialog.label;"/>
+      <tabbox>
+        <tabs>
+          <tab label="&tab.download;" />
+          <tab label="&tab.filename;" />
+          <tab label="&tab.miscellaneous;" />
+        </tabs>
+        <tabpanels>
+          <tabpanel>
+            <vbox>
+              <checkbox preference="show-save-dialog" label="&showSaveDialog.label;"/>
 
-        <hbox align="center">
-          <checkbox preference="download-when-rate" />
-          <menulist preference="download-rate">
-            <menupopup>
-              <menuitem label="6" value="6"/>
-              <menuitem label="7" value="7"/>
-              <menuitem label="8" value="8"/>
-              <menuitem label="9" value="9"/>
-              <menuitem label="10" value="10"/>
-            </menupopup>
-          </menulist>
-          <label value="&downloadRate.label;"/>
-        </hbox>
+              <hbox align="center">
+                <checkbox preference="download-when-rate" />
+                <menulist preference="download-rate">
+                  <menupopup>
+                    <menuitem label="6" value="6"/>
+                    <menuitem label="7" value="7"/>
+                    <menuitem label="8" value="8"/>
+                    <menuitem label="9" value="9"/>
+                    <menuitem label="10" value="10"/>
+                  </menupopup>
+                </menulist>
+                <label value="&downloadRate.label;"/>
+              </hbox>
 
-        <hbox align="center">
-          <label accesskey="I" control="textstringpref">
-            &initialDirectory.label;
-          </label>
-          <textbox preference="initial-directory" flex="1" />
-          <toolbarbutton id="initial-directory-browse" oncommand="selectDir();"
-                         instantApply="true" label="&browse;" />
-        </hbox>
+              <hbox align="center">
+                <label accesskey="I" control="textstringpref">
+                  &initialDirectory.label;
+                </label>
+                <textbox preference="initial-directory" flex="1" />
+                <toolbarbutton id="initial-directory-browse" oncommand="selectDir();"
+                               instantApply="true" label="&browse;" />
+              </hbox>
 
-        <checkbox preference="save-history" label="&saveHistory.label;" />
-        <checkbox preference="large-on-middle" label="&largeOnMiddle;" />
-        <checkbox preference="open-comment" label="&openComment;" />
-        <checkbox preference="confirm-existing" label="&confirmExistingDownload;"
-                  onclick="onConfirmExistingDownloadClick(event)"/>
-        <checkbox preference="confirm-existing-when-auto" label="&confirmExistingDownloadWhenAuto;" />
-        <checkbox preference="download-when-middle" label="&downloadWhenClickMiddle;" />
-        <checkbox preference="show-complete-popup" label="&showCompletePopup;" />
-        <checkbox preference="display-downloaded" label="&displayDownloaded;" />
-        <checkbox preference="save-meta" label="&saveMeta;" />
-        <checkbox preference="mark-downloaded" label="&markDownloaded;" />
-      </groupbox>
+              <checkbox preference="save-history" label="&saveHistory.label;" />
+              <checkbox preference="confirm-existing" label="&confirmExistingDownload;"
+                        onclick="onConfirmExistingDownloadClick(event)"/>
+              <checkbox preference="confirm-existing-when-auto" label="&confirmExistingDownloadWhenAuto;" />
+              <checkbox preference="download-when-middle" label="&downloadWhenClickMiddle;" />
+              <checkbox preference="show-complete-popup" label="&showCompletePopup;" />
+              <checkbox preference="display-downloaded" label="&displayDownloaded;" />
+              <checkbox preference="save-meta" label="&saveMeta;" />
+              <checkbox preference="mark-downloaded" label="&markDownloaded;" />
+            </vbox>
 
-      <groupbox orient="vertical">
-        <vbox>
-          <caption label="&defaultFilename;" />
-          <textbox id="default-filename-box" preference="default-filename" onfocus="currentFilenameElement=event.target" />
-          <caption label="&alternateFilename;" />
-          <textbox preference="alternate-filename" onfocus="currentFilenameElement=event.target" />
-        </vbox>
-        <groupbox>
-          <hbox>
-            <listbox id="token-listbox1" rows="8" class="token-listbox" onclick="pushToken(this)">
-              <listitem label="?title?"></listitem>
-              <listitem label="?member-id?"></listitem>
-              <listitem label="?member-name?"></listitem>
-              <listitem label="?memoized-name?"></listitem>
-              <listitem label="?tags?"></listitem>
-              <listitem label="?short-tags?"></listitem>
-              <listitem label="?tools?"></listitem>
-              <listitem label="?pixiv-id?"></listitem>
-            </listbox>
-            <listbox id="token-listbox2" rows="8" class="token-listbox" onclick="pushToken(this)">
-              <listitem label="?illust-id?"></listitem>
-              <listitem label="?illust-year?"></listitem>
-              <listitem label="?illust-year2?"></listitem>
-              <listitem label="?illust-month?"></listitem>
-              <listitem label="?illust-day?"></listitem>
-              <listitem label="?illust-hour?"></listitem>
-              <listitem label="?illust-minute?"></listitem>
-            </listbox>
-            <listbox id="token-listbox3" rows="8" class="token-listbox" onclick="pushToken(this)">
-              <listitem label="?saved-year?"></listitem>
-              <listitem label="?saved-year2?"></listitem>
-              <listitem label="?saved-month?"></listitem>
-              <listitem label="?saved-day?"></listitem>
-              <listitem label="?saved-hour?"></listitem>
-              <listitem label="?saved-minute?"></listitem>
-            </listbox>
-           </hbox>
-        </groupbox>
-      </groupbox>
-
+          </tabpanel>
+          <tabpanel>
+            <vbox>
+              <vbox>
+                <caption label="&defaultFilename;" />
+                <textbox id="default-filename-box" preference="default-filename" onfocus="currentFilenameElement=event.target" />
+                <caption label="&alternateFilename;" />
+                <textbox preference="alternate-filename" onfocus="currentFilenameElement=event.target" />
+              </vbox>
+              <groupbox>
+                <hbox>
+                  <listbox id="token-listbox1" rows="8" class="token-listbox" onclick="pushToken(this)">
+                    <listitem label="?title?"></listitem>
+                    <listitem label="?member-id?"></listitem>
+                    <listitem label="?member-name?"></listitem>
+                    <listitem label="?memoized-name?"></listitem>
+                    <listitem label="?tags?"></listitem>
+                    <listitem label="?short-tags?"></listitem>
+                    <listitem label="?tools?"></listitem>
+                    <listitem label="?pixiv-id?"></listitem>
+                  </listbox>
+                  <listbox id="token-listbox2" rows="8" class="token-listbox" onclick="pushToken(this)">
+                    <listitem label="?illust-id?"></listitem>
+                    <listitem label="?illust-year?"></listitem>
+                    <listitem label="?illust-year2?"></listitem>
+                    <listitem label="?illust-month?"></listitem>
+                    <listitem label="?illust-day?"></listitem>
+                    <listitem label="?illust-hour?"></listitem>
+                    <listitem label="?illust-minute?"></listitem>
+                  </listbox>
+                  <listbox id="token-listbox3" rows="8" class="token-listbox" onclick="pushToken(this)">
+                    <listitem label="?saved-year?"></listitem>
+                    <listitem label="?saved-year2?"></listitem>
+                    <listitem label="?saved-month?"></listitem>
+                    <listitem label="?saved-day?"></listitem>
+                    <listitem label="?saved-hour?"></listitem>
+                    <listitem label="?saved-minute?"></listitem>
+                  </listbox>
+                 </hbox>
+              </groupbox>
+            </vbox>
+          </tabpanel>
+          <tabpanel>
+            <vbox>
+              <checkbox preference="large-on-middle" label="&largeOnMiddle;" />
+              <checkbox preference="open-comment" label="&openComment;" />
+            </vbox>
+          </tabpanel>
+        </tabpanels>
+      </tabbox>
     </prefpane>
 
     <script type="application/x-javascript"><![CDATA[
