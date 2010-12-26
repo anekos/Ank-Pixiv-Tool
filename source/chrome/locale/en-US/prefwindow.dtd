@@ -18,6 +18,7 @@
 <!ENTITY alternateMangaFilename "Alternate Manga (Comic) filename">
 <!ENTITY saveMeta "Save meta information text">
 <!ENTITY markDownloaded "Mark downloaded illustrations.">
+<!ENTITY downloadOriginalSize "Download original size manga.">
 <!ENTITY tab.download "Download">
 <!ENTITY tab.filename "Filename">
 <!ENTITY tab.miscellaneous "Miscellaneous">

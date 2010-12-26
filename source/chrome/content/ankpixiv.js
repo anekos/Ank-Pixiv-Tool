@@ -1015,16 +1015,22 @@ saved-minute  = ?saved-minute?
 
         if (AnkPixiv.in.manga) {
           AnkPixiv.getLastMangaPage(function (v, ext) {
-            AnkUtils.remoteFileExists(
-              AnkPixiv.info.path.getLargeMangaImage(0, url, ext, true),
-              function (hasOriginal) {
-                let urls = [];
+            function _download (originalSize) {
+              let urls = [];
                 for (let i = 0; i < v; i++)
                   urls.push(AnkPixiv.info.path.getLargeMangaImage(i, url, ext, hasOriginal));
                 if (AnkPixiv.downloadFiles(urls, ref, destFiles.image, onComplete, onError))
                   addDownloading();
-              }
-            );
+            }
+
+            if (AnkPixiv.Prefs.get('downloadOriginalSize', false)) {
+              AnkUtils.remoteFileExists(
+                AnkPixiv.info.path.getLargeMangaImage(0, url, ext, true),
+                _download
+              );
+            } else {
+              _download(false);
+            }
           });
         } else {
           if (AnkPixiv.downloadFile(url, ref, destFiles.image, onComplete, onError))

@@ -90,6 +90,7 @@
         <preference id="initial-directory" name="extensions.ankpixiv.initialDirectory" type="string" />
         <preference id="save-meta" name="extensions.ankpixiv.saveMeta" type="bool" />
         <preference id="mark-downloaded" name="extensions.ankpixiv.markDownloaded" type="bool" />
+        <preference id="download-original-size" name="extensions.ankpixiv.downloadOriginalSize" type="bool" />
       </preferences>
 
       <tabbox>
@@ -135,6 +136,7 @@
               <checkbox preference="display-downloaded" label="&displayDownloaded;" />
               <checkbox preference="save-meta" label="&saveMeta;" />
               <checkbox preference="mark-downloaded" label="&markDownloaded;" />
+              <checkbox preference="download-original-size" label="&downloadOriginalSize;" />
             </vbox>
 
           </tabpanel>
