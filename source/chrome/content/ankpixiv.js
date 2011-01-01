@@ -1782,6 +1782,11 @@ saved-minute  = ?saved-minute?
     onDOMContentLoaded: function (event) { // {{{
       AnkPixiv.installFunctions();
       AnkPixiv.markDownloaded();
+      if (AnkPixiv.in.delayMarkPage) {
+        // FIXME
+        let node = AnkPixiv.elements.doc;
+        setTimeout(function() AnkPixiv.markDownloaded(node, true), 1000);
+      }
     }, // }}}
 
     onFocus: function (ev) { // {{{
