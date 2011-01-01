@@ -1,0 +1,24 @@
+<!ENTITY prefwindow.title "Inställningar för Ank Pixiv Tool">
+<!ENTITY mainpane.title "Inställningar för Ank Pixiv Tool">
+<!ENTITY initialDirectory.label "Spara illustrationer till:">
+<!ENTITY showSaveDialog.label "Använd spardialogen när illustrationer laddas ner">
+<!ENTITY saveHistory.label "Spara nerladdningshistorik">
+<!ENTITY downloadRate.label "Ladda ner en illustration när du ger den det här betyget eller högre.">
+<!ENTITY browse "Bläddra...">
+<!ENTITY defaultFilename "Standardfilnamn">
+<!ENTITY largeOnMiddle "Visa den stora versionen i samma flik när du mittenklickar bilden.">
+<!ENTITY openComment "Öppna kommenteringsrutan automatiskt.">
+<!ENTITY alternateFilename "Alternativt filnamn">
+<!ENTITY confirmExistingDownload "Bekräftelse av omnerladdning.">
+<!ENTITY confirmExistingDownloadWhenAuto "Begär bekräftelse av omnerladdning vid automatisk nerladdning.">
+<!ENTITY downloadWhenClickMiddle "Ladda automatiskt ner när du mittenklickar bilden.">
+<!ENTITY showCompletePopup "Visa popup när nerladdning slutförts.">
+<!ENTITY displayDownloaded "Visa &quot;Redan nerladdad&quot;">
+<!ENTITY defaultMangaFilename "Standardfilnamn för manga (serier)">
+<!ENTITY alternateMangaFilename "Alternativt filnamn för manga (serier)">
+<!ENTITY saveMeta "Spara metainformationstext">
+<!ENTITY markDownloaded "Märk nerladdade illustrationer.">
+<!ENTITY downloadOriginalSize "Ladda ner manga i originalstorlek.">
+<!ENTITY tab.download "Nerladdning">
+<!ENTITY tab.filename "Filnamn">
+<!ENTITY tab.miscellaneous "Övrigt">

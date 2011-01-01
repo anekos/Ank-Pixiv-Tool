@@ -1,9 +1,9 @@
 <!ENTITY prefwindow.title "Ank Pixiv Tool 选项">
 <!ENTITY mainpane.title "Ank Pixiv Tool 选项">
-<!ENTITY initialDirectory.label "保存说明到：">
-<!ENTITY showSaveDialog.label "下载说明时使用保存对话框">
+<!ENTITY initialDirectory.label "保存插图到：">
+<!ENTITY showSaveDialog.label "下载插图时使用保存对话框">
 <!ENTITY saveHistory.label "保存下载历史">
-<!ENTITY downloadRate.label "当你给它评级后或评级超出这个数字时下载说明。">
+<!ENTITY downloadRate.label "当您给它评级后或评级超出这个数字时下载插图。">
 <!ENTITY browse "浏览...">
 <!ENTITY defaultFilename "默认文件名">
 <!ENTITY largeOnMiddle "当您点击中间的图片时在同一个标签显示大图片。">
@@ -11,10 +11,14 @@
 <!ENTITY alternateFilename "备用文件名">
 <!ENTITY confirmExistingDownload "在重新下载时询问。">
 <!ENTITY confirmExistingDownloadWhenAuto "当自动下载时确认重新下载。">
-<!ENTITY downloadWhenClickMiddle "当你点击中间的图片时自动下载">
+<!ENTITY downloadWhenClickMiddle "当您点击中间的图片时自动下载">
 <!ENTITY showCompletePopup "当下载结束时显示弹出提示。">
-<!ENTITY displayDownloaded "显示 “已经下载”">
+<!ENTITY displayDownloaded "显示“已经下载”">
 <!ENTITY defaultMangaFilename "默认漫画文件名">
 <!ENTITY alternateMangaFilename "备用漫画文件名">
 <!ENTITY saveMeta "保存元信息文本">
 <!ENTITY markDownloaded "标记已下载插图。">
+<!ENTITY downloadOriginalSize "下载原始大小的漫画。">
+<!ENTITY tab.download "下载">
+<!ENTITY tab.filename "文件名">
+<!ENTITY tab.miscellaneous "其他">

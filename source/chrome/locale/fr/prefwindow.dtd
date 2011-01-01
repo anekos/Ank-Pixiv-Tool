@@ -18,3 +18,7 @@
 <!ENTITY alternateMangaFilename "Nom de fichier de Manga (BD) alternatif">
 <!ENTITY saveMeta "Enregistrer le texte d'information des métadonnées">
 <!ENTITY markDownloaded "Marquer les illustrations téléchargées.">
+<!ENTITY downloadOriginalSize "Télécharger le manga en taille originale">
+<!ENTITY tab.download "Télécharger">
+<!ENTITY tab.filename "Nom de fichier">
+<!ENTITY tab.miscellaneous "Divers">

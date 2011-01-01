@@ -18,3 +18,7 @@
 <!ENTITY alternateMangaFilename "Verander Manga (Comic) bestandsnaam">
 <!ENTITY saveMeta "Bewaar meta-informatie tekst">
 <!ENTITY markDownloaded "Markeer gedownloade illustraties.">
+<!ENTITY downloadOriginalSize "Download oorspronkelijke grootte manga.">
+<!ENTITY tab.download "Download">
+<!ENTITY tab.filename "Bestandsnaam">
+<!ENTITY tab.miscellaneous "Mengeling">

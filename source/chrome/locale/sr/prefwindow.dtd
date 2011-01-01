@@ -5,16 +5,20 @@
 <!ENTITY saveHistory.label "Сачувај историјат преузимања">
 <!ENTITY downloadRate.label "Преузми илустрацију када је оценим са овом или вишом оценом">
 <!ENTITY browse "Прегледај...">
-<!ENTITY defaultFilename "Подразумевани назив">
+<!ENTITY defaultFilename "Подразумевани назив датотеке">
 <!ENTITY largeOnMiddle "Прикажи велику слику у истом језичку када кликнем на средњу">
 <!ENTITY openComment "Аутоматски отвори оквир за коментаре">
-<!ENTITY alternateFilename "Алтернативни назив">
+<!ENTITY alternateFilename "Алтернативни назив датотеке">
 <!ENTITY confirmExistingDownload "Потврда поновног преузимања">
 <!ENTITY confirmExistingDownloadWhenAuto "Потврђивање поновног преузимања кад је аутоматско.">
 <!ENTITY downloadWhenClickMiddle "Аутоматски преузми када кликнем на средњу слику.">
 <!ENTITY showCompletePopup "Прикажи искачући прозор кад се преузимање заврши.">
-<!ENTITY displayDownloaded "Прикажи „већ преузето”">
+<!ENTITY displayDownloaded "Прикажи обавештење „Већ преузето”">
 <!ENTITY defaultMangaFilename "Манга називи датотека">
 <!ENTITY alternateMangaFilename "Алтернативни манга називи датотека">
 <!ENTITY saveMeta "Сачувај текст са мета информацијама">
 <!ENTITY markDownloaded "Означи преузете илустрације.">
+<!ENTITY downloadOriginalSize "Преузми мангу у оригиналној величини.">
+<!ENTITY tab.download "Преузми">
+<!ENTITY tab.filename "Назив датотеке">
+<!ENTITY tab.miscellaneous "Разно">
