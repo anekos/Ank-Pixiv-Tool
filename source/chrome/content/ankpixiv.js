@@ -1183,6 +1183,13 @@ saved-minute  = ?saved-minute?
                 viewer.style.display = '';
                 wrapper.setAttribute('style', 'opacity: 0.1;');
                 bigImg.style['opacity'] = '1 !important;';
+                if (AnkPixiv.Prefs.get('fitLargeImageInWindowSize', false)) {
+                  bigImg.style.width = '100%';
+                  bigImg.style.height = '100%';
+                } else {
+                  bigImg.style.width = 'auto';
+                  bigImg.style.height = 'auto';
+                }
                 ads.forEach(
                   function (ad) {
                     ad.__ank_pixiv__style_display = ad.style.display;

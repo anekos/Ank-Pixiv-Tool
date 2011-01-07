@@ -91,6 +91,7 @@
         <preference id="save-meta" name="extensions.ankpixiv.saveMeta" type="bool" />
         <preference id="mark-downloaded" name="extensions.ankpixiv.markDownloaded" type="bool" />
         <preference id="download-original-size" name="extensions.ankpixiv.downloadOriginalSize" type="bool" />
+        <preference id="fit-large-image-in-window-size" name="extensions.ankpixiv.fitLargeImageInWindowSize" type="bool" />
       </preferences>
 
       <tabbox>
@@ -184,6 +185,7 @@
           <tabpanel>
             <vbox>
               <checkbox preference="large-on-middle" label="&largeOnMiddle;" />
+              <checkbox preference="fit-large-image-in-window-size" label="&fitLargeImageInWindowSize;" />
               <checkbox preference="open-comment" label="&openComment;" />
             </vbox>
           </tabpanel>
