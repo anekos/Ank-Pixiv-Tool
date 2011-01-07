@@ -12,3 +12,5 @@ locale:
 clean:
 	rm -f $(XPI)
 
+publish: all
+	scp ank_pixiv_tool.xpi linode:/srv/www/www.snca.net/public_html/blogfiles/
