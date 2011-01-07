@@ -123,15 +123,6 @@ try {
 
       get myIllust () // {{{
         !AnkPixiv.elements.illust.avatar, // }}}
-
-      get delayMarkPage () { // {{{
-        const re = RegExp([
-          '^http://www\\.pixiv\\.net/bookmark\\.php\\?tag=',
-          '^http://www\\.pixiv\\.net/bookmark_add\\.php$'
-        ].join('|'));
-        return !!re(AnkPixiv.currentLocation);
-      }, // }}}
-
     }, // }}}
 
     elements: (function () { // {{{
@@ -1780,13 +1771,18 @@ saved-minute  = ?saved-minute?
     }, // }}}
 
     onDOMContentLoaded: function (event) { // {{{
-      AnkPixiv.installFunctions();
-      AnkPixiv.markDownloaded();
-      if (AnkPixiv.in.delayMarkPage) {
-        // FIXME
-        let node = AnkPixiv.elements.doc;
-        setTimeout(function() AnkPixiv.markDownloaded(node, true), 1000);
+      function body (doc) {
+        if (doc.readyState == 'complete') {
+          AnkPixiv.installFunctions();
+          AnkPixiv.markDownloaded(doc, true);
+        } else {
+          setTimeout(function () body(doc), 250);
+        }
       }
+
+      let doc = event.target;
+      if (doc && doc.domain == 'www.pixiv.net')
+        body(event.target);
     }, // }}}
 
     onFocus: function (ev) { // {{{
