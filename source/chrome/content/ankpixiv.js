@@ -1154,6 +1154,16 @@ saved-minute  = ?saved-minute?
 
             let bigMode = false;
 
+            let resizeImage = function () {
+              if (AnkPixiv.Prefs.get('fitLargeImageInWindowSize', false)) {
+                bigImg.style.width = '100%';
+                bigImg.style.height = 'auto';
+              } else {
+                bigImg.style.width = 'auto';
+                bigImg.style.height = 'auto';
+              }
+            };
+
             let changeImageSize = function () {
               let ads = AnkPixiv.elements.illust.ads;
               if (bigMode) {
@@ -1183,13 +1193,7 @@ saved-minute  = ?saved-minute?
                 viewer.style.display = '';
                 wrapper.setAttribute('style', 'opacity: 0.1;');
                 bigImg.style['opacity'] = '1 !important;';
-                if (AnkPixiv.Prefs.get('fitLargeImageInWindowSize', false)) {
-                  bigImg.style.width = '100%';
-                  bigImg.style.height = '100%';
-                } else {
-                  bigImg.style.width = 'auto';
-                  bigImg.style.height = 'auto';
-                }
+                resizeImage();
                 ads.forEach(
                   function (ad) {
                     ad.__ank_pixiv__style_display = ad.style.display;
@@ -1225,6 +1229,7 @@ saved-minute  = ?saved-minute?
               updateButtons();
               AnkUtils.dump('goto ' + num + ' page');
               bigImg.setAttribute('src', AnkPixiv.info.path.getLargeMangaImage(num));
+              resizeImage();
             };
 
             let goNextPage = function (d, doLoop) {
