@@ -1174,7 +1174,6 @@ saved-minute  = ?saved-minute?
             let loadBigImage = function () {
               bigImg.style.display = 'none';
               bigImg.setAttribute('src', bigImgPath);
-              window.content.scrollTo(0, 0);
             };
 
             bigImg.addEventListener('load', function () {
@@ -1214,6 +1213,7 @@ saved-minute  = ?saved-minute?
                 break;
               }
               bigImg.style.display = '';
+              window.content.scrollTo(0, 0);
             }, true);
 
             let changeImageSize = function () {
