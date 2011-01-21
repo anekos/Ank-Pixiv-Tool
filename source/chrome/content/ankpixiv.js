@@ -1475,11 +1475,14 @@ saved-minute  = ?saved-minute?
         return findBox(e.parentNode, limit - 1);
       }
 
+      if (AnkPixiv.in.medium || !AnkPixiv.in.pixiv)
+        return;
+
       if (!(
         force
         ||
         (
-          AnkPixiv.in.pixiv && !AnkPixiv.in.medium && AnkPixiv.Prefs.get('markDownloaded', false) &&
+          AnkPixiv.Prefs.get('markDownloaded', false) &&
           !AnkPixiv.Store.document.marked
         )
       ))
