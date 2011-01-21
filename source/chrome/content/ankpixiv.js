@@ -50,6 +50,13 @@ try {
       "|":  "｜"
     }, // }}}
 
+    FIT: {
+      NONE: 0,
+      IN_WINDOW_SIZE: 1,
+      IN_WINDOW_HEIGHT: 2,
+      IN_WINDOW_WIDTH: 3
+    },
+
     Prefs: new AnkPref('extensions.ankpixiv'),
 
     AllPrefs: new AnkPref(),
@@ -1056,6 +1063,14 @@ saved-minute  = ?saved-minute?
         AnkUtils.dump('tried: ' + installTryed);
       } // }}}
 
+      function noMoreEvent (func) { // {{{
+        return function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          return func.apply(this, arguments);
+        };
+      } // }}}
+
       // closure {{{
       let ut = AnkUtils;
       let installInterval = 500;
@@ -1066,7 +1081,7 @@ saved-minute  = ?saved-minute?
       let currentMangaPage = 0;
       // }}}
 
-      let installer = function () {
+      let installer = function () { // {{{
         try {
           // インストールに必用な各種要素
           try { // {{{
@@ -1114,22 +1129,18 @@ saved-minute  = ?saved-minute?
             let buttonPanel = createElement('div', 'button-panel');
             let prevButton = createElement('button', 'previous-button');
             let nextButton = createElement('button', 'next-button');
+            let closeButton = createElement('button', 'close-button');
             let pageSelector = createElement('select', 'page-selector');
 
-            let updateButtons = function (v) {
-              nextButton.innerHTML =
-                (lastMangaPage === undefined || (currentMangaPage < lastMangaPage - 1)) ? '>>' : '\xD7';
-              prevButton.innerHTML =
-                (currentMangaPage > 0) ? '<<' : '\xD7';
-              pageSelector.value = currentMangaPage;
-            };
+            let updateButtons = function (v) (pageSelector.value = currentMangaPage);
 
-            viewer.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; padding-top: 10px; padding-bottom: 100px; display: none; -moz-opacity: 1;');
+            viewer.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; display: none; -moz-opacity: 1;');
             prevButton.innerHTML = '<<';
             nextButton.innerHTML = '>>';
-            buttonPanel.setAttribute('style', 'display: block; margin: 0 auto; text-align: center; ');
+            closeButton.innerHTML = '\xD7';
+            buttonPanel.setAttribute('style', 'position: fixed; bottom: 10px; width: 100%; opacity: 0');
 
-            [prevButton, nextButton].forEach(function (button) {
+            [prevButton, nextButton, closeButton].forEach(function (button) {
               button.setAttribute('class', 'submit_btn');
               button.setAttribute('style', 'width: 100px !important');
             });
@@ -1142,31 +1153,75 @@ saved-minute  = ?saved-minute?
              *      - prevButton
              *      - pageSelector
              *      - nextButton
+             *      - closeButton
              */
             viewer.appendChild(imgPanel);
             imgPanel.appendChild(bigImg);
             if (AnkPixiv.in.manga) {
               viewer.appendChild(buttonPanel);
+              buttonPanel.appendChild(pageSelector);
               buttonPanel.appendChild(prevButton);
               buttonPanel.appendChild(nextButton);
+              buttonPanel.appendChild(closeButton);
             }
             body.appendChild(viewer);
 
             let bigMode = false;
 
             let resizeImage = function () {
-              if (AnkPixiv.Prefs.get('fitLargeImageInWindowSize', false)) {
-                bigImg.style.width = '100%';
-                bigImg.style.height = 'auto';
-              } else {
-                bigImg.style.width = 'auto';
-                bigImg.style.height = 'auto';
-              }
             };
+
+            let loadBigImage = function () {
+              bigImg.style.display = 'none';
+              bigImg.setAttribute('src', bigImgPath);
+              window.content.scrollTo(0, 0);
+            };
+
+            bigImg.addEventListener('load', function () {
+              function killBars (x, y) {
+                doc.querySelector('html').style.overflowX = x ? 'hidden' : '';
+                doc.querySelector('html').style.overflowY = y ? 'hidden' : '';
+              }
+
+              let barSize = AnkUtils.scrollbarSize;
+
+              bigImg.style.width = 'auto';
+              bigImg.style.height = 'auto';
+
+              let cw = content.innerWidth, ch = content.innerHeight;
+              let iw = bigImg.width, ih = bigImg.height;
+              let pw = cw / iw, ph = ch / ih;
+              let pp = Math.min(pw, ph);
+
+              switch (AnkPixiv.Prefs.get('largeImageSize', AnkPixiv.FIT.NONE)) {
+              case AnkPixiv.FIT.IN_WINDOW_SIZE:
+                killBars(true, true);
+                bigImg.style.width = parseInt(iw * pp) + 'px';
+                bigImg.style.height = parseInt(ih * pp) + 'px';
+                break;
+              case AnkPixiv.FIT.IN_WINDOW_WIDTH:
+                killBars(true, false);
+                bigImg.style.width = parseInt(iw * pw - barSize) + 'px';
+                bigImg.style.height = parseInt(ih * pw) + 'px';
+                break;
+              case AnkPixiv.FIT.IN_WINDOW_HEIGHT:
+                killBars(false, true);
+                bigImg.style.width = parseInt(iw * ph) + 'px';
+                bigImg.style.height = parseInt(ih * ph - barSize) + 'px';
+                break;
+              default:
+                killBars(false, false);
+                break;
+              }
+              bigImg.style.display = '';
+            }, true);
 
             let changeImageSize = function () {
               let ads = AnkPixiv.elements.illust.ads;
               if (bigMode) {
+                doc.querySelector('html').style.overflowX = '';
+                doc.querySelector('html').style.overflowY = '';
+
                 body.style.backgroundImage = bgImage;
                 viewer.style.display = 'none';
                 wrapper.setAttribute('style', 'opacity: 1;');
@@ -1177,7 +1232,6 @@ saved-minute  = ?saved-minute?
                   AnkPixiv.getLastMangaPage(function (v) {
                     lastMangaPage = v;
                     if (v) {
-                      buttonPanel.insertBefore(pageSelector, nextButton);
                       for (let i = 0; i < v; i++) {
                         let option = doc.createElement('option');
                         option.textContent = (i + 1) + '/' + v;
@@ -1188,12 +1242,10 @@ saved-minute  = ?saved-minute?
                   });
                 }
                 body.style.backgroundImage = 'none';
-                bigImg.setAttribute('src', bigImgPath);
-                window.content.scrollTo(0, 0);
+                loadBigImage(bigImgPath);
                 viewer.style.display = '';
                 wrapper.setAttribute('style', 'opacity: 0.1;');
                 bigImg.style['opacity'] = '1 !important;';
-                resizeImage();
                 ads.forEach(
                   function (ad) {
                     ad.__ank_pixiv__style_display = ad.style.display;
@@ -1229,7 +1281,7 @@ saved-minute  = ?saved-minute?
               updateButtons();
               AnkUtils.dump('goto ' + num + ' page');
               bigImg.setAttribute('src', AnkPixiv.info.path.getLargeMangaImage(num));
-              resizeImage();
+              //resizeImage();
             };
 
             let goNextPage = function (d, doLoop) {
@@ -1248,41 +1300,33 @@ saved-minute  = ?saved-minute?
             doc.changeImageSize = changeImageSize;
             doc.goNextMangaPage = goNextPage;
 
-            pageSelector.addEventListener('change', function (e) {
-              return goPage(parseInt(pageSelector.value, 10));
-            }, true);
-
-            doc.addEventListener('click', function (e) {
-              function preventCall (f) {
-                e.preventDefault();
-                f();
-              }
-
-              if (e.button)
-                return;
-
-              if (bigMode) {
-                if (e.target == bigImg) {
-                  if (AnkPixiv.in.manga && (currentMangaPage < lastMangaPage || lastMangaPage === undefined))
-                    return preventCall(function () goNextPage(1, false));
-                  else
-                    return preventCall(changeImageSize);
-                }
-                if (AnkPixiv.in.manga && e.target == prevButton)
-                  return preventCall(function () goNextPage(-1, false));
-                if (AnkPixiv.in.manga && e.target == nextButton)
-                  return preventCall(function () goNextPage(1, false));
-                if (AnkPixiv.in.manga && e.target == pageSelector)
-                  return;
-                if (AnkPixiv.in.manga && e.target.parentNode == pageSelector) {
-                  return;
-                }
-                return preventCall(changeImageSize);
-              } else {
-                if (e.target.src == medImg.src)
-                  return preventCall(changeImageSize);
-              }
-            }, true);
+            buttonPanel.addEventListener('mouseover', function () buttonPanel.style.opacity = 1, false);
+            buttonPanel.addEventListener('mouseout', function () buttonPanel.style.opacity = 0, false);
+            prevButton.addEventListener('click', noMoreEvent(function () goNextPage(-1, true)), false);
+            nextButton.addEventListener('click', noMoreEvent(function () goNextPage(1, true)), false);
+            closeButton.addEventListener('click', noMoreEvent(changeImageSize), false);
+            bigImg.addEventListener(
+              'click',
+              noMoreEvent(function (e) {
+                if (AnkPixiv.in.manga && (currentMangaPage < lastMangaPage || lastMangaPage === undefined))
+                  goNextPage(1, false)
+                else
+                  changeImageSize();
+              }),
+              false
+            );
+            medImg.addEventListener('click', noMoreEvent(changeImageSize), false);
+            pageSelector.addEventListener(
+              'change',
+              noMoreEvent(function () goPage(parseInt(pageSelector.value, 10))),
+              true
+            );
+            pageSelector.addEventListener('click', noMoreEvent(function () void 0), false);
+            doc.addEventListener(
+              'click',
+              function (e) (bigMode && noMoreEvent(changeImageSize)(e)),
+              false
+            );
           } // }}}
 
           // レイティングによるダウンロード
@@ -1324,7 +1368,7 @@ saved-minute  = ?saved-minute?
         } catch (e) {
           AnkUtils.dumpError(e);
         }
-      };
+      }; // }}}
 
       return installer();
     }, // }}}

@@ -264,6 +264,22 @@ try {
       return AnkUtils.fromUTF8Octets(AnkUtils.makeLocalFile(target).getRelativeDescriptor(AnkUtils.makeLocalFile(base)));
     }, // }}}
 
+    get scrollbarSize () {
+      let doc = content.document;
+      let div = doc.createElement('div');
+      let s = div.style;
+      s.position = 'fixed';
+      s.left = s.top = '-200px';
+      s.height = s.width = '100px';
+      s.overflowY = 'scroll';
+      doc.body.appendChild(div);
+      let result = 100 - div.clientWidth;
+      doc.body.removeChild(div);
+      AnkUtils.__defineGetter__('scrollbarSize', function () result);
+      return result;
+    },
+
+
     /********************************************************************************
     * ネットワーク
     ********************************************************************************/

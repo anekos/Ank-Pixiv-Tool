@@ -92,6 +92,7 @@
         <preference id="mark-downloaded" name="extensions.ankpixiv.markDownloaded" type="bool" />
         <preference id="download-original-size" name="extensions.ankpixiv.downloadOriginalSize" type="bool" />
         <preference id="fit-large-image-in-window-size" name="extensions.ankpixiv.fitLargeImageInWindowSize" type="bool" />
+        <preference id="large-image-size" name="extensions.ankpixiv.largeImageSize" type="int" />
       </preferences>
 
       <tabbox>
@@ -184,8 +185,12 @@
           </tabpanel>
           <tabpanel>
             <vbox>
-              <checkbox preference="large-on-middle" label="&largeOnMiddle;" />
-              <checkbox preference="fit-large-image-in-window-size" label="&fitLargeImageInWindowSize;" />
+              <groupbox>
+                <checkbox preference="large-on-middle" label="&largeOnMiddle;" />
+                <menulist id="large-image-size-menulist" preference="large-image-size">
+                  <menupopup id="large-image-size-menupopup" />
+                </menulist>
+              </groupbox>
               <checkbox preference="open-comment" label="&openComment;" />
             </vbox>
           </tabpanel>
@@ -194,6 +199,16 @@
     </prefpane>
 
     <script type="application/x-javascript"><![CDATA[
+        let menupopup = document.getElementById('large-image-size-menupopup');
+        for (let [k, v] in Iterator(AnkPixiv.FIT)) {
+          let menuitem = document.createElement('menuitem');
+          menuitem.setAttribute('label', AnkPixiv.Locale('largeImageSize.' + k));
+          menuitem.setAttribute('value', v);
+          menupopup.appendChild(menuitem);
+        }
+        let menulist = document.getElementById('large-image-size-menulist');
+        menulist.value = AnkPixiv.Prefs.get('largeImageSize');
+
         currentFilenameElement = document.getElementById('default-filename-box');
     ]]></script>
 
