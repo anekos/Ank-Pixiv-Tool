@@ -1627,14 +1627,14 @@ saved-minute  = ?saved-minute?
 
       let doc = AnkPixiv.elements.doc;
 
-      function append ({parent, name, text, style, class}) {
+      function append ({parent, name, text, style, klass}) {
         let elem = doc.createElement(name);
         if (text)
           elem.textContent = text;
         if (style)
           elem.setAttribute('style', style);
-        if (class)
-          elem.setAttribute('class', class);
+        if (klass)
+          elem.setAttribute('class', klass);
         if (parent)
           parent.appendChild(elem);
         return elem;
