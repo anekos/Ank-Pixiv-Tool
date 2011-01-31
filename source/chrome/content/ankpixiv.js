@@ -1331,12 +1331,12 @@ saved-minute  = ?saved-minute?
 
       function get (source) {
         const MAX = 1000;
-        let doc = AnkUtils.createHTMLDocument(source);
-        for (let n = 0; n < MAX; n++) {
-          if (!doc.getElementById('page' + n))
-            return (n < PAGE_LIMIT) ? n : pagesFromIllustPage;
-        }
-        throw 'not found page elements';
+         let doc = AnkUtils.createHTMLDocument(source);
+         let scripts = AnkUtils.A(doc.querySelectorAll('script'));
+        return Math.min(
+          MAX,
+          scripts.filter(function (e) ~e.textContent.indexOf('++pixiv.context.totalPages')).length
+        );
       }
 
       let xhr = new XMLHttpRequest();
