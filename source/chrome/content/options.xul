@@ -93,6 +93,7 @@
         <preference id="download-original-size" name="extensions.ankpixiv.downloadOriginalSize" type="bool" />
         <preference id="fit-large-image-in-window-size" name="extensions.ankpixiv.fitLargeImageInWindowSize" type="bool" />
         <preference id="large-image-size" name="extensions.ankpixiv.largeImageSize" type="int" />
+        <preference id="dont-resize-if-small" name="extensions.ankpixiv.dontResizeIfSmall" type="bool" />
       </preferences>
 
       <tabbox>
@@ -190,6 +191,7 @@
                 <menulist id="large-image-size-menulist" preference="large-image-size">
                   <menupopup id="large-image-size-menupopup" />
                 </menulist>
+                <checkbox preference="dont-resize-if-small" label="&dontResizeIfSmall;" />
               </groupbox>
               <checkbox preference="open-comment" label="&openComment;" />
             </vbox>

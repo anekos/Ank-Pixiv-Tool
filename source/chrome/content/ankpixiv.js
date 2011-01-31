@@ -1151,11 +1151,13 @@ saved-minute  = ?saved-minute?
 
             let updateButtons = function (v) (pageSelector.value = currentMangaPage);
 
-            viewer.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: auto; background: white; text-align: center; display: none; -moz-opacity: 1;');
+            viewer.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: 100%; background: white; text-align: center; display: none; -moz-opacity: 1; padding: 0px');
             prevButton.innerHTML = '<<';
             nextButton.innerHTML = '>>';
             closeButton.innerHTML = '\xD7';
-            buttonPanel.setAttribute('style', 'position: fixed; bottom: 10px; width: 100%; opacity: 0');
+            buttonPanel.setAttribute('style', 'position: fixed; bottom: 0px; width: 100%; opacity: 0');
+            bigImg.setAttribute('style', 'margin: 0px');
+            imgPanel.setAttribute('style', 'margin: 0px');
 
             [prevButton, nextButton, closeButton].forEach(function (button) {
               button.setAttribute('class', 'submit_btn');
@@ -1185,50 +1187,46 @@ saved-minute  = ?saved-minute?
 
             let bigMode = false;
 
-            let resizeImage = function () {
-            };
-
             let loadBigImage = function () {
               bigImg.style.display = 'none';
               bigImg.setAttribute('src', bigImgPath);
             };
 
             bigImg.addEventListener('load', function () {
-              function killBars (x, y) {
-                doc.querySelector('html').style.overflowX = x ? 'hidden' : '';
-                doc.querySelector('html').style.overflowY = y ? 'hidden' : '';
+              function resize (w, h) {
+                bigImg.style.width = w + 'px';
+                bigImg.style.height = h + 'px';
+                if (ch > h)
+                  bigImg.style.marginTop = parseInt(ch / 2 - h / 2) + 'px';
               }
-
-              let barSize = AnkUtils.scrollbarSize;
 
               bigImg.style.width = 'auto';
               bigImg.style.height = 'auto';
 
-              let cw = content.innerWidth, ch = content.innerHeight;
+              let body = content.window.document.body;
+              let cw = doc.documentElement.clientWidth, ch = doc.documentElement.clientHeight;
               let iw = bigImg.width, ih = bigImg.height;
               let pw = cw / iw, ph = ch / ih;
               let pp = Math.min(pw, ph);
 
-              switch (AnkPixiv.Prefs.get('largeImageSize', AnkPixiv.FIT.NONE)) {
-              case AnkPixiv.FIT.IN_WINDOW_SIZE:
-                killBars(true, true);
-                bigImg.style.width = parseInt(iw * pp) + 'px';
-                bigImg.style.height = parseInt(ih * pp) + 'px';
-                break;
-              case AnkPixiv.FIT.IN_WINDOW_WIDTH:
-                killBars(true, false);
-                bigImg.style.width = parseInt(iw * pw - barSize) + 'px';
-                bigImg.style.height = parseInt(ih * pw) + 'px';
-                break;
-              case AnkPixiv.FIT.IN_WINDOW_HEIGHT:
-                killBars(false, true);
-                bigImg.style.width = parseInt(iw * ph) + 'px';
-                bigImg.style.height = parseInt(ih * ph - barSize) + 'px';
-                break;
-              default:
-                killBars(false, false);
-                break;
+              let fit = AnkPixiv.Prefs.get('largeImageSize', AnkPixiv.FIT.NONE);
+              if (fit != AnkPixiv.FIT.NONE && (!AnkPixiv.Prefs.get('dontResizeIfSmall') || iw > cw || ih > ch)) {
+                switch (fit) {
+                case AnkPixiv.FIT.IN_WINDOW_SIZE:
+                  resize(parseInt(iw * pp), parseInt(ih * pp));
+                  break;
+                case AnkPixiv.FIT.IN_WINDOW_WIDTH:
+                  resize(parseInt(iw * pw), parseInt(ih * pw));
+                  break;
+                case AnkPixiv.FIT.IN_WINDOW_HEIGHT:
+                  resize(parseInt(iw * ph), parseInt(ih * ph));
+                  break;
+                }
+              } else {
+                if (ch > ih)
+                  bigImg.style.marginTop = parseInt(ch / 2 - ih / 2) + 'px';
               }
+
               bigImg.style.display = '';
               window.content.scrollTo(0, 0);
             }, true);
@@ -1298,20 +1296,21 @@ saved-minute  = ?saved-minute?
               updateButtons();
               AnkUtils.dump('goto ' + num + ' page');
               bigImg.setAttribute('src', AnkPixiv.info.path.getLargeMangaImage(num));
-              //resizeImage();
             };
 
             let goNextPage = function (d, doLoop) {
-              if (!bigMode)
+              if (bigMode) {
+                let page = currentMangaPage + (d || 1);
+                goPage(
+                  lastMangaPage === undefined ? page :
+                  !doLoop                     ? page :
+                  page >= lastMangaPage       ? 0 :
+                  page < 0                    ? lastMangaPage :
+                  page
+                );
+              } else {
                 changeImageSize();
-              let page = currentMangaPage + (d || 1);
-              goPage(
-                lastMangaPage === undefined ? page :
-                !doLoop                     ? page :
-                page >= lastMangaPage       ? 0 :
-                page < 0                    ? lastMangaPage :
-                page
-              );
+              }
             };
 
             doc.changeImageSize = changeImageSize;
