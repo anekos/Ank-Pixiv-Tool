@@ -1463,7 +1463,7 @@ saved-minute  = ?saved-minute?
      *    node:     対象のノード (AutoPagerize などで追加されたノードのみに追加するためにあるよ)
      *    force:    追加済みであっても、強制的にマークする
      */
-    markDownloaded: function (node, force) { // {{{
+    markDownloaded: function (node, force, ignorePref) { // {{{
       const IsIllust = /&illust_id=(\d+)/;
       const BoxTag = /^(li|div)$/i;
 
@@ -1478,14 +1478,10 @@ saved-minute  = ?saved-minute?
       if (AnkPixiv.in.medium || !AnkPixiv.in.pixiv)
         return;
 
-      if (!(
-        force
-        ||
-        (
-          AnkPixiv.Prefs.get('markDownloaded', false) &&
-          !AnkPixiv.Store.document.marked
-        )
-      ))
+      if (!AnkPixiv.Prefs.get('markDownloaded', false) && !ignorePref)
+        return;
+
+      if (!force && AnkPixiv.Store.document.marked)
         return;
 
       AnkPixiv.Store.document.marked = true;
