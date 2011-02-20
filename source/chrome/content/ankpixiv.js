@@ -786,6 +786,8 @@ try {
         if (!AnkPixiv.in.illustPage)
           return false;
 
+        AnkPixiv.setCookies();
+
         let destFiles;
         let metaText      = AnkPixiv.infoText;
         let pageUrl       = AnkPixiv.currentLocation;
@@ -1518,6 +1520,23 @@ saved-minute  = ?saved-minute?
             //box.style.opacity = '0.2';
           }
         });
+    }, // }}}
+
+    /*
+     * remoteFileExists 用のクッキーをセットする
+     */
+    setCookies: function () { // {{{
+      const cookieManager = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
+      cookieManager.add(
+        '.pixiv.net',
+        '/',
+        'pixiv_embed',
+        'pix',
+        false,
+        false,
+        false,
+        new Date().getTime() + (1000 * 60 * 60 * 24 * 365)
+      );
     }, // }}}
 
 
