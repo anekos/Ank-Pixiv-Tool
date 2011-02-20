@@ -1015,8 +1015,9 @@ saved-minute  = ?saved-minute?
             }
 
             if (AnkPixiv.Prefs.get('downloadOriginalSize', false)) {
-              AnkUtils.remoteFileExists(
+              AnkUtils.remoteFileExistsRetryable(
                 AnkPixiv.info.path.getLargeMangaImage(0, url, ext, true),
+                6,
                 _download
               );
             } else {
