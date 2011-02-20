@@ -1020,10 +1020,10 @@ saved-minute  = ?saved-minute?
           AnkPixiv.getLastMangaPage(function (v, ext) {
             function _download (originalSize) {
               let urls = [];
-                for (let i = 0; i < v; i++)
-                  urls.push(AnkPixiv.info.path.getLargeMangaImage(i, url, ext, originalSize));
-                AnkPixiv.downloadFiles(urls, ref, destFiles.image, onComplete, onError);
-                addDownloading();
+              for (let i = 0; i < v; i++)
+                urls.push(AnkPixiv.info.path.getLargeMangaImage(i, url, ext, originalSize));
+              AnkPixiv.downloadFiles(urls, ref, destFiles.image, onComplete, onError);
+              addDownloading();
             }
 
             if (AnkPixiv.Prefs.get('downloadOriginalSize', false)) {
