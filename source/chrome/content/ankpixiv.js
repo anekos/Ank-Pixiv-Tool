@@ -1472,7 +1472,6 @@ saved-minute  = ?saved-minute?
       return true;
     }, // }}}
 
-
     /*
      * ダウンロード済みイラストにマーカーを付ける
      *    node:     対象のノード (AutoPagerize などで追加されたノードのみに追加するためにあるよ)
