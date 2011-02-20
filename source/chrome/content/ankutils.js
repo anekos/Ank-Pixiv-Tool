@@ -303,21 +303,24 @@ try {
         xhr.send(null);
       }
 
-      function onResult (statusCode) {
-        if (statusCode == 200) {
-          return callback(true);
-        }
-        if (statusCode == 404) {
+      function call () {
+        rfe(function (statusCode) {
+          AnkUtils.dump(statusCode);
+          if (statusCode == 200) {
+            return callback(true);
+          }
+          if (statusCode == 404) {
+            return callback(false);
+          }
+          ++times;
+          if (times < maxTimes)
+            return setTimeout(call, times * 10 * 1000);
           return callback(false);
-        }
-        ++times;
-        if (times < maxTimes)
-          return setTimeout(function () rfe(onResult), times * 10 * 1000);
-        return callback(false);
+        });
       }
 
       let times = 0;
-      rfe(onResult);
+      call();
    }, // }}}
 
 

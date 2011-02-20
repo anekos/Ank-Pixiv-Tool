@@ -571,10 +571,9 @@ try {
      *    file:           nsIFile
      *    onComplete      終了時に呼ばれる関数
      *    onError         エラー時に呼ばれる関数
-     *    return:         成功?
      * ファイルをダウンロードする
      */
-    downloadTo: function (url, referer, file, onComplete, onError) { // {{{ // {{{
+    downloadTo: function (url, referer, file, onComplete, onError) { // {{{
       // 何もしなーい
       if (!onError)
         onError = function () void 0;
@@ -634,11 +633,40 @@ try {
       wbpersist.persistFlags = Components.interfaces.nsIWebBrowserPersist.
                                  PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
       wbpersist.saveURI(sourceURI, cache, refererURI, null, null, file);
+    }, // }}}
 
 
-      // 成功
-      return file;
-    }, // }}} // }}}
+    /*
+     * downloadToRetryable
+     *    url:            URL
+     *    maxTimes:       リトライ最大回数
+     *    referer:        リファラ
+     *    file:           nsIFile
+     *    onComplete      終了時に呼ばれる関数
+     *    onError         エラー時に呼ばれる関数
+     * ファイルをダウンロードする
+     */
+    downloadToRetryable: function (url, maxTimes, referer, file, onComplete, onError) { // {{{
+      function call () {
+        AnkPixiv.downloadTo(
+          url,
+          referer,
+          file,
+          onComplete,
+          function (statusCode) {
+            if (statusCode == 404)
+              return onError(statusCode);
+            ++times;
+            if (times < maxTimes)
+              return setTimeout(call, times * 10 * 1000);
+            return onError(statusCode);
+          }
+        );
+      }
+
+      let times = 0;
+      call();
+    }, // }}}
 
     /*
      * saveTextFile
@@ -660,26 +688,11 @@ try {
     }, // }}}
 
     /*
-     * downloadFile
-     *    url:            URL
-     *    referer:        リファラ
-     *    localfile:      出力先ファイル nsILocalFile
-     *    onComplete      終了時のアラート
-     *    return:         キャンセルなどがされなければ、true
-     * ファイルをダウンロードする
-     */
-    downloadFile: function (url, referer, localfile, onComplete, onError) { // {{{
-      AnkPixiv.downloadTo(url, referer, localfile, onComplete, onError);
-      return true;
-    }, // }}}
-
-    /*
      * downloadFiles
      *    urls:           URL
      *    referer:        リファラ
      *    localdir:       出力先ディレクトリ nsilocalFile
      *    onComplete      終了時のアラート
-     *    return:         キャンセルなどがされなければ、true
      * 複数のファイルをダウンロードする
      */
     downloadFiles: function (urls, referer, localdir, onComplete, onError) { // {{{
@@ -696,26 +709,26 @@ try {
         return onComplete.apply(null, arguments);
       }
 
-      function downloadNext (_orignalArgs, _filePath, status) {
+      function _onError (statusCode) {
+        // エラーファイルが保存されていたら削除する
+        if (lastFile && lastFile.exists()) {
+          try {
+            lastFile.remove(false);
+            AnkUtils.dump('Delete invalid file. => ' + lastFile.path);
+          } catch (e) {
+            AnkUtils.dump('Failed to delete invalid file. => ' + e);
+          }
+        }
+        return onError.apply(null, arguments);
+      }
+
+      function downloadNext (localpath) {
 
         // 前ファイルの処理
         if (lastFile) {
           // ダウンロードに失敗していたら、そこで終了さ！
           if (!lastFile.exists) {
             AnkUtils.dump('Strange error! file not found!');
-            return _onComplete.apply(null, arguments);
-          }
-
-          // 404 の時も終了。ついでにゴミファイルを消す。
-          if (status != 200) { // XXX || (lastFile.exists() && lastFile.fileSize < 1000)) {
-            if (lastFile.exists()) {
-              try {
-                lastFile.remove(false);
-                AnkUtils.dump('Delete invalid file. => ' + lastFile.path);
-              } catch (e) {
-                AnkUtils.dump('Failed to delete invalid file. => ' + e);
-              }
-            }
             return _onComplete.apply(null, arguments);
           }
 
@@ -741,11 +754,10 @@ try {
         index++;
 
         AnkUtils.dump('DL => ' + file.path);
-        return AnkPixiv.downloadTo(url, referer, file, downloadNext, onError);
+        return AnkPixiv.downloadToRetryable(url, 3, referer, file, downloadNext, _onError);
       }
 
       downloadNext();
-      return true;
     }, // }}}
 
     /*
@@ -1010,8 +1022,8 @@ saved-minute  = ?saved-minute?
               let urls = [];
                 for (let i = 0; i < v; i++)
                   urls.push(AnkPixiv.info.path.getLargeMangaImage(i, url, ext, originalSize));
-                if (AnkPixiv.downloadFiles(urls, ref, destFiles.image, onComplete, onError))
-                  addDownloading();
+                AnkPixiv.downloadFiles(urls, ref, destFiles.image, onComplete, onError);
+                addDownloading();
             }
 
             if (AnkPixiv.Prefs.get('downloadOriginalSize', false)) {
@@ -1025,8 +1037,8 @@ saved-minute  = ?saved-minute?
             }
           });
         } else {
-          if (AnkPixiv.downloadFile(url, ref, destFiles.image, onComplete, onError))
-            addDownloading();
+          AnkPixiv.downloadToRetryable(url, 3, ref, destFiles.image, onComplete, onError);
+          addDownloading();
         }
 
       } catch (e) {
