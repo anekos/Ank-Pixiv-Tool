@@ -578,6 +578,8 @@ try {
       if (!onError)
         onError = function () void 0;
 
+      AnkUtils.dump('downloadTo: ' + url);
+
       // ディレクトリ作成
       let (dir = file.parent)
         dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
