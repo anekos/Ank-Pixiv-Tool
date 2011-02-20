@@ -612,14 +612,14 @@ try {
             try {
               responseStatus = _request.responseStatus
             } catch (e) {
-              return onError(orig_args, file.path, 0);
+              return onError(void 0);
             }
 
             if (responseStatus != 200)
-              return onError(orig_args, file.path, responseStatus);
+              return onError(responseStatus);
 
             if (onComplete)
-              return onComplete(orig_args, file.path, responseStatus);
+              return onComplete(file.path);
           }
         },
         onProgressChange: function (_webProgress, _request, _curSelfProgress, _maxSelfProgress,
@@ -692,7 +692,7 @@ try {
       //localdir.exists() || localdir.create(localdir.DIRECTORY_TYPE, 0755);
 
       function _onComplete () {
-        arguments[1] = localdir.path;
+        arguments[0] = localdir.path;
         return onComplete.apply(null, arguments);
       }
 
@@ -930,7 +930,7 @@ saved-minute  = ?saved-minute?
           AnkPixiv.updateStatusBarText();
         };
 
-        let onComplete = function (orig_args, local_path) {
+        let onComplete = function (local_path) {
           try {
             removeDownloading();
 
@@ -974,7 +974,7 @@ saved-minute  = ?saved-minute?
           }
         };
 
-        let onError = function (origArgs, filepath, responseStatus) {
+        let onError = function (responseStatus) {
           removeDownloading();
 
           let desc = '\n' + title + ' / ' + memoized_name + '\n' + pageUrl + '\n';
