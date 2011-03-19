@@ -1340,7 +1340,10 @@ saved-minute  = ?saved-minute?
             pageSelector.addEventListener('click', noMoreEvent(function () void 0), false);
             doc.addEventListener(
               'click',
-              function (e) (bigMode && noMoreEvent(changeImageSize)(e)),
+              function (e) {
+                if (e.button === 0 && bigMode)
+                  noMoreEvent(changeImageSize)(e);
+              },
               false
             );
           } // }}}
