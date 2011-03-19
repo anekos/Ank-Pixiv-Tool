@@ -22,3 +22,5 @@
 <!ENTITY tab.download "Pobierz">
 <!ENTITY tab.filename "Nazwa pliku">
 <!ENTITY tab.miscellaneous "Różne">
+<!ENTITY fitLargeImageInWindowSize "Dopasuj duże obrazki do wymiaru okna.">
+<!ENTITY dontResizeIfSmall "Nie zmieniaj rozmiaru, jeśli obrazek jest  mniejszy niż okno.">

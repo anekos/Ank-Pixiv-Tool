@@ -22,3 +22,5 @@
 <!ENTITY tab.download "Преузми">
 <!ENTITY tab.filename "Назив датотеке">
 <!ENTITY tab.miscellaneous "Разно">
+<!ENTITY fitLargeImageInWindowSize "Уклопи велике слике тако да стану у прозор.">
+<!ENTITY dontResizeIfSmall "Не мењај величину илустрације ако је мања од прозора.">

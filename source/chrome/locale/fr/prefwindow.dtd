@@ -22,3 +22,5 @@
 <!ENTITY tab.download "Télécharger">
 <!ENTITY tab.filename "Nom de fichier">
 <!ENTITY tab.miscellaneous "Divers">
+<!ENTITY fitLargeImageInWindowSize "Adapter la dimension des grandes images à la taille de la fenêtre.">
+<!ENTITY dontResizeIfSmall "Ne pas redimensionner si l'illustration est plus petite que la fenêtre.">

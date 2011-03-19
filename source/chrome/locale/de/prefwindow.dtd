@@ -1,24 +1,26 @@
 <!ENTITY prefwindow.title "Ank Pixiv Tool - Einstellungen">
 <!ENTITY mainpane.title "Ank Pixiv Tool - Einstellungen">
 <!ENTITY initialDirectory.label "Bild speichern in:">
-<!ENTITY showSaveDialog.label "Den Speichern-Dialog zum Herunterladen von Bildern verwenden">
+<!ENTITY showSaveDialog.label "Speichern-Dialog für den Bilderdownload verwenden">
 <!ENTITY saveHistory.label "Download-Chronik speichern">
 <!ENTITY downloadRate.label "Ein Bild erst herunterladen, wenn die Bewertung diesen oder einen höheren Wert erhält.">
 <!ENTITY browse "Durchsuchen…">
-<!ENTITY defaultFilename "Standard-Dateiname">
-<!ENTITY largeOnMiddle "Durch Klicken auf das mittlere Bild, Originalgröße des Bildes im aktuellen Tab anzeigen">
+<!ENTITY defaultFilename "Dateinamensformat">
+<!ENTITY largeOnMiddle "Durch Klicken auf das mittlere Bild, das große Bild im aktuellen Tab anzeigen">
 <!ENTITY openComment "Kommentarfeld automatisch öffnen">
-<!ENTITY alternateFilename "Alternativer Dateiname">
+<!ENTITY alternateFilename "Alternatives Dateinamensformat">
 <!ENTITY confirmExistingDownload "Erneuten Download bestätigen">
-<!ENTITY confirmExistingDownloadWhenAuto "Bei automatischem Download, einen erneuten Download bestätigen">
-<!ENTITY downloadWhenClickMiddle "Durch Klicken auf das mittlere Bild, automatischen Download beginnen">
-<!ENTITY showCompletePopup "Wenn ein Download abgeschlossen ist, Benachrichtigung anzeigen">
+<!ENTITY confirmExistingDownloadWhenAuto "Bei automatischen Downloads, erneute Downloads bestätigen">
+<!ENTITY downloadWhenClickMiddle "Durch Klicken auf das mittlere Bild, automatischen Download starten">
+<!ENTITY showCompletePopup "Benachrichtigung anzeigen, wenn ein Download abgeschlossen wurde">
 <!ENTITY displayDownloaded "&quot;Bereits heruntergeladen&quot;-Hinweis anzeigen">
-<!ENTITY defaultMangaFilename "Standard-Dateiname für Mangas (Comic)">
-<!ENTITY alternateMangaFilename "Alternativer Dateiname für Mangas (Comic)">
+<!ENTITY defaultMangaFilename "Standard-Dateiname für Mangas (Comics)">
+<!ENTITY alternateMangaFilename "Alternativer Dateiname für Mangas (Comics)">
 <!ENTITY saveMeta "Metadaten speichern">
-<!ENTITY markDownloaded "Heruntergeladene Bilder hervorheben.">
-<!ENTITY downloadOriginalSize "Download original size manga.">
+<!ENTITY markDownloaded "Heruntergeladene Bilder hervorheben">
+<!ENTITY downloadOriginalSize "Mangas in Originalgröße herunterladen">
 <!ENTITY tab.download "Download">
-<!ENTITY tab.filename "Filename">
-<!ENTITY tab.miscellaneous "Miscellaneous">
+<!ENTITY tab.filename "Dateiname">
+<!ENTITY tab.miscellaneous "Verschiedenes">
+<!ENTITY fitLargeImageInWindowSize "Große Bilder an Fenstergröße anpassen">
+<!ENTITY dontResizeIfSmall "Kleine Bilder nicht an Fenstergröße anpassen">

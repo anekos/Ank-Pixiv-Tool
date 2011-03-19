@@ -22,3 +22,5 @@
 <!ENTITY tab.download "Download">
 <!ENTITY tab.filename "Bestandsnaam">
 <!ENTITY tab.miscellaneous "Mengeling">
+<!ENTITY fitLargeImageInWindowSize "Pas de grote aan, zodat de afbeelding in de venstergrootte past.">
+<!ENTITY dontResizeIfSmall "Dont't resize if illustration is smaller than window.">
