@@ -578,13 +578,14 @@ try {
      *    file:           nsIFile
      *    onComplete      終了時に呼ばれる関数
      *    onError         エラー時に呼ばれる関数
-     *    return:         成功?
      * ファイルをダウンロードする
      */
-    downloadTo: function (url, referer, file, onComplete, onError) { // {{{ // {{{
+    downloadTo: function (url, referer, file, onComplete, onError) { // {{{
       // 何もしなーい
       if (!onError)
         onError = function () void 0;
+
+      AnkUtils.dump('downloadTo: ' + url);
 
       // ディレクトリ作成
       let (dir = file.parent)
@@ -619,14 +620,14 @@ try {
             try {
               responseStatus = _request.responseStatus
             } catch (e) {
-              return onError(orig_args, file.path, 0);
+              return onError(void 0);
             }
 
             if (responseStatus != 200)
-              return onError(orig_args, file.path, responseStatus);
+              return onError(responseStatus);
 
             if (onComplete)
-              return onComplete(orig_args, file.path, responseStatus);
+              return onComplete(file.path);
           }
         },
         onProgressChange: function (_webProgress, _request, _curSelfProgress, _maxSelfProgress,
@@ -641,11 +642,40 @@ try {
       wbpersist.persistFlags = Components.interfaces.nsIWebBrowserPersist.
                                  PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
       wbpersist.saveURI(sourceURI, cache, refererURI, null, null, file);
+    }, // }}}
 
 
-      // 成功
-      return file;
-    }, // }}} // }}}
+    /*
+     * downloadToRetryable
+     *    url:            URL
+     *    maxTimes:       リトライ最大回数
+     *    referer:        リファラ
+     *    file:           nsIFile
+     *    onComplete      終了時に呼ばれる関数
+     *    onError         エラー時に呼ばれる関数
+     * ファイルをダウンロードする
+     */
+    downloadToRetryable: function (url, maxTimes, referer, file, onComplete, onError) { // {{{
+      function call () {
+        AnkPixiv.downloadTo(
+          url,
+          referer,
+          file,
+          onComplete,
+          function (statusCode) {
+            if (statusCode == 404)
+              return onError(statusCode);
+            ++times;
+            if (times < maxTimes)
+              return setTimeout(call, times * 10 * 1000);
+            return onError(statusCode);
+          }
+        );
+      }
+
+      let times = 0;
+      call();
+    }, // }}}
 
     /*
      * saveTextFile
@@ -667,26 +697,11 @@ try {
     }, // }}}
 
     /*
-     * downloadFile
-     *    url:            URL
-     *    referer:        リファラ
-     *    localfile:      出力先ファイル nsILocalFile
-     *    onComplete      終了時のアラート
-     *    return:         キャンセルなどがされなければ、true
-     * ファイルをダウンロードする
-     */
-    downloadFile: function (url, referer, localfile, onComplete, onError) { // {{{
-      AnkPixiv.downloadTo(url, referer, localfile, onComplete, onError);
-      return true;
-    }, // }}}
-
-    /*
      * downloadFiles
      *    urls:           URL
      *    referer:        リファラ
      *    localdir:       出力先ディレクトリ nsilocalFile
      *    onComplete      終了時のアラート
-     *    return:         キャンセルなどがされなければ、true
      * 複数のファイルをダウンロードする
      */
     downloadFiles: function (urls, referer, localdir, onComplete, onError) { // {{{
@@ -699,30 +714,30 @@ try {
       //localdir.exists() || localdir.create(localdir.DIRECTORY_TYPE, 0755);
 
       function _onComplete () {
-        arguments[1] = localdir.path;
+        arguments[0] = localdir.path;
         return onComplete.apply(null, arguments);
       }
 
-      function downloadNext (_orignalArgs, _filePath, status) {
+      function _onError (statusCode) {
+        // エラーファイルが保存されていたら削除する
+        if (lastFile && lastFile.exists()) {
+          try {
+            lastFile.remove(false);
+            AnkUtils.dump('Delete invalid file. => ' + lastFile.path);
+          } catch (e) {
+            AnkUtils.dump('Failed to delete invalid file. => ' + e);
+          }
+        }
+        return onError.apply(null, arguments);
+      }
+
+      function downloadNext (localpath) {
 
         // 前ファイルの処理
         if (lastFile) {
           // ダウンロードに失敗していたら、そこで終了さ！
           if (!lastFile.exists) {
             AnkUtils.dump('Strange error! file not found!');
-            return _onComplete.apply(null, arguments);
-          }
-
-          // 404 の時も終了。ついでにゴミファイルを消す。
-          if (status != 200) { // XXX || (lastFile.exists() && lastFile.fileSize < 1000)) {
-            if (lastFile.exists()) {
-              try {
-                lastFile.remove(false);
-                AnkUtils.dump('Delete invalid file. => ' + lastFile.path);
-              } catch (e) {
-                AnkUtils.dump('Failed to delete invalid file. => ' + e);
-              }
-            }
             return _onComplete.apply(null, arguments);
           }
 
@@ -748,11 +763,10 @@ try {
         index++;
 
         AnkUtils.dump('DL => ' + file.path);
-        return AnkPixiv.downloadTo(url, referer, file, downloadNext, onError);
+        return AnkPixiv.downloadToRetryable(url, 3, referer, file, downloadNext, _onError);
       }
 
       downloadNext();
-      return true;
     }, // }}}
 
     /*
@@ -778,6 +792,8 @@ try {
 
         if (!AnkPixiv.in.illustPage)
           return false;
+
+        AnkPixiv.setCookies();
 
         let destFiles;
         let metaText      = AnkPixiv.infoText;
@@ -937,7 +953,7 @@ saved-minute  = ?saved-minute?
           AnkPixiv.updateStatusBarText();
         };
 
-        let onComplete = function (orig_args, local_path) {
+        let onComplete = function (local_path) {
           try {
             removeDownloading();
 
@@ -981,7 +997,7 @@ saved-minute  = ?saved-minute?
           }
         };
 
-        let onError = function (origArgs, filepath, responseStatus) {
+        let onError = function (responseStatus) {
           removeDownloading();
 
           let desc = '\n' + title + ' / ' + memoized_name + '\n' + pageUrl + '\n';
@@ -1015,15 +1031,16 @@ saved-minute  = ?saved-minute?
           AnkPixiv.getLastMangaPage(function (v, ext) {
             function _download (originalSize) {
               let urls = [];
-                for (let i = 0; i < v; i++)
-                  urls.push(AnkPixiv.info.path.getLargeMangaImage(i, url, ext, originalSize));
-                if (AnkPixiv.downloadFiles(urls, ref, destFiles.image, onComplete, onError))
-                  addDownloading();
+              for (let i = 0; i < v; i++)
+                urls.push(AnkPixiv.info.path.getLargeMangaImage(i, url, ext, originalSize));
+              AnkPixiv.downloadFiles(urls, ref, destFiles.image, onComplete, onError);
+              addDownloading();
             }
 
             if (AnkPixiv.Prefs.get('downloadOriginalSize', false)) {
-              AnkUtils.remoteFileExists(
+              AnkUtils.remoteFileExistsRetryable(
                 AnkPixiv.info.path.getLargeMangaImage(0, url, ext, true),
+                6,
                 _download
               );
             } else {
@@ -1031,8 +1048,8 @@ saved-minute  = ?saved-minute?
             }
           });
         } else {
-          if (AnkPixiv.downloadFile(url, ref, destFiles.image, onComplete, onError))
-            addDownloading();
+          AnkPixiv.downloadToRetryable(url, 3, ref, destFiles.image, onComplete, onError);
+          addDownloading();
         }
 
       } catch (e) {
@@ -1387,12 +1404,12 @@ saved-minute  = ?saved-minute?
 
       function get (source) {
         const MAX = 1000;
-        let doc = AnkUtils.createHTMLDocument(source);
-        for (let n = 0; n < MAX; n++) {
-          if (!doc.getElementById('page' + n))
-            return (n < PAGE_LIMIT) ? n : pagesFromIllustPage;
-        }
-        throw 'not found page elements';
+         let doc = AnkUtils.createHTMLDocument(source);
+         let scripts = AnkUtils.A(doc.querySelectorAll('script'));
+        return Math.min(
+          MAX,
+          scripts.filter(function (e) ~e.textContent.indexOf('++pixiv.context.totalPages')).length
+        );
       }
 
       let xhr = new XMLHttpRequest();
@@ -1513,13 +1530,12 @@ saved-minute  = ?saved-minute?
       return true;
     }, // }}}
 
-
     /*
      * ダウンロード済みイラストにマーカーを付ける
      *    node:     対象のノード (AutoPagerize などで追加されたノードのみに追加するためにあるよ)
      *    force:    追加済みであっても、強制的にマークする
      */
-    markDownloaded: function (node, force) { // {{{
+    markDownloaded: function (node, force, ignorePref) { // {{{
       const IsIllust = /&illust_id=(\d+)/;
       const BoxTag = /^(li|div)$/i;
 
@@ -1534,14 +1550,10 @@ saved-minute  = ?saved-minute?
       if (AnkPixiv.in.medium || !AnkPixiv.in.pixiv)
         return;
 
-      if (!(
-        force
-        ||
-        (
-          AnkPixiv.Prefs.get('markDownloaded', false) &&
-          !AnkPixiv.Store.document.marked
-        )
-      ))
+      if (!AnkPixiv.Prefs.get('markDownloaded', false) && !ignorePref)
+        return;
+
+      if (!force && AnkPixiv.Store.document.marked)
         return;
 
       AnkPixiv.Store.document.marked = true;
@@ -1564,6 +1576,23 @@ saved-minute  = ?saved-minute?
             //box.style.opacity = '0.2';
           }
         });
+    }, // }}}
+
+    /*
+     * remoteFileExists 用のクッキーをセットする
+     */
+    setCookies: function () { // {{{
+      const cookieManager = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
+      cookieManager.add(
+        '.pixiv.net',
+        '/',
+        'pixiv_embed',
+        'pix',
+        false,
+        false,
+        false,
+        new Date().getTime() + (1000 * 60 * 60 * 24 * 365)
+      );
     }, // }}}
 
 

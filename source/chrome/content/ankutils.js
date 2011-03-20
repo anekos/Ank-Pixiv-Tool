@@ -302,6 +302,44 @@ try {
    }, // }}}
 
 
+    /*
+     * remoteFileExistsRetryable
+     *    url:          チェックする
+     *    maxTimes:     最大チェック回数
+     *    callback:     function (exists) 存在していれば exists が真
+     */
+   remoteFileExistsRetryable: function (url, maxTimes, callback) { // {{{
+     function rfe (callback) {
+        let xhr = new XMLHttpRequest();
+        xhr.open('HEAD', url, true);
+        xhr.onreadystatechange = function (e) {
+          if (xhr.readyState == 4)
+            callback(xhr.status);
+        };
+        xhr.send(null);
+      }
+
+      function call () {
+        rfe(function (statusCode) {
+          AnkUtils.dump(statusCode);
+          if (statusCode == 200) {
+            return callback(true);
+          }
+          if (statusCode == 404) {
+            return callback(false);
+          }
+          ++times;
+          if (times < maxTimes)
+            return setTimeout(call, times * 10 * 1000);
+          return callback(false);
+        });
+      }
+
+      let times = 0;
+      call();
+   }, // }}}
+
+
     /********************************************************************************
     * 手抜き用関数
     ********************************************************************************/
