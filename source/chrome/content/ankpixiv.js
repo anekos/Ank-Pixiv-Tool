@@ -1187,6 +1187,24 @@ saved-minute  = ?saved-minute?
 
             let bigMode = false;
 
+            let fadeOutTimer
+            let showButtons = function () {
+              if (fadeOutTimer)
+                clearInterval(fadeOutTimer);
+              buttonPanel.style.opacity = 1;
+            };
+            let hideButtons = function () {
+              let buttonOpacity = 100;
+              fadeOutTimer = setInterval(function () {
+                if (buttonOpacity <= 0) {
+                  clearInterval(fadeOutTimer);
+                  fadeOutTimer = void 0;
+                }
+                buttonOpacity -= 10;
+                buttonPanel.style.opacity = buttonOpacity / 100.0;
+              }, 100);
+            };
+
             let loadBigImage = function () {
               bigImg.style.display = 'none';
               bigImg.setAttribute('src', bigImgPath);
@@ -1242,6 +1260,7 @@ saved-minute  = ?saved-minute?
                 wrapper.setAttribute('style', 'opacity: 1;');
                 ads.forEach(function (ad) (ad.style.display = ad.__ank_pixiv__style_display));
               } else {
+                hideButtons();
                 currentMangaPage = 0;
                 if (lastMangaPage === undefined) {
                   AnkPixiv.getLastMangaPage(function (v) {
@@ -1316,8 +1335,8 @@ saved-minute  = ?saved-minute?
             doc.changeImageSize = changeImageSize;
             doc.goNextMangaPage = goNextPage;
 
-            buttonPanel.addEventListener('mouseover', function () buttonPanel.style.opacity = 1, false);
-            buttonPanel.addEventListener('mouseout', function () buttonPanel.style.opacity = 0, false);
+            buttonPanel.addEventListener('mouseover', showButtons, false);
+            buttonPanel.addEventListener('mouseout', hideButtons, false);
             prevButton.addEventListener('click', noMoreEvent(function () goNextPage(-1, true)), false);
             nextButton.addEventListener('click', noMoreEvent(function () goNextPage(1, true)), false);
             closeButton.addEventListener('click', noMoreEvent(changeImageSize), false);
