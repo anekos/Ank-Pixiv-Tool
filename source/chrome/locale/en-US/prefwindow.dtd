@@ -23,4 +23,4 @@
 <!ENTITY tab.filename "Filename">
 <!ENTITY tab.miscellaneous "Miscellaneous">
 <!ENTITY fitLargeImageInWindowSize "Fit large image in window size.">
-<!ENTITY dontResizeIfSmall "Dont't resize if illustration is smaller than window.">
+<!ENTITY dontResizeIfSmall "Don't resize if illustration is smaller than window.">
