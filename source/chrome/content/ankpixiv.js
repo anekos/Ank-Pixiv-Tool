@@ -323,8 +323,13 @@ try {
           return originalSize ? url.replace(/_p(\d+)\./, '_big_p$1.') : url;
         },
 
-        get mediumImage ()
-          AnkPixiv.elements.illust.mediumImage.src.replace(/\?.*$/, ''),
+        get mediumImage () {
+          let result = AnkPixiv.elements.illust.mediumImage.src.replace(/\?.*$/, '');
+          // for pixiv_expand_thumbnail
+          //  http://userscripts.org/scripts/show/82175
+          result = result.replace(/_big_p0/, '');
+          return result;
+        }
       };
 
       return {
