@@ -168,7 +168,7 @@ try {
           // searchSub は現時点で存在しないが search がリネームされそうなので書いておく
           let searchSub = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('.pixiv-search'));
           // 検索欄も広告扱いしちゃうぞ
-          let findbox = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('form.search.head'));
+          let findbox = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('form.search2'));
           // ldrize
           let ldrize = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('#gm_ldrize'));
 
