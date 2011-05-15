@@ -18,9 +18,9 @@
 <!ENTITY alternateMangaFilename "Nome de arquivo alternativo para Mangá (Comic)">
 <!ENTITY saveMeta "Salvar texto de meta informação">
 <!ENTITY markDownloaded "Marcar ilustrações baixadas.">
-<!ENTITY downloadOriginalSize "Download original size manga.">
+<!ENTITY downloadOriginalSize "Baixar mangá no tamanho original.">
 <!ENTITY tab.download "Download">
-<!ENTITY tab.filename "Filename">
-<!ENTITY tab.miscellaneous "Miscellaneous">
+<!ENTITY tab.filename "Nome do arquivo">
+<!ENTITY tab.miscellaneous "Diversos">
 <!ENTITY fitLargeImageInWindowSize "Ajustar imagem grande ao tamanho da janela.">
-<!ENTITY dontResizeIfSmall "Dont't resize if illustration is smaller than window.">
+<!ENTITY dontResizeIfSmall "Não redimensionar se a ilustração for menor que a janela.">
