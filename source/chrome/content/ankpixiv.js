@@ -1568,7 +1568,7 @@ saved-minute  = ?saved-minute?
       function findBox (e, limit) {
         if (limit <= 0)
           return null;
-        if (BoxTag(e.tagName))
+        if (BoxTag.test(e.tagName))
           return e;
         return findBox(e.parentNode, limit - 1);
       }
@@ -1589,7 +1589,7 @@ saved-minute  = ?saved-minute?
 
       AnkUtils.A(node.querySelectorAll('a > img')) .
         map(function (img) img.parentNode) .
-        map(function (link) link.href && let (m = IsIllust(link.href)) m && [link, m]) .
+        map(function (link) link.href && let (m = IsIllust.exec(link.href)) m && [link, m]) .
         filter(function (m) m) .
         map(function ([link, m]) [link, parseInt(m[1], 10)]) .
         forEach(function ([link, id]) {
