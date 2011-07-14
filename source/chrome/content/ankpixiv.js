@@ -164,15 +164,13 @@ try {
         get ads () {
           let obj = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('object'));
           let iframe = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('iframe'));
-          let search = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('.pixivSearch'));
-          // searchSub は現時点で存在しないが search がリネームされそうなので書いておく
-          let searchSub = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('.pixiv-search'));
+          let search = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('.ui-search'));
           // 検索欄も広告扱いしちゃうぞ
           let findbox = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('form.search2'));
           // ldrize
           let ldrize = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('#gm_ldrize'));
 
-          return ([]).concat(obj, iframe, search, searchSub, findbox, ldrize);
+          return ([]).concat(obj, iframe, search, findbox, ldrize);
         }
       };
 
