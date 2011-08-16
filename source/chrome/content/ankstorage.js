@@ -10,10 +10,17 @@ try {
       this.tables[key] = new AnkTable(key, tables[key]);
     }
 
-    let file = Components.classes["@mozilla.org/file/directory_service;1"].
-                getService(Components.interfaces.nsIProperties).
-                get("ProfD", Components.interfaces.nsIFile);
-    file.append(filename);
+    let file;
+
+    if (~filename.indexOf(AnkUtils.SYS_SLASH)) {
+      file = AnkUtils.makeLocalFile(filename);
+    } else {
+      file = Components.classes["@mozilla.org/file/directory_service;1"].
+               getService(Components.interfaces.nsIProperties).
+               get("ProfD", Components.interfaces.nsIFile);
+      file.append(filename);
+    }
+
     let storageService = Components.classes["@mozilla.org/storage/service;1"].
                            getService(Components.interfaces.mozIStorageService);
     this.database = storageService.openDatabase(file);

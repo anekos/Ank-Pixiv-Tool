@@ -13,29 +13,7 @@ try {
 
     ID_FANTASY_DISPLAY: 'ankpixiv-fantasy-display',
 
-    Storage: new AnkStorage("ankpixiv.sqlite", // {{{
-      {
-        histories: {
-          illust_id: "integer",
-          member_id: "integer",
-          local_path: "string",
-          title: "string",
-          tags: "string",
-          server: "string",
-          datetime: "datetime",
-          saved: "boolean",
-          filename: "string",
-          version: "integer",
-          comment: "string",
-        },
-        members: {
-          id: "integer",
-          name: "string",
-          pixiv_id: "string",
-          version: "integer",
-        }
-      }
-    ), // }}}
+    Storage: null,
 
     FULL_WIDTH_CHARS: { // {{{
       "\\": "￥",
@@ -1879,6 +1857,30 @@ saved-minute  = ?saved-minute?
     onInit: function () { // {{{
       window.addEventListener('focus', AnkPixiv.onFocus, true);
       let appcontent = document.getElementById('appcontent');
+      AnkPixiv.Storage = new AnkStorage(
+        AnkPixiv.Prefs.get('storageFilepath', 'ankpixiv.sqlite'),
+        {
+          histories: {
+            illust_id: "integer",
+            member_id: "integer",
+            local_path: "string",
+            title: "string",
+            tags: "string",
+            server: "string",
+            datetime: "datetime",
+            saved: "boolean",
+            filename: "string",
+            version: "integer",
+            comment: "string",
+          },
+          members: {
+            id: "integer",
+            name: "string",
+            pixiv_id: "string",
+            version: "integer",
+          }
+        }
+      );
       appcontent.addEventListener('DOMContentLoaded', AnkPixiv.onDOMContentLoaded, false);
     }, // }}}
 
