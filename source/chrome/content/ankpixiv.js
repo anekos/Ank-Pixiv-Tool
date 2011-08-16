@@ -1551,6 +1551,12 @@ saved-minute  = ?saved-minute?
         return findBox(e.parentNode, limit - 1);
       }
 
+      function trackbackParentNode (node, n) {
+        for (let i = 0; i< n; i++)
+          node = node.parentNode;
+        return node;
+      }
+
       if (AnkPixiv.in.medium || !AnkPixiv.in.pixiv)
         return;
 
@@ -1565,21 +1571,23 @@ saved-minute  = ?saved-minute?
       if (!node)
         node = AnkPixiv.elements.doc;
 
-      AnkUtils.A(node.querySelectorAll('a > img')) .
-        map(function (img) img.parentNode) .
-        map(function (link) link.href && let (m = IsIllust.exec(link.href)) m && [link, m]) .
-        filter(function (m) m) .
-        map(function ([link, m]) [link, parseInt(m[1], 10)]) .
-        forEach(function ([link, id]) {
-          if (!AnkPixiv.isDownloaded(id))
-            return;
-          let box = findBox(link, 3);
-          if (box) {
-            box.style.borderBottom = '4px solid red';
-            //box.style.margin = '-2px';
-            //box.style.opacity = '0.2';
-          }
-        });
+      [['a > img', 1], ['a > p > img', 2]].forEach(function ([selector, nTrackback]) {
+        AnkUtils.A(node.querySelectorAll(selector)) .
+          map(function (img) trackbackParentNode(img, nTrackback)) .
+          map(function (link) link.href && let (m = IsIllust.exec(link.href)) m && [link, m]) .
+          filter(function (m) m) .
+          map(function ([link, m]) [link, parseInt(m[1], 10)]) .
+          forEach(function ([link, id]) {
+            if (!AnkPixiv.isDownloaded(id))
+              return;
+            let box = findBox(link, 3);
+            if (box) {
+              box.style.borderBottom = '4px solid red';
+              //box.style.margin = '-2px';
+              //box.style.opacity = '0.2';
+            }
+          });
+      });
     }, // }}}
 
     /*
