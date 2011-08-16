@@ -183,8 +183,10 @@ try {
             .map(function (e) AnkUtils.trim(e.textContent))
             .filter(function (s) s && s.length),
 
-        get shortTags ()
-          AnkPixiv.info.illust.tags.filter(function (it) (it.length <= 8)),
+        get shortTags () {
+          let limit = AnkPixiv.Prefs.get('shortTagsMaxLength', 8);
+          return AnkPixiv.info.illust.tags.filter(function (it) (it.length <= limit));
+        },
 
         get tools ()
           AnkPixiv.info.illust.worksData.tools,
