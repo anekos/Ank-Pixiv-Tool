@@ -1843,8 +1843,8 @@ saved-minute  = ?saved-minute?
     ********************************************************************************/
 
     set statusbarText (text) { // {{{
-      let elem = document.getElementById('ankpixiv-statusbar-text');
-      elem.textContent = text;
+      let elem = document.getElementById('ankpixiv-toolbar-button-text');
+      elem.value = text;
       elem.collapsed = text.length == 0;
       return text;
     }, // }}}
@@ -1918,8 +1918,7 @@ saved-minute  = ?saved-minute?
           elem.setAttribute('dark', !AnkPixiv.in.illustPage);
         };
 
-        changeEnabled.call(AnkPixiv, 'ankpixiv-toolbar-button');
-        changeEnabled.call(AnkPixiv, 'ankpixiv-statusbarpanel');
+        changeEnabled.call(AnkPixiv, 'ankpixiv-toolbar-button-image');
         changeEnabled.call(AnkPixiv, 'ankpixiv-menu-download');
 
         AnkPixiv.markDownloaded();
