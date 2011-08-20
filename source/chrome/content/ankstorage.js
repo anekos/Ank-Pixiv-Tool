@@ -106,11 +106,10 @@ try {
                 AnkUtils.simplePopupAlert('エラー発生', e);
             }
           }
-          let result = stmt.executeStep();
+          return stmt.executeStep();
         } finally {
           stmt.reset();
         }
-        return result;
       });
     }, // }}}
 
@@ -157,7 +156,7 @@ try {
       let _block = function (stmt) {
         if (typeof block == 'function')
           block(stmt);
-        result = !!(stmt.executeStep());
+        let result = !!(stmt.executeStep());
         stmt.reset();
         return result;
       };
@@ -225,7 +224,7 @@ try {
     }, // }}}
 
     count: function (tableName) { // {{{
-      query = 'select count(*) from ' + tableName;
+      let query = 'select count(*) from ' + tableName;
       return this.createStatement(query, function (stmt) {
         return stmt.executeStep() && stmt.getInt32(0);
       });
