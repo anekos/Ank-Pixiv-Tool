@@ -1843,9 +1843,11 @@ saved-minute  = ?saved-minute?
     ********************************************************************************/
 
     set statusbarText (text) { // {{{
-      let elem = document.getElementById('ankpixiv-toolbar-button-text');
-      elem.value = text;
-      elem.collapsed = text.length == 0;
+      let es = document.querySelectorAll('#ankpixiv-toolbar-button-text');
+      for (let [, e] in AnkUtils.IA(es)) {
+        e.value = text;
+        e.collapsed = text.length == 0;
+      }
       return text;
     }, // }}}
 
