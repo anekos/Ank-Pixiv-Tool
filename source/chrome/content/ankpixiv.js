@@ -86,7 +86,7 @@ try {
     in: { // {{{
       get manga () { // {{{
         let node = AnkPixiv.elements.illust.largeLink;
-        return node && ~node.href.indexOf('?mode=manga&');
+        return node && node.href.match(/(?:&|\?)mode=manga(?:&|$)/);
       }, // }}}
 
       get pixiv () { // {{{
@@ -97,8 +97,15 @@ try {
         }
       }, // }}}
 
-      get medium () // {{{
-        AnkPixiv.in.pixiv && AnkPixiv.currentLocation.match(/member_illust\.php\?mode=medium&illust_id=\d+/), // }}}
+      get medium () { // {{{
+        let loc = AnkPixiv.currentLocation;
+        return (
+          AnkPixiv.in.pixiv &&
+          loc.match(/member_illust\.php\?/) &&
+          loc.match(/(?:&|\?)mode=medium(?:&|$)/) &&
+          loc.match(/(?:&|\?)illust_id=\d+(?:&|$)/)
+        );
+      }, // }}}
 
       get illustPage () // {{{
         AnkPixiv.currentLocation.match(/\.pixiv\.net\/member_illust.php\?.*illust_id=/), // }}}
@@ -283,7 +290,7 @@ try {
           (AnkPixiv.info.path.largeStandardImage.match(/\.\w+$/)[0] || '.jpg'),
 
         get mangaIndexPage ()
-          AnkPixiv.currentLocation.replace(/\?mode=medium/, '?mode=manga'),
+          AnkPixiv.currentLocation.replace(/(\?|&)mode=medium(&|$)/, "$1mode=manga$2"),
 
         get largeImage ()
           let (i = AnkPixiv.info.path)
