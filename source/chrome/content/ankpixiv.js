@@ -35,6 +35,10 @@ try {
       IN_WINDOW_WIDTH: 3
     },
 
+    CLASS_NAME: {
+      DOWNLOADED: 'ank-pixiv-tool-downloaded'
+    },
+
     Prefs: new AnkPref('extensions.ankpixiv'),
 
     AllPrefs: new AnkPref(),
@@ -1588,11 +1592,8 @@ saved-minute  = ?saved-minute?
             if (!AnkPixiv.isDownloaded(id))
               return;
             let box = findBox(link, 3);
-            if (box) {
-              box.style.borderBottom = '4px solid red';
-              //box.style.margin = '-2px';
-              //box.style.opacity = '0.2';
-            }
+            if (box)
+              box.className += ' ' + AnkPixiv.CLASS_NAME.DOWNLOADED;
           });
       });
     }, // }}}
@@ -1865,6 +1866,37 @@ saved-minute  = ?saved-minute?
 
 
     /********************************************************************************
+    * スタイル
+    ********************************************************************************/
+
+    registerSheet: let (registered) function (style) { // {{{
+      const IOS = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Ci.nsIIOService);
+      const StyleSheetService = Cc['@mozilla.org/content/style-sheet-service;1'].getService(Ci.nsIStyleSheetService);
+      const DefaultStyle = <><![CDATA[
+        .ank-pixiv-tool-downloaded {
+          border-bottom: 4px solid red;
+          opacity: 0.4;
+        }
+      ]]></>.toString();
+
+      let CSS = [
+        '@namespace url(http://www.w3.org/1999/xhtml);',
+        '@-moz-document domain("www.pixiv.net") {',
+        style || DefaultStyle,
+        '}'
+      ].join("\n");
+
+      let uri = IOS.newURI('chrome-data:text/css,' + window.encodeURIComponent(CSS), null, null);
+
+      if (registered)
+        StyleSheetService.unregisterSheet(registered, StyleSheetService.USER_SHEET);
+
+      registered = uri;
+      StyleSheetService.loadAndRegisterSheet(uri, StyleSheetService.USER_SHEET);
+    }, // }}}
+
+
+    /********************************************************************************
     * イベント
     ********************************************************************************/
 
@@ -1904,6 +1936,7 @@ saved-minute  = ?saved-minute?
       window.addEventListener('focus', AnkPixiv.onFocus, true);
       let appcontent = document.getElementById('appcontent');
       initStorage();
+      AnkPixiv.registerSheet();
       appcontent.addEventListener('DOMContentLoaded', AnkPixiv.onDOMContentLoaded, false);
     }, // }}}
 
