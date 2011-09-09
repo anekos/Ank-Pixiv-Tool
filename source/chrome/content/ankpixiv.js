@@ -1888,7 +1888,7 @@ saved-minute  = ?saved-minute?
         '}'
       ].join("\n");
 
-      let uri = IOS.newURI('chrome-data:text/css,' + window.encodeURIComponent(CSS), null, null);
+      let uri = IOS.newURI('data:text/css,' + window.encodeURIComponent(CSS), null, null);
 
       if (registered)
         StyleSheetService.unregisterSheet(registered, StyleSheetService.USER_SHEET);
