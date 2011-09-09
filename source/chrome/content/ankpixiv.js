@@ -1874,8 +1874,10 @@ saved-minute  = ?saved-minute?
       const StyleSheetService = Cc['@mozilla.org/content/style-sheet-service;1'].getService(Ci.nsIStyleSheetService);
       const DefaultStyle = <><![CDATA[
         .ank-pixiv-tool-downloaded {
-          border-bottom: 4px solid red;
-          opacity: 0.4;
+          background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAABGdBTUEAALGPC/xhBQAAABVJREFUGFdj/M+ABIAcOEKwQEqQZQAoTgz1O3uPKAAAAABJRU5ErkJggg==);
+
+          background-repeat: repeat-x;
+          background-position: bottom;
         }
       ]]></>.toString();
 
