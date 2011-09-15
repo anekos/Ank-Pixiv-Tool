@@ -1069,6 +1069,8 @@ saved-minute  = ?saved-minute?
           if (e)
             AnkUtils.dumpError(e, AnkPixiv.Prefs.get('showErrorDialog'));
         }
+        if (installTryed > 100)
+          return;
         setTimeout(installer, installInterval);
         installTryed++;
         AnkUtils.dump('tried: ' + installTryed);
