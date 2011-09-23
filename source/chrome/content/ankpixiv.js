@@ -1880,6 +1880,7 @@ saved-minute  = ?saved-minute?
 
           background-repeat: repeat-x !important;
           background-position: bottom !important;
+          background-color: pink !important;
         }
       ]]></>.toString();
 
