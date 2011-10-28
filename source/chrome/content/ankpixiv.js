@@ -158,8 +158,10 @@ try {
           let findbox = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('form.search2'));
           // ldrize
           let ldrize = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('#gm_ldrize'));
+          // ヘッダ
+          let header = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('#global-header'));
 
-          return ([]).concat(obj, iframe, search, findbox, ldrize);
+          return ([]).concat(obj, iframe, search, findbox, ldrize, header);
         }
       };
 
@@ -1147,7 +1149,7 @@ saved-minute  = ?saved-minute?
 
             let updateButtons = function (v) (pageSelector.value = currentMangaPage);
 
-            viewer.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: 100%; background: white; text-align: center; display: none; -moz-opacity: 1; padding: 0px');
+            viewer.setAttribute('style', 'position: absolute; top: 0px; left: 0px; width:100%; height: 100%; text-align: center; display: none; -moz-opacity: 1; padding: 0px');
             prevButton.innerHTML = '<<';
             nextButton.innerHTML = '>>';
             closeButton.innerHTML = '\xD7';
