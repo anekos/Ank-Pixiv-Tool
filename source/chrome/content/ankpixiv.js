@@ -293,7 +293,7 @@ try {
 
       let path = {
         get ext ()
-          (AnkPixiv.info.path.largeStandardImage.match(/\.\w+$/)[0] || '.jpg'),
+          (AnkPixiv.info.path.largeStandardImage.match(/(\.\w+)(?:$|\?)/)[1] || '.jpg'),
 
         get mangaIndexPage ()
           AnkPixiv.currentLocation.replace(/(\?|&)mode=medium(&|$)/, "$1mode=manga$2"),
@@ -315,7 +315,9 @@ try {
         },
 
         get mediumImage () {
-          let result = AnkPixiv.elements.illust.mediumImage.src.replace(/\?.*$/, '');
+          // XXX 再投稿された、イラストのパスの末尾には、"?28737478..." のように数値がつく模様
+          // 数値を除去してしまうと、再投稿前の画像が保存されてしまう。
+          let result = AnkPixiv.elements.illust.mediumImage.src;//.replace(/\?.*$/, '');
           // for pixiv_expand_thumbnail
           //  http://userscripts.org/scripts/show/82175
           result = result.replace(/_big_p0/, '');
