@@ -13,4 +13,4 @@ clean:
 	rm -f $(XPI)
 
 publish: all
-	scp ank_pixiv_tool.xpi linode:/srv/www/www.snca.net/public/blogfiles/$(FILENAME)
+	scp ank_pixiv_tool.xpi snca.net:/srv/www/www.snca.net/public/blogfiles/$(FILENAME)
