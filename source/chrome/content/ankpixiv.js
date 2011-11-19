@@ -1253,6 +1253,8 @@ saved-minute  = ?saved-minute?
 
             let changeImageSize = function () {
               let ads = AnkPixiv.elements.illust.ads;
+              let wrapperTopMargin;
+
               if (bigMode) {
                 doc.querySelector('html').style.overflowX = '';
                 doc.querySelector('html').style.overflowY = '';
@@ -1260,6 +1262,8 @@ saved-minute  = ?saved-minute?
                 body.style.backgroundImage = bgImage;
                 viewer.style.display = 'none';
                 wrapper.setAttribute('style', 'opacity: 1;');
+                if (wrapperTopMargin)
+                  wrapper.style.marginTop = wrapperTopMargin;
                 ads.forEach(function (ad) (ad.style.display = ad.__ank_pixiv__style_display));
               } else {
                 hideButtons();
@@ -1281,6 +1285,8 @@ saved-minute  = ?saved-minute?
                 loadBigImage(bigImgPath);
                 viewer.style.display = '';
                 wrapper.setAttribute('style', 'opacity: 0.1;');
+                wrapperTopMargin = wrapper.style.marginTop;
+                wrapper.style.marginTop = '0px';
                 bigImg.style['opacity'] = '1 !important;';
                 ads.forEach(
                   function (ad) {
