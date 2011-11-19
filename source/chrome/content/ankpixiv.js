@@ -754,7 +754,9 @@ try {
 
         let url = urls[index];
         let file = localdir.clone();
-        let fileExt = url.match(/\.\w+$/)[0] || '.jpg';
+        let fileExt =
+          let (m = url.match(/(\.\w+)(?:$|\?)/))
+            ((m && m[1]) || '.jpg');
         file.append(AnkUtils.zeroPad(index + 1, 2) + fileExt);
 
         lastFile = file;
