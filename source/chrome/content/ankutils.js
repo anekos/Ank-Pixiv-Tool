@@ -211,6 +211,9 @@ try {
 
     popupAlert: function (iconPath, title, text, buttonEnabled, a, b) { // {{{
       try {
+        if (navigator.platform.toLowerCase().indexOf('win') < 0)
+          iconPath = '';
+
         const ALERT_SVC = AnkUtils.ccgs("@mozilla.org/alerts-service;1",
                                         Components.interfaces.nsIAlertsService);
         return ALERT_SVC.showAlertNotification.apply(ALERT_SVC, arguments);
