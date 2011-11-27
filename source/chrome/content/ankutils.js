@@ -239,17 +239,6 @@ try {
         window.loadURI(url);
     }, // }}}
 
-    loadJavaScript: function (doc, path) { // {{{
-      let elem = doc.createElement('script');
-      elem.setAttribute('type', 'text/javascript');
-      elem.setAttribute('src', path);
-      let head = doc.getElementsByTagName('head')[0];
-      if (head) {
-        head.appendChild(elem);
-        return elem;
-      }
-    }, // }}}
-
     loadStyleSheet: function (doc, path) { // {{{
       let elem = doc.createElement('link');
       elem.setAttribute('type', 'text/css');
