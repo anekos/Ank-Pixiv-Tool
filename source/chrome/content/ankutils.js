@@ -268,7 +268,7 @@ try {
       return AnkUtils.fromUTF8Octets(AnkUtils.makeLocalFile(target).getRelativeDescriptor(AnkUtils.makeLocalFile(base)));
     }, // }}}
 
-    get scrollbarSize () {
+    get scrollbarSize () { // {{{
       let doc = content.document;
       let div = doc.createElement('div');
       let s = div.style;
@@ -281,7 +281,7 @@ try {
       doc.body.removeChild(div);
       AnkUtils.__defineGetter__('scrollbarSize', function () result);
       return result;
-    },
+    }, // }}}
 
 
     /********************************************************************************
