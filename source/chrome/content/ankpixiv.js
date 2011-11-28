@@ -1207,7 +1207,7 @@ saved-minute  = ?saved-minute?
               }, 100);
             };
 
-            let loadBigImage = function () {
+            let loadBigImage = function (bigImgPath) {
               bigImg.style.display = 'none';
               bigImg.setAttribute('src', bigImgPath);
             };
@@ -1216,8 +1216,11 @@ saved-minute  = ?saved-minute?
               function resize (w, h) {
                 bigImg.style.width = w + 'px';
                 bigImg.style.height = h + 'px';
-                if (ch > h)
+                if (ch > h) {
                   bigImg.style.marginTop = parseInt(ch / 2 - h / 2) + 'px';
+                } else {
+                  bigImg.style.marginTop = '0px';
+                }
               }
 
               bigImg.style.width = 'auto';
