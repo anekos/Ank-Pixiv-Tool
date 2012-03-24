@@ -394,7 +394,9 @@ try {
         filePicker.displayDirectory = initdir;
       }
 
-      return (filePicker.show() == nsIFilePicker.returnOK) && filePicker && filePicker.file;
+      let ret = filePicker.show();
+      let ok = (ret == nsIFilePicker.returnOK) || (ret == nsIFilePicker.returnReplace);
+      return ok && filePicker && filePicker.file;
     }, // }}}
 
     /*
