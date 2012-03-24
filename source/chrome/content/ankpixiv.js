@@ -1961,18 +1961,23 @@ saved-minute  = ?saved-minute?
     }, // }}}
 
     onDOMContentLoaded: function (event) { // {{{
-      function body (doc) {
+      function body (docRef) {
+        let doc = docRef.get();
+
+        if (!doc)
+          return;
+
         if (doc.readyState == 'complete') {
           AnkPixiv.installFunctions();
           AnkPixiv.markDownloaded(doc, true);
         } else {
-          setTimeout(function () body(doc), 250);
+          setTimeout(function () body(docRef), 250);
         }
       }
 
       let doc = event.target;
       if (doc && doc.domain == 'www.pixiv.net')
-        body(event.target);
+        body(Cu.getWeakReference(event.target));
     }, // }}}
 
     onFocus: function (ev) { // {{{
