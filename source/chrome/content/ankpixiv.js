@@ -1155,11 +1155,11 @@ saved-minute  = ?saved-minute?
 
             let updateButtons = function (v) (pageSelector.value = currentMangaPage);
 
-            viewer.setAttribute('style', 'top: 0px; left: 0px; width:100%; height: 100%; text-align: center; display: none; -moz-opacity: 1; padding: 0px');
+            viewer.setAttribute('style', 'top: 0px; left: 0px; width:100%; height: 100%; text-align: center; display: none; -moz-opacity: 1; padding: 0px; bottom: 0px');
             prevButton.innerHTML = '<<';
             nextButton.innerHTML = '>>';
             closeButton.innerHTML = '\xD7';
-            buttonPanel.setAttribute('style', 'position: fixed; bottom: 0px; width: 100%; opacity: 0');
+            buttonPanel.setAttribute('style', 'position: fixed !important; bottom: 0px; width: 100%; opacity: 0; z-index: 666');
             bigImg.setAttribute('style', 'margin: 0px');
             imgPanel.setAttribute('style', 'margin: 0px');
 
