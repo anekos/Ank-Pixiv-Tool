@@ -174,6 +174,9 @@ try {
     }, // }}}
 
     dump: function () { // {{{
+      if (!AnkUtils.DEBUG)
+        return;
+
       let msg = "";
       if (arguments.length <= 1) {
         msg = "\n<<ANK " + arguments[0] + " >>\n";
