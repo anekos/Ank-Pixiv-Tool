@@ -232,7 +232,15 @@ try {
           items.forEach(function (item) {
             item = item.replace(/\[ \u30DE\u30A4\u30D4\u30AF\u9650\u5B9A \]/, '').trim();
             let m;
-            if (m = item.match(/(\d+)[^\d]+(\d+)[^\d]+(\d+)[^\d]+(\d+):(\d+)/)) {
+            if (m = item.match(/(\d+)\/(\d+)\/(\d{4})[^\d]+(\d+):(\d+)/)) {
+              result.dateTime = {
+                year: m[3],
+                month: m[1],
+                day: m[2],
+                hour: m[4],
+                minute: m[5],
+              };
+            } else if (m = item.match(/(\d+)[^\d]+(\d+)[^\d]+(\d+)[^\d]+(\d+):(\d+)/)) {
               result.dateTime = {
                 year: m[1],
                 month: m[2],
