@@ -278,7 +278,7 @@ try {
         get pixivId ()
           (AnkPixiv.elements.illust.avatar.src.match(/\/profile\/([^\/]+)\//)
            ||
-           AnkPixiv.info.path.largeImage.match(/^https?:\/\/[^\.]+\.pixiv\.net\/img\/([^\/]+)\//))[1],
+           AnkPixiv.info.path.largeImage.match(/^https?:\/\/[^\.]+\.pixiv\.net\/img(?:\d+)?\/([^\/]+)\//))[1],
 
         get name ()
           AnkUtils.trim(AnkPixiv.elements.illust.avatar.getAttribute('alt')),
