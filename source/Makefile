@@ -9,6 +9,9 @@ all:
 locale:
 	zip -r $(XPI) chrome.manifest defaults install.rdf chrome/content chrome/locale/en-US chrome/locale/ja-JP
 
+apply: all
+	firefox ank_pixiv_tool.xpi
+
 clean:
 	rm -f $(XPI)
 
