@@ -130,13 +130,13 @@ try {
           AnkPixiv.elements.doc.querySelector('.works_display > a'),
 
         get worksData ()
-          AnkPixiv.elements.doc.querySelector('.works_data > p'),
+          AnkPixiv.elements.doc.querySelector('.work-info'),
 
         get title ()
-          AnkPixiv.elements.doc.querySelector('.works_data > h3'),
+          AnkPixiv.elements.doc.querySelector('.work-info > .title'),
 
         get comment ()
-          AnkPixiv.elements.doc.querySelector('.works_area > p'),
+          AnkPixiv.elements.doc.querySelector('.work-info > .caption'),
 
         get avatar ()
           AnkPixiv.elements.doc.querySelector('.avatar_m > img'),
@@ -148,7 +148,7 @@ try {
           AnkPixiv.elements.doc.querySelector('#tags'),
 
         get downloadedDisplayParent ()
-          AnkPixiv.elements.doc.querySelector('.works_data'),
+          AnkPixiv.elements.doc.querySelector('.work-info'),
 
         get ads () {
           let obj = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('object'));
@@ -217,8 +217,7 @@ try {
           AnkUtils.trim(AnkPixiv.elements.illust.title.textContent),
 
         get comment ()
-          let (node = AnkPixiv.elements.doc.querySelector('.works_area > p'))
-            (node && AnkUtils.textContent(node)),
+          AnkUtils.textContent(AnkPixiv.elements.illust.comment),
 
         get R18 ()
           AnkPixiv.info.illust.tags.some(function (v) 'R-18' == v),
@@ -227,10 +226,10 @@ try {
           AnkPixiv.info.illust.worksData.mangaPages,
 
         get worksData () {
-          let items = AnkPixiv.elements.illust.worksData.textContent.split(/\uFF5C/).map(String.trim);
+          let items = AnkUtils.A(AnkPixiv.elements.illust.worksData.querySelectorAll('.meta > li'));
           let result = {};
           items.forEach(function (item) {
-            item = item.replace(/\[ \u30DE\u30A4\u30D4\u30AF\u9650\u5B9A \]/, '').trim();
+            item = item.textContent.replace(/\[ \u30DE\u30A4\u30D4\u30AF\u9650\u5B9A \]/, '').trim();
             let m;
             if (m = item.match(/(\d+)\/(\d+)\/(\d{4})[^\d]+(\d+):(\d+)/)) {
               result.dateTime = {
@@ -1106,6 +1105,7 @@ saved-minute  = ?saved-minute?
       let installTryed = 0;
       let con = content;
       let doc = AnkPixiv.elements.doc;
+      let win = window.content.window;
       let lastMangaPage = undefined;
       let currentMangaPage = 0;
       // }}}
@@ -1393,13 +1393,18 @@ saved-minute  = ?saved-minute?
             if (!AnkPixiv.Prefs.get('downloadWhenRate', false))
               return;
             let point = AnkPixiv.Prefs.get('downloadRate', 10);
-            let elem, iter = AnkUtils.findNodesByXPath("//ul[@class='unit-rating']/li/a");
-            while (elem = iter.iterateNext()) {
-              let m = elem.className.match(/r(\d{1,2})-unit/);
-              if (m && (point <= parseInt(m[1]))) {
-                elem.addEventListener('click', function() AnkPixiv.downloadCurrentImageAuto(), true);
-              }
-            }
+            AnkUtils.A(doc.querySelectorAll('.rating')).forEach(function (e) {
+              e.addEventListener(
+                'click',
+                function () {
+                  let klass = e.getAttribute('class', '');
+                  let m = klass.match(/rate-(\d+)/);
+                  if (m && (point <= parseInt(m[1], 10)))
+                    AnkPixiv.downloadCurrentImageAuto();
+                },
+                true
+              );
+            });
           })(); // }}}
 
           // 保存済み表示
@@ -2057,16 +2062,19 @@ saved-minute  = ?saved-minute?
         throw 'not in pixiv';
       if (pt < 1 || 10 < pt)
         throw 'out of range';
-      let elem, iter = AnkUtils.findNodesByXPath("//ul[@class='unit-rating']/li/a");
-      while (elem = iter.iterateNext()) {
-        let m = elem.className.match(/r(\d{1,2})-unit/);
-        if (m[1] == pt) {
-          let evt = document.createEvent('MouseEvents');
-          evt.initEvent('click', false, true);
-          elem.dispatchEvent(evt);
-          break;
-        }
+      let rating = window.content.window.wrappedJSObject.pixiv.rating;
+      if (typeof rating.rate === 'number') {
+        rating.rate = pt;
+        rating.apply.call(rating, {});
+        if (!AnkPixiv.Prefs.get('downloadWhenRate', false))
+          return true;
+        let point = AnkPixiv.Prefs.get('downloadRate', 10);
+        if (point <= pt)
+          AnkPixiv.downloadCurrentImageAuto();
+      } else {
+        return false;
       }
+
       return true;
     }, // }}}
 
