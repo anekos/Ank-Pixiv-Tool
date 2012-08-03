@@ -217,7 +217,8 @@ try {
           AnkUtils.trim(AnkPixiv.elements.illust.title.textContent),
 
         get comment ()
-          AnkUtils.textContent(AnkPixiv.elements.illust.comment),
+          let (e = AnkPixiv.elements.illust.comment)
+            (e ? AnkUtils.textContent(e) : ''),
 
         get R18 ()
           AnkPixiv.info.illust.tags.some(function (v) 'R-18' == v),
