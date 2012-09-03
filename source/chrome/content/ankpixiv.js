@@ -1592,7 +1592,7 @@ saved-minute  = ?saved-minute?
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
       const IsIllust = /&illust_id=(\d+)/;
-      const BoxTag = /^(li|div)$/i;
+      const BoxTag = /^(li|div|article)$/i;
 
       function findBox (e, limit) {
         if (limit <= 0)
@@ -1622,7 +1622,10 @@ saved-minute  = ?saved-minute?
       if (!node)
         node = AnkPixiv.elements.doc;
 
-      [['a > img', 1], ['a > p > img', 2]].forEach(function ([selector, nTrackback]) {
+      [
+        ['a > img', 1],
+        ['a > p > img', 2]
+      ].forEach(function ([selector, nTrackback]) {
         AnkUtils.A(node.querySelectorAll(selector)) .
           map(function (img) trackbackParentNode(img, nTrackback)) .
           map(function (link) link.href && let (m = IsIllust.exec(link.href)) m && [link, m]) .
