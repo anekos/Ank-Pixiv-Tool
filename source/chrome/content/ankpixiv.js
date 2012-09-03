@@ -1508,9 +1508,16 @@ saved-minute  = ?saved-minute?
 
       const ElementID = 'ankpixiv-downloaded-display';
 
-      let doc = appendTo.ownerDocument;
+      let doc;
 
-      if (doc.getElementById(ElementID))
+      try { 
+        // XXX for "can't access dead object".
+        doc = appendTo && appendTo.ownerDocument;
+      } catch (e) {
+        return;
+      }
+
+      if (!doc || doc.getElementById(ElementID))
         return;
 
       let div = doc.createElement('div');
