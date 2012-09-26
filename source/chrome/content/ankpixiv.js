@@ -145,7 +145,7 @@ try {
           AnkPixiv.elements.doc.querySelector('a.avatar_m'),
 
         get tags ()
-          AnkPixiv.elements.doc.querySelector('#tags'),
+          AnkPixiv.elements.doc.querySelector('.tags'),
 
         get downloadedDisplayParent ()
           AnkPixiv.elements.doc.querySelector('.work-info'),
