@@ -653,7 +653,7 @@ try {
       wbpersist.progressListener = progressListener;
       wbpersist.persistFlags = Components.interfaces.nsIWebBrowserPersist.
                                  PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
-      wbpersist.saveURI(sourceURI, cache, refererURI, null, null, file);
+      wbpersist.saveURI(sourceURI, cache, refererURI, null, null, file, null);
     }, // }}}
 
 
