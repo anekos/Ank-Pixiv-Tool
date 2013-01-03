@@ -195,7 +195,7 @@ try {
           let elem = AnkPixiv.elements.illust.tags;
           if (!elem)
             return [];
-          return AnkUtils.A(elem.querySelectorAll('a'))
+          return AnkUtils.A(elem.querySelectorAll('.tag > .text'))
                   .map(function (e) AnkUtils.trim(e.textContent))
                   .filter(function (s) s && s.length);
         },
