@@ -1628,7 +1628,9 @@ saved-minute  = ?saved-minute?
 
       [
         ['a > img', 1],
-        ['a > p > img', 2]
+        ['a > p > img', 2],
+        ['a > div > img', 2],
+        ['a > p > div > img', 3]
       ].forEach(function ([selector, nTrackback]) {
         AnkUtils.A(node.querySelectorAll(selector)) .
           map(function (img) trackbackParentNode(img, nTrackback)) .
