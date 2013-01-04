@@ -1123,7 +1123,7 @@ saved-minute  = ?saved-minute?
             var wrapper = doc.getElementById('wrapper');
             var medImg = AnkPixiv.elements.illust.mediumImage;
             var bigImgPath = AnkPixiv.info.path.largeImage;
-            var openComment = function () content.wrappedJSObject.one_comment_view();
+            var openComment = doc.querySelector('.comment-show-button');
             var worksData = AnkPixiv.elements.illust.worksData;
             var bgImage = doc.defaultView.getComputedStyle(doc.body, '').backgroundImage;
           } catch (e) {
@@ -1422,7 +1422,7 @@ saved-minute  = ?saved-minute?
 
           // コメント欄を開く
           if (AnkPixiv.Prefs.get('openComment', false)) // {{{
-            setTimeout(openComment, 1000);
+            setTimeout(function () openComment.click(), 1000);
           // }}}
 
           // 最大イラストIDの変更
