@@ -139,7 +139,10 @@ try {
           AnkPixiv.elements.doc.querySelector('.work-info > .caption'),
 
         get avatar ()
-          AnkPixiv.elements.doc.querySelector('.avatar_m > img'),
+          AnkPixiv.elements.doc.querySelector('.user-unit > a > img.user-image'),
+
+        get userName ()
+          AnkPixiv.elements.doc.querySelector('.user-unit > a > .user'),
 
         get memberLink ()
           AnkPixiv.elements.doc.querySelector('a.avatar_m'),
@@ -271,13 +274,8 @@ try {
       });
 
       let member = {
-        get id () {
-          try {
-            return AnkPixiv.elements.illust.memberLink.getAttribute('href').replace(/^.*id=/, '');
-          } catch (e) {
-            return 0;
-          }
-        },
+        get id ()
+          content.window.wrappedJSObject.pixiv.context.userId,
 
         get pixivId ()
           (AnkPixiv.elements.illust.avatar.src.match(/\/profile\/([^\/]+)\//)
@@ -285,7 +283,7 @@ try {
            AnkPixiv.info.path.largeImage.match(/^https?:\/\/[^\.]+\.pixiv\.net\/(?:img\d+\/)?img\/([^\/]+)\//))[1],
 
         get name ()
-          AnkUtils.trim(AnkPixiv.elements.illust.avatar.getAttribute('alt')),
+          AnkUtils.trim(AnkPixiv.elements.illust.userName.textContent),
 
         get memoizedName () {
           let result = AnkPixiv.Storage.select(
