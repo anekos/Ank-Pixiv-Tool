@@ -162,9 +162,12 @@ try {
           // ldrize
           let ldrize = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('#gm_ldrize'));
           // ヘッダ
-          let header = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('#global-header'));
+          let header1 = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('#global-header'));
+          let header2 = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('.header'));
 
-          return ([]).concat(obj, iframe, search, findbox, ldrize, header);
+          let toolbarItems = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('#toolbar-items'));
+
+          return ([]).concat(obj, iframe, search, findbox, ldrize, header1, header2, toolbarItems);
         }
       };
 
