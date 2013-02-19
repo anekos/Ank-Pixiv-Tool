@@ -278,7 +278,9 @@ try {
 
       let member = {
         get id ()
-          content.window.wrappedJSObject.pixiv.context.userId,
+          AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('script'))
+            .map(function(it) it.textContent.match(/pixiv.context.userId = '(\d+)';/))
+            .filter(function(it) it)[0][1],
 
         get pixivId ()
           (AnkPixiv.elements.illust.avatar.src.match(/\/profile\/([^\/]+)\//)
