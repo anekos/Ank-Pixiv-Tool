@@ -139,10 +139,10 @@ try {
           AnkPixiv.elements.doc.querySelector('.work-info > .caption'),
 
         get avatar ()
-          AnkPixiv.elements.doc.querySelector('.user-unit > a > img.user-image'),
+          AnkPixiv.elements.doc.querySelector('.profile-unit > a > img.user-image'),
 
         get userName ()
-          AnkPixiv.elements.doc.querySelector('.user-unit > a > .user'),
+          AnkPixiv.elements.doc.querySelector('.profile-unit > a > .user'),
 
         get memberLink ()
           AnkPixiv.elements.doc.querySelector('a.avatar_m'),
