@@ -917,29 +917,29 @@ try {
           filenames.push(repl(alternateFilename));
           filenames = filenames.map(function (filename) filename.replace(/\s*\?page-number\?\s*/g, ''));
           if (debug) {
-            let tokens = <><![CDATA[
-title         = ?title?
-member-id     = ?member-id?
-member-name   = ?member-name?
-memoized-name = ?memoized-name?
-tags          = ?tags?
-short-tags    = ?short-tags?
-tools         = ?tools?
-pixiv-id      = ?pixiv-id?
-illust-id     = ?illust-id?
-illust-year   = ?illust-year?
-illust-year2  = ?illust-year2?
-illust-month  = ?illust-month?
-illust-day    = ?illust-day?
-illust-hour   = ?illust-hour?
-illust-minute = ?illust-minute?
-saved-year    = ?saved-year?
-saved-year2   = ?saved-year2?
-saved-month   = ?saved-month?
-saved-day     = ?saved-day?
-saved-hour    = ?saved-hour?
-saved-minute  = ?saved-minute?
-                ]]></>.toString();
+            let tokens = [
+              'title         = ?title?',
+              'member-id     = ?member-id?',
+              'member-name   = ?member-name?',
+              'memoized-name = ?memoized-name?',
+              'tags          = ?tags?',
+              'short-tags    = ?short-tags?',
+              'tools         = ?tools?',
+              'pixiv-id      = ?pixiv-id?',
+              'illust-id     = ?illust-id?',
+              'illust-year   = ?illust-year?',
+              'illust-year2  = ?illust-year2?',
+              'illust-month  = ?illust-month?',
+              'illust-day    = ?illust-day?',
+              'illust-hour   = ?illust-hour?',
+              'illust-minute = ?illust-minute?',
+              'saved-year    = ?saved-year?',
+              'saved-year2   = ?saved-year2?',
+              'saved-month   = ?saved-month?',
+              'saved-day     = ?saved-day?',
+              'saved-hour    = ?saved-hour?',
+              'saved-minute  = ?saved-minute?'
+            ].join("\n");
             window.alert(repl(tokens, title));
             window.alert(filenames);
           }
@@ -1933,15 +1933,14 @@ saved-minute  = ?saved-minute?
     registerSheet: let (registered) function (style) { // {{{
       const IOS = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Ci.nsIIOService);
       const StyleSheetService = Cc['@mozilla.org/content/style-sheet-service;1'].getService(Ci.nsIStyleSheetService);
-      const DefaultStyle = <><![CDATA[
-        .ank-pixiv-tool-downloaded {
-          background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAABGdBTUEAALGPC/xhBQAAABVJREFUGFdj/M+ABIAcOEKwQEqQZQAoTgz1O3uPKAAAAABJRU5ErkJggg==) !important;
-
-          background-repeat: repeat-x !important;
-          background-position: bottom !important;
-          background-color: pink !important;
-        }
-      ]]></>.toString();
+      const DefaultStyle = [
+        '.ank-pixiv-tool-downloaded {',
+        '  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAABGdBTUEAALGPC/xhBQAAABVJREFUGFdj/M+ABIAcOEKwQEqQZQAoTgz1O3uPKAAAAABJRU5ErkJggg==) !important;',
+        '  background-repeat: repeat-x !important;',
+        '  background-position: bottom !important;',
+        '  background-color: pink !important;',
+        '}'
+      ].join("\n");
 
       let CSS = [
         '@namespace url(http://www.w3.org/1999/xhtml);',
