@@ -1214,14 +1214,23 @@ saved-minute  = ?saved-minute?
               buttonPanel.style.opacity = 1;
             };
             let hideButtons = function () {
+              function clearFadeOutTimer () {
+                clearInterval(fadeOutTimer);
+                fadeOutTimer = void 0;
+                buttonOpacity = 0;
+              }
+
               let buttonOpacity = 100;
               fadeOutTimer = setInterval(function () {
-                if (buttonOpacity <= 0) {
-                  clearInterval(fadeOutTimer);
-                  fadeOutTimer = void 0;
+                try {
+                  if (buttonOpacity <= 0)
+                    return clearFadeOutTimer();
+                  buttonOpacity -= 10;
+                  buttonPanel.style.opacity = buttonOpacity / 100.0;
+                } catch (e if e instanceof TypeError) {
+                  // XXX for "can't access dead object"
+                  clearFadeOutTimer();
                 }
-                buttonOpacity -= 10;
-                buttonPanel.style.opacity = buttonOpacity / 100.0;
               }, 100);
             };
 
