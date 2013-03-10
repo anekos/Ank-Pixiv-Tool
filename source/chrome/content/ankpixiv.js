@@ -237,6 +237,7 @@ try {
           AnkPixiv.info.illust.worksData.mangaPages,
 
         get worksData () {
+          let zp = AnkUtils.zeroPad;
           let items = AnkUtils.A(AnkPixiv.elements.illust.worksData.querySelectorAll('.meta > li'));
           let result = {};
           items.forEach(function (item) {
@@ -244,19 +245,19 @@ try {
             let m;
             if (m = item.match(/(\d+)\/(\d+)\/(\d{4})[^\d]+(\d+):(\d+)/)) {
               result.dateTime = {
-                year: m[3],
-                month: m[1],
-                day: m[2],
-                hour: m[4],
-                minute: m[5],
+                year: zp(m[3], 4),
+                month: zp(m[1], 2),
+                day: zp(m[2], 2),
+                hour: zp(m[4], 2),
+                minute: zp(m[5], 2),
               };
             } else if (m = item.match(/(\d+)[^\d]+(\d+)[^\d]+(\d+)[^\d]+(\d+):(\d+)/)) {
               result.dateTime = {
-                year: m[1],
-                month: m[2],
-                day: m[3],
-                hour: m[4],
-                minute: m[5],
+                year: zp(m[1], 4),
+                month: zp(m[2], 2),
+                day: zp(m[3], 2),
+                hour: zp(m[4], 2),
+                minute: zp(m[5], 2),
               };
             } else if (m = item.match(/\u6F2B\u753B\s*(\d+)P/)) {
               result.mangaPages = parseInt(m[1], 10);
