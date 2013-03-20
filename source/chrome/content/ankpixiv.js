@@ -720,7 +720,7 @@ try {
      *    onComplete      終了時のアラート
      * 複数のファイルをダウンロードする
      */
-    downloadFiles: function (urls, referer, localdir, onComplete, onError) { // {{{
+    downloadFiles: function (urls, referer, localdir, fp, onComplete, onError) { // {{{
       const MAX_FILE = 1000;
 
       let index = 0;
@@ -775,7 +775,7 @@ try {
         let fileExt =
           let (m = url.match(/(\.\w+)(?:$|\?)/))
             ((m && m[1]) || '.jpg');
-        file.append(AnkUtils.zeroPad(index + 1, 2) + fileExt);
+    	file.append(((fp!=null)?(AnkUtils.zeroPad(fp[index], 2) + '_'):'') + AnkUtils.zeroPad(index + 1, 2) + fileExt);
 
         lastFile = file;
         index++;
@@ -1046,12 +1046,12 @@ try {
           return;
 
         if (AnkPixiv.in.manga) {
-          AnkPixiv.getLastMangaPage(function (v, ext) {
+          AnkPixiv.getLastMangaPage(function (v, fp, ext) {
             function _download (originalSize) {
               let urls = [];
               for (let i = 0; i < v; i++)
                 urls.push(AnkPixiv.info.path.getLargeMangaImage(i, url, ext, originalSize));
-              AnkPixiv.downloadFiles(urls, ref, destFiles.image, onComplete, onError);
+              AnkPixiv.downloadFiles(urls, ref, destFiles.image, fp, onComplete, onError);
               addDownloading();
             }
 
@@ -1471,17 +1471,30 @@ try {
         const MAX = 1000;
          let doc = AnkUtils.createHTMLDocument(source);
          let scripts = AnkUtils.A(doc.querySelectorAll('script'));
-        return Math.min(
-          MAX,
-          scripts.filter(function (e) ~e.textContent.indexOf('++pixiv.context.totalPages')).length
-        );
+         let sm = scripts.filter(function (e) ~e.textContent.indexOf('++pixiv.context.totalPages'));
+         let fp = new Array(sm.length);
+         sm.forEach(function (v,i,a) {
+        	 if ( v.textContent.match(/pixiv\.context\.images\[(\d+)\]/) ) {
+    			 fp[i] = 1+parseInt(RegExp.$1);
+        	 }
+         });
+         if (fp[fp.length-1]<fp.length) {
+        	 // 見開きがある場合
+             AnkUtils.dump("*** MOD *** Facing Page Check: "+fp.length+" pics in "+fp[fp.length-1]+" pages");
+         }
+         else {
+        	 // 見開きがない場合
+        	 fp = null;
+         }
+        return [Math.min(MAX,sm.length),fp];
       }
 
       let xhr = new XMLHttpRequest();
       xhr.open('GET', AnkPixiv.info.path.mangaIndexPage, true);
       xhr.onreadystatechange = function (e) {
         if (xhr.readyState == 4 && xhr.status == 200) {
-          result(get(xhr.responseText));
+          let arr = get(xhr.responseText);
+          result(arr[0],arr[1]);
         }
       };
       xhr.send(null);
