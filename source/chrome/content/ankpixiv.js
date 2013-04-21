@@ -123,8 +123,13 @@ try {
 
     elements: (function () { // {{{
       let illust =  {
-        get mediumImage ()
-          AnkPixiv.elements.doc.querySelector('.works_display > a > img'),
+        get mediumImage () {
+          return (
+            AnkPixiv.elements.doc.querySelector('.works_display > a > img')
+            ||
+            AnkPixiv.elements.doc.querySelector('.works_display > * > a > img')
+          );
+        },
 
         get largeLink ()
           AnkPixiv.elements.doc.querySelector('.works_display > a'),
