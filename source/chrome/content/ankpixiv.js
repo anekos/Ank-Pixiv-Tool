@@ -2011,6 +2011,12 @@ try {
               pixiv_id: "string",
               version: "integer",
             }
+          },
+          {
+            index: {
+              histories: ['illust_id'],
+              members: ['id']
+            }
           }
         );
       } // }}}

@@ -2,9 +2,10 @@
 try {
 
 
-  AnkStorage = function (filename, tables) { // {{{
+  AnkStorage = function (filename, tables, options) { // {{{
     this.filename = filename;
     this.tables = {};
+    this.options = options || {};
 
     for (let key in tables) {
       this.tables[key] = new AnkTable(key, tables[key]);
@@ -167,6 +168,16 @@ try {
       //データベースのテーブルを作成
       for (let tableName in this.tables) {
         this.createTable(this.tables[tableName]);
+      }
+      if (this.options.index) {
+        for (let tableName in this.options.index) {
+          let self = this;
+          this.options.index[tableName].forEach(function (columnName) {
+            let indexName = tableName + '_index_' + columnName;
+            if (!self.database.indexExists(indexName))
+              self.database.executeSimpleSQL('create index ' + indexName + ' on ' + tableName + '(' + columnName + ');');
+          })
+        }
       }
     }, // }}}
 
