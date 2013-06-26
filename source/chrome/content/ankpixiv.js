@@ -1476,8 +1476,8 @@ try {
         const MAX = 1000;
          let doc = AnkUtils.createHTMLDocument(source);
          let scripts = AnkUtils.A(doc.querySelectorAll('script'));
-         let sm = scripts.filter(function (e) ~e.textContent.indexOf('++pixiv.context.totalPages'));
-         let fp = new Array(sm.length);
+         let sm = scripts.filter(function (e) ~e.textContent.indexOf('pixiv.context.pages'));
+         let fp = new Array(sm.length-1);
          sm.forEach(function (v,i,a) {
         	 if ( v.textContent.match(/pixiv\.context\.images\[(\d+)\]/) ) {
     			 fp[i] = 1+parseInt(RegExp.$1);
@@ -1491,7 +1491,7 @@ try {
         	 // 見開きがない場合
         	 fp = null;
          }
-        return [Math.min(MAX,sm.length),fp];
+        return [Math.min(MAX,sm.length-1),fp];
       }
 
       let xhr = new XMLHttpRequest();
