@@ -376,6 +376,8 @@ try {
           }
           return result;
         } else {
+          if ( value && ! AnkPixiv.in.manga && name == 'path.mangaIndexPage')
+            value = value.replace(/mode=manga/,'mode=medium');
           return value ? name + "\n" + indent(value) + "\n" : '';
         }
       }
@@ -1182,7 +1184,7 @@ try {
             nextButton.innerHTML = '>>';
             closeButton.innerHTML = '\xD7';
             buttonPanel.setAttribute('style', 'position: fixed !important; bottom: 0px; width: 100%; opacity: 0; z-index: 666');
-            bigImg.setAttribute('style', 'margin: 0px');
+            bigImg.setAttribute('style', 'margin: 0px; background: #FFFFFF');
             imgPanel.setAttribute('style', 'margin: 0px');
 
             [prevButton, nextButton, closeButton].forEach(function (button) {
