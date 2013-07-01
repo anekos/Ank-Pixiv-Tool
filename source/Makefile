@@ -17,3 +17,5 @@ clean:
 
 publish: all
 	scp ank_pixiv_tool.xpi snca.net:/srv/www/www.snca.net/public/blogfiles/$(FILENAME)
+	echo 'http://www.kurinton.net/~snca/blogfiles/ank_pixiv_tool.xpi'
+	echo 'http://www.kurinton.net/~snca/blogfiles/ank_pixiv_tool.xpi' | xclip -i
