@@ -1547,7 +1547,7 @@ try {
 
       let doc;
 
-      try { 
+      try {
         // XXX for "can't access dead object".
         doc = appendTo && appendTo.ownerDocument;
       } catch (e) {
@@ -1562,6 +1562,7 @@ try {
       textNode.textContent = AnkPixiv.Locale(R18 ? 'used' : 'downloaded');
       div.setAttribute('style', AnkPixiv.Prefs.get('downloadedDisplayStyle', ''));
       div.setAttribute('id', ElementID);
+      div.setAttribute('class', R18 ? 'R18' : '');
       div.appendChild(textNode);
       if (appendTo)
         appendTo.appendChild(div);
@@ -1960,6 +1961,20 @@ try {
         '  background-repeat: repeat-x !important;',
         '  background-position: bottom !important;',
         '  background-color: pink !important;',
+        '}',
+        '#ankpixiv-downloaded-display.R18 {',
+        '  animation-duration: 10s;',
+        '  animation-name: slidein;',
+        '  animation-iteration-count: infinite !important;',
+        '  animation-direction: alternate;',
+        '}',
+        '@keyframes slidein {',
+        '  from {',
+        '    transform: rotateY(0deg);',
+        '  }',
+        '  to {',
+        '    transform: rotateY(360deg);',
+        '  }',
         '}'
       ].join("\n");
 
