@@ -355,8 +355,10 @@ try {
      *    _interface:
      * Components.classes[klass].createInstance(interface)
      */
-    ccci: function (klass, _interface) // {{{
-      Components.classes[klass].createInstance(_interface), // }}}
+    ccci: function (klass, _interface) {
+      let cc = Components.classes[klass];
+      return cc && cc.createInstance(_interface);
+    }, // {{{
 
     /*
      * makeLocalFile

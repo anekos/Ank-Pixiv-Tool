@@ -199,14 +199,26 @@ try {
       let storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
                                          Components.interfaces.mozIStorageStatementWrapper);
       let q = 'pragma table_info (' + tableName + ')';
-      return this.createStatement(q, function (stmt) {
-        storageWrapper.initialize(stmt);
-        let result = {};
-        while (storageWrapper.step()) {
-          result[storageWrapper.row["name"]] = {type: storageWrapper.row["type"]};
-        }
-        return result;
-      });
+      // statement wrappers have been deprecated | Nathan's Blog
+      // https://blog.mozilla.org/nfroyd/2012/05/14/statement-wrappers-have-been-deprecated/
+      if (storageWrapper) {
+        return this.createStatement(q, function (stmt) {
+          storageWrapper.initialize(stmt);
+          let result = {};
+          while (storageWrapper.step()) {
+            result[storageWrapper.row["name"]] = {type: storageWrapper.row["type"]};
+          }
+          return result;
+        });
+      } else {
+        return this.createStatement(q, function (stmt) {
+          let result = {};
+          while (stmt.step()) {
+            result[stmt.row["name"]] = {type: stmt.row["type"]};
+          }
+          return result;
+        });
+      }
     }, // }}}
 
     updateTable: function (table) { // {{{
