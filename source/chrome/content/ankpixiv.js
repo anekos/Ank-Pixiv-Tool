@@ -1144,6 +1144,7 @@ try {
             var openComment = doc.querySelector('.comment-show-button');
             var worksData = AnkPixiv.elements.illust.worksData;
             var bgImage = doc.defaultView.getComputedStyle(doc.body, '').backgroundImage;
+            var fitMode = AnkPixiv.Prefs.get('largeImageSize', AnkPixiv.FIT.NONE);
           } catch (e) {
             return delay("delay installation by error", e);
           } // }}}
@@ -1181,6 +1182,7 @@ try {
             let buttonPanel = createElement('div', 'button-panel');
             let prevButton = createElement('button', 'previous-button');
             let nextButton = createElement('button', 'next-button');
+            let resizeButton = createElement('button', 'resize-button');
             let closeButton = createElement('button', 'close-button');
             let pageSelector = createElement('select', 'page-selector');
 
@@ -1189,12 +1191,13 @@ try {
             viewer.setAttribute('style', 'top: 0px; left: 0px; width:100%; height: 100%; text-align: center; display: none; -moz-opacity: 1; padding: 0px; bottom: 0px');
             prevButton.innerHTML = '<<';
             nextButton.innerHTML = '>>';
+            resizeButton.innerHTML = 'RESIZE';
             closeButton.innerHTML = '\xD7';
             buttonPanel.setAttribute('style', 'position: fixed !important; bottom: 0px; width: 100%; opacity: 0; z-index: 666');
             bigImg.setAttribute('style', 'margin: 0px; background: #FFFFFF');
             imgPanel.setAttribute('style', 'margin: 0px');
 
-            [prevButton, nextButton, closeButton].forEach(function (button) {
+            [prevButton, nextButton, resizeButton, closeButton].forEach(function (button) {
               button.setAttribute('class', 'submit_btn');
               button.setAttribute('style', 'width: 100px !important');
             });
@@ -1207,6 +1210,7 @@ try {
              *      - prevButton
              *      - pageSelector
              *      - nextButton
+             *      - resizeButton
              *      - closeButton
              */
             viewer.appendChild(imgPanel);
@@ -1216,6 +1220,12 @@ try {
               buttonPanel.appendChild(pageSelector);
               buttonPanel.appendChild(prevButton);
               buttonPanel.appendChild(nextButton);
+              buttonPanel.appendChild(resizeButton);
+              buttonPanel.appendChild(closeButton);
+            }
+            else {
+              viewer.appendChild(buttonPanel);
+              buttonPanel.appendChild(resizeButton);
               buttonPanel.appendChild(closeButton);
             }
             body.insertBefore(viewer, body.firstChild);
@@ -1254,7 +1264,7 @@ try {
               bigImg.setAttribute('src', bigImgPath);
             };
 
-            bigImg.addEventListener('load', function () {
+            let autoResize = function () {
               function resize (w, h) {
                 bigImg.style.width = w + 'px';
                 bigImg.style.height = h + 'px';
@@ -1265,36 +1275,53 @@ try {
                 }
               }
 
-              bigImg.style.width = 'auto';
-              bigImg.style.height = 'auto';
-
-              let body = content.window.document.body;
               let cw = doc.documentElement.clientWidth, ch = doc.documentElement.clientHeight;
-              let iw = bigImg.width, ih = bigImg.height;
+              let iw = bigImg.naturalWidth, ih = bigImg.naturalHeight;
               let pw = cw / iw, ph = ch / ih;
+              if (AnkPixiv.Prefs.get('dontResizeIfSmall')) {
+                pw = pw>1 ? 1 : pw;
+                ph = ph>1 ? 1 : ph;
+              }
               let pp = Math.min(pw, ph);
 
-              let fit = AnkPixiv.Prefs.get('largeImageSize', AnkPixiv.FIT.NONE);
-              if (fit != AnkPixiv.FIT.NONE && (!AnkPixiv.Prefs.get('dontResizeIfSmall') || iw > cw || ih > ch)) {
-                switch (fit) {
-                case AnkPixiv.FIT.IN_WINDOW_SIZE:
-                  resize(parseInt(iw * pp), parseInt(ih * pp));
-                  break;
-                case AnkPixiv.FIT.IN_WINDOW_WIDTH:
-                  resize(parseInt(iw * pw), parseInt(ih * pw));
-                  break;
-                case AnkPixiv.FIT.IN_WINDOW_HEIGHT:
-                  resize(parseInt(iw * ph), parseInt(ih * ph));
-                  break;
-                }
-              } else {
-                if (ch > ih)
-                  bigImg.style.marginTop = parseInt(ch / 2 - ih / 2) + 'px';
+              switch (fitMode) {
+              case AnkPixiv.FIT.IN_WINDOW_SIZE:
+                resize(parseInt(iw * pp), parseInt(ih * pp));
+                resizeButton.innerHTML = 'FIT in Window';
+                break;
+              case AnkPixiv.FIT.IN_WINDOW_WIDTH:
+                resize(parseInt(iw * pw), parseInt(ih * pw));
+                resizeButton.innerHTML = 'FIT in Width';
+                break;
+              case AnkPixiv.FIT.IN_WINDOW_HEIGHT:
+                resize(parseInt(iw * ph), parseInt(ih * ph));
+                resizeButton.innerHTML = 'FIT in Height';
+                break;
+              default:
+                resize(iw, ih);
+                resizeButton.innerHTML = 'No FIT';
+                break;
               }
 
               bigImg.style.display = '';
               window.content.scrollTo(0, 0);
-            }, true);
+            };
+
+            bigImg.addEventListener('load', autoResize, true);
+
+            let qresize = null;
+            let delayResize = function () {
+              if (!bigMode)
+                return;
+              if (qresize)
+                clearTimeout(qresize);
+              qresize = setTimeout(function(e) {
+                qresize = null;
+                autoResize();
+              },200)
+            };
+            
+            win.addEventListener('resize', delayResize, false);
 
             let changeImageSize = function () {
               let ads = AnkPixiv.elements.illust.ads;
@@ -1395,6 +1422,27 @@ try {
             buttonPanel.addEventListener('mouseout', hideButtons, false);
             prevButton.addEventListener('click', noMoreEvent(function () goNextPage(-1, true)), false);
             nextButton.addEventListener('click', noMoreEvent(function () goNextPage(1, true)), false);
+            resizeButton.addEventListener(
+              'click',
+              noMoreEvent(function() {
+                function rotateFitMode (fit) {
+                  switch (fit) {
+                  case AnkPixiv.FIT.IN_WINDOW_SIZE:
+                    return AnkPixiv.FIT.IN_WINDOW_HEIGHT;
+                  case AnkPixiv.FIT.IN_WINDOW_HEIGHT:
+                    return AnkPixiv.FIT.IN_WINDOW_WIDTH;
+                  case AnkPixiv.FIT.IN_WINDOW_WIDTH:
+                    return AnkPixiv.FIT.IN_WINDOW_NONE;
+                  default:
+                    return AnkPixiv.FIT.IN_WINDOW_SIZE;
+                  }
+                }
+
+                fitMode = rotateFitMode(fitMode);
+                autoResize();
+              }),
+              false
+            );
             closeButton.addEventListener('click', noMoreEvent(changeImageSize), false);
             bigImg.addEventListener(
               'click',
