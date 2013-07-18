@@ -1477,9 +1477,14 @@ try {
       function get (source) {
         const MAX = 1000;
         let doc = AnkUtils.createHTMLDocument(source);
+        if (doc.querySelector('.errorArea')) {
+          let msg = AnkPixiv.Locale('serverError');
+          AnkUtils.dump(msg)
+          return window.alert(msg);
+        }
         let scripts = AnkUtils.A(doc.querySelectorAll('script'));
-        let sm = scripts.filter(function (e) ~e.textContent.indexOf('pixiv.context.pages'));
-        let fp = new Array(sm.length - 1);
+        let sm = scripts.filter(function (e) ~e.textContent.indexOf('pixiv.context.pages['));
+        let fp = new Array(sm.length);
         sm.forEach(function (v, i, a) {
           if (v.textContent.match(/pixiv\.context\.images\[(\d+)\]/)) {
             fp[i] = 1+parseInt(RegExp.$1);
@@ -1493,7 +1498,7 @@ try {
           // 見開きがない場合
           fp = null;
         }
-        return [Math.min(MAX,sm.length - 1), fp];
+        return [Math.min(MAX,sm.length), fp];
       }
 
       let xhr = new XMLHttpRequest();
