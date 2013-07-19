@@ -131,8 +131,13 @@ try {
           );
         },
 
-        get largeLink ()
-          AnkPixiv.elements.doc.querySelector('.works_display > a'),
+        get largeLink () {
+          return (
+            AnkPixiv.elements.doc.querySelector('.works_display > a')
+            ||
+            AnkPixiv.elements.doc.querySelector('.works_display > * > a')
+          );
+        },
 
         get worksData ()
           AnkPixiv.elements.doc.querySelector('.work-info'),
@@ -1055,11 +1060,13 @@ try {
         if (AnkPixiv.in.manga) {
           AnkPixiv.getLastMangaPage(function (v, fp, ext) {
             function _download (originalSize) {
-              let urls = [];
-              for (let i = 0; i < v; i++)
-                urls.push(AnkPixiv.info.path.getLargeMangaImage(i, url, ext, originalSize));
-              AnkPixiv.downloadFiles(urls, ref, destFiles.image, fp, onComplete, onError);
-              addDownloading();
+              if (v) {
+                let urls = [];
+                for (let i = 0; i < v; i++)
+                  urls.push(AnkPixiv.info.path.getLargeMangaImage(i, url, ext, originalSize));
+                AnkPixiv.downloadFiles(urls, ref, destFiles.image, fp, onComplete, onError);
+                addDownloading();
+              }
             }
 
             if (AnkPixiv.Prefs.get('downloadOriginalSize', false)) {
@@ -1306,16 +1313,19 @@ try {
               } else {
                 hideButtons();
                 currentMangaPage = 0;
-                if (lastMangaPage === undefined) {
+                if (AnkPixiv.in.manga && lastMangaPage === undefined) {
                   AnkPixiv.getLastMangaPage(function (v) {
-                    lastMangaPage = v;
                     if (v) {
+                      lastMangaPage = v;
                       for (let i = 0; i < v; i++) {
                         let option = doc.createElement('option');
                         option.textContent = (i + 1) + '/' + v;
                         option.value = i;
                         pageSelector.appendChild(option);
                       }
+                    }
+                    else {
+                      changeImageSize();
                     }
                   });
                 }
@@ -1477,11 +1487,15 @@ try {
       function get (source) {
         const MAX = 1000;
         let doc = AnkUtils.createHTMLDocument(source);
+        if (doc.querySelector('.errorArea') || doc.querySelector('.errortxt')) {
+          window.alert(AnkPixiv.Locale('serverError'));
+          return [0, null];
+        }
         let scripts = AnkUtils.A(doc.querySelectorAll('script'));
-        let sm = scripts.filter(function (e) ~e.textContent.indexOf('pixiv.context.pages'));
-        let fp = new Array(sm.length - 1);
+        let sm = scripts.filter(function (e) ~e.textContent.indexOf('pixiv.context.pages['));
+        let fp = new Array(sm.length);
         sm.forEach(function (v, i, a) {
-          if (v.textContent.match(/pixiv\.context\.images\[(\d+)\]/)) {
+          if (v.textContent.match(/pixiv\.context\.pages\[(\d+)\]/)) {
             fp[i] = 1+parseInt(RegExp.$1);
           }
         });
@@ -1493,7 +1507,7 @@ try {
           // 見開きがない場合
           fp = null;
         }
-        return [Math.min(MAX,sm.length - 1), fp];
+        return [Math.min(MAX,sm.length), fp];
       }
 
       let xhr = new XMLHttpRequest();
