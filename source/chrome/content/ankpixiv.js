@@ -1467,7 +1467,7 @@ try {
      * この関数は、非同期に呼び出してはいけない。
      * (pagesFromIllustPage のため)
      *
-     *    result:     コールバック関数 function (ページ数)
+     *    result:     コールバック関数 function (ページ数, 見開きか否か)
      */
     getLastMangaPage: function (result) { // {{{
       const PAGE_LIMIT = 50 - 5;
