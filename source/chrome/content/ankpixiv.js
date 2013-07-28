@@ -1496,7 +1496,7 @@ try {
         let fp = new Array(sm.length);
         sm.forEach(function (v, i, a) {
           if (v.textContent.match(/pixiv\.context\.pages\[(\d+)\]/)) {
-            fp[i] = 1+parseInt(RegExp.$1);
+            fp[i] = 1 + parseInt(RegExp.$1);
           }
         });
         if (fp[fp.length - 1] < fp.length) {
