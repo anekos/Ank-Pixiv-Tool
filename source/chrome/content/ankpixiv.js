@@ -1313,7 +1313,7 @@ try {
               } else {
                 hideButtons();
                 currentMangaPage = 0;
-                if (AnkPixiv.in.manga && lastMangaPage === undefined) {
+                if (AnkPixiv.in.manga && typeof lastMangaPage == 'undefined') {
                   AnkPixiv.getLastMangaPage(function (v) {
                     if (v) {
                       lastMangaPage = v;
