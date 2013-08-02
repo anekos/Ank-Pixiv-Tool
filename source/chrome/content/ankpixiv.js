@@ -1199,6 +1199,20 @@ try {
               button.setAttribute('style', 'width: 100px !important');
             });
 
+            if (MutationObserver) {
+              // 画像ロード中は半透明にする
+              new MutationObserver(function (o) {
+                o.forEach(function (e) {
+                  e.target.style.setProperty('opacity', '0.5', 'important');
+                });
+              }).observe(bigImg, {attributes: true, attributeFilter: ['src']});
+
+              // 画像ロード完了後に半透明を解除
+              bigImg.addEventListener('load', function (e) {
+                e.target.style.setProperty('opacity', '1', 'important');
+              }, false);
+            }
+
             /*
              * viewer
              *    - imgPanel
@@ -1335,7 +1349,7 @@ try {
                 wrapper.setAttribute('style', 'opacity: 0.1;');
                 wrapperTopMargin = wrapper.style.marginTop;
                 wrapper.style.marginTop = '0px';
-                bigImg.style['opacity'] = '1 !important;';
+                bigImg.style.setProperty('opacity', '1', 'important');
                 ads.forEach(
                   function (ad) {
                     ad.__ank_pixiv__style_display = ad.style.display;
