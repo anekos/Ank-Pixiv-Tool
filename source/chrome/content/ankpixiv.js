@@ -1201,18 +1201,18 @@ try {
 
             if (MutationObserver) {
               // 画像ロード中は半透明にする
-              new MutationObserver(function(o) {
-                o.forEach(function(e) {
+              new MutationObserver(function (o) {
+                o.forEach(function (e) {
                   e.target.style.setProperty('opacity', '0.5', 'important');
                 });
-              }).observe(bigImg, {attributes:true, attributeFilter:['src']});
-              
+              }).observe(bigImg, {attributes: true, attributeFilter: ['src']});
+
               // 画像ロード完了後に半透明を解除
-              bigImg.addEventListener('load', function(e) {
+              bigImg.addEventListener('load', function (e) {
                 e.target.style.setProperty('opacity', '1', 'important');
               }, false);
             }
-            
+
             /*
              * viewer
              *    - imgPanel
