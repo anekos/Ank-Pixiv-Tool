@@ -1320,7 +1320,7 @@ try {
                 autoResize();
               },200)
             };
-            
+
             win.addEventListener('resize', delayResize, false);
 
             let changeImageSize = function () {
