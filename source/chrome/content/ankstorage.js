@@ -173,7 +173,7 @@ try {
         for (let tableName in this.options.index) {
           let self = this;
           this.options.index[tableName].forEach(function (columnName) {
-            let indexName = tableName + '_index_' + columnName;
+            let indexName = tableName + '_index_' + columnName.replace(/,/,'_');
             if (!self.database.indexExists(indexName))
               self.database.executeSimpleSQL('create index ' + indexName + ' on ' + tableName + '(' + columnName + ');');
           })

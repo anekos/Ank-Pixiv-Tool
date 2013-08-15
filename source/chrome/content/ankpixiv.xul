@@ -8,6 +8,7 @@
 
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankutils.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankstorage.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/anknijie.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankpixiv.js" />
   <script type="application/x-javascript"><![CDATA[
     AnkPixiv.onInit();

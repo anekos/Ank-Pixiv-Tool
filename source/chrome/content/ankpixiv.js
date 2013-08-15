@@ -7,7 +7,7 @@ try {
     * 定数
     ********************************************************************************/
 
-    DB_VERSION: 5,
+    DB_VERSION: 6,
 
     PREF_PREFIX: 'extensions.ankpixiv.',
 
@@ -56,12 +56,54 @@ try {
 
     Locale: AnkUtils.getLocale('chrome://ankpixiv/locale/ankpixiv.properties'),
 
-    URL: { // {{{
-      Pixiv: 'http://www.pixiv.net/',
-    }, // }}}
-
     MAX_ILLUST_ID: 12000000,
 
+    URL:        'http://www.pixiv.net/',
+    DOMAIN:     'www.pixiv.net',
+    SERVICE_ID: 'PXV',
+
+
+    /********************************************************************************
+    * マルチサイト対応 - ankpixiv.xulにも登録を
+    ********************************************************************************/
+
+    get domains () // {{{
+      [
+        typeof AnkNijie  !== 'undefined' && AnkNijie.DOMAIN,
+        typeof AnkNico   !== 'undefined' && AnkNico.DOMAIN,
+        typeof AnkTinami !== 'undefined' && AnkTinami.DOMAIN,
+                                            AnkPixiv.DOMAIN,
+      ].filter(function (v)  v), // }}}
+
+    get inSite () // {{{
+      (typeof AnkNijie  !== 'undefined' && AnkNijie.in.site)  ||
+      (typeof AnkNico   !== 'undefined' && AnkNico.in.site)   ||
+      (typeof AnkTimami !== 'undefined' && AnkTimami.in.site) ||
+                                           AnkPixiv.in.site, // }}}
+
+    get in () 
+      (typeof AnkNijie  !== 'undefined' && AnkNijie.in.site  && AnkNijie.in)  ||
+      (typeof AnkNico   !== 'undefined' && AnkNico.in.site   && AnkNico.in)   ||
+      (typeof AnkTimami !== 'undefined' && AnkTimami.in.site && AnkTinami.in) ||
+                                                                AnkPixiv.siteIn, // }}}
+
+    get elements () // {{{
+      (typeof AnkNijie  !== 'undefined' && AnkNijie.in.site  && AnkNijie.elements)  ||
+      (typeof AnkNico   !== 'undefined' && AnkNico.in.site   && AnkNico.elements)   ||
+      (typeof AnkTimami !== 'undefined' && AnkTimami.in.site && AnkTinami.elements) ||
+                                                                AnkPixiv.siteElements, // }}}
+
+    get info () // {{{
+      (typeof AnkNijie  !== 'undefined' && AnkNijie.in.site  && AnkNijie.info)  ||
+      (typeof AnkNico   !== 'undefined' && AnkNico.in.site   && AnkNico.info)   ||
+      (typeof AnkTimami !== 'undefined' && AnkTimami.in.site && AnkTinami.info) ||
+                                                                AnkPixiv.siteInfo, // }}}
+
+    get methods ()  // {{{
+      (typeof AnkNijie  !== 'undefined' && AnkNijie.in.site  && AnkNijie.methods)  ||
+      (typeof AnkNico   !== 'undefined' && AnkNico.in.site   && AnkNico.methods)   ||
+      (typeof AnkTimami !== 'undefined' && AnkTimami.in.site && AnkTinami.methods) ||
+                                                                AnkPixiv.siteMethods, // }}}
 
     /********************************************************************************
     * プロパティ
@@ -87,7 +129,10 @@ try {
     get currentLocation () // {{{
       window.content.document.location.href, // }}}
 
-    in: { // {{{
+    siteIn: { // {{{
+      get site () // {{{
+        AnkPixiv.siteIn.pixiv, // }}}
+
       get manga () { // {{{
         let node = AnkPixiv.elements.illust.largeLink;
         return node && node.href.match(/(?:&|\?)mode=manga(?:&|$)/);
@@ -121,7 +166,7 @@ try {
         !AnkPixiv.elements.illust.avatar, // }}}
     }, // }}}
 
-    elements: (function () { // {{{
+    siteElements: (function () { // {{{
       let illust =  {
         get mediumImage () {
           return (
@@ -196,7 +241,18 @@ try {
       };
     })(), // }}}
 
-    info: (function () { // {{{
+    siteInfo: (function () { // {{{
+      let service = {
+        get id ()
+          AnkPixiv.SERVICE_ID,
+
+        get url ()
+          AnkPixiv.URL,
+
+        get initDir ()
+          AnkPixiv.Prefs.get('initialDirectory'),
+      };
+
       let illust = {
         get id ()
           parseInt(AnkPixiv.elements.doc.querySelector('#rpc_i_id').textContent, 10),
@@ -232,6 +288,14 @@ try {
 
         get server ()
           AnkPixiv.info.path.largeStandardImage.match(/^http:\/\/([^\/\.]+)\./i)[1],
+
+        get referer () {
+          let mode =
+            !AnkPixiv.in.manga                                 ? 'big' :
+            !AnkPixiv.Prefs.get('downloadOriginalSize', false) ? 'manga' :
+                                                                 'manga_big&page=0'; // @see downloadFiles#downloadNext()
+          return AnkPixiv.currentLocation.replace(/mode=medium/, 'mode='+mode);
+        },
 
         get title ()
           AnkUtils.trim(AnkPixiv.elements.illust.title.textContent),
@@ -301,20 +365,8 @@ try {
         get name ()
           AnkUtils.trim(AnkPixiv.elements.illust.userName.textContent),
 
-        get memoizedName () {
-          let result = AnkPixiv.Storage.select(
-            'members',
-            'id = ?1',
-            function (stmt){
-              let result = [];
-              stmt.bindUTF8StringParameter(0, member.id);
-              while (stmt.executeStep())
-                result.push(AnkStorage.statementToObject(stmt));
-              return result;
-            }
-          );
-          return result && result.length && result[0].name;
-        },
+        get memoizedName ()
+          AnkPixiv.memoizedName,
       };
 
       let path = {
@@ -352,6 +404,7 @@ try {
       };
 
       return {
+        service: service,
         illust: illust,
         member: member,
         path: path
@@ -381,6 +434,8 @@ try {
           }
           return result;
         } else {
+          if (name.match(/^path\.images/))
+            return '';
           if ( value && ! AnkPixiv.in.manga && name == 'path.mangaIndexPage')
             value = value.replace(/mode=manga/,'mode=medium');
           return value ? name + "\n" + indent(value) + "\n" : '';
@@ -390,6 +445,21 @@ try {
       return textize([], AnkPixiv.info);
     }, // }}}
 
+    get memoizedName () {
+      let result = AnkPixiv.Storage.select(
+        'members',
+        'id = ?1 and service_id = ?2',
+        function (stmt){
+          let result = [];
+          stmt.bindUTF8StringParameter(0, AnkPixiv.info.member.id);
+          stmt.bindUTF8StringParameter(1, AnkPixiv.info.service.id);
+          while (stmt.executeStep())
+            result.push(AnkStorage.statementToObject(stmt));
+          return result;
+        }
+      );
+      return result && result.length && result[0].name;
+    },
 
     /********************************************************************************
     * 状態
@@ -413,10 +483,22 @@ try {
 
       filePicker.appendFilters(nsIFilePicker.filterAll);
       filePicker.init(window, "pixiviiiiieee", nsIFilePicker.modeSave);
-      filePicker.defaultString = defaultFilename;
 
-      let prefInitDir = AnkPixiv.Prefs.get('initialDirectory');
+      let pm = defaultFilename.split('/');
+      if (pm.length == 1)
+        pm = defaultFilename.split('\\');
+
+      filePicker.defaultString = pm.pop();
+
+      let prefInitDir = AnkPixiv.info.service.initDir;
       if (prefInitDir) {
+        if (pm.length > 0 && AnkPixiv.newLocalFile(prefInitDir).exists()) {
+          pm.unshift(prefInitDir);
+          let (d = pm.join(AnkUtils.SYS_SLASH)) {
+            if (AnkPixiv.newLocalFile(d).exists())
+              prefInitDir = d;
+          }
+        }
         let initdir = AnkUtils.ccci("@mozilla.org/file/local;1", Components.interfaces.nsILocalFile);
         initdir.initWithPath(prefInitDir);
         filePicker.displayDirectory = initdir;
@@ -561,7 +643,7 @@ try {
 
       try {
         let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
-        let prefInitDir = AnkPixiv.Prefs.get('initialDirectory');
+        let prefInitDir = AnkPixiv.info.service.initDir;
         let initDir = AnkPixiv.newLocalFile(prefInitDir);
 
         if (!initDir.exists())
@@ -593,10 +675,10 @@ try {
      *    illust_id:     イラストID
      *    return:        ダウンロード済み？
      */
-    isDownloaded: function (illust_id) { // {{{
+    isDownloaded: function (illust_id,service_id) { // {{{
       if (!/^\d+$/.test(illust_id))
         throw "Invalid illust_id";
-      return AnkPixiv.Storage.exists('histories', 'illust_id = ' + illust_id);
+      return AnkPixiv.Storage.exists('histories', 'illust_id = ' + illust_id + ' and service_id = \'' + service_id + '\'');
     }, // }}}
 
     /*
@@ -613,7 +695,7 @@ try {
       if (!onError)
         onError = function () void 0;
 
-      AnkUtils.dump('downloadTo: ' + url);
+      AnkUtils.dump('downloadTo: ' + url + ', ' + referer);
 
       // ディレクトリ作成
       let (dir = file.parent)
@@ -782,6 +864,7 @@ try {
         if (index >= Math.min(urls.length, MAX_FILE))
           return _onComplete.apply(null, arguments);
 
+        let ref = referer.replace(/(mode=manga_big)(&page=)\d+(.*)$/,"$1$3$2"+index);  // Pixivマンガオリジナルサイズの場合は画像ごとにrefererが異なる
         let url = urls[index];
         let file = localdir.clone();
         let fileExt =
@@ -793,7 +876,7 @@ try {
         index++;
 
         AnkUtils.dump('DL => ' + file.path);
-        return AnkPixiv.downloadToRetryable(url, 3, referer, file, downloadNext, _onError);
+        return AnkPixiv.downloadToRetryable(url, 3, ref, file, downloadNext, _onError);
       }
 
       downloadNext();
@@ -823,7 +906,7 @@ try {
         if (!AnkPixiv.in.illustPage)
           return false;
 
-        AnkPixiv.setCookies();
+        AnkPixiv.methods.setCookies();
 
         let destFiles;
         let metaText      = AnkPixiv.infoText;
@@ -831,7 +914,7 @@ try {
         let url           = AnkPixiv.info.path.largeStandardImage;
         let illust_id     = AnkPixiv.info.illust.id;
         let ext           = AnkPixiv.info.path.ext;
-        let ref           = AnkPixiv.currentLocation.replace(/mode=medium/, 'mode=big');
+        let ref           = AnkPixiv.info.illust.referer;
         let member_id     = AnkPixiv.info.member.id;
         let member_name   = AnkPixiv.info.member.name || member_id;
         let pixiv_id      = AnkPixiv.info.member.pixivId;
@@ -844,10 +927,11 @@ try {
         let dlDispPoint   = AnkPixiv.elements.illust.downloadedDisplayParent;
         let filenames     = [];
         let shortTags     = AnkPixiv.info.illust.shortTags;
+        let service_id    = AnkPixiv.info.service.id;
 
         if (AnkPixiv.Prefs.get('saveHistory', true)) {
           try {
-            if (AnkPixiv.Storage.exists('members', 'id = ' + parseInt(member_id))) {
+            if (AnkPixiv.Storage.exists('members', 'id = ' + parseInt(member_id) + ' and service_id = \'' + service_id + '\'')) {
               // 古いデータには pixiv_id がついていなかったら付加する
               // (DB_VERSION = 5 で pixiv_id がついた
               AnkPixiv.Storage.createStatement(
@@ -865,7 +949,8 @@ try {
                   id: member_id,
                   name: member_name,
                   pixiv_id: pixiv_id,
-                  version: AnkPixiv.DB_VERSION
+                  version: AnkPixiv.DB_VERSION,
+                  service_id: service_id
                 }
               );
             }
@@ -875,7 +960,7 @@ try {
         }
 
         /* ダウンロード済みかの確認 */
-        if (AnkPixiv.isDownloaded(illust_id)) {
+        if (AnkPixiv.isDownloaded(illust_id,service_id)) {
           if (confirmDownloaded) {
             if (!window.confirm(AnkPixiv.Locale('downloadExistingImage')))
               return;
@@ -971,6 +1056,7 @@ try {
           datetime: AnkUtils.toSQLDateTimeString(savedDateTime),
           comment: comment,
           version: AnkPixiv.DB_VERSION,
+          service_id: service_id,
         };
 
         let removeDownloading = function () {
@@ -989,7 +1075,7 @@ try {
 
             let caption = AnkPixiv.Locale('finishedDownload');
             let text = filenames[0];
-            let prefInitDir = AnkPixiv.Prefs.get('initialDirectory');
+            let prefInitDir = AnkPixiv.info.service.initDir;
             let relPath = prefInitDir ? AnkUtils.getRelativePath(local_path, prefInitDir)
                                       : AnkUtils.extractFilename(local_path);
 
@@ -1014,7 +1100,7 @@ try {
             AnkPixiv.insertDownloadedDisplay(dlDispPoint, R18);
 
             AnkPixiv.Store.documents.forEach(function(it) (it.marked = false));
-            AnkPixiv.markDownloaded();
+            AnkPixiv.methods.markDownloaded();
 
             return true;
 
@@ -1056,6 +1142,18 @@ try {
         destFiles = AnkPixiv.getSaveFilePath(filenames, AnkPixiv.in.manga ? '' : ext, useDialog, !AnkPixiv.in.manga);
         if (!destFiles)
           return;
+
+        if (!AnkPixiv.in.pixiv) {
+          if (AnkPixiv.in.manga) {
+            AnkPixiv.downloadFiles(AnkPixiv.info.path.images, ref, destFiles.image, null, onComplete, onError);
+            addDownloading();
+          }
+          else {
+            AnkPixiv.downloadToRetryable(AnkPixiv.info.path.images[0], 3, ref, destFiles.image, onComplete, onError);
+            addDownloading();
+          }
+          return;
+        }
 
         if (AnkPixiv.in.manga) {
           AnkPixiv.getLastMangaPage(function (v, fp, ext) {
@@ -1505,7 +1603,7 @@ try {
           })(); // }}}
 
           // 保存済み表示
-          if (AnkPixiv.isDownloaded(AnkPixiv.info.illust.id)) { // {{{
+          if (AnkPixiv.isDownloaded(AnkPixiv.info.illust.id,AnkPixiv.info.service.id)) { // {{{
             AnkPixiv.insertDownloadedDisplay(
                 AnkPixiv.elements.illust.downloadedDisplayParent,
                 AnkPixiv.info.illust.R18
@@ -1524,7 +1622,7 @@ try {
             }
           } // }}}
 
-          AnkUtils.dump('installed');
+          AnkUtils.dump('installed: pixiv');
 
         } catch (e) {
           AnkUtils.dumpError(e);
@@ -1591,15 +1689,15 @@ try {
         if (AnkPixiv.Store.document.functionsInstalled)
           return;
         AnkPixiv.Store.document.functionsInstalled = true;
-        if (AnkPixiv.in.pixiv) {
+        if (AnkPixiv.inSite) {
           if (AnkPixiv.in.medium) {
-            AnkPixiv.installMediumPageFunctions();
+            AnkPixiv.methods.installMediumPageFunctions();
           } else {
             // AutoPagerize 専用コードだよ
             if (AnkPixiv.Prefs.get('markDownloaded', false)) {
               AnkPixiv.elements.doc.addEventListener(
                 'AutoPagerize_DOMNodeInserted',
-                function (e) AnkPixiv.markDownloaded(e.target, true),
+                function (e) AnkPixiv.methods.markDownloaded(e.target, true),
                 false
               );
             }
@@ -1748,7 +1846,7 @@ try {
           filter(function (m) m) .
           map(function ([link, m]) [link, parseInt(m[1], 10)]) .
           forEach(function ([link, id]) {
-            if (!AnkPixiv.isDownloaded(id))
+            if (!AnkPixiv.isDownloaded(id,AnkPixiv.SERVICE_ID))
               return;
             let box = findBox(link, 3);
             if (box)
@@ -1772,6 +1870,20 @@ try {
         false,
         new Date().getTime() + (1000 * 60 * 60 * 24 * 365)
       );
+    }, // }}}
+
+    siteMethods: { // {{{
+      installMediumPageFunctions: function () { // {{{
+        AnkPixiv.installMediumPageFunctions();
+      }, // }}}
+
+      markDownloaded: function (node, force, ignorePref) { // {{{
+        AnkPixiv.markDownloaded(node, force, ignorePref);
+      }, // }}}
+
+      setCookies: function () {
+        AnkPixiv.setCookies();
+      }, // }}}
     }, // }}}
 
 
@@ -1908,21 +2020,35 @@ try {
     ********************************************************************************/
 
     updateDatabase: function () { // {{{
-      // version 1
-      let olds = AnkPixiv.Storage.oselect('histories', '(version is null) or (version < 1)');
+      if (!AnkPixiv.Storage.exists('histories','rowid < 10 and ((version is null) or (version < 6))'))
+        return;
+
+      AnkUtils.dump('update database to version 6')
+
+      // version 6
+      let olds = AnkPixiv.Storage.oselect('histories', '((version is null) or (version < 6)) and service_id is null');
       for each (let old in olds) {
         try {
           let dt = AnkUtils.toSQLDateTimeString(new Date(old.datetime));
           AnkPixiv.Storage.update('histories',
-                              "`datetime` = datetime('" + dt + "', '1 months'), version = 2",
+                              'service_id = \'' + AnkPixiv.SERVICE_ID + '\', version = 6',
                               'rowid = ' + old.rowid);
         } catch (e) {
           AnkUtils.dump(e);
         }
       }
 
-      // version 2
-      // TODO
+      olds = AnkPixiv.Storage.oselect('members', '((version is null) or (version < 6)) and service_id is null');
+      for each (let old in olds) {
+        try {
+          let dt = AnkUtils.toSQLDateTimeString(new Date(old.datetime));
+          AnkPixiv.Storage.update('members',
+                              'service_id = \'' + AnkPixiv.SERVICE_ID + '\', version = 6',
+                              'rowid = ' + old.rowid);
+        } catch (e) {
+          AnkUtils.dump(e);
+        }
+      }
     }, // }}}
 
     fixStorageEncode: function () { // {{{
@@ -2056,7 +2182,7 @@ try {
 
       let CSS = [
         '@namespace url(http://www.w3.org/1999/xhtml);',
-        '@-moz-document domain("www.pixiv.net") {',
+        '@-moz-document '+AnkPixiv.domains.map(function (v) 'domain("'+v+'")').join(',')+' {',
         style || DefaultStyle,
         '}'
       ].join("\n");
@@ -2097,18 +2223,20 @@ try {
               filename: "string",
               version: "integer",
               comment: "string",
+              service_id: "string",
             },
             members: {
               id: "integer",
               name: "string",
               pixiv_id: "string",
               version: "integer",
+              service_id: "string",
             }
           },
           {
             index: {
-              histories: ['illust_id'],
-              members: ['id']
+              histories: ['illust_id,service_id'],
+              members: ['id,service_id']
             }
           }
         );
@@ -2117,6 +2245,7 @@ try {
       window.addEventListener('focus', AnkPixiv.onFocus, true);
       let appcontent = document.getElementById('appcontent');
       initStorage();
+      AnkPixiv.updateDatabase();
       AnkPixiv.registerSheet();
       appcontent.addEventListener('DOMContentLoaded', AnkPixiv.onDOMContentLoaded, false);
     }, // }}}
@@ -2130,14 +2259,14 @@ try {
 
         if (doc.readyState == 'complete') {
           AnkPixiv.installFunctions();
-          AnkPixiv.markDownloaded(doc, true);
+          AnkPixiv.methods.markDownloaded(doc, true);
         } else {
           setTimeout(function () body(docRef), 250);
         }
       }
 
       let doc = event.target;
-      if (doc && doc.domain == 'www.pixiv.net')
+      if (doc && AnkPixiv.inSite)
         body(Cu.getWeakReference(event.target));
     }, // }}}
 
@@ -2153,9 +2282,9 @@ try {
         changeEnabled.call(AnkPixiv, 'ankpixiv-toolbar-button-image');
         changeEnabled.call(AnkPixiv, 'ankpixiv-menu-download');
 
-        AnkPixiv.markDownloaded();
+        AnkPixiv.methods.markDownloaded();
 
-        if (AnkPixiv.in.pixiv && !AnkPixiv.Store.document.onFocusDone) {
+        if (AnkPixiv.in.site && !AnkPixiv.Store.document.onFocusDone) {
           AnkPixiv.Store.document.onFocusDone = true;
 
           if (AnkPixiv.in.illustPage) {
@@ -2186,9 +2315,9 @@ try {
         let open = function (left) {
           let tab = AnkPixiv.AllPrefs.get('extensions.tabmix.opentabfor.bookmarks', false);
           if (!!left ^ !!tab)
-            AnkUtils.loadURI(AnkPixiv.URL.Pixiv);
+            AnkUtils.loadURI(AnkPixiv.info.service.url);
           else
-            AnkUtils.openTab(AnkPixiv.URL.Pixiv);
+            AnkUtils.openTab(AnkPixiv.info.service.url);
         };
         switch(button) {
           case 0: open(true); break;
