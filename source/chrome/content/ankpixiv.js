@@ -2026,28 +2026,12 @@ try {
       AnkUtils.dump('update database to version 6')
 
       // version 6
-      let olds = AnkPixiv.Storage.oselect('histories', '((version is null) or (version < 6)) and service_id is null');
-      for each (let old in olds) {
-        try {
-          let dt = AnkUtils.toSQLDateTimeString(new Date(old.datetime));
-          AnkPixiv.Storage.update('histories',
-                              'service_id = \'' + AnkPixiv.SERVICE_ID + '\', version = 6',
-                              'rowid = ' + old.rowid);
-        } catch (e) {
-          AnkUtils.dump(e);
-        }
-      }
-
-      olds = AnkPixiv.Storage.oselect('members', '((version is null) or (version < 6)) and service_id is null');
-      for each (let old in olds) {
-        try {
-          let dt = AnkUtils.toSQLDateTimeString(new Date(old.datetime));
-          AnkPixiv.Storage.update('members',
-                              'service_id = \'' + AnkPixiv.SERVICE_ID + '\', version = 6',
-                              'rowid = ' + old.rowid);
-        } catch (e) {
-          AnkUtils.dump(e);
-        }
+      try {
+        let set = 'service_id = \'' + AnkPixiv.SERVICE_ID + '\', version = 6';
+        AnkPixiv.Storage.update('histories', set);
+        AnkPixiv.Storage.update('members', set);
+      } catch (e) {
+        AnkUtils.dump(e);
       }
     }, // }}}
 
