@@ -2017,20 +2017,28 @@ try {
     ********************************************************************************/
 
     updateDatabase: function () { // {{{
-      if (AnkPixiv.Storage.count('histories','service_id is null') == 0)
-        return;
+      let ver = AnkPixiv.DB_VERSION;
 
-      AnkUtils.dump('update database to version 6')
+      let (uver = AnkPixiv.Storage.getUserVersion()) {
+        if (uver >= ver) {
+          AnkUtils.dump("database is up to date. version "+uver);
+          return;
+        }
+
+        AnkUtils.dump('update database. version '+uver+' -> '+ver);
+      }
 
       // version 6
       try {
         AnkPixiv.Storage.dropIndexes('histories',['illust_id']);
         AnkPixiv.Storage.dropIndexes('members',['id']);
 
-        let set = 'service_id = \'' + AnkPixiv.SERVICE_ID + '\', version = 6';
+        let set = 'service_id = \'' + AnkPixiv.SERVICE_ID + '\', version = '+ver;
         let cond = 'service_id is null';
         AnkPixiv.Storage.update('histories', set, cond);
         AnkPixiv.Storage.update('members', set, cond);
+
+        AnkPixiv.Storage.setUserVersion(ver);
       } catch (e) {
         AnkUtils.dump(e);
       }

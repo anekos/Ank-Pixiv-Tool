@@ -105,14 +105,15 @@ try {
           AnkPixiv.currentLocation.match(/^https?:\/\/twitpic\.com\/([^/]+)$/)[1],
 
         get dateTime () {
-          let m = AnkTwitpic.elements.illust.datetime.textContent.match(/(\d+) (minutes|hours|days)/)
+          let m = AnkTwitpic.elements.illust.datetime.textContent.match(/(an|\d+) (minute|hour|day)/)
           if (!m)
             return null;
 
+          let d = m[1] === 'an' ? 1 : m[1];
           let diff = 60 * 1000 * (
-            m[2] === 'days'  ? m[1]*1440 :
-            m[2] === 'hours' ? m[1]*60 :
-                               m[1]);
+            m[2] === 'day'  ? d*1440 :
+            m[2] === 'hour' ? d*60 :
+                               d);
           let dd = new Date();
           dd.setTime(dd.getTime() - diff);
 

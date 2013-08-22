@@ -268,7 +268,19 @@ try {
       return this.createStatement(query, function (stmt) {
         return stmt.executeStep() && stmt.getInt32(0);
       });
-    } // }}}
+    }, // }}}
+
+    setUserVersion: function (version) { // {{{
+      let query = 'pragma user_version = '+version;
+      return this.database.executeSimpleSQL(query);
+    }, // }}}
+
+    getUserVersion: function () { // {{{
+      let query = 'pragma user_version';
+      return this.createStatement(query, function (stmt) {
+        return stmt.executeStep() && stmt.getInt32(0);
+      });
+    }, // }}}
   };
 
 
