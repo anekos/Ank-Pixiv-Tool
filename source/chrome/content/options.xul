@@ -46,7 +46,7 @@
 
       function onLoad () {
         document.getElementById('confirm-existing-when-auto').disabled =
-          !AnkPixiv.Prefs.get('confirmExistingDownload');
+          !AnkBase.Prefs.get('confirmExistingDownload');
         return true;
       }
       function onSave (event) {
@@ -60,7 +60,7 @@
               throw 'Initial directory does not exist';
           }
         } catch (e) {
-          if (!confirm(AnkPixiv.Locale('notifyNonexistentDirectory')))
+          if (!confirm(AnkBase.Locale('notifyNonexistentDirectory')))
             return false;
         }
         return true;
@@ -202,14 +202,14 @@
 
     <script type="application/x-javascript"><![CDATA[
         let menupopup = document.getElementById('large-image-size-menupopup');
-        for (let [k, v] in Iterator(AnkPixiv.FIT)) {
+        for (let [k, v] in Iterator(AnkBase.FIT)) {
           let menuitem = document.createElement('menuitem');
-          menuitem.setAttribute('label', AnkPixiv.Locale('largeImageSize.' + k));
+          menuitem.setAttribute('label', AnkBase.Locale('largeImageSize.' + k));
           menuitem.setAttribute('value', v);
           menupopup.appendChild(menuitem);
         }
         let menulist = document.getElementById('large-image-size-menulist');
-        menulist.value = AnkPixiv.Prefs.get('largeImageSize');
+        menulist.value = AnkBase.Prefs.get('largeImageSize');
 
         currentFilenameElement = document.getElementById('default-filename-box');
     ]]></script>

@@ -18,7 +18,7 @@ try {
 
     in: { // {{{
       get site () // {{{
-        AnkPixiv.currentLocation.match(/^https?:\/\/nijie\.info\//), // }}}
+        AnkBase.currentLocation.match(/^https?:\/\/nijie\.info\//), // }}}
 
       get manga () // {{{
         (AnkNijie.info.illust.mangaPages > 1), // }}}
@@ -27,7 +27,7 @@ try {
         AnkNijie.in.illustPage, // }}}
 
       get illustPage () // {{{
-        AnkPixiv.currentLocation.match(/^https?:\/\/nijie\.info\/view\.php\?id=/), // }}}
+        AnkBase.currentLocation.match(/^https?:\/\/nijie\.info\/view\.php\?id=/), // }}}
 
       get myPage ()
         false,  // under construction
@@ -94,20 +94,9 @@ try {
     })(), // }}}
 
     info: (function () { // {{{
-      let service = {
-        get id ()
-          AnkNijie.SERVICE_ID,
-
-        get url ()
-          AnkNijie.URL,
-
-        get initDir ()
-          AnkPixiv.Prefs.get('initialDirectory.Nijie') || AnkPixiv.Prefs.get('initialDirectory'),
-      };
-
       let illust = {
         get id ()
-          AnkPixiv.currentLocation.match(/id=(\d+)/)[1],
+          AnkBase.currentLocation.match(/id=(\d+)/)[1],
 
         get dateTime () {
           let m = AnkNijie.elements.illust.datetime.textContent.match(/(\d+)[^\d]+(\d+)[^\d]+(\d+)[^\d]+(\d+):(\d+)/)
@@ -142,7 +131,7 @@ try {
         },
 
         get shortTags () {
-          let limit = AnkPixiv.Prefs.get('shortTagsMaxLength', 8);
+          let limit = AnkBase.Prefs.get('shortTagsMaxLength', 8);
           return AnkNijie.info.illust.tags.filter(function (it) (it.length <= limit));
         },
 
@@ -159,7 +148,7 @@ try {
           AnkNijie.info.path.images[0].match(/^https?:\/\/([^\/\.]+)\./i)[1],
 
         get referer ()
-          AnkPixiv.currentLocation,
+          AnkBase.currentLocation,
 
         get title ()
           AnkUtils.trim(AnkNijie.elements.illust.title.textContent),
@@ -193,10 +182,13 @@ try {
           AnkUtils.trim(AnkNijie.elements.illust.userName.textContent),
 
         get memoizedName ()
-          AnkPixiv.memoizedName,
+          AnkBase.memoizedName,
       };
 
       let path = {
+        get initDir ()
+          AnkBase.Prefs.get('initialDirectory.Nijie') || AnkBase.Prefs.get('initialDirectory'),
+
         get ext ()
           (path.images[0].match(/(\.\w+)(?:$|\?)/)[1] || '.jpg'),
 
@@ -218,7 +210,6 @@ try {
       };
 
       return {
-        service: service,
         illust: illust,
         member: member,
         path: path
@@ -230,160 +221,171 @@ try {
     * ダウンロード＆ファイル関連
     ********************************************************************************/
 
-    // ボタン押下でのダウンロードまでの実装であれば、methods内の３つのメソッドは空のメソッドのままでＯＫ
+    // ボタン押下でのダウンロードまでの実装であれば、以下の３つのメソッドは空のメソッドのままでＯＫ
 
-    methods: { // {{{
-      /*
-       * 遅延インストールのためにクロージャに doc などを保存しておく
-       */
-      installMediumPageFunctions: function () { // {{{
-        function delay (msg, e) { // {{{
-          if (installTryed == 10) {
-            AnkUtils.dump(msg);
-            if (e)
-              AnkUtils.dumpError(e, AnkPixiv.Prefs.get('showErrorDialog'));
-          }
-          if (installTryed >= 20)
-            return;
-          setTimeout(installer, installInterval);
-          installTryed++;
-          AnkUtils.dump('tried: ' + installTryed);
-        } // }}}
-
-        // closure {{{
-        let installInterval = 500;
-        let installTryed = 0;
-        let doc = AnkNijie.elements.doc;
-        // }}}
-
-        let installer = function () { // {{{
-          try {
-            // インストールに必用な各種要素
-            try { // {{{
-              var body = doc.getElementsByTagName('body')[0];
-              var medImg = AnkNijie.elements.illust.mediumImage;
-              var openComment = doc.querySelector('p.open');
-              var noComment = doc.querySelector('div.co2') || doc.querySelector('div#dojin_comment');
-            } catch (e) {
-              return delay("delay installation by error", e);
-            } // }}}
-
-            // 完全に読み込まれていないっぽいときは、遅延する
-            if (!(body && medImg && (openComment || noComment))) // {{{
-              return delay("delay installation by null");
-            // }}}
-
-            // ニジエはデフォルトのviewerがあるので独自viewerはいらないと思う(fitは欲しいけど…)
-
-            // 中画像クリック時に保存する
-            if (AnkPixiv.Prefs.get('downloadWhenClickMiddle')) { // {{{
-              medImg.addEventListener(
-                'click',
-                function (e) {
-                  AnkPixiv.downloadCurrentImageAuto();
-                },
-                true
-              );
-            } // }}}
-
-            // レイティング("抜いた","いいね")によるダウンロード
-            (function () { // {{{
-              if (!AnkPixiv.Prefs.get('downloadWhenRate', false))
-                return;
-
-              ['a#nuita','a#good'].forEach(function (v) {
-                let e = doc.querySelector(v)
-                if (e) {
-                  e.addEventListener(
-                    'click',
-                    function () {
-                      AnkPixiv.downloadCurrentImageAuto();
-                    },
-                    true
-                  );
-                }
-              });
-            })(); // }}}
-
-            // 保存済み表示
-            if (AnkPixiv.isDownloaded(AnkNijie.info.illust.id,AnkNijie.info.service.id)) { // {{{
-              AnkPixiv.insertDownloadedDisplay(
-                  AnkNijie.elements.illust.downloadedDisplayParent,
-                  AnkNijie.info.illust.R18
-              );
-            } // }}}
-
-            // コメント欄を開く
-            if (openComment && AnkPixiv.Prefs.get('openComment', false)) // {{{
-              setTimeout(function () openComment.click(), 1000);
-            // }}}
-
-            AnkUtils.dump('installed: nijie');
-
-          } catch (e) {
-            AnkUtils.dumpError(e);
-          }
-        }; // }}}
-
-        return installer();
-      }, // }}}
-
-      /*
-       * ダウンロード済みイラストにマーカーを付ける
-       *    node:     対象のノード (AutoPagerize などで追加されたノードのみに追加するためにあるよ)
-       *    force:    追加済みであっても、強制的にマークする
-       */
-      markDownloaded: function (node, force, ignorePref) { // {{{
-        const IsIllust = /view\.php\?id=(\d+)/;
-
-        function trackbackParentNode (node, n) {
-          for (let i = 0; i< n; i++)
-            node = node.parentNode;
-          return node;
+    /*
+     * 遅延インストールのためにクロージャに doc などを保存しておく
+     */
+    installMediumPageFunctions: function () { // {{{
+      function delay (msg, e) { // {{{
+        if (installTryed == 10) {
+          AnkUtils.dump(msg);
+          if (e)
+            AnkUtils.dumpError(e, AnkBase.Prefs.get('showErrorDialog'));
         }
-
-        if (AnkNijie.in.medium || !AnkNijie.in.site)
+        if (installTryed >= 20)
           return;
+        setTimeout(installer, installInterval);
+        installTryed++;
+        AnkUtils.dump('tried: ' + installTryed);
+      } // }}}
 
-        if (!AnkPixiv.Prefs.get('markDownloaded', false) && !ignorePref)
-          return;
+      // closure {{{
+      let installInterval = 500;
+      let installTryed = 0;
+      let doc = AnkNijie.elements.doc;
+      // }}}
 
-        if (!force && AnkPixiv.Store.document.marked)
-          return;
+      let installer = function () { // {{{
+        try {
+          // インストールに必用な各種要素
+          try { // {{{
+            var body = doc.getElementsByTagName('body')[0];
+            var medImg = AnkNijie.elements.illust.mediumImage;
+            var openComment = doc.querySelector('p.open');
+            var noComment = doc.querySelector('div.co2') || doc.querySelector('div#dojin_comment');
+          } catch (e) {
+            return delay("delay installation by error", e);
+          } // }}}
 
-        AnkPixiv.Store.document.marked = true;
+          // 完全に読み込まれていないっぽいときは、遅延する
+          if (!(body && medImg && (openComment || noComment))) // {{{
+            return delay("delay installation by null");
+          // }}}
 
-        if (!node)
-          node = AnkNijie.elements.doc;
+          // ニジエはデフォルトのviewerがあるので独自viewerはいらないと思う(fitは欲しいけど…)
 
-        [
-          ['div.nijie > div.picture > p.nijiedao > a', 3],  // 通常の一覧
-          ['div.nijie > p.nijiedao > a', 2],                // "同人"の一覧
-          ['div.nijie-bookmark > p > a', 2],                // "ブックマーク"の一覧
-        ].forEach(function ([selector, nTrackback]) {
-          AnkUtils.A(node.querySelectorAll(selector)) .
-            map(function (link) link.href && let (m = IsIllust.exec(link.href)) m && [link, m]) .
-            filter(function (m) m) .
-            map(function ([link, m]) [link, parseInt(m[1], 10)]) .
-            forEach(function ([link, id]) {
-              if (!AnkPixiv.isDownloaded(id,AnkNijie.SERVICE_ID))
-                return;
-              let box = trackbackParentNode(link, nTrackback);
-              if (box)
-                box.className += ' ' + AnkPixiv.CLASS_NAME.DOWNLOADED;
+          // 中画像クリック時に保存する
+          if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
+            medImg.addEventListener(
+              'click',
+              function (e) {
+                AnkBase.downloadCurrentImageAuto();
+              },
+              true
+            );
+          } // }}}
+
+          // レイティング("抜いた","いいね")によるダウンロード
+          (function () { // {{{
+            if (!AnkBase.Prefs.get('downloadWhenRate', false))
+              return;
+
+            ['a#nuita','a#good'].forEach(function (v) {
+              let e = doc.querySelector(v)
+              if (e) {
+                e.addEventListener(
+                  'click',
+                  function () {
+                    AnkBase.downloadCurrentImageAuto();
+                  },
+                  true
+                );
+              }
             });
-        });
-      }, // }}}
+          })(); // }}}
 
-      /*
-       * remoteFileExists 用のクッキーをセットする
-       */
-      setCookies: function () {
-        // under construction
-      }, // }}}
+          // 保存済み表示
+          if (AnkBase.isDownloaded(AnkNijie.info.illust.id,AnkNijie.SERVICE_ID)) { // {{{
+            AnkBase.insertDownloadedDisplay(
+                AnkNijie.elements.illust.downloadedDisplayParent,
+                AnkNijie.info.illust.R18
+            );
+          } // }}}
+
+          // コメント欄を開く
+          if (openComment && AnkBase.Prefs.get('openComment', false)) // {{{
+            setTimeout(function () openComment.click(), 1000);
+          // }}}
+
+          AnkUtils.dump('installed: nijie');
+
+        } catch (e) {
+          AnkUtils.dumpError(e);
+        }
+      }; // }}}
+
+      return installer();
+    }, // }}}
+
+    /*
+     * リストページ用ファンクション
+     */
+    installListPageFunctions: function () { /// {
+      // under construction
+    }, // }}}
+
+    /*
+     * ダウンロード済みイラストにマーカーを付ける
+     *    node:     対象のノード (AutoPagerize などで追加されたノードのみに追加するためにあるよ)
+     *    force:    追加済みであっても、強制的にマークする
+     */
+    markDownloaded: function (node, force, ignorePref) { // {{{
+      const IsIllust = /view\.php\?id=(\d+)/;
+
+      function trackbackParentNode (node, n) {
+        for (let i = 0; i< n; i++)
+          node = node.parentNode;
+        return node;
+      }
+
+      if (AnkNijie.in.medium || !AnkNijie.in.site)
+        return;
+
+      if (!AnkBase.Prefs.get('markDownloaded', false) && !ignorePref)
+        return;
+
+      if (!force && AnkBase.Store.document.marked)
+        return;
+
+      AnkBase.Store.document.marked = true;
+
+      if (!node)
+        node = AnkNijie.elements.doc;
+
+      [
+        ['div.nijie > div.picture > p.nijiedao > a', 3],  // 通常の一覧
+        ['div.nijie > p.nijiedao > a', 2],                // "同人"の一覧
+        ['div.nijie-bookmark > p > a', 2],                // "ブックマーク"の一覧
+      ].forEach(function ([selector, nTrackback]) {
+        AnkUtils.A(node.querySelectorAll(selector)) .
+          map(function (link) link.href && let (m = IsIllust.exec(link.href)) m && [link, m]) .
+          filter(function (m) m) .
+          map(function ([link, m]) [link, parseInt(m[1], 10)]) .
+          forEach(function ([link, id]) {
+            if (!AnkBase.isDownloaded(id,AnkNijie.SERVICE_ID))
+              return;
+            let box = trackbackParentNode(link, nTrackback);
+            if (box)
+              box.className += ' ' + AnkBase.CLASS_NAME.DOWNLOADED;
+          });
+      });
+    }, // }}}
+
+    /*
+     * remoteFileExists 用のクッキーをセットする
+     */
+    setCookies: function () {
+      // under construction
     }, // }}}
 
   };
+
+  /********************************************************************************
+  * インストール - ankpixiv.xulにも登録を
+  ********************************************************************************/
+
+  AnkBase.MODULES.push(AnkNijie);
 
 } catch (error) {
  dump("[" + error.name + "]\n" +
