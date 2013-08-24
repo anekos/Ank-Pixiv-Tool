@@ -63,6 +63,11 @@ try {
     * プロパティ
     ********************************************************************************/
 
+    get inSupportedSite () { // {{{
+      AnkUtils.dump('inSupportedSite check: '+AnkBase.currentLocation+",\n"+Error().stack);
+      return AnkBase.MODULES.some(function (v) (AnkModule = v.in.site ? v : null));
+    }, // }}}
+
     get current () { // {{{
       function clone (obj) {
         if (obj && typeof obj === 'object' && !(obj instanceof HTMLElement)) {
@@ -287,15 +292,6 @@ try {
       let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
       return IOService.newFileURI(AnkBase.newLocalFile(path));
     }, // }}}
-
-    getSiteName: function () { // {{{
-      if (AnkModule.info.path.initDir) {
-        return '';
-      }
-
-      let n = AnkBase.Prefs.get('siteName.'+AnkModule.SITE_NAME);
-      return n || AnkModule.SITE_NAME;
-    },
 
     getInitDir: function () // {{{
       AnkModule.info.path.initDir || AnkBase.Prefs.get('initialDirectory'), // }}}
@@ -565,6 +561,14 @@ try {
     }, // }}}
 
     /*
+     * 他拡張からAnkPixiv.downloadCurrentImageが呼び出された時に実行する
+     */
+    callDownloadCurrentImage: function (useDialog, confirmDownloaded, debug) { // {{{
+      if (AnkBase.inSupportedSite)
+        return AnkBase.downloadCurrentImage(useDialog, confirmDownloaded, debug);
+    }, // }}}
+
+    /*
      * downloadCurrentImage
      *    useDialog:            保存ダイアログを使うか？
      *    confirmDownloaded:    ダウンロード済みの場合の確認を行うか？
@@ -610,7 +614,7 @@ try {
         let filenames     = [];
         let shortTags     = AnkModule.info.illust.shortTags;
         let service_id    = AnkModule.SERVICE_ID;
-        let site_name     = AnkBase.getSiteName();
+        let site_name     = AnkModule.info.path.initDir ? null : AnkBase.Prefs.get('siteName.'+AnkModule.SITE_NAME, AnkModule.SITE_NAME);
 
         if (AnkBase.Prefs.get('saveHistory', true)) {
           try {
@@ -1357,12 +1361,7 @@ try {
           elem.setAttribute('dark', !AnkModule.in.illustPage);
         };
 
-        function inSupportedSite () { // {{{
-          AnkUtils.dump('inSupportedSite check: '+AnkBase.currentLocation+",\n"+Error().stack);
-          return AnkBase.MODULES.some(function (v) (AnkModule = v.in.site ? v : null));
-        } // }}}
-
-        if (!inSupportedSite())
+        if (!AnkBase.inSupportedSite)
           return;
 
         changeEnabled.call(AnkBase, 'ankpixiv-toolbar-button-image');
