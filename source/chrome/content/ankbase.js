@@ -1,7 +1,7 @@
 
 try {
 
-  AnkModule = null;
+  let AnkModule = null;
 
   AnkBase = {
 
@@ -156,13 +156,13 @@ try {
       filePicker.appendFilters(nsIFilePicker.filterAll);
       filePicker.init(window, "pixiviiiiieee", nsIFilePicker.modeSave);
 
-      let pm = defaultFilename.split('/');
+      let pm = defaultFilename.split('/').filter(function (v) v);
       if (pm.length == 1)
-        pm = defaultFilename.split('\\');
+        pm = defaultFilename.split('\\').filter(function (v) v);
 
       filePicker.defaultString = pm.pop();
 
-      let prefInitDir = AnkModule.info.path.initDir;
+      let prefInitDir = AnkBase.getInitDir();
       if (prefInitDir) {
         if (pm.length > 0 && AnkBase.newLocalFile(prefInitDir).exists()) {
           pm.unshift(prefInitDir);
@@ -288,6 +288,18 @@ try {
       return IOService.newFileURI(AnkBase.newLocalFile(path));
     }, // }}}
 
+    getSiteName: function () { // {{{
+      if (AnkModule.info.path.initDir) {
+        return '';
+      }
+
+      let n = AnkBase.Prefs.get('siteName.'+AnkModule.SITE_NAME);
+      return n || AnkModule.SITE_NAME;
+    },
+
+    getInitDir: function () // {{{
+      AnkModule.info.path.initDir || AnkBase.Prefs.get('initialDirectory'), // }}}
+
     /*
      * getSaveFilePath
      *    filenames:          ファイル名の候補のリスト(一個以上必須)
@@ -315,7 +327,7 @@ try {
 
       try {
         let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
-        let prefInitDir = AnkModule.info.path.initDir;
+        let prefInitDir = AnkBase.getInitDir();
         let initDir = AnkBase.newLocalFile(prefInitDir);
 
         if (!initDir.exists())
@@ -365,6 +377,7 @@ try {
       if (!onError)
         onError = function () void 0;
 
+      AnkUtils.dump('DL => ' + file.path);
       AnkUtils.dump('downloadTo: ' + url + ', ' + referer);
 
       // ディレクトリ作成
@@ -545,7 +558,6 @@ try {
         lastFile = file;
         index++;
 
-        AnkUtils.dump('DL => ' + file.path);
         return AnkBase.downloadToRetryable(url, 3, ref, file, downloadNext, _onError);
       }
 
@@ -598,6 +610,7 @@ try {
         let filenames     = [];
         let shortTags     = AnkModule.info.illust.shortTags;
         let service_id    = AnkModule.SERVICE_ID;
+        let site_name     = AnkBase.getSiteName();
 
         if (AnkBase.Prefs.get('saveHistory', true)) {
           try {
@@ -647,6 +660,7 @@ try {
           let ii = i.illust;
           let im = i.member;
           let ps = [
+            [/\?site-name\?/g, site_name, true],
             [/\?title\?/g, title],
             [/\?member-id\?/g, member_id],
             [/\?member-name\?/g, member_name],
@@ -669,9 +683,9 @@ try {
             [/\?saved-day\?/g, AnkUtils.zeroPad(savedDateTime.getDate(), 2)],
             [/\?saved-hour\?/g, AnkUtils.zeroPad(savedDateTime.getHours(), 2)],
             [/\?saved-minute\?/g, AnkUtils.zeroPad(savedDateTime.getMinutes(), 2)]
-          ].map(function ([re, val]) {
+          ].map(function ([re, val, allowempty]) {
             try {
-              return [re, AnkUtils.fixFilename((val || '-').toString())];
+              return [re, AnkUtils.fixFilename((val || (allowempty ? '' : '-')).toString())];
             } catch (e) {
               AnkUtils.dump(re + ' is not found');
               throw e;
@@ -686,6 +700,7 @@ try {
           filenames = filenames.map(function (filename) filename.replace(/\s*\?page-number\?\s*/g, ''));
           if (debug) {
             let tokens = [
+              'site-name     = ?site-name?',
               'title         = ?title?',
               'member-id     = ?member-id?',
               'member-name   = ?member-name?',
@@ -745,7 +760,7 @@ try {
 
             let caption = AnkBase.Locale('finishedDownload');
             let text = filenames[0];
-            let prefInitDir = AnkModule.info.path.initDir;
+            let prefInitDir = AnkBase.getInitDir();
             let relPath = prefInitDir ? AnkUtils.getRelativePath(local_path, prefInitDir)
                                       : AnkUtils.extractFilename(local_path);
 
@@ -1328,7 +1343,6 @@ try {
       } // }}}
 
       window.addEventListener('focus', AnkBase.onFocus, true);
-      let appcontent = document.getElementById('appcontent');
       initStorage();
       AnkBase.updateDatabase();
       AnkBase.registerSheet();
@@ -1344,7 +1358,7 @@ try {
         };
 
         function inSupportedSite () { // {{{
-          AnkUtils.dump('inSite check: '+AnkBase.currentLocation+",\n"+Error().stack);
+          AnkUtils.dump('inSupportedSite check: '+AnkBase.currentLocation+",\n"+Error().stack);
           return AnkBase.MODULES.some(function (v) (AnkModule = v.in.site ? v : null));
         } // }}}
 

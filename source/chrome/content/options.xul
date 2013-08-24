@@ -16,7 +16,7 @@
 
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankutils.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankstorage.js" />
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankpixiv.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankbase.js" />
 
   <script type="application/x-javascript"><![CDATA[
       let currentFilenameElement;
@@ -162,6 +162,7 @@
                     <listitem label="?short-tags?"></listitem>
                     <listitem label="?tools?"></listitem>
                     <listitem label="?pixiv-id?"></listitem>
+                    <listitem label="?site-name?"></listitem>
                   </listbox>
                   <listbox id="token-listbox2" rows="8" class="token-listbox" onclick="pushToken(this)">
                     <listitem label="?illust-id?"></listitem>

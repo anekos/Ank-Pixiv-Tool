@@ -10,6 +10,7 @@ try {
     URL:        'http://nijie.info/',   // イラストページ以外でボタンを押したときに開くトップページのURL
     DOMAIN:     'nijie.info',           // CSSの適用対象となるドメイン
     SERVICE_ID: 'NJE',                  // 履歴DBに登録するサイト識別子
+    SITE_NAME:  'Nijie',                // ?site-name?で置換されるサイト名のデフォルト値 
 
 
     /********************************************************************************
@@ -187,7 +188,7 @@ try {
 
       let path = {
         get initDir ()
-          AnkBase.Prefs.get('initialDirectory.Nijie') || AnkBase.Prefs.get('initialDirectory'),
+          AnkBase.Prefs.get('initialDirectory.'+AnkNijie.SITE_NAME),
 
         get ext ()
           (path.images[0].match(/(\.\w+)(?:$|\?)/)[1] || '.jpg'),

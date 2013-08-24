@@ -10,6 +10,7 @@ try {
     URL:        'http://www.pixiv.net/',
     DOMAIN:     'www.pixiv.net',
     SERVICE_ID: 'PXV',
+    SITE_NAME:  'Pixiv',
 
     ID_FANTASY_DISPLAY: 'ankpixiv-fantasy-display',
 
@@ -262,7 +263,7 @@ try {
 
       let path = {
         get initDir ()
-          AnkBase.Prefs.get('initialDirectory'),
+          AnkBase.Prefs.get('initialDirectory.'+AnkPixiv.SITE_NAME),
 
         get ext ()
           (AnkPixiv.info.path.largeStandardImage.match(/(\.\w+)(?:$|\?)/)[1] || '.jpg'),

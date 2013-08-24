@@ -10,6 +10,7 @@ try {
     URL:        'http://twitpic.com/',  // イラストページ以外でボタンを押したときに開くトップページのURL
     DOMAIN:     'twitpic.com',          // CSSの適用対象となるドメイン
     SERVICE_ID: 'TWP',                  // 履歴DBに登録するサイト識別子
+    SITE_NAME:  'Twitpic',              // ?site-name?で置換されるサイト名のデフォルト値
 
 
     /********************************************************************************
@@ -175,7 +176,7 @@ try {
 
       let path = {
         get initDir ()
-          AnkBase.Prefs.get('initialDirectory.Twitpic') || AnkBase.Prefs.get('initialDirectory'),
+          AnkBase.Prefs.get('initialDirectory.'+AnkTwitpic.SITE_NAME),
 
         get ext ()
           (path.images[0].match(/(\.\w+)(?:$|\?)/)[1] || '.jpg'),
