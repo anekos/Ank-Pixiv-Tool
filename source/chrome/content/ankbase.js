@@ -1412,32 +1412,6 @@ try {
 
 
     /********************************************************************************
-    * 外部向け
-    ********************************************************************************/
-
-    rate: function (pt) { // {{{
-      if (!(AnkModule.in.pixiv && AnkModule.in.medium))
-        throw 'not in pixiv';
-      if (pt < 1 || 10 < pt)
-        throw 'out of range';
-      let rating = window.content.window.wrappedJSObject.pixiv.rating;
-      if (typeof rating.rate === 'number') {
-        rating.rate = pt;
-        rating.apply.call(rating, {});
-        if (!AnkBase.Prefs.get('downloadWhenRate', false))
-          return true;
-        let point = AnkBase.Prefs.get('downloadRate', 10);
-        if (point <= pt)
-          AnkBase.downloadCurrentImageAuto();
-      } else {
-        return false;
-      }
-
-      return true;
-    }, // }}}
-
-
-    /********************************************************************************
     * テスト用
     ********************************************************************************/
 

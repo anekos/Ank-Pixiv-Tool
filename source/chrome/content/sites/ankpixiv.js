@@ -935,12 +935,42 @@ try {
       xhr.send(null);
     }, // }}}
 
+
+    /********************************************************************************
+     * 外部向け - 多サイト対応以前との互換性維持のためankpixiv.jsに作成
+     ********************************************************************************/
+
     /*
-     * 他拡張との連携してのダウンロード - 多サイト対応以前との互換性維持のため
+     * 他拡張と連携してダウンロード
      */
     downloadCurrentImage: function (useDialog, confirmDownloaded, debug) { // {{{
       AnkBase.callDownloadCurrentImage(useDialog, confirmDownloaded, debug);
     }, // }}}
+
+    /*
+     * 他拡張と連携して評価
+     */
+    rate: function (pt) { // {{{
+      if (!(AnkPixiv.in.pixiv && AnkPixiv.in.medium))
+        throw 'not in pixiv';
+      if (pt < 1 || 10 < pt)
+        throw 'out of range';
+      let rating = window.content.window.wrappedJSObject.pixiv.rating;
+      if (typeof rating.rate === 'number') {
+        rating.rate = pt;
+        rating.apply.call(rating, {});
+        if (!AnkBase.Prefs.get('downloadWhenRate', false))
+          return true;
+        let point = AnkBase.Prefs.get('downloadRate', 10);
+        if (point <= pt)
+          AnkPixiv.downloadCurrentImage(undefined, AnkBase.Prefs.get('confirmExistingDownloadWhenAuto'));
+      } else {
+        return false;
+      }
+
+      return true;
+    }, // }}}
+
   };
 
   /********************************************************************************
