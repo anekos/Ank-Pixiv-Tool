@@ -1361,6 +1361,9 @@ try {
           elem.setAttribute('dark', !AnkModule.in.illustPage);
         };
 
+        if (!ev.target.toString().match(/\[object Window\]/,'i'))
+          return;
+
         if (!AnkBase.inSupportedSite)
           return;
 
