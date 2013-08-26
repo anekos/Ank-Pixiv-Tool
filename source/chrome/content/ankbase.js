@@ -1389,6 +1389,8 @@ try {
     onDownloadButtonClick: function (event) { // {{{
       event.stopPropagation();
       event.preventDefault();
+      if (!AnkModule)
+        return;
       let useDialog = AnkBase.Prefs.get('showSaveDialog', true);
       let button = (typeof event.button == 'undefined') ? 0 : event.button;
       if (AnkModule.in.illustPage) {
