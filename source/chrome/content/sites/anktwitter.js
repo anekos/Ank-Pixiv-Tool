@@ -28,8 +28,20 @@ try {
         AnkTwitter.in.illustPage, // }}}
 
       get illustPage () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/twitter\.com\/[^/]+\/status\/[^/]+\/photo\//),
+        AnkTwitter.in.illustTweet ||   // イラスト入りツイート（pic.twitterと使っているのと、twitpicやtumblrなどの外部と連携しているのの２種類ある）
+        AnkTwitter.in.gallery ||       // ポップアップ中
+        AnkTwitter.in.illustGrid,      // '画像/動画'ページ
       // }}}
+
+      get illustTweet () // {{{
+        AnkBase.currentLocation.match(/^https?:\/\/twitter\.com\/[^/]+\/status\//) &&
+        (AnkTwitter.elements.illust.mediumImage || AnkTwitter.elements.illust.photoFrame), // }}}
+
+      get gallery () // {{{
+        AnkTwitter.elements.illust.galleryEnabled, // }}}
+
+      get illustGrid () // {{{
+        AnkBase.currentLocation.match(/^https?:\/\/twitter\.com\/[^/]+\/media\/grid/),
 
       get myPage ()
         false,  // under construction
@@ -40,40 +52,57 @@ try {
 
     elements: (function () { // {{{
       let illust =  {
+        query: function (gQuery, tQuery)
+          AnkTwitter.in.gallery ? illust.gallery.querySelector(gQuery) :
+                                 (illust.tweet && illust.tweet.querySelector(tQuery)),
+
         get mediumImage ()
-          AnkTwitter.elements.doc.querySelector('div.media > a.media-thumbnail > img'),
+          illust.query('img.media-image', '.media-thumbnail > img'),
+
+        get photoFrame ()
+          let (e = AnkTwitter.elements.illust.tweet.querySelector('.card2 > div > iframe'))
+            (e && AnkUtils.trackbackParentNode(e, 2).getAttribute('data-card2-name') === 'photo') ? e : null, 
+
+        get photoImage ()
+          illust.photoFrame && illust.photoFrame.contentDocument.querySelector('.u-block'),
 
         get largeLink ()
-          AnkTwitter.elements.doc.querySelector('p.tweet-text > a.twitter-timeline-link'),
+          illust.query('.twitter-timeline-link', '.twitter-timeline-link'),
 
         get datetime ()
-          AnkTwitter.elements.doc.querySelector('a.tweet-timestamp'),
+          illust.query('.tweet-timestamp', 'span.metadata > span'),
 
         get title ()
-          AnkTwitter.elements.doc.querySelector('p.tweet-text'),
+          illust.query('.tweet-text', '.tweet-text'),
 
         get comment ()
-          null,
+          illust.title,
 
         get avatar ()
-          AnkTwitter.elements.doc.querySelector('img.avatar'),
+          illust.query('.avatar', '.avatar'),
 
         get userName ()
-          AnkTwitter.elements.doc.querySelector('strong.fullname'),
+          illust.query('.simple-tweet', '.user-actions'),
 
         get memberLink ()
-          AnkTwitter.elements.doc.querySelector('a.account-group'),
+          illust.query('.account-group', '.account-group'),
 
         get tags ()
           null,
 
-        get notDisplayed()
-          AnkTwitter.elements.doc.querySelector('div.media-not-displayed'),
+        get tweet ()
+          AnkTwitter.elements.doc.querySelector('.permalink-tweet'),
+
+        get gallery ()
+          AnkTwitter.elements.doc.querySelector('.gallery-container'),
+
+        get galleryEnabled ()
+          AnkTwitter.elements.doc.querySelector('.gallery-enabled'),
 
         // elements.illust中ではdownloadedDisplayParentのみankpixiv.jsから呼ばれるので必須、他はこのソース内でしか使わない
 
         get downloadedDisplayParent ()
-          AnkTwitter.elements.doc.querySelector('ul.tweet-actions'),
+          illust.query('.stream-item-header', '.tweet-actions'),
       };
 
       let mypage = {
@@ -93,8 +122,12 @@ try {
 
     info: (function () { // {{{
       let illust = {
-        get id ()
-          AnkTwitter.elements.illust.largeLink.href.match(/\/([^/]+)$/)[1],
+        get id () {
+          let m = AnkTwitter.in.illustTwitter && AnkTwitter.elements.illust.largeLink.getAttribute('data-url').match(/^https?:\/\/pbs\.twimg\.com\/media\/([^/]+?)\./);
+          if (m)
+            return m[1];
+          return AnkTwitter.elements.illust.largeLink.href.match(/\/([^/]+)$/)[1];
+        },  // 'http://t.co/'+id で作品のページに飛べる
 
         get dateTime () {
           let dtext  = AnkTwitter.elements.illust.datetime.title;
@@ -107,7 +140,7 @@ try {
             dd.setHours(parseInt(m[4]));
             dd.setMinutes(parseInt(m[5]));
           } else {
-            AnkUtils.dump(AnkTwitpic.SERVICE_ID+': unknown datetime format = '+dtext);
+            AnkUtils.dump(AnkTwitter.SERVICE_ID+': unknown datetime format = '+dtext);
           }
 
           return {
@@ -153,7 +186,7 @@ try {
           false,
 
         get mangaPages ()
-          1,  // under construction
+          1,
 
         get worksData ()
           null,
@@ -165,14 +198,13 @@ try {
 
       let member = {
         get id ()
-          AnkTwitter.elements.illust.memberLink.getAttribute('data-user-id'),
+          AnkTwitter.elements.illust.userName.getAttribute('data-user-id'),
 
         get pixivId ()
-          let (m = AnkTwitter.elements.illust.memberLink.href.match(/\/([^/]+)$/))
-            m ? m[1] : null,
+          AnkTwitter.elements.illust.userName.getAttribute('data-screen-name'),
 
         get name ()
-          AnkUtils.trim(AnkTwitter.elements.illust.userName.textContent),
+          AnkTwitter.elements.illust.userName.getAttribute('data-name'),
 
         get memoizedName ()
           AnkBase.memoizedName,
@@ -182,14 +214,18 @@ try {
         get initDir ()
           AnkBase.Prefs.get('initialDirectory.'+AnkTwitter.SITE_NAME),
 
-        get ext ()
-          (path.images[0].match(/(\.\w+):large$/)[1] || '.jpg'),
+        get ext () 
+         (path.images[0].match(/(\.\w+)(?::large|\?)/)[1] || '.jpg'),
 
         get mangaIndexPage ()
           null,
 
         get images ()
-          [AnkTwitter.elements.illust.mediumImage.src+':large'],
+          [
+            AnkTwitter.in.gallery                 ? AnkTwitter.elements.illust.mediumImage.src :
+            AnkTwitter.elements.illust.photoFrame ? AnkTwitter.elements.illust.photoImage.src :
+                                                    AnkTwitter.elements.illust.mediumImage.parentNode.getAttribute('data-url')
+          ],
       };
 
       return {
@@ -210,15 +246,72 @@ try {
      * 遅延インストールのためにクロージャに doc などを保存しておく
      */
     installMediumPageFunctions: function () { // {{{
-      // under construction
-      AnkUtils.dump('installed: '+AnkTwitter.SITE_NAME);
+      function delay (msg, e) { // {{{
+        if (installTryed == 10) {
+          AnkUtils.dump(msg);
+          if (e)
+            AnkUtils.dumpError(e, AnkBase.Prefs.get('showErrorDialog'));
+        }
+        if (installTryed >= 20)
+          return;
+        setTimeout(installer, installInterval);
+        installTryed++;
+        AnkUtils.dump('tried: ' + installTryed);
+      } // }}}
+
+      // closure {{{
+      let installInterval = 500;
+      let installTryed = 0;
+      let doc = AnkTwitter.elements.doc;
+      // }}}
+
+      let installer = function () { // {{{
+        try {
+          // インストールに必用な各種要素
+          try { // {{{
+            var body = doc.getElementsByTagName('body')[0];
+            var gallery = AnkTwitter.elements.illust.gallery;
+            var tweet = AnkTwitter.elements.illust.tweet;
+            var largeLink = AnkTwitter.elements.illust.largeLink;
+            var photoFrame = AnkTwitter.in.illustTweet ? AnkTwitter.elements.illust.photoFrame : null;
+          } catch (e) {
+            return delay("delay installation by error", e);
+          } // }}}
+
+          // 完全に読み込まれていないっぽいときは、遅延する
+          let cond = AnkTwitter.in.illustGrid ? true :
+                     photoFrame               ? AnkTwitter.elements.illust.photoImage :
+                                                largeLink;
+          if (!(body && cond))
+            return delay("delay installation by null");
+
+          // viewerは作らない
+
+          // 保存済み表示
+          if (!AnkTwitter.in.illustGrid && AnkBase.isDownloaded(AnkTwitter.info.illust.id,AnkTwitter.SERVICE_ID)) { // {{{
+            AnkBase.insertDownloadedDisplay(
+                AnkTwitter.elements.illust.downloadedDisplayParent,
+                AnkTwitter.info.illust.R18
+            );
+          }
+
+          // ギャラリー移動にあわせて保存済み表示 - under construction
+
+          AnkUtils.dump('installed: '+AnkTwitter.SITE_NAME);
+
+        } catch (e) {
+          AnkUtils.dumpError(e);
+        }
+      }; // }}}
+
+      return installer();
     }, // }}}
 
     /*
      * リストページ用ファンクション
      */
     installListPageFunctions: function () { /// {
-      // under construction
+      // 実装しない（外部の画像サービスを使っていると、DOMの情報とillust_idを関連付けしづらいため）
       AnkUtils.dump('installed: '+AnkTwitter.SITE_NAME+' list');
     }, // }}}
 
@@ -228,7 +321,7 @@ try {
      *    force:    追加済みであっても、強制的にマークする
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
-      // under construction
+      // 実装しない（同上）
     }, // }}}
 
     /*

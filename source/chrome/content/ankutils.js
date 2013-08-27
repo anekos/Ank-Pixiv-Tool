@@ -450,7 +450,13 @@ try {
       let temp = doc.createElement('div');
       temp.innerHTML = elem.innerHTML.replace(/<br[\s\/]*>/g, '\n');
       return temp.textContent;
-    } // }}}
+    }, // }}}
+
+    trackbackParentNode: function (node, n) { // {{{
+      for (let i = 0; node && i < n; i++)
+        node = node.parentNode;
+      return node;
+    }, // }}}
   };
 
 

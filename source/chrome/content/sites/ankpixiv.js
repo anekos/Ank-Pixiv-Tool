@@ -55,6 +55,9 @@ try {
       get bookmarkPage () // {{{
         AnkBase.currentLocation.match(/\.pixiv\.net\/bookmark_detail.php\?.*illust_id=/), // }}}
 
+      get bookmarkNew () // {{{
+        AnkBase.currentLocation.match(/\.pixiv\.net\/bookmark_new_illust\.php/), // }}}
+
       get myPage () // {{{
         (AnkBase.currentLocation == 'http://www.pixiv.net/mypage.php'), // }}}
 
@@ -62,7 +65,7 @@ try {
         !AnkPixiv.elements.illust.avatar, // }}}
 
       get myBookmark () // {{{
-        (AnkBase.currentLocation == 'http://www.pixiv.net/bookmark.php'), // }}}
+        AnkBase.currentLocation.match(/\.pixiv\.net\/bookmark\.php/), // }}}
     }, // }}}
 
     elements: (function () { // {{{
@@ -730,7 +733,7 @@ try {
             setTimeout(function () openComment.click(), 1000);
           // }}}
 
-          AnkUtils.dump('installed: pixiv');
+          AnkUtils.dump('installed: '+AnkPixiv.SITE_NAME);
 
         } catch (e) {
           AnkUtils.dumpError(e);
@@ -748,7 +751,7 @@ try {
       // 伸びるおすすめリストに追随する
       function followExpansion () {
         let recommend = AnkPixiv.elements.illust.recommendList;
-        
+
         let installTimer = setInterval(
           function () {
             if (!recommend)
@@ -768,7 +771,7 @@ try {
               }
             }
   
-            AnkUtils.dump('installed: pixiv bookmark');
+            AnkUtils.dump('installed: '+AnkPixiv.SITE_NAME+' bookmark');
           },
           interval
         );
@@ -791,7 +794,7 @@ try {
 
               AnkPixiv.markDownloaded(doc,true);
 
-              AnkUtils.dump('installed: pixiv list');
+              AnkUtils.dump('installed: '+AnkPixiv.SITE_NAME+' list');
             },
             interval
           );
@@ -802,7 +805,8 @@ try {
 
       if (AnkPixiv.in.bookmarkPage || AnkPixiv.in.myBookmark) {
         followExpansion();
-      } else if (AnkPixiv.in.listPage) {
+      }
+      if (AnkPixiv.in.listPage || AnkPixiv.in.bookmarkNew) {
         delayMarking();
       }
     },
@@ -822,12 +826,6 @@ try {
         if (BoxTag.test(e.tagName))
           return e;
         return findBox(e.parentNode, limit - 1);
-      }
-
-      function trackbackParentNode (node, n) {
-        for (let i = 0; i< n; i++)
-          node = node.parentNode;
-        return node;
       }
 
       if (AnkPixiv.in.medium || !AnkPixiv.in.site)
@@ -851,7 +849,7 @@ try {
         ['a > p > div > img', 3]
       ].forEach(function ([selector, nTrackback]) {
         AnkUtils.A(node.querySelectorAll(selector)) .
-          map(function (img) trackbackParentNode(img, nTrackback)) .
+          map(function (img) AnkUtils.trackbackParentNode(img, nTrackback)) .
           map(function (link) link.href && let (m = IsIllust.exec(link.href)) m && [link, m]) .
           filter(function (m) m) .
           map(function ([link, m]) [link, parseInt(m[1], 10)]) .

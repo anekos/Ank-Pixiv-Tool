@@ -309,7 +309,7 @@ try {
             setTimeout(function () openComment.click(), 1000);
           // }}}
 
-          AnkUtils.dump('installed: nijie');
+          AnkUtils.dump('installed: '+AnkNijie.SITE_NAME);
 
         } catch (e) {
           AnkUtils.dumpError(e);
@@ -324,6 +324,7 @@ try {
      */
     installListPageFunctions: function () { /// {
       // under construction
+      AnkUtils.dump('installed: '+AnkNijie.SITE_NAME+' list');
     }, // }}}
 
     /*
@@ -333,12 +334,6 @@ try {
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
       const IsIllust = /view\.php\?id=(\d+)/;
-
-      function trackbackParentNode (node, n) {
-        for (let i = 0; i< n; i++)
-          node = node.parentNode;
-        return node;
-      }
 
       if (AnkNijie.in.medium || !AnkNijie.in.site)
         return;
@@ -366,7 +361,7 @@ try {
           forEach(function ([link, id]) {
             if (!AnkBase.isDownloaded(id,AnkNijie.SERVICE_ID))
               return;
-            let box = trackbackParentNode(link, nTrackback);
+            let box = AnkUtils.trackbackParentNode(link, nTrackback);
             if (box)
               box.className += ' ' + AnkBase.CLASS_NAME.DOWNLOADED;
           });

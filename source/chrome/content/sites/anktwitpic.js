@@ -269,7 +269,7 @@ try {
             );
           }
 
-          AnkUtils.dump('installed: twitpic');
+          AnkUtils.dump('installed: '+AnkTwitpic.SITE_NAME);
 
         } catch (e) {
           AnkUtils.dumpError(e);
@@ -284,6 +284,7 @@ try {
      */
     installListPageFunctions: function () { /// {
       // under construction
+      AnkUtils.dump('installed: '+AnkTwitpic.SITE_NAME+' list');
     }, // }}}
 
     /*
@@ -292,11 +293,6 @@ try {
      *    force:    追加済みであっても、強制的にマークする
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
-      function trackbackParentNode (node, n) {
-        for (let i = 0; i< n; i++)
-          node = node.parentNode;
-        return node;
-      }
 
       if (AnkTwitpic.in.medium || !AnkTwitpic.in.site)
         return;
@@ -322,7 +318,7 @@ try {
           forEach(function ([link, id]) {
             if (!AnkBase.isDownloaded(id,AnkTwitpic.SERVICE_ID))
               return;
-            let box = trackbackParentNode(link, nTrackback);
+            let box = AnkUtils.trackbackParentNode(link, nTrackback);
             if (box)
               box.className += ' ' + AnkBase.CLASS_NAME.DOWNLOADED;
           });
