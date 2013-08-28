@@ -28,8 +28,7 @@ try {
         AnkTwitpic.in.illustPage, // }}}
 
       get illustPage () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/twitpic\.com\/[^/]+$/) &&
-        AnkTwitpic.elements.illust.mediumImage,                               // 動画は保存できない
+        AnkBase.currentLocation.match(/^https?:\/\/twitpic\.com\/[^/]+$/),
       // }}}
 
       get myPage ()
@@ -201,6 +200,12 @@ try {
         path: path
       };
     })(), // }}}
+
+    get downloadable () {
+      if (AnkTwitpic.in.illustPage && !AnkTwitpic.elements.illust.mediumImage)
+        return false;// 動画は保存できない
+      return true;
+    },
 
 
     /********************************************************************************

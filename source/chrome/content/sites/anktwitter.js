@@ -28,14 +28,13 @@ try {
         AnkTwitter.in.illustPage, // }}}
 
       get illustPage () // {{{
-        AnkTwitter.in.illustTweet ||   // イラスト入りツイート（pic.twitterと使っているのと、twitpicやtumblrなどの外部と連携しているのの２種類ある）
+        AnkTwitter.in.tweet ||         // ツイート
         AnkTwitter.in.gallery ||       // ポップアップ中
         AnkTwitter.in.illustGrid,      // '画像/動画'ページ
       // }}}
 
-      get illustTweet () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/twitter\.com\/[^/]+\/status\//) &&
-        (AnkTwitter.elements.illust.mediumImage || AnkTwitter.elements.illust.photoFrame), // }}}
+      get tweet () // {{{
+        AnkBase.currentLocation.match(/^https?:\/\/twitter\.com\/[^/]+\/status\//), // }}}
 
       get gallery () // {{{
         AnkTwitter.elements.illust.galleryEnabled, // }}}
@@ -123,11 +122,16 @@ try {
     info: (function () { // {{{
       let illust = {
         get id () {
-          let m = AnkTwitter.in.illustTwitter && AnkTwitter.elements.illust.largeLink.getAttribute('data-url').match(/^https?:\/\/pbs\.twimg\.com\/media\/([^/]+?)\./);
-          if (m)
-            return m[1];
-          return AnkTwitter.elements.illust.largeLink.href.match(/\/([^/]+)$/)[1];
-        },  // 'http://t.co/'+id で作品のページに飛べる
+          let v = AnkTwitter.elements.illust.largeLink.getAttribute('data-url');  // pic.twitter
+          if (v && v.match(/^https?:\/\/pbs\.twimg\.com\/media\/([^/]+?)\./))
+            return RegExp.$1;
+
+          v = AnkTwitter.elements.illust.largeLink.href;  // ツイート
+          if (v && v.match(/\/([^/]+)$/))
+            return RegExp.$1;
+
+          return null;
+        },  // いずれも 'http://t.co/'+id で作品のページに飛べる
 
         get dateTime () {
           let dtext  = AnkTwitter.elements.illust.datetime.title;
@@ -235,6 +239,15 @@ try {
       };
     })(), // }}}
 
+    get downloadable () { // {{{
+      if (AnkTwitter.in.gallery)
+        return true;
+      if (AnkTwitter.in.tweet && !(AnkTwitter.elements.illust.mediumImage||AnkTwitter.elements.illust.photoFrame))
+        return false;
+      if (AnkTwitter.in.illustGrid)
+        return false;
+      return true
+    }, // }}}
 
     /********************************************************************************
     * ダウンロード＆ファイル関連
@@ -273,7 +286,7 @@ try {
             var gallery = AnkTwitter.elements.illust.gallery;
             var tweet = AnkTwitter.elements.illust.tweet;
             var largeLink = AnkTwitter.elements.illust.largeLink;
-            var photoFrame = AnkTwitter.in.illustTweet ? AnkTwitter.elements.illust.photoFrame : null;
+            var photoFrame = AnkTwitter.in.tweet ? AnkTwitter.elements.illust.photoFrame : null;
           } catch (e) {
             return delay("delay installation by error", e);
           } // }}}

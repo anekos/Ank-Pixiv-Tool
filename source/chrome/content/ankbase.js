@@ -564,7 +564,7 @@ try {
      * 他拡張からAnkPixiv.downloadCurrentImageが呼び出された時に実行する
      */
     callDownloadCurrentImage: function (useDialog, confirmDownloaded, debug) { // {{{
-      if (AnkBase.inSupportedSite)
+      if (AnkBase.inSupportedSite && AnkModule.downloadable)
         return AnkBase.downloadCurrentImage(useDialog, confirmDownloaded, debug);
     }, // }}}
 
@@ -578,6 +578,17 @@ try {
      */
     downloadCurrentImage: function (useDialog, confirmDownloaded, debug) { // {{{
       try {
+
+        function getSiteName () {
+          if (AnkModule.info.path.initDir) 
+            return null;                // サイト別初期ディレクトリが設定されていればそちらを優先
+
+          let v = AnkBase.Prefs.get('siteName.'+AnkModule.SITE_NAME);
+          if (v)
+            return v;                   // サイトの別名定義がされていればそちらを優先
+
+          return AnkModule.SITE_NAME;   // デフォルトサイト名を利用
+        }
 
         // 自分のページのは構成が違い、問題となるのでダウンロードしないようにする。
         if (AnkModule.in.myIllust)
@@ -614,7 +625,7 @@ try {
         let filenames     = [];
         let shortTags     = AnkModule.info.illust.shortTags;
         let service_id    = AnkModule.SERVICE_ID;
-        let site_name     = AnkModule.info.path.initDir ? null : AnkBase.Prefs.get('siteName.'+AnkModule.SITE_NAME, AnkModule.SITE_NAME);
+        let site_name     = getSiteName();
 
         if (AnkBase.Prefs.get('saveHistory', true)) {
           try {
@@ -1390,6 +1401,8 @@ try {
       event.stopPropagation();
       event.preventDefault();
       if (!AnkModule)
+        return;
+      if (!AnkModule.downloadable)
         return;
       let useDialog = AnkBase.Prefs.get('showSaveDialog', true);
       let button = (typeof event.button == 'undefined') ? 0 : event.button;
