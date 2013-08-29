@@ -144,7 +144,7 @@ try {
     siteModules: [],
 
     addModule: function (module) {
-      let (m = AnkBase.siteModules.filter(function (v) (module.SERVICE_ID === v.SERVICE_ID) ? true : false)) {
+      let (m = AnkBase.siteModules.filter(function (v) (module.SERVICE_ID === v.SERVICE_ID))) {
         if (m.length > 0) {
           AnkUtils.dump('error ! duplicated service id: '+m[0].SITE_NAME+' <=> '+module.SITE_NAME+', '+module.SERVICE_ID);
         } else {
@@ -1162,10 +1162,18 @@ try {
 
       // version 6
       try {
+        let m = AnkBase.siteModules.filter(function (v) (typeof v.in.pixiv !== 'undefined') && v);
+        if (m.length == 0) {
+          AnkUtils.dump('unable to update db. pixiv module not installed.');
+          return;
+        }
+
+        let srvid = m[0].SERVICE_ID;
+
         AnkBase.Storage.dropIndexes('histories',['illust_id']);
         AnkBase.Storage.dropIndexes('members',['id']);
 
-        let set = 'service_id = \'' + AnkBase.SERVICE_ID + '\', version = '+ver;
+        let set = 'service_id = \'' + srvid + '\', version = '+ver;
         let cond = 'service_id is null';
         AnkBase.Storage.update('histories', set, cond);
         AnkBase.Storage.update('members', set, cond);
@@ -1452,21 +1460,23 @@ try {
     * 外部向け
     ********************************************************************************/
 
-    /*
-     * 他拡張からAnkPixiv.downloadCurrentImageが呼び出された時に実行する
-     */
-    callDownloadCurrentImage: function (useDialog, confirmDownloaded, debug) { // {{{
-      if (AnkBase.inSupportedSite)
-        return AnkBase.downloadCurrentImage(useDialog, confirmDownloaded, debug);
-    }, // }}}
+    call: {
+      /*
+       * 他拡張からAnkPixiv.downloadCurrentImageが呼び出された時に実行する
+       */
+      downloadCurrentImage: function (useDialog, confirmDownloaded, debug) { // {{{
+        if (AnkBase.inSupportedSite)
+          return AnkBase.downloadCurrentImage(useDialog, confirmDownloaded, debug);
+      }, // }}}
 
-    /*
-     * 他拡張からAnkPixiv.rateが呼び出された時に実行する
-     */
-    callRate: function (pt) { // {{{
-      if (AnkBase.inSupportedSite && typeof AnkModule.rate === 'function')
-        return AnkModule.rate(pt);
-    }, // }}}
+      /*
+       * 他拡張からAnkPixiv.rateが呼び出された時に実行する
+       */
+      rate: function (pt) { // {{{
+        if (AnkBase.inSupportedSite && typeof AnkModule.rate === 'function')
+          return AnkModule.rate(pt);
+      }, // }}}
+    },
 
 
     /********************************************************************************

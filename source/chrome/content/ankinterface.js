@@ -9,14 +9,14 @@ try {
        * ダウンロード
        */
       downloadCurrentImage: function (useDialog, confirmDownloaded, debug) { // {{{
-        AnkBase.callDownloadCurrentImage(useDialog, confirmDownloaded, debug);
+        AnkBase.call.downloadCurrentImage(useDialog, confirmDownloaded, debug);
       }, // }}}
 
       /*
        * 評価
        */
       rate: function (pt) { // {{{
-        AnkBase.callRate(pt);
+        AnkBase.call.rate(pt);
       }, // }}}
   };
 
