@@ -1,7 +1,7 @@
 
 try {
 
-  AnkPixiv = {
+  /*let*/ AnkPixiv = {
 
     /********************************************************************************
     * 定数
@@ -697,7 +697,7 @@ try {
             doc.addEventListener(
               'click',
               function (e) {
-                if (e.button === 0 && bigMode)
+                if (e.button === 0 && bigMode && e.target !== openComment)
                   noMoreEvent(changeImageSize)(e);
               },
               false

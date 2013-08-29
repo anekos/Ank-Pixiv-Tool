@@ -36,7 +36,8 @@ try {
     },
 
     CLASS_NAME: {
-      DOWNLOADED: 'ank-pixiv-tool-downloaded'
+      DOWNLOADED: 'ank-pixiv-tool-downloaded',
+      DOWNLOADED_OVERLAY: 'ank-pixiv-tool-downloaded-overlay',
     },
 
     Prefs: new AnkPref('extensions.ankpixiv'),
@@ -564,7 +565,7 @@ try {
      * 他拡張からAnkPixiv.downloadCurrentImageが呼び出された時に実行する
      */
     callDownloadCurrentImage: function (useDialog, confirmDownloaded, debug) { // {{{
-      if (AnkBase.inSupportedSite && AnkModule.downloadable)
+      if (AnkBase.inSupportedSite)
         return AnkBase.downloadCurrentImage(useDialog, confirmDownloaded, debug);
     }, // }}}
 
@@ -592,6 +593,10 @@ try {
 
         // 自分のページのは構成が違い、問題となるのでダウンロードしないようにする。
         if (AnkModule.in.myIllust)
+          return false;
+
+        // 同一ページでも、表示中の状態によってダウンロードの可否が異なる場合がある
+        if (!AnkModule.downloadable)
           return false;
 
         if (typeof useDialog === 'undefined')
@@ -1281,6 +1286,13 @@ try {
         '  animation-name: slidein;',
         '  animation-iteration-count: infinite !important;',
         '  animation-direction: alternate;',
+        '}',
+        '.ank-pixiv-tool-downloaded-overlay {',
+        '  opacity: 0.5 !important;',
+        '  border-width: thick;',
+        '  border-color: red;',
+        '  border-top-style: double;',
+        '  border-left-style: double;',
         '}',
         '@keyframes slidein {',
         '  from {',
