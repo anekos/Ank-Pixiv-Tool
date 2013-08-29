@@ -1,7 +1,7 @@
 
 try {
 
-  let AnkTwitpic = {
+  let self = {
 
     /********************************************************************************
     * 定数
@@ -25,7 +25,7 @@ try {
         false, // }}}
 
       get medium () // {{{
-        AnkTwitpic.in.illustPage, // }}}
+        self.in.illustPage, // }}}
 
       get illustPage () // {{{
         AnkBase.currentLocation.match(/^https?:\/\/twitpic\.com\/[^/]+$/),
@@ -41,28 +41,28 @@ try {
     elements: (function () { // {{{
       let illust =  {
         get mediumImage ()
-          AnkTwitpic.elements.doc.querySelector('div#media > img'),
+          self.elements.doc.querySelector('div#media > img'),
 
         get largeLink ()
-          AnkTwitpic.elements.doc.querySelector('div#media-overlay > div > span > a'),
+          self.elements.doc.querySelector('div#media-overlay > div > span > a'),
 
         get datetime ()
-          AnkTwitpic.elements.doc.querySelectorAll('div#media-stats > div.media-stat')[1],
+          self.elements.doc.querySelectorAll('div#media-stats > div.media-stat')[1],
 
         get title ()
-          AnkTwitpic.elements.illust.mediumImage,
+          self.elements.illust.mediumImage,
 
         get comment ()
           null,
 
         get avatar ()
-          AnkTwitpic.elements.doc.querySelector('div#infobar-user-avatar > a > img'),
+          self.elements.doc.querySelector('div#infobar-user-avatar > a > img'),
 
         get userName ()
-          AnkTwitpic.elements.doc.querySelector('div#infobar-user-info > h2'),
+          self.elements.doc.querySelector('div#infobar-user-info > h2'),
 
         get memberLink ()
-          AnkTwitpic.elements.doc.querySelector('div#infobar-user-info > h4 > a'),
+          self.elements.doc.querySelector('div#infobar-user-info > h4 > a'),
 
         get tags ()
           null,
@@ -70,7 +70,7 @@ try {
         // elements.illust中ではdownloadedDisplayParentのみankpixiv.jsから呼ばれるので必須、他はこのソース内でしか使わない
 
         get downloadedDisplayParent ()
-          AnkTwitpic.elements.doc.querySelector('div#content'),
+          self.elements.doc.querySelector('div#content'),
       };
 
       let mypage = {
@@ -94,7 +94,7 @@ try {
           AnkBase.currentLocation.match(/^https?:\/\/twitpic\.com\/([^/]+)$/)[1],
 
         get dateTime () {
-          let dtext = AnkTwitpic.elements.illust.datetime.textContent;
+          let dtext = self.elements.illust.datetime.textContent;
           let diff = 0;         // 'less than a minute ago', etc.
 
           let m = dtext.match(/(an?|\d+) (minute|hour|day)/)
@@ -105,7 +105,7 @@ try {
               m[2] === 'hour' ? d*60 :
                                 d);
           } else if (!dtext.match(/less than a minute ago/)) {
-            AnkUtils.dump(AnkTwitpic.SERVICE_ID+': unknown datetime format = '+dtext);
+            AnkUtils.dump(self.SERVICE_ID+': unknown datetime format = '+dtext);
           }
 
           let dd = new Date();
@@ -140,13 +140,13 @@ try {
           0,
 
         get server ()
-          AnkTwitpic.info.path.images[0].match(/^https?:\/\/([^\/\.]+)\./i)[1],
+          self.info.path.images[0].match(/^https?:\/\/([^\/\.]+)\./i)[1],
 
         get referer ()
           AnkBase.currentLocation,
 
         get title ()
-          AnkUtils.trim(AnkTwitpic.elements.illust.title.alt),
+          AnkUtils.trim(self.elements.illust.title.alt),
 
         get comment ()
           illust.title,
@@ -167,13 +167,13 @@ try {
 
       let member = {
         get id ()
-          AnkTwitpic.elements.illust.memberLink.href.match(/\/photos\/(.+)$/)[1],
+          self.elements.illust.memberLink.href.match(/\/photos\/(.+)$/)[1],
 
         get pixivId ()
           member.id,
 
         get name ()
-          AnkUtils.trim(AnkTwitpic.elements.illust.userName.textContent),
+          AnkUtils.trim(self.elements.illust.userName.textContent),
 
         get memoizedName ()
           AnkBase.memoizedName,
@@ -181,7 +181,7 @@ try {
 
       let path = {
         get initDir ()
-          AnkBase.Prefs.get('initialDirectory.'+AnkTwitpic.SITE_NAME),
+          AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext ()
           (path.images[0].match(/(\.\w+)(?:$|\?)/)[1] || '.jpg'),
@@ -191,7 +191,7 @@ try {
 
         get images ()
           // 本当は'full'ページから引かなければいけない？しかしサンプルがみつからず
-          [AnkTwitpic.elements.illust.mediumImage.src],
+          [self.elements.illust.mediumImage.src],
       };
 
       return {
@@ -202,7 +202,7 @@ try {
     })(), // }}}
 
     get downloadable () {
-      if (AnkTwitpic.in.illustPage && !AnkTwitpic.elements.illust.mediumImage)
+      if (self.in.illustPage && !self.elements.illust.mediumImage)
         return false;// 動画は保存できない
       return true;
     },
@@ -234,7 +234,7 @@ try {
       // closure {{{
       let installInterval = 500;
       let installTryed = 0;
-      let doc = AnkTwitpic.elements.doc;
+      let doc = self.elements.doc;
       // }}}
 
       let installer = function () { // {{{
@@ -242,8 +242,8 @@ try {
           // インストールに必用な各種要素
           try { // {{{
             var body = doc.getElementsByTagName('body')[0];
-            var largeLink = AnkTwitpic.elements.illust.largeLink;
-            var medImg = AnkTwitpic.elements.illust.mediumImage;
+            var largeLink = self.elements.illust.largeLink;
+            var medImg = self.elements.illust.mediumImage;
           } catch (e) {
             return delay("delay installation by error", e);
           } // }}}
@@ -255,7 +255,7 @@ try {
 
           // viewerは作らない
 
-          // 中画像クリック時("View full size")に保存する
+          // 中画像クリック時に保存する
           if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
             largeLink.addEventListener(
               'click',
@@ -267,14 +267,14 @@ try {
           } // }}}
 
           // 保存済み表示
-          if (AnkBase.isDownloaded(AnkTwitpic.info.illust.id,AnkTwitpic.SERVICE_ID)) { // {{{
+          if (AnkBase.isDownloaded(self.info.illust.id,self.SERVICE_ID)) { // {{{
             AnkBase.insertDownloadedDisplay(
-                AnkTwitpic.elements.illust.downloadedDisplayParent,
-                AnkTwitpic.info.illust.R18
+                self.elements.illust.downloadedDisplayParent,
+                self.info.illust.R18
             );
           }
 
-          AnkUtils.dump('installed: '+AnkTwitpic.SITE_NAME);
+          AnkUtils.dump('installed: '+self.SITE_NAME);
 
         } catch (e) {
           AnkUtils.dumpError(e);
@@ -289,7 +289,7 @@ try {
      */
     installListPageFunctions: function () { /// {
       // under construction
-      AnkUtils.dump('installed: '+AnkTwitpic.SITE_NAME+' list');
+      AnkUtils.dump('installed: '+self.SITE_NAME+' list');
     }, // }}}
 
     /*
@@ -299,7 +299,7 @@ try {
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
 
-      if (AnkTwitpic.in.medium || !AnkTwitpic.in.site)
+      if (self.in.medium || !self.in.site)
         return;
 
       if (!AnkBase.Prefs.get('markDownloaded', false) && !ignorePref)
@@ -311,7 +311,7 @@ try {
       AnkBase.Store.document.marked = true;
 
       if (!node)
-        node = AnkTwitpic.elements.doc;
+        node = self.elements.doc;
 
       [
         ['div.user-photo-wrap > div > a', 2],             // 一覧
@@ -321,7 +321,7 @@ try {
           map(function (link) link.href && let (m = link.href.split(/\//)) m.length >= 2 && [link, m.pop()]) .
           filter(function (m) m) .
           forEach(function ([link, id]) {
-            if (!AnkBase.isDownloaded(id,AnkTwitpic.SERVICE_ID))
+            if (!AnkBase.isDownloaded(id,self.SERVICE_ID))
               return;
             let box = AnkUtils.trackbackParentNode(link, nTrackback);
             if (box)
@@ -337,13 +337,22 @@ try {
       // under construction
     }, // }}}
 
+
+    /********************************************************************************
+     * その他
+     ********************************************************************************/
+
+    rate: function (pt) { // {{{
+      return true;
+    },
+
   };
 
   /********************************************************************************
   * インストール - ankpixiv.xulにも登録を
   ********************************************************************************/
 
-  AnkBase.MODULES.push(AnkTwitpic);
+  AnkBase.addModule(self);
 
 } catch (error) {
  dump("[" + error.name + "]\n" +

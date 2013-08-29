@@ -1,7 +1,7 @@
 
 try {
 
-  let AnkTwipple = {
+  let self = {
 
     /********************************************************************************
     * 定数
@@ -25,7 +25,7 @@ try {
         false, // }}}
 
       get medium () // {{{
-        AnkTwipple.in.illustPage, // }}}
+        self.in.illustPage, // }}}
 
       get illustPage () // {{{
         AnkBase.currentLocation.match(/^https?:\/\/p\.twipple\.jp\//) &&
@@ -42,25 +42,25 @@ try {
     elements: (function () { // {{{
       let illust =  {
         get mediumImage ()
-          AnkTwipple.elements.doc.querySelector('#post_image'),
+          self.elements.doc.querySelector('#post_image'),
 
         get largeLink ()
-          AnkTwipple.elements.doc.querySelector('#img_a_origin'),
+          self.elements.doc.querySelector('#img_a_origin'),
 
         get datetime ()
-          AnkTwipple.elements.doc.querySelector('.date'),
+          self.elements.doc.querySelector('.date'),
 
         get title ()
-          AnkTwipple.elements.doc.querySelector('#item_tweet'),
+          self.elements.doc.querySelector('#item_tweet'),
 
         get comment ()
           illust.title,
 
         get avatar ()
-          AnkTwipple.elements.doc.querySelector('#comment > a > img'),
+          self.elements.doc.querySelector('#comment > a > img'),
 
         get userName ()
-          AnkTwipple.elements.doc.querySelector('#item_screen_name > a'),
+          self.elements.doc.querySelector('#item_screen_name > a'),
 
         get memberLink ()
           illust.userName,
@@ -71,7 +71,7 @@ try {
         // elements.illust中ではdownloadedDisplayParentのみankpixiv.jsから呼ばれるので必須、他はこのソース内でしか使わない
 
         get downloadedDisplayParent ()
-          AnkTwipple.elements.doc.querySelector('#comment'),
+          self.elements.doc.querySelector('#comment'),
       };
 
       let mypage = {
@@ -95,7 +95,7 @@ try {
           AnkBase.currentLocation.match(/\/([^/]+)$/)[1],
 
         get dateTime () {
-          let dtext  = AnkTwipple.elements.illust.datetime.textContent;
+          let dtext  = self.elements.illust.datetime.textContent;
           let m = dtext.match(/(\d+).+?(\d+).+?(\d+).+?(\d+):(\d+):/);
           let dd = new Date();
           if (m) {
@@ -105,7 +105,7 @@ try {
             dd.setHours(parseInt(m[4]));
             dd.setMinutes(parseInt(m[5]));
           } else {
-            AnkUtils.dump(AnkTwipple.SERVICE_ID+': unknown datetime format = '+dtext);
+            AnkUtils.dump(self.SERVICE_ID+': unknown datetime format = '+dtext);
           }
 
           return {
@@ -139,10 +139,10 @@ try {
           null,
 
         get referer ()
-          AnkTwipple.elements.illust.largeLink.href,
+          self.elements.illust.largeLink.href,
 
         get title ()
-          AnkUtils.trim(AnkTwipple.elements.illust.title.textContent),
+          AnkUtils.trim(self.elements.illust.title.textContent),
 
         get comment ()
           illust.title,
@@ -163,13 +163,13 @@ try {
 
       let member = {
         get id ()
-          AnkTwipple.elements.illust.memberLink.href.match(/\/user\/(.+)$/)[1],
+          self.elements.illust.memberLink.href.match(/\/user\/(.+)$/)[1],
 
         get pixivId ()
           member.id,
 
         get name ()
-          AnkUtils.trim(AnkTwipple.elements.illust.userName.textContent).replace(/さん$/,''),
+          AnkUtils.trim(self.elements.illust.userName.textContent).replace(/さん$/,''),
 
         get memoizedName ()
           AnkBase.memoizedName,
@@ -177,7 +177,7 @@ try {
 
       let path = {
         get initDir ()
-          AnkBase.Prefs.get('initialDirectory.'+AnkTwipple.SITE_NAME),
+          AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext ()
           '.jpg',   // 読み込んでみないとわからないのでとりあえずjpgで
@@ -186,7 +186,7 @@ try {
           null,
 
         get images ()
-          [AnkTwipple.elements.illust.largeLink.href],
+          [self.elements.illust.largeLink.href],
       };
 
       return {
@@ -226,7 +226,7 @@ try {
       // closure {{{
       let installInterval = 500;
       let installTryed = 0;
-      let doc = AnkTwipple.elements.doc;
+      let doc = self.elements.doc;
       // }}}
 
       let installer = function () { // {{{
@@ -234,8 +234,8 @@ try {
           // インストールに必用な各種要素
           try { // {{{
             var body = doc.getElementsByTagName('body')[0];
-            var largeLink = AnkTwipple.elements.illust.largeLink;
-            var medImg = AnkTwipple.elements.illust.mediumImage;
+            var largeLink = self.elements.illust.largeLink;
+            var medImg = self.elements.illust.mediumImage;
           } catch (e) {
             return delay("delay installation by error", e);
           } // }}}
@@ -247,26 +247,31 @@ try {
 
           // viewerは作らない
 
-          // 中画像クリック時("View full size")に保存する
+          // 中画像クリック時に保存する
           if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
-            largeLink.addEventListener(
-              'click',
-              function (e) {
-                AnkBase.downloadCurrentImageAuto();
-              },
-              true
-            );
+            ['#img_overlay_container', '#post_image'].forEach(function (v) {
+              let e = self.elements.doc.querySelector(v);
+              if (e) {
+                e.addEventListener(
+                  'click',
+                  function (e) {
+                    AnkBase.downloadCurrentImageAuto();
+                  },
+                  true
+                );
+              }
+            });
           } // }}}
 
           // 保存済み表示
-          if (AnkBase.isDownloaded(AnkTwipple.info.illust.id,AnkTwipple.SERVICE_ID)) { // {{{
+          if (AnkBase.isDownloaded(self.info.illust.id,self.SERVICE_ID)) { // {{{
             AnkBase.insertDownloadedDisplay(
-                AnkTwipple.elements.illust.downloadedDisplayParent,
-                AnkTwipple.info.illust.R18
+                self.elements.illust.downloadedDisplayParent,
+                self.info.illust.R18
             );
           }
 
-          AnkUtils.dump('installed: '+AnkTwipple.SITE_NAME);
+          AnkUtils.dump('installed: '+self.SITE_NAME);
 
         } catch (e) {
           AnkUtils.dumpError(e);
@@ -281,7 +286,7 @@ try {
      */
     installListPageFunctions: function () { /// {
       // under construction
-      AnkUtils.dump('installed: '+AnkTwipple.SITE_NAME+' list');
+      AnkUtils.dump('installed: '+self.SITE_NAME+' list');
     }, // }}}
 
     /*
@@ -291,7 +296,7 @@ try {
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
 
-      if (AnkTwipple.in.medium || !AnkTwipple.in.site)
+      if (self.in.medium || !self.in.site)
         return;
 
       if (!AnkBase.Prefs.get('markDownloaded', false) && !ignorePref)
@@ -303,7 +308,7 @@ try {
       AnkBase.Store.document.marked = true;
 
       if (!node)
-        node = AnkTwipple.elements.doc;
+        node = self.elements.doc;
 
       [
         ['.simple_list_photo > div > a', 1],             // 一覧
@@ -312,7 +317,7 @@ try {
           map(function (link) link.href && let (m = link.href.split(/\//)) m.length >= 2 && [link, m.pop()]) .
           filter(function (m) m) .
           forEach(function ([link, id]) {
-            if (!AnkBase.isDownloaded(id,AnkTwipple.SERVICE_ID))
+            if (!AnkBase.isDownloaded(id,self.SERVICE_ID))
               return;
             let box = AnkUtils.trackbackParentNode(link, nTrackback);
             if (box)
@@ -328,13 +333,22 @@ try {
       // under construction
     }, // }}}
 
+
+    /********************************************************************************
+     * その他
+     ********************************************************************************/
+
+    rate: function (pt) { // {{{
+      return true;
+    },
+
   };
 
   /********************************************************************************
   * インストール - ankpixiv.xulにも登録を
   ********************************************************************************/
 
-  AnkBase.MODULES.push(AnkTwipple);
+  AnkBase.addModule(self);
 
 } catch (error) {
  dump("[" + error.name + "]\n" +

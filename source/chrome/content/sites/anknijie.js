@@ -1,7 +1,7 @@
 
 try {
 
-  let AnkNijie = {
+  let self = {
 
     /********************************************************************************
     * 定数
@@ -22,10 +22,10 @@ try {
         AnkBase.currentLocation.match(/^https?:\/\/nijie\.info\//), // }}}
 
       get manga () // {{{
-        (AnkNijie.info.illust.mangaPages > 1), // }}}
+        (self.info.illust.mangaPages > 1), // }}}
 
       get medium () // {{{
-        AnkNijie.in.illustPage, // }}}
+        self.in.illustPage, // }}}
 
       get illustPage () // {{{
         AnkBase.currentLocation.match(/^https?:\/\/nijie\.info\/view\.php\?id=/), // }}}
@@ -40,43 +40,43 @@ try {
     elements: (function () { // {{{
       let illust =  {
         get mediumImage ()
-          AnkNijie.elements.doc.querySelector('img#view_img') ||      // "投稿イラスト"ページ
-          AnkNijie.elements.doc.querySelector('p.image > img'),       // "同人"ページ
+          self.elements.doc.querySelector('img#view_img') ||      // "投稿イラスト"ページ
+          self.elements.doc.querySelector('p.image > img'),       // "同人"ページ
 
         get datetime ()
-          AnkNijie.elements.doc.querySelector('div#view-honbun > p') ||
-          AnkNijie.elements.doc.querySelector('div#created > p'),
+          self.elements.doc.querySelector('div#view-honbun > p') ||
+          self.elements.doc.querySelector('div#created > p'),
 
         get title ()
-          AnkNijie.elements.doc.querySelector('div#view-header > div#view-left > p') ||
-          AnkNijie.elements.doc.querySelector('p.title'),
+          self.elements.doc.querySelector('div#view-header > div#view-left > p') ||
+          self.elements.doc.querySelector('p.title'),
 
         get comment ()
-          AnkNijie.elements.doc.querySelectorAll('div#view-honbun > p')[1] ||
-          AnkNijie.elements.doc.querySelectorAll('div#dojin_text > p')[1],
+          self.elements.doc.querySelectorAll('div#view-honbun > p')[1] ||
+          self.elements.doc.querySelectorAll('div#dojin_text > p')[1],
 
         get avatar ()
-          AnkNijie.elements.doc.querySelector('a.name > img'),        // "同人"ページではimgが存在しない
+          self.elements.doc.querySelector('a.name > img'),        // "同人"ページではimgが存在しない
 
         get userName ()
-          AnkNijie.elements.doc.querySelector('a.name') ||
-          AnkNijie.elements.doc.querySelector('div#dojin_left > div.right > p.text > a'),
+          self.elements.doc.querySelector('a.name') ||
+          self.elements.doc.querySelector('div#dojin_left > div.right > p.text > a'),
 
         get memberLink ()
           illust.userName,
 
         get tags ()
-          AnkNijie.elements.doc.querySelector('div#view-tag') ||
-          AnkNijie.elements.doc.querySelector('ul#tag'),
+          self.elements.doc.querySelector('div#view-tag') ||
+          self.elements.doc.querySelector('ul#tag'),
 
         get gallery ()
-          AnkNijie.elements.doc.querySelector('div#gallery'),         // 両ページ共通
+          self.elements.doc.querySelector('div#gallery'),         // 両ページ共通
 
         // elements.illust中ではdownloadedDisplayParentのみankpixiv.jsから呼ばれるので必須、他はこのソース内でしか使わない
 
         get downloadedDisplayParent ()
-          AnkNijie.elements.doc.querySelector('div#view-honbun') ||
-          AnkNijie.elements.doc.querySelector('div#infomation'),
+          self.elements.doc.querySelector('div#view-honbun') ||
+          self.elements.doc.querySelector('div#infomation'),
       };
 
       let mypage = {
@@ -100,7 +100,7 @@ try {
           AnkBase.currentLocation.match(/id=(\d+)/)[1],
 
         get dateTime () {
-          let m = AnkNijie.elements.illust.datetime.textContent.match(/(\d+)[^\d]+(\d+)[^\d]+(\d+)[^\d]+(\d+):(\d+)/)
+          let m = self.elements.illust.datetime.textContent.match(/(\d+)[^\d]+(\d+)[^\d]+(\d+)[^\d]+(\d+):(\d+)/)
           if (!m)
             return null;
 
@@ -117,7 +117,7 @@ try {
           null,
 
         get tags () {
-          let elem = AnkNijie.elements.illust.tags;
+          let elem = self.elements.illust.tags;
           if (!elem)
             return [];
           let tags = AnkUtils.A(elem.querySelectorAll('span.tag_name'))
@@ -133,7 +133,7 @@ try {
 
         get shortTags () {
           let limit = AnkBase.Prefs.get('shortTagsMaxLength', 8);
-          return AnkNijie.info.illust.tags.filter(function (it) (it.length <= limit));
+          return self.info.illust.tags.filter(function (it) (it.length <= limit));
         },
 
         get tools ()
@@ -146,23 +146,23 @@ try {
           0,
 
         get server ()
-          AnkNijie.info.path.images[0].match(/^https?:\/\/([^\/\.]+)\./i)[1],
+          self.info.path.images[0].match(/^https?:\/\/([^\/\.]+)\./i)[1],
 
         get referer ()
           AnkBase.currentLocation,
 
         get title ()
-          AnkUtils.trim(AnkNijie.elements.illust.title.textContent),
+          AnkUtils.trim(self.elements.illust.title.textContent),
 
         get comment ()
-          let (e = AnkNijie.elements.illust.comment)
+          let (e = self.elements.illust.comment)
             (e ? AnkUtils.textContent(e) : ''),
 
         get R18 ()
           true,
 
         get mangaPages ()
-          AnkNijie.info.path.images.length,
+          self.info.path.images.length,
 
         get worksData ()
           null,
@@ -174,13 +174,13 @@ try {
 
       let member = {
         get id ()
-          AnkNijie.elements.illust.memberLink.href.match(/id=(\d+)/)[1],
+          self.elements.illust.memberLink.href.match(/id=(\d+)/)[1],
 
         get pixivId ()
           member.id,
 
         get name ()
-          AnkUtils.trim(AnkNijie.elements.illust.userName.textContent),
+          AnkUtils.trim(self.elements.illust.userName.textContent),
 
         get memoizedName ()
           AnkBase.memoizedName,
@@ -188,7 +188,7 @@ try {
 
       let path = {
         get initDir ()
-          AnkBase.Prefs.get('initialDirectory.'+AnkNijie.SITE_NAME),
+          AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext ()
           (path.images[0].match(/(\.\w+)(?:$|\?)/)[1] || '.jpg'),
@@ -197,11 +197,11 @@ try {
           null,
 
         get images () {
-          let sm = AnkUtils.A(AnkNijie.elements.illust.gallery.querySelectorAll('a'));
+          let sm = AnkUtils.A(self.elements.illust.gallery.querySelectorAll('a'));
           let m = [];
 
           if (sm.filter(function (v) v.href.match(/dojin_main/)).length > 0)
-            m.push(AnkNijie.elements.illust.mediumImage.src); // "同人"の場合は表紙をリストに追加
+            m.push(self.elements.illust.mediumImage.src); // "同人"の場合は表紙をリストに追加
 
           sm.forEach(function (v) {
             m.push(v.href);
@@ -247,7 +247,7 @@ try {
       // closure {{{
       let installInterval = 500;
       let installTryed = 0;
-      let doc = AnkNijie.elements.doc;
+      let doc = self.elements.doc;
       // }}}
 
       let installer = function () { // {{{
@@ -255,7 +255,7 @@ try {
           // インストールに必用な各種要素
           try { // {{{
             var body = doc.getElementsByTagName('body')[0];
-            var medImg = AnkNijie.elements.illust.mediumImage;
+            var medImg = self.elements.illust.mediumImage;
             var openComment = doc.querySelector('p.open');
             var noComment = doc.querySelector('div.co2') || doc.querySelector('div#dojin_comment');
           } catch (e) {
@@ -300,10 +300,10 @@ try {
           })(); // }}}
 
           // 保存済み表示
-          if (AnkBase.isDownloaded(AnkNijie.info.illust.id,AnkNijie.SERVICE_ID)) { // {{{
+          if (AnkBase.isDownloaded(self.info.illust.id,self.SERVICE_ID)) { // {{{
             AnkBase.insertDownloadedDisplay(
-                AnkNijie.elements.illust.downloadedDisplayParent,
-                AnkNijie.info.illust.R18
+                self.elements.illust.downloadedDisplayParent,
+                self.info.illust.R18
             );
           } // }}}
 
@@ -312,7 +312,7 @@ try {
             setTimeout(function () openComment.click(), 1000);
           // }}}
 
-          AnkUtils.dump('installed: '+AnkNijie.SITE_NAME);
+          AnkUtils.dump('installed: '+self.SITE_NAME);
 
         } catch (e) {
           AnkUtils.dumpError(e);
@@ -327,7 +327,7 @@ try {
      */
     installListPageFunctions: function () { /// {
       // under construction
-      AnkUtils.dump('installed: '+AnkNijie.SITE_NAME+' list');
+      AnkUtils.dump('installed: '+self.SITE_NAME+' list');
     }, // }}}
 
     /*
@@ -338,7 +338,7 @@ try {
     markDownloaded: function (node, force, ignorePref) { // {{{
       const IsIllust = /view\.php\?id=(\d+)/;
 
-      if (AnkNijie.in.medium || !AnkNijie.in.site)
+      if (self.in.medium || !self.in.site)
         return;
 
       if (!AnkBase.Prefs.get('markDownloaded', false) && !ignorePref)
@@ -350,7 +350,7 @@ try {
       AnkBase.Store.document.marked = true;
 
       if (!node)
-        node = AnkNijie.elements.doc;
+        node = self.elements.doc;
 
       [
         ['div.nijie > div.picture > p.nijiedao > a', 3],  // 通常の一覧
@@ -362,7 +362,7 @@ try {
           filter(function (m) m) .
           map(function ([link, m]) [link, parseInt(m[1], 10)]) .
           forEach(function ([link, id]) {
-            if (!AnkBase.isDownloaded(id,AnkNijie.SERVICE_ID))
+            if (!AnkBase.isDownloaded(id,self.SERVICE_ID))
               return;
             let box = AnkUtils.trackbackParentNode(link, nTrackback);
             if (box)
@@ -378,13 +378,22 @@ try {
       // under construction
     }, // }}}
 
+
+    /********************************************************************************
+     * その他
+     ********************************************************************************/
+
+    rate: function (pt) { // {{{
+      return true;
+    },
+
   };
 
   /********************************************************************************
   * インストール - ankpixiv.xulにも登録を
   ********************************************************************************/
 
-  AnkBase.MODULES.push(AnkNijie);
+  AnkBase.addModule(self);
 
 } catch (error) {
  dump("[" + error.name + "]\n" +

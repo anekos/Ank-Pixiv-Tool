@@ -1,8 +1,6 @@
 
 try {
 
-  let AnkModule = null;
-
   AnkBase = {
 
     /********************************************************************************
@@ -57,8 +55,6 @@ try {
 
     Locale: AnkUtils.getLocale('chrome://ankpixiv/locale/ankpixiv.properties'),
 
-    MODULES: [],
-
 
     /********************************************************************************
     * プロパティ
@@ -66,7 +62,7 @@ try {
 
     get inSupportedSite () { // {{{
       AnkUtils.dump('inSupportedSite check: '+AnkBase.currentLocation+",\n"+Error().stack);
-      return AnkBase.MODULES.some(function (v) (AnkModule = v.in.site ? v : null));
+      return AnkBase.siteModules.some(function (v) (AnkModule = v.in.site ? v : null));
     }, // }}}
 
     get current () { // {{{
@@ -138,6 +134,26 @@ try {
       );
       return result && result.length && result[0].name;
     },
+
+    /********************************************************************************
+    * モジュール関連
+    ********************************************************************************/
+
+    AnkModule: null,
+
+    siteModules: [],
+
+    addModule: function (module) {
+      let (m = AnkBase.siteModules.filter(function (v) (module.SERVICE_ID === v.SERVICE_ID) ? true : false)) {
+        if (m.length > 0) {
+          AnkUtils.dump('error ! duplicated service id: '+m[0].SITE_NAME+' <=> '+module.SITE_NAME+', '+module.SERVICE_ID);
+        } else {
+          AnkUtils.dump('installed module: '+module.SITE_NAME+', '+module.SERVICE_ID);
+          AnkBase.siteModules.push(module);
+        }
+      }
+    },
+
 
     /********************************************************************************
     * 状態
@@ -559,14 +575,6 @@ try {
       }
 
       downloadNext();
-    }, // }}}
-
-    /*
-     * 他拡張からAnkPixiv.downloadCurrentImageが呼び出された時に実行する
-     */
-    callDownloadCurrentImage: function (useDialog, confirmDownloaded, debug) { // {{{
-      if (AnkBase.inSupportedSite)
-        return AnkBase.downloadCurrentImage(useDialog, confirmDownloaded, debug);
     }, // }}}
 
     /*
@@ -1304,8 +1312,7 @@ try {
         '}'
       ].join("\n");
 
-      let domainlist = AnkBase.MODULES.map(function (v) 'domain("'+v.DOMAIN+'")').join(',');
-      AnkUtils.dump('supported: '+domainlist);
+      let domainlist = AnkBase.siteModules.map(function (v) 'domain("'+v.DOMAIN+'")').join(',');
 
       let CSS = [
         '@namespace url(http://www.w3.org/1999/xhtml);',
@@ -1438,6 +1445,27 @@ try {
           case 2: AnkBase.openPrefWindow(); break;
         }
       }
+    }, // }}}
+
+
+    /********************************************************************************
+    * 外部向け
+    ********************************************************************************/
+
+    /*
+     * 他拡張からAnkPixiv.downloadCurrentImageが呼び出された時に実行する
+     */
+    callDownloadCurrentImage: function (useDialog, confirmDownloaded, debug) { // {{{
+      if (AnkBase.inSupportedSite)
+        return AnkBase.downloadCurrentImage(useDialog, confirmDownloaded, debug);
+    }, // }}}
+
+    /*
+     * 他拡張からAnkPixiv.rateが呼び出された時に実行する
+     */
+    callRate: function (pt) { // {{{
+      if (AnkBase.inSupportedSite && typeof AnkModule.rate === 'function')
+        return AnkModule.rate(pt);
     }, // }}}
 
 

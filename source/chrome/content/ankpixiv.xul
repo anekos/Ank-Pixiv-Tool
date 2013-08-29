@@ -9,6 +9,7 @@
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankutils.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankstorage.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankbase.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankinterface.js" />
 <!-- サイト別.jsの登録はここから -->
   <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anknijie.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/ankpixiv.js" />
