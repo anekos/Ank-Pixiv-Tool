@@ -38,45 +38,51 @@ try {
     }, // }}}
 
     elements: (function () { // {{{
+      function query (q)
+        self.elements.doc.querySelector(q);
+
+      function queryAll (q)
+        self.elements.doc.querySelectorAll(q);
+
       let illust =  {
         get mediumImage ()
-          self.elements.doc.querySelector('img#view_img') ||      // "投稿イラスト"ページ
-          self.elements.doc.querySelector('p.image > img'),       // "同人"ページ
+          query('img#view_img') ||      // "投稿イラスト"ページ
+          query('p.image > img'),       // "同人"ページ
 
         get datetime ()
-          self.elements.doc.querySelector('div#view-honbun > p') ||
-          self.elements.doc.querySelector('div#created > p'),
+          query('div#view-honbun > p') ||
+          query('div#created > p'),
 
         get title ()
-          self.elements.doc.querySelector('div#view-header > div#view-left > p') ||
-          self.elements.doc.querySelector('p.title'),
+          query('div#view-header > div#view-left > p') ||
+          query('p.title'),
 
         get comment ()
-          self.elements.doc.querySelectorAll('div#view-honbun > p')[1] ||
-          self.elements.doc.querySelectorAll('div#dojin_text > p')[1],
+          queryAll('div#view-honbun > p')[1] ||
+          queryAll('div#dojin_text > p')[1],
 
         get avatar ()
-          self.elements.doc.querySelector('a.name > img'),        // "同人"ページではimgが存在しない
+          query('a.name > img'),        // "同人"ページではimgが存在しない
 
         get userName ()
-          self.elements.doc.querySelector('a.name') ||
-          self.elements.doc.querySelector('div#dojin_left > div.right > p.text > a'),
+          query('a.name') ||
+          query('div#dojin_left > div.right > p.text > a'),
 
         get memberLink ()
           illust.userName,
 
         get tags ()
-          self.elements.doc.querySelector('div#view-tag') ||
-          self.elements.doc.querySelector('ul#tag'),
+          query('div#view-tag') ||
+          query('ul#tag'),
 
         get gallery ()
-          self.elements.doc.querySelector('div#gallery'),         // 両ページ共通
+          query('div#gallery'),         // 両ページ共通
 
         // elements.illust中ではdownloadedDisplayParentのみankpixiv.jsから呼ばれるので必須、他はこのソース内でしか使わない
 
         get downloadedDisplayParent ()
-          self.elements.doc.querySelector('div#view-honbun') ||
-          self.elements.doc.querySelector('div#infomation'),
+          query('div#view-honbun') ||
+          query('div#infomation'),
       };
 
       let mypage = {

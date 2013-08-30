@@ -60,77 +60,87 @@ try {
       get pixiv () // {{{
         self.in.site, // }}}
 
-      get listPage () // {{{
-        AnkBase.currentLocation.match(/\.pixiv\.net\/member_illust.php\?id=/), // }}}
+      // elementsを使っているが確定後にしか使わないのでOK
+      get feed () // {{{
+        self.elements.illust.feedList, // }}}
 
-      get bookmarkPage () // {{{
-        AnkBase.currentLocation.match(/\.pixiv\.net\/bookmark_detail.php\?.*illust_id=/), // }}}
+      get illustList () // {{{
+        AnkBase.currentLocation.match(/\.pixiv\.net\/member_illust.php\?id=/), // }}}
 
       get bookmarkNew () // {{{
         AnkBase.currentLocation.match(/\.pixiv\.net\/bookmark_new_illust\.php/), // }}}
 
-      get myBookmark () // {{{
-        AnkBase.currentLocation.match(/\.pixiv\.net\/bookmark\.php/), // }}}
+      get bookmarkAdd () // {{{
+        AnkBase.currentLocation.match(/\.pixiv\.net\/bookmark_add\.php\?/), // }}}
     }, // }}}
 
     elements: (function () { // {{{
+      function query (q)
+        self.elements.doc.querySelector(q);
+
+      function queryAll (q)
+        self.elements.doc.querySelectorAll(q);
+
       let illust =  {
         get mediumImage () {
           return (
-            self.elements.doc.querySelector('.works_display > a > img')
+            query('.works_display > a > img')
             ||
-            self.elements.doc.querySelector('.works_display > * > a > img')
+            query('.works_display > * > a > img')
           );
         },
 
         get largeLink () {
           return (
-            self.elements.doc.querySelector('.works_display > a')
+            query('.works_display > a')
             ||
-            self.elements.doc.querySelector('.works_display > * > a')
+            query('.works_display > * > a')
           );
         },
 
         get worksData ()
-          self.elements.doc.querySelector('.work-info'),
+          query('.work-info'),
 
         get title ()
-          self.elements.doc.querySelector('.work-info > .title'),
+          query('.work-info > .title'),
 
         get comment ()
-          self.elements.doc.querySelector('.work-info > .caption'),
+          query('.work-info > .caption'),
 
         get avatar ()
-          self.elements.doc.querySelector('.profile-unit > a > img.user-image'),
+          query('.profile-unit > a > img.user-image'),
 
         get userName ()
-          self.elements.doc.querySelector('.profile-unit > a > .user'),
+          query('.profile-unit > a > .user'),
 
         get memberLink ()
-          self.elements.doc.querySelector('a.avatar_m'),
+          query('a.avatar_m'),
 
         get tags ()
-          self.elements.doc.querySelector('.tags'),
+          query('.tags'),
 
         get recommendList()
-          AnkUtils.A(self.elements.doc.querySelectorAll('ul.image-items')).pop(),
-          
+          AnkUtils.A(queryAll('.image-items')).pop(),
+
+        get feedList()
+          query('#stacc_timeline'),
+
         get downloadedDisplayParent ()
-          self.elements.doc.querySelector('.work-info'),
+          query('.work-info'),
 
         get ads () {
-          let obj = AnkUtils.A(self.elements.doc.querySelectorAll('object'));
-          let iframe = AnkUtils.A(self.elements.doc.querySelectorAll('iframe'));
-          let search = AnkUtils.A(self.elements.doc.querySelectorAll('.ui-search'));
+          let obj = AnkUtils.A(queryAll('object'));
+          let iframe = AnkUtils.A(queryAll('iframe'));
+          let search = AnkUtils.A(queryAll('.ui-search'));
           // 検索欄も広告扱いしちゃうぞ
-          let findbox = AnkUtils.A(self.elements.doc.querySelectorAll('form.search2'));
+          let findbox = AnkUtils.A(queryAll('form.search2'));
           // ldrize
-          let ldrize = AnkUtils.A(self.elements.doc.querySelectorAll('#gm_ldrize'));
+          let ldrize = AnkUtils.A(queryAll('#gm_ldrize'));
           // ヘッダ
-          let header1 = AnkUtils.A(self.elements.doc.querySelectorAll('#global-header'));
-          let header2 = AnkUtils.A(self.elements.doc.querySelectorAll('.header'));
+          let header1 = AnkUtils.A(queryAll('#global-header'));
+          let header2 = AnkUtils.A(queryAll('.header'));
 
-          let toolbarItems = AnkUtils.A(self.elements.doc.querySelectorAll('#toolbar-items'));
+          let toolbarItems = AnkUtils.A(queryAll('#toolbar-items'));
 
           return ([]).concat(obj, iframe, search, findbox, ldrize, header1, header2, toolbarItems);
         }
@@ -138,10 +148,10 @@ try {
 
       let mypage = {
         get fantasyDisplay ()
-          self.elements.doc.querySelector('#' + self.ID_FANTASY_DISPLAY),
+          query('#' + self.ID_FANTASY_DISPLAY),
 
         get fantasyDisplayNext ()
-          self.elements.doc.querySelector('#contents > div > div.area_pixivmobile'),
+          query('#contents > div > div.area_pixivmobile'),
       };
 
       return {
@@ -759,27 +769,34 @@ try {
       // 伸びるおすすめリストに追随する
       function followExpansion () {
         let recommend = self.elements.illust.recommendList;
+        let feed = self.elements.illust.feedList;
 
         let installTimer = setInterval(
           function () {
-            if (!recommend)
-              if (counter > 0) {
-                AnkUtils.dump('delay: '+counter--);
-                return;
-              }
+            if (!AnkBase.Prefs.get('markDownloaded', false))
+              return;
+
+            let elm = recommend || feed;
+            if (!elm && counter > 0) {
+              AnkUtils.dump('delay fe: '+self.SITE_NAME+', '+counter--);
+              return;
+            }
   
             clearInterval(installTimer);
             installTimer = null;
-  
-            if (AnkBase.Prefs.get('markDownloaded', false)) {
-              if (MutationObserver) {
-                new MutationObserver(function (o) {
-                  o.forEach(function (e) self.markDownloaded(e.target, true));
-                }).observe(recommend, {childList: true});
-              }
+
+            if (!elm) {
+              AnkUtils.dump('installation failed fe: '+self.SITE_NAME);
+              return;
+            }
+
+            if (MutationObserver) {
+              new MutationObserver(function (o) {
+                o.forEach(function (e) self.markDownloaded(e.target, true));
+              }).observe(elm, {childList: true});
             }
   
-            AnkUtils.dump('installed: '+self.SITE_NAME+' bookmark');
+            AnkUtils.dump('installed fe: '+self.SITE_NAME);
           },
           interval
         );
@@ -793,7 +810,7 @@ try {
             function () {
               if (doc.readyState !== "complete")
                 if (counter > 0) {
-                  AnkUtils.dump('delay: '+counter--);
+                  AnkUtils.dump('delay dm: '+counter--);
                   return;
                 }
     
@@ -802,7 +819,7 @@ try {
 
               self.markDownloaded(doc,true);
 
-              AnkUtils.dump('installed: '+self.SITE_NAME+' list');
+              AnkUtils.dump('installed dm: '+self.SITE_NAME);
             },
             interval
           );
@@ -811,12 +828,10 @@ try {
       let counter = 20;
       let interval = 500;
 
-      if (self.in.bookmarkPage || self.in.myBookmark) {
+      if (!(self.in.illustList || self.in.bookmarkNew || self.in.bookmarkAdd))
         followExpansion();
-      }
-      if (self.in.listPage || self.in.bookmarkNew) {
-        delayMarking();
-      }
+
+      delayMarking();
     },
 
     /*
@@ -828,12 +843,16 @@ try {
       const IsIllust = /&illust_id=(\d+)/;
       const BoxTag = /^(li|div|article)$/i;
 
-      function findBox (e, limit) {
+      function findBox (e, limit, cls) {
         if (limit <= 0)
           return null;
-        if (BoxTag.test(e.tagName))
-          return e;
-        return findBox(e.parentNode, limit - 1);
+        if (BoxTag.test(e.tagName)) {
+          if (!cls && self.in.feed)
+            cls = 'stacc_ref_thumb_left';
+          if (!cls || e.className.split(/ /).some(function (v) (v === cls)))
+            return e;
+        }
+        return findBox(e.parentNode, limit - 1, cls);
       }
 
       if (self.in.medium || !self.in.site)
@@ -863,9 +882,10 @@ try {
           map(function ([link, m]) [link, parseInt(m[1], 10)]) .
           forEach(function ([link, id]) {
             let box = findBox(link, 3);
-            if (box && !box.className.split(/ /).some(function (v) v === AnkBase.CLASS_NAME.DOWNLOADED))
+            if (box && !box.className.split(/ /).some(function (v) v === AnkBase.CLASS_NAME.DOWNLOADED)) {
               if (AnkBase.isDownloaded(id,self.SERVICE_ID))
                 box.className += ' ' + AnkBase.CLASS_NAME.DOWNLOADED;
+            }
           });
       });
     }, // }}}

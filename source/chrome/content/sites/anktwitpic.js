@@ -39,12 +39,15 @@ try {
     }, // }}}
 
     elements: (function () { // {{{
+      function query (q)
+        self.elements.doc.querySelector(q);
+
       let illust =  {
         get mediumImage ()
-          self.elements.doc.querySelector('div#media > img'),
+          query('div#media > img'),
 
         get largeLink ()
-          self.elements.doc.querySelector('div#media-overlay > div > span > a'),
+          query('div#media-overlay > div > span > a'),
 
         get datetime ()
           self.elements.doc.querySelectorAll('div#media-stats > div.media-stat')[1],
@@ -56,13 +59,13 @@ try {
           null,
 
         get avatar ()
-          self.elements.doc.querySelector('div#infobar-user-avatar > a > img'),
+          query('div#infobar-user-avatar > a > img'),
 
         get userName ()
-          self.elements.doc.querySelector('div#infobar-user-info > h2'),
+          query('div#infobar-user-info > h2'),
 
         get memberLink ()
-          self.elements.doc.querySelector('div#infobar-user-info > h4 > a'),
+          query('div#infobar-user-info > h4 > a'),
 
         get tags ()
           null,
@@ -70,7 +73,7 @@ try {
         // elements.illust中ではdownloadedDisplayParentのみankpixiv.jsから呼ばれるので必須、他はこのソース内でしか使わない
 
         get downloadedDisplayParent ()
-          self.elements.doc.querySelector('div#content'),
+          query('div#content'),
       };
 
       let mypage = {

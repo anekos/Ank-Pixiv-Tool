@@ -40,27 +40,30 @@ try {
     }, // }}}
 
     elements: (function () { // {{{
+      function query (q)
+        self.elements.doc.querySelector(q);
+
       let illust =  {
         get mediumImage ()
-          self.elements.doc.querySelector('#post_image'),
+          query('#post_image'),
 
         get largeLink ()
-          self.elements.doc.querySelector('#img_a_origin'),
+          query('#img_a_origin'),
 
         get datetime ()
-          self.elements.doc.querySelector('.date'),
+          query('.date'),
 
         get title ()
-          self.elements.doc.querySelector('#item_tweet'),
+          query('#item_tweet'),
 
         get comment ()
           illust.title,
 
         get avatar ()
-          self.elements.doc.querySelector('#comment > a > img'),
+          query('#comment > a > img'),
 
         get userName ()
-          self.elements.doc.querySelector('#item_screen_name > a'),
+          query('#item_screen_name > a'),
 
         get memberLink ()
           illust.userName,
@@ -71,7 +74,7 @@ try {
         // elements.illust中ではdownloadedDisplayParentのみankpixiv.jsから呼ばれるので必須、他はこのソース内でしか使わない
 
         get downloadedDisplayParent ()
-          self.elements.doc.querySelector('#comment'),
+          query('#comment'),
       };
 
       let mypage = {

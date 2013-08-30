@@ -48,7 +48,7 @@ try {
 
       // elementを見ているが、これに関しては問題ないはず
       get illustTweet() // {{{
-        (self.elements.illust.mediumImage||self.elements.illust.photoFrame), // }}}
+        (self.elements.illust.mediumImage || self.elements.illust.photoFrame), // }}}
 
       // elementを見ているが、これに関しては問題ないはず
       get gallery () // {{{
@@ -59,13 +59,16 @@ try {
     }, // }}}
 
     elements: (function () { // {{{
-      let illust =  {
-        query: function (gQuery, tQuery)
-          self.in.gallery ? illust.gallery.querySelector(gQuery) :
-                                 (illust.tweet && illust.tweet.querySelector(tQuery)),
+      function query (q)
+        self.elements.doc.querySelector(q);
 
+      function queryEither (gQuery, tQuery)
+        self.in.gallery ? illust.gallery.querySelector(gQuery) :
+                          (illust.tweet && illust.tweet.querySelector(tQuery));
+
+      let illust =  {
         get mediumImage ()
-          illust.query('img.media-image', '.media-thumbnail > img'),
+          queryEither('img.media-image', '.media-thumbnail > img'),
 
         get photoFrame ()
           let (e = self.elements.illust.tweet.querySelector('.card2 > div > iframe'))
@@ -75,42 +78,42 @@ try {
           illust.photoFrame && illust.photoFrame.contentDocument.querySelector('.u-block'),
 
         get largeLink ()
-          illust.query('.twitter-timeline-link', '.twitter-timeline-link'),
+          queryEither('.twitter-timeline-link', '.twitter-timeline-link'),
 
         get datetime ()
-          illust.query('.tweet-timestamp', 'span.metadata > span'),
+          queryEither('.tweet-timestamp', 'span.metadata > span'),
 
         get title ()
-          illust.query('.tweet-text', '.tweet-text'),
+          queryEither('.tweet-text', '.tweet-text'),
 
         get comment ()
           illust.title,
 
         get avatar ()
-          illust.query('.avatar', '.avatar'),
+          queryEither('.avatar', '.avatar'),
 
         get userName ()
-          illust.query('.simple-tweet', '.user-actions'),
+          queryEither('.simple-tweet', '.user-actions'),
 
         get memberLink ()
-          illust.query('.account-group', '.account-group'),
+          queryEither('.account-group', '.account-group'),
 
         get tags ()
           null,
 
         get tweet ()
-          self.elements.doc.querySelector('.permalink-tweet'),
+          query('.permalink-tweet'),
 
         get gallery ()
-          self.elements.doc.querySelector('.gallery-container'),
+          query('.gallery-container'),
 
         get galleryEnabled ()
-          self.elements.doc.querySelector('.gallery-enabled'),
+          query('.gallery-enabled'),
 
         // elements.illust中ではdownloadedDisplayParentのみankpixiv.jsから呼ばれるので必須、他はこのソース内でしか使わない
 
         get downloadedDisplayParent ()
-          illust.query('.stream-item-header', '.tweet-actions'),
+          queryEither('.stream-item-header', '.tweet-actions'),
       };
 
       let mypage = {
@@ -300,8 +303,8 @@ try {
 
           // 完全に読み込まれていないっぽいときは、遅延する
           let cond = self.in.illustGrid ? true :
-                     photoFrame               ? self.elements.illust.photoImage :
-                                                largeLink;
+                     photoFrame         ? self.elements.illust.photoImage :
+                                          largeLink;
           if (!(body && cond))
             return delay("delay installation by null");
 
