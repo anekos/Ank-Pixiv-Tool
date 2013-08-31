@@ -808,14 +808,20 @@ try {
 
         let installTimer = setInterval(
             function () {
-              if (doc.readyState !== "complete")
+              if (typeof doc === 'undefined' || !doc || doc.readyState !== "complete") {
                 if (counter > 0) {
                   AnkUtils.dump('delay dm: '+counter--);
                   return;
                 }
-    
+              }
+
               clearInterval(installTimer);
               installTimer = null;
+
+              if (typeof doc === 'undefined' || !doc ) {
+                AnkUtils.dump('installation failed dm: '+self.SITE_NAME);
+                return;
+              }
 
               self.markDownloaded(doc,true);
 
