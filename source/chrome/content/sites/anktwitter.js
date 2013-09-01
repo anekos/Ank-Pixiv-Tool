@@ -223,7 +223,7 @@ try {
           self.elements.illust.userName.getAttribute('data-name'),
 
         get memoizedName ()
-          AnkBase.memoizedName,
+          AnkBase.memoizedName(member.id, self.SERVICE_ID),
       };
 
       let path = {
@@ -231,17 +231,19 @@ try {
           AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext () 
-         (path.images[0].match(/(\.\w+)(?::large|\?)/)[1] || '.jpg'),
+         (path.image.images[0].match(/(\.\w+)(?::large|\?)/)[1] || '.jpg'),
 
         get mangaIndexPage ()
           null,
 
-        get images ()
-          [
+        get image () {
+          let m = [
             self.in.gallery                 ? self.elements.illust.mediumImage.src :
             self.elements.illust.photoFrame ? self.elements.illust.photoImage.src :
                                               self.elements.illust.mediumImage.parentNode.getAttribute('data-url')
-          ],
+          ];
+          return { images: m, facing: null, };
+        },
       };
 
       return {
@@ -345,13 +347,6 @@ try {
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
       // 実装しない（同上）
-    }, // }}}
-
-    /*
-     * remoteFileExists 用のクッキーをセットする
-     */
-    setCookies: function () {
-      // under construction
     }, // }}}
 
 

@@ -94,6 +94,7 @@
         <preference id="fit-large-image-in-window-size" name="extensions.ankpixiv.fitLargeImageInWindowSize" type="bool" />
         <preference id="large-image-size" name="extensions.ankpixiv.largeImageSize" type="int" />
         <preference id="dont-resize-if-small" name="extensions.ankpixiv.dontResizeIfSmall" type="bool" />
+        <preference id="dont-hide-panel" name="extensions.ankpixiv.dontHidePanel" type="bool" />
       </preferences>
 
       <tabbox>
@@ -195,6 +196,7 @@
                 <checkbox preference="dont-resize-if-small" label="&dontResizeIfSmall;" />
               </groupbox>
               <checkbox preference="open-comment" label="&openComment;" />
+              <checkbox preference="dont-hide-panel" label="&dontHidePanel;" />
             </vbox>
           </tabpanel>
         </tabpanels>

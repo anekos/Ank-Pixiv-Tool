@@ -143,7 +143,7 @@ try {
           0,
 
         get server ()
-          self.info.path.images[0].match(/^https?:\/\/([^\/\.]+)\./i)[1],
+          self.info.path.image.images[0].match(/^https?:\/\/([^\/\.]+)\./i)[1],
 
         get referer ()
           AnkBase.currentLocation,
@@ -179,7 +179,7 @@ try {
           AnkUtils.trim(self.elements.illust.userName.textContent),
 
         get memoizedName ()
-          AnkBase.memoizedName,
+          AnkBase.memoizedName(member.id, self.SERVICE_ID),
       };
 
       let path = {
@@ -187,14 +187,15 @@ try {
           AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext ()
-          (path.images[0].match(/(\.\w+)(?:$|\?)/)[1] || '.jpg'),
+          (path.image.images[0].match(/(\.\w+)(?:$|\?)/)[1] || '.jpg'),
 
         get mangaIndexPage ()
           null,
 
-        get images ()
+        get image () {
           // 本当は'full'ページから引かなければいけない？しかしサンプルがみつからず
-          [self.elements.illust.mediumImage.src],
+          return { images: [self.elements.illust.mediumImage.src], facing: null, };
+        },
       };
 
       return {
@@ -331,13 +332,6 @@ try {
               box.className += ' ' + AnkBase.CLASS_NAME.DOWNLOADED;
           });
       });
-    }, // }}}
-
-    /*
-     * remoteFileExists 用のクッキーをセットする
-     */
-    setCookies: function () {
-      // under construction
     }, // }}}
 
 

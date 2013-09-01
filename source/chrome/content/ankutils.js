@@ -290,7 +290,7 @@ try {
       xhr.open('HEAD', url, !!callback);
       xhr.onreadystatechange = function (e) {
         if (xhr.readyState == 4) {
-          callback(xhr.status == 200);
+          callback && callback(xhr.status == 200);
         }
       };
       xhr.send(null);
@@ -335,6 +335,19 @@ try {
       call();
    }, // }}}
 
+   httpGET: function (url) { // {{{
+     let text = null;
+     let xhr = new XMLHttpRequest();
+     xhr.open('GET', url, false);
+     xhr.onreadystatechange = function (e) {
+       if (xhr.readyState == 4 && xhr.status == 200) {
+         text = xhr.responseText;
+       }
+     };
+     xhr.send(null);
+
+     return text;
+   }, // }}}
 
     /********************************************************************************
     * 手抜き用関数

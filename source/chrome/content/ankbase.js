@@ -85,7 +85,7 @@ try {
     get currentLocation () // {{{
       window.content.document.location.href, // }}}
 
-    get infoText () { // {{{
+    infoText: function (context) { // {{{
       let ignore =
         let (pref = AnkBase.Prefs.get('infoText.ignore', 'illust.dateTime.'))
           (pref ? pref.split(/[,\s]+/) : []);
@@ -108,25 +108,21 @@ try {
           }
           return result;
         } else {
-          if (name.match(/^path\.images/))
-            return '';
-          if ( value && ! AnkModule.in.manga && name == 'path.mangaIndexPage')
-            value = value.replace(/mode=manga/,'mode=medium');
           return value ? name + "\n" + indent(value) + "\n" : '';
         }
       }
 
-      return textize([], AnkModule.info);
+      return textize([], context.info);
     }, // }}}
 
-    get memoizedName () {
+    memoizedName: function (member_id, service_id) {
       let result = AnkBase.Storage.select(
         'members',
         'id = ?1 and service_id = ?2',
         function (stmt){
           let result = [];
-          stmt.bindUTF8StringParameter(0, AnkModule.info.member.id);
-          stmt.bindUTF8StringParameter(1, AnkModule.SERVICE_ID);
+          stmt.bindUTF8StringParameter(0, member_id);
+          stmt.bindUTF8StringParameter(1, service_id);
           while (stmt.executeStep())
             result.push(AnkStorage.statementToObject(stmt));
           return result;
@@ -171,28 +167,15 @@ try {
      *    return:          選択されたファイルのパス(nsILocalFile)
      * ファイル保存ダイアログを開く
      */
-    showFilePicker: function (defaultFilename) { // {{{
+    showFilePicker: function (prefInitDir, defaultFilename) { // {{{
       const nsIFilePicker = Components.interfaces.nsIFilePicker;
       let filePicker = AnkUtils.ccci('@mozilla.org/filepicker;1', nsIFilePicker);
 
       filePicker.appendFilters(nsIFilePicker.filterAll);
       filePicker.init(window, "pixiviiiiieee", nsIFilePicker.modeSave);
+      filePicker.defaultString = defaultFilename;
 
-      let pm = defaultFilename.split('/').filter(function (v) v);
-      if (pm.length == 1)
-        pm = defaultFilename.split('\\').filter(function (v) v);
-
-      filePicker.defaultString = pm.pop();
-
-      let prefInitDir = AnkBase.getInitDir();
       if (prefInitDir) {
-        if (pm.length > 0 && AnkBase.newLocalFile(prefInitDir).exists()) {
-          pm.unshift(prefInitDir);
-          let (d = pm.join(AnkUtils.SYS_SLASH)) {
-            if (AnkBase.newLocalFile(d).exists())
-              prefInitDir = d;
-          }
-        }
         let initdir = AnkUtils.ccci("@mozilla.org/file/local;1", Components.interfaces.nsILocalFile);
         initdir.initWithPath(prefInitDir);
         filePicker.displayDirectory = initdir;
@@ -210,8 +193,8 @@ try {
      *    return:          {image: nsILocalFile, meta: nsILocalFile}
      * ファイル保存ダイアログを開く
      */
-    showFilePickerWithMeta: function (basename, ext, isFile) { // {{{
-      let image = AnkBase.showFilePicker(basename + ext);
+    showFilePickerWithMeta: function (prefInitDir, basename, ext, isFile) { // {{{
+      let image = AnkBase.showFilePicker(prefInitDir, basename + ext);
       if (!image)
         return;
 
@@ -310,11 +293,9 @@ try {
       return IOService.newFileURI(AnkBase.newLocalFile(path));
     }, // }}}
 
-    getInitDir: function () // {{{
-      AnkModule.info.path.initDir || AnkBase.Prefs.get('initialDirectory'), // }}}
-
     /*
      * getSaveFilePath
+     *    prefInitDir:        出力先ベースディレクトリ
      *    filenames:          ファイル名の候補のリスト(一個以上必須)
      *    ext:                拡張子
      *    useDialog:          保存ダイアログを使うか？
@@ -323,7 +304,7 @@ try {
      * ファイルを保存すべきパスを返す
      * 設定によっては、ダイアログを表示する
      */
-    getSaveFilePath: function (filenames, ext, useDialog, isFile) { // {{{
+    getSaveFilePath: function (prefInitDir, filenames, ext, useDialog, isFile) { // {{{
       function _file (initDir, basename, ext, isMeta) {
         // TODO File#join
         let filename = (isMeta && !isFile) ? basename + AnkUtils.SYS_SLASH + 'meta.txt' : basename + ext;
@@ -340,11 +321,10 @@ try {
 
       try {
         let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
-        let prefInitDir = AnkBase.getInitDir();
         let initDir = AnkBase.newLocalFile(prefInitDir);
 
         if (!initDir.exists())
-          return AnkBase.showFilePickerWithMeta(filenames[0], ext, isFile);
+          return AnkBase.showFilePickerWithMeta(prefInitDir, filenames[0], ext, isFile);
 
         for (let i in filenames) {
           let image = _file(prefInitDir, filenames[i], ext);
@@ -354,7 +334,7 @@ try {
             continue;
 
           if (useDialog) {
-            return AnkBase.showFilePickerWithMeta(filenames[i], ext, isFile);
+            return AnkBase.showFilePickerWithMeta(prefInitDir, filenames[i], ext, isFile);
           } else {
             return {image: image.file, meta: meta.file};
           }
@@ -364,7 +344,7 @@ try {
         AnkUtils.dump(e);
       }
 
-      return AnkBase.showFilePickerWithMeta(filenames[0], ext, isFile);
+      return AnkBase.showFilePickerWithMeta(prefInitDir, filenames[0], ext, isFile);
     }, // }}}
 
     /*
@@ -385,7 +365,7 @@ try {
      *    onError         エラー時に呼ばれる関数
      * ファイルをダウンロードする
      */
-    downloadTo: function (url, referer, file, onComplete, onError) { // {{{
+    downloadTo: function (url, referer, prefInitDir, file, onComplete, onError) { // {{{
       // 何もしなーい
       if (!onError)
         onError = function () void 0;
@@ -433,7 +413,7 @@ try {
               return onError(responseStatus);
 
             if (onComplete)
-              return onComplete(file.path);
+              return onComplete(prefInitDir, file.path);
           }
         },
         onProgressChange: function (_webProgress, _request, _curSelfProgress, _maxSelfProgress,
@@ -456,16 +436,18 @@ try {
      *    url:            URL
      *    maxTimes:       リトライ最大回数
      *    referer:        リファラ
+     *    prefInitDir:    出力先ベースディレクトリ
      *    file:           nsIFile
      *    onComplete      終了時に呼ばれる関数
      *    onError         エラー時に呼ばれる関数
      * ファイルをダウンロードする
      */
-    downloadToRetryable: function (url, maxTimes, referer, file, onComplete, onError) { // {{{
+    downloadToRetryable: function (url, maxTimes, referer, prefInitDir, file, onComplete, onError) { // {{{
       function call () {
         AnkBase.downloadTo(
           url,
           referer,
+          prefInitDir,
           file,
           onComplete,
           function (statusCode) {
@@ -506,11 +488,12 @@ try {
      * downloadFiles
      *    urls:           URL
      *    referer:        リファラ
+     *    prefInitDir:    出力先ベースディレクトリ
      *    localdir:       出力先ディレクトリ nsilocalFile
      *    onComplete      終了時のアラート
      * 複数のファイルをダウンロードする
      */
-    downloadFiles: function (urls, referer, localdir, fp, onComplete, onError) { // {{{
+    downloadFiles: function (urls, referer, prefInitDir, localdir, fp, onComplete, onError) { // {{{
       const MAX_FILE = 1000;
 
       let index = 0;
@@ -537,7 +520,7 @@ try {
         return onError.apply(null, arguments);
       }
 
-      function downloadNext (localpath) {
+      function downloadNext () {
 
         // 前ファイルの処理
         if (lastFile) {
@@ -571,7 +554,7 @@ try {
         lastFile = file;
         index++;
 
-        return AnkBase.downloadToRetryable(url, 3, ref, file, downloadNext, _onError);
+        return AnkBase.downloadToRetryable(url, 3, ref, prefInitDir, file, downloadNext, _onError);
       }
 
       downloadNext();
@@ -587,24 +570,28 @@ try {
      */
     downloadCurrentImage: function (useDialog, confirmDownloaded, debug) { // {{{
       try {
-
-        function getSiteName () {
-          if (AnkModule.info.path.initDir) 
+        function getSiteName (context) {
+          if (context.info.path.initDir) 
             return null;                // サイト別初期ディレクトリが設定されていればそちらを優先
 
-          let v = AnkBase.Prefs.get('siteName.'+AnkModule.SITE_NAME);
+          let v = AnkBase.Prefs.get('siteName.'+context.SITE_NAME);
           if (v)
             return v;                   // サイトの別名定義がされていればそちらを優先
 
-          return AnkModule.SITE_NAME;   // デフォルトサイト名を利用
+          return context.SITE_NAME;     // デフォルトサイト名を利用
         }
 
-        // 自分のページのは構成が違い、問題となるのでダウンロードしないようにする。
-        if (AnkModule.in.myIllust)
+        // ダウンロード用のコンテキストの収集
+        let context = new AnkContext(AnkModule);
+        if (!context)
+          return;
+
+        // 自分のページは構成が違い、問題となるのでダウンロードしないようにする。
+        if (context.in.myIllust)
           return false;
 
         // 同一ページでも、表示中の状態によってダウンロードの可否が異なる場合がある
-        if (!AnkModule.downloadable)
+        if (!context.downloadable)
           return false;
 
         if (typeof useDialog === 'undefined')
@@ -613,32 +600,31 @@ try {
         if (typeof confirmDownloaded === 'undefined')
           confirmDownloaded = AnkBase.Prefs.get('confirmExistingDownload');
 
-        if (!AnkModule.in.illustPage)
+        if (!context.in.illustPage)
           return false;
 
-        AnkModule.setCookies();
-
         let destFiles;
-        let metaText      = AnkBase.infoText;
+        let metaText      = AnkBase.infoText(context);
         let pageUrl       = AnkBase.currentLocation;
-        let url           = AnkModule.info.path.largeStandardImage;
-        let illust_id     = AnkModule.info.illust.id;
-        let ext           = AnkModule.info.path.ext;
-        let ref           = AnkModule.info.illust.referer;
-        let member_id     = AnkModule.info.member.id;
-        let member_name   = AnkModule.info.member.name || member_id;
-        let pixiv_id      = AnkModule.info.member.pixivId;
-        let memoized_name = AnkModule.info.member.memoizedName || member_name;
-        let tags          = AnkModule.info.illust.tags;
-        let title         = AnkModule.info.illust.title;
-        let comment       = AnkModule.info.illust.comment;
-        let R18           = AnkModule.info.illust.R18;
-        let doc           = AnkModule.elements.doc;
-        let dlDispPoint   = AnkModule.elements.illust.downloadedDisplayParent;
+        let illust_id     = context.info.illust.id;
+        let ext           = context.info.path.ext;
+        let ref           = context.info.illust.referer;
+        let member_id     = context.info.member.id;
+        let member_name   = context.info.member.name || member_id;
+        let pixiv_id      = context.info.member.pixivId;
+        let memoized_name = context.info.member.memoizedName || member_name;
+        let tags          = context.info.illust.tags;
+        let title         = context.info.illust.title;
+        let comment       = context.info.illust.comment;
+        let R18           = context.info.illust.R18;
+        let dlDispPoint   = context.elements.illust.downloadedDisplayParent;
         let filenames     = [];
-        let shortTags     = AnkModule.info.illust.shortTags;
-        let service_id    = AnkModule.SERVICE_ID;
-        let site_name     = getSiteName();
+        let shortTags     = context.info.illust.shortTags;
+        let service_id    = context.SERVICE_ID;
+        let site_name     = getSiteName(context);
+        let images        = context.info.path.image.images;
+        let facing        = context.info.path.image.facing;
+        let prefInitDir   = context.info.path.initDir || AnkBase.Prefs.get('initialDirectory');
 
         if (AnkBase.Prefs.get('saveHistory', true)) {
           try {
@@ -684,7 +670,7 @@ try {
         let defaultFilename = AnkBase.Prefs.get('defaultFilename', '?member-name? - ?title?');
         let alternateFilename = AnkBase.Prefs.get('alternateFilename', '?member-name? - ?title? - (?illust-id?)');
         (function () {
-          let i = AnkModule.info;
+          let i = context.info;
           let ii = i.illust;
           let im = i.member;
           let ps = [
@@ -699,12 +685,12 @@ try {
             [/\?tools\?/g, ii.tools],
             [/\?pixiv-id\?/g, im.pixivId],
             [/\?illust-id\?/g, illust_id],
-            [/\?illust-year\?/g, ii.year],
-            [/\?illust-year2\?/g, ii.year.toString().slice(2, 4)],
-            [/\?illust-month\?/g, ii.month],
-            [/\?illust-day\?/g, ii.day],
-            [/\?illust-hour\?/g, ii.hour],
-            [/\?illust-minute\?/g, ii.minute],
+            [/\?illust-year\?/g, ii.dateTime.year],
+            [/\?illust-year2\?/g, ii.dateTime.year.toString().slice(2, 4)],
+            [/\?illust-month\?/g, ii.dateTime.month],
+            [/\?illust-day\?/g, ii.dateTime.day],
+            [/\?illust-hour\?/g, ii.dateTime.hour],
+            [/\?illust-minute\?/g, ii.dateTime.minute],
             [/\?saved-year\?/g, savedDateTime.getFullYear()],
             [/\?saved-year2\?/g, savedDateTime.getFullYear().toString().slice(2, 4)],
             [/\?saved-month\?/g, AnkUtils.zeroPad(savedDateTime.getMonth() + 1, 2)],
@@ -764,7 +750,7 @@ try {
           illust_id: illust_id,
           title: title,
           tags: AnkUtils.join(tags, ' '),
-          server: AnkModule.info.illust.server,
+          server: context.info.illust.server,
           saved: true,
           datetime: AnkUtils.toSQLDateTimeString(savedDateTime),
           comment: comment,
@@ -782,13 +768,12 @@ try {
           AnkBase.updateStatusBarText();
         };
 
-        let onComplete = function (local_path) {
+        let onComplete = function (prefInitDir, local_path) {
           try {
             removeDownloading();
 
             let caption = AnkBase.Locale('finishedDownload');
             let text = filenames[0];
-            let prefInitDir = AnkBase.getInitDir();
             let relPath = prefInitDir ? AnkUtils.getRelativePath(local_path, prefInitDir)
                                       : AnkUtils.extractFilename(local_path);
 
@@ -813,7 +798,6 @@ try {
             AnkBase.insertDownloadedDisplay(dlDispPoint, R18);
 
             AnkBase.Store.documents.forEach(function(it) (it.marked = false));
-            AnkModule.markDownloaded();
 
             return true;
 
@@ -852,46 +836,16 @@ try {
         }
 
         // XXX 前方で宣言済み
-        destFiles = AnkBase.getSaveFilePath(filenames, AnkModule.in.manga ? '' : ext, useDialog, !AnkModule.in.manga);
+        destFiles = AnkBase.getSaveFilePath(prefInitDir, filenames, context.in.manga ? '' : ext, useDialog, !context.in.manga);
         if (!destFiles)
           return;
 
-        if (!AnkModule.in.pixiv) {
-          if (AnkModule.in.manga) {
-            AnkBase.downloadFiles(AnkModule.info.path.images, ref, destFiles.image, null, onComplete, onError);
-            addDownloading();
-          }
-          else {
-            AnkBase.downloadToRetryable(AnkModule.info.path.images[0], 3, ref, destFiles.image, onComplete, onError);
-            addDownloading();
-          }
-          return;
+        if (context.in.manga) {
+          AnkBase.downloadFiles(images, ref, prefInitDir, destFiles.image, facing, onComplete, onError);
+          addDownloading();
         }
-
-        if (AnkModule.in.manga) {
-          AnkModule.getLastMangaPage(function (v, fp, ext) {
-            function _download (originalSize) {
-              if (v) {
-                let urls = [];
-                for (let i = 0; i < v; i++)
-                  urls.push(AnkModule.info.path.getLargeMangaImage(i, url, ext, originalSize));
-                AnkBase.downloadFiles(urls, ref, destFiles.image, fp, onComplete, onError);
-                addDownloading();
-              }
-            }
-
-            if (AnkBase.Prefs.get('downloadOriginalSize', false)) {
-              AnkUtils.remoteFileExistsRetryable(
-                AnkModule.info.path.getLargeMangaImage(0, url, ext, true),
-                6,
-                _download
-              );
-            } else {
-              _download(false);
-            }
-          });
-        } else {
-          AnkBase.downloadToRetryable(url, 3, ref, destFiles.image, onComplete, onError);
+        else {
+          AnkBase.downloadToRetryable(images[0], 3, ref, prefInitDir, destFiles.image, onComplete, onError);
           addDownloading();
         }
 
@@ -1427,7 +1381,7 @@ try {
     onDownloadButtonClick: function (event) { // {{{
       event.stopPropagation();
       event.preventDefault();
-      if (!AnkModule)
+      if (!AnkBase.inSupportedSite)
         return;
       if (!AnkModule.downloadable)
         return;

@@ -24,3 +24,4 @@
 <!ENTITY tab.miscellaneous "その他">
 <!ENTITY fitLargeImageInWindowSize "大サイズ画像をウィンドウサイズにあわせる">
 <!ENTITY dontResizeIfSmall "ウィンドウより小さいときはリサイズしない">
+<!ENTITY dontHidePanel "ボタンパネルを隠さない">

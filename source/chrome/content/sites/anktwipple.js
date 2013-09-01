@@ -175,7 +175,7 @@ try {
           AnkUtils.trim(self.elements.illust.userName.textContent).replace(/さん$/,''),
 
         get memoizedName ()
-          AnkBase.memoizedName,
+          AnkBase.memoizedName(member.id, self.SERVICE_ID),
       };
 
       let path = {
@@ -188,8 +188,9 @@ try {
         get mangaIndexPage ()
           null,
 
-        get images ()
-          [self.elements.illust.largeLink.href],
+        get image () {
+          return { images: [self.elements.illust.largeLink.href], facing: null, };
+        },
       };
 
       return {
@@ -327,13 +328,6 @@ try {
               box.className += ' ' + AnkBase.CLASS_NAME.DOWNLOADED_OVERLAY;
           });
       });
-    }, // }}}
-
-    /*
-     * remoteFileExists 用のクッキーをセットする
-     */
-    setCookies: function () {
-      // under construction
     }, // }}}
 
 

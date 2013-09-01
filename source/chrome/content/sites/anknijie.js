@@ -152,7 +152,7 @@ try {
           0,
 
         get server ()
-          self.info.path.images[0].match(/^https?:\/\/([^\/\.]+)\./i)[1],
+          self.info.path.image.images[0].match(/^https?:\/\/([^\/\.]+)\./i)[1],
 
         get referer ()
           AnkBase.currentLocation,
@@ -168,7 +168,7 @@ try {
           true,
 
         get mangaPages ()
-          self.info.path.images.length,
+          self.info.path.image.images.length,
 
         get worksData ()
           null,
@@ -189,7 +189,7 @@ try {
           AnkUtils.trim(self.elements.illust.userName.textContent),
 
         get memoizedName ()
-          AnkBase.memoizedName,
+          AnkBase.memoizedName(member.id, self.SERVICE_ID),
       };
 
       let path = {
@@ -197,12 +197,12 @@ try {
           AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext ()
-          (path.images[0].match(/(\.\w+)(?:$|\?)/)[1] || '.jpg'),
+          (path.image.images[0].match(/(\.\w+)(?:$|\?)/)[1] || '.jpg'),
 
         get mangaIndexPage ()
           null,
 
-        get images () {
+        get image () {
           let sm = AnkUtils.A(self.elements.illust.gallery.querySelectorAll('a'));
           let m = [];
 
@@ -212,7 +212,8 @@ try {
           sm.forEach(function (v) {
             m.push(v.href);
           });
-          return m;
+
+          return { images: m, facing: null, };
         }
       };
 
@@ -375,13 +376,6 @@ try {
               box.className += ' ' + AnkBase.CLASS_NAME.DOWNLOADED;
           });
       });
-    }, // }}}
-
-    /*
-     * remoteFileExists 用のクッキーをセットする
-     */
-    setCookies: function () {
-      // under construction
     }, // }}}
 
 
