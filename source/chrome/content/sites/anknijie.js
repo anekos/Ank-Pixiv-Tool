@@ -76,7 +76,11 @@ try {
           query('ul#tag'),
 
         get gallery ()
-          query('div#gallery'),         // 両ページ共通
+          query('#gallery'),         // 両ページ共通
+
+        get doujinHeader ()
+          query('#dojin_header'),
+
 
         // elements.illust中ではdownloadedDisplayParentのみankpixiv.jsから呼ばれるので必須、他はこのソース内でしか使わない
 
@@ -203,15 +207,15 @@ try {
           null,
 
         get image () {
-          let sm = AnkUtils.A(self.elements.illust.gallery.querySelectorAll('a'));
           let m = [];
 
-          if (sm.filter(function (v) v.href.match(/dojin_main/)).length > 0)
+          if (self.elements.illust.doujinHeader)
             m.push(self.elements.illust.mediumImage.src); // "同人"の場合は表紙をリストに追加
 
-          sm.forEach(function (v) {
-            m.push(v.href);
-          });
+          AnkUtils.A(self.elements.illust.gallery.querySelectorAll('a')).
+            forEach(function (v) {
+              m.push(v.href);
+            });
 
           return { images: m, facing: null, };
         }
