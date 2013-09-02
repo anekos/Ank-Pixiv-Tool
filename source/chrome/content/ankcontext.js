@@ -31,19 +31,18 @@ function AnkContext (module) {
       module.in.myIllust,
   };
 
-  self.elements = (function () {
-    let _illust = {
+  self.elements = {
+    illust: {
       downloadedDisplayParent:
         module.elements.illust.downloadedDisplayParent,
-    };
+    },
+  };
 
-    return {
-      illust: _illust,
-    };
-  })();
+  self.info = {
+    illust: {
+      pageUrl:
+        AnkBase.currentLocation,
 
-  self.info = (function () {
-    let _illust = {
       id:
         module.info.illust.id,
 
@@ -82,12 +81,9 @@ function AnkContext (module) {
 
       R18:
         module.info.illust.R18,
+    },
 
-      mangaPages:
-        module.info.illust.mangaPages,
-    };
-
-    let _member = {
+    member: {
       id:
         module.info.member.id,
 
@@ -99,9 +95,9 @@ function AnkContext (module) {
 
       memoizedName:
         module.info.member.memoizedName,
-    };
+    },
 
-    let _path = {
+    path: {
       initDir:
         module.info.path.initDir,
 
@@ -110,14 +106,8 @@ function AnkContext (module) {
 
       image:
         module.info.path.image,
-    };
-
-    return {
-      illust: _illust,
-      member: _member,
-      path: _path
-    };
-  })(); // }}}
+    },
+  }; // }}}
 
   return self;
 }

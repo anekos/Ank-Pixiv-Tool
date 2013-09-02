@@ -33,6 +33,13 @@ try {
       IN_WINDOW_WIDTH: 3
     },
 
+    DOWNLOAD_DISPLAY: {
+      DOWNLOADED:  'downloaded',
+      USED:        'used',
+      DOWNLOADING: 'downloading',
+      FAILED:      'downloadFailed',
+    },
+
     CLASS_NAME: {
       DOWNLOADED: 'ank-pixiv-tool-downloaded',
       DOWNLOADED_OVERLAY: 'ank-pixiv-tool-downloaded-overlay',
@@ -155,7 +162,16 @@ try {
     * 状態
     ********************************************************************************/
 
-    downloadings: {},
+    downloading: {
+      pages:
+        [],
+
+      images:
+        0,
+
+      downloadedImages:
+        0,
+    }, 
 
     /********************************************************************************
     * ダイアログ関連
@@ -412,8 +428,11 @@ try {
             if (responseStatus != 200)
               return onError(responseStatus);
 
-            if (onComplete)
+            if (onComplete) {
+              ++AnkBase.downloading.downloadedImages;
+              AnkBase.updateStatusBarText();
               return onComplete(prefInitDir, file.path);
+            }
           }
         },
         onProgressChange: function (_webProgress, _request, _curSelfProgress, _maxSelfProgress,
@@ -570,21 +589,10 @@ try {
      */
     downloadCurrentImage: function (useDialog, confirmDownloaded, debug) { // {{{
       try {
-        function getSiteName (context) {
-          if (context.info.path.initDir) 
-            return null;                // サイト別初期ディレクトリが設定されていればそちらを優先
-
-          let v = AnkBase.Prefs.get('siteName.'+context.SITE_NAME);
-          if (v)
-            return v;                   // サイトの別名定義がされていればそちらを優先
-
-          return context.SITE_NAME;     // デフォルトサイト名を利用
-        }
-
         // ダウンロード用のコンテキストの収集
         let context = new AnkContext(AnkModule);
         if (!context)
-          return;
+          return false;
 
         // 自分のページは構成が違い、問題となるのでダウンロードしないようにする。
         if (context.in.myIllust)
@@ -592,6 +600,10 @@ try {
 
         // 同一ページでも、表示中の状態によってダウンロードの可否が異なる場合がある
         if (!context.downloadable)
+          return false;
+
+        // 画像の情報がない
+        if (context.info.path.image.images.length == 0)
           return false;
 
         if (typeof useDialog === 'undefined')
@@ -603,9 +615,110 @@ try {
         if (!context.in.illustPage)
           return false;
 
+        // ダウンロード中だったらやめようぜ！
+        if (AnkBase.downloading.pages.some(function (v) (v.context.info.path.image.images[0] === context.info.path.image.images[0]))) {
+          return window.alert(AnkBase.Locale('alreadyDownloading'));
+        }
+
+        /* ダウンロード済みかの確認 */
+        if (AnkBase.isDownloaded(context.info.illust.id, context.SERVICE_ID)) {
+          if (confirmDownloaded) {
+            if (!window.confirm(AnkBase.Locale('downloadExistingImage')))
+              return false;
+          } else {
+            return false;
+          }
+        }
+
+        AnkBase.addDownload(context, useDialog, debug);
+        return true;
+
+      } catch (e) {
+        AnkUtils.dumpError(e, true);
+      }
+    },
+
+    addDownload: function (context, useDialog, debug) {
+      let (ev = document.createEvent('Event')) {
+        ev.initEvent('ankDownload', true, false);
+        ev.ank = {
+          context: context,
+          useDialog: useDialog,
+          debug: debug,
+        };
+        window.dispatchEvent(ev);
+      }
+    },
+
+    removeDownload: function (context, success) {
+      let (ev = document.createEvent('Event')) {
+        ev.initEvent('ankDownload', true, false);
+        ev.ank = {
+          context: context,
+          success: success,
+        };
+        window.dispatchEvent(ev);
+      }
+    },
+
+    downloadHandler: function (ev) {
+      try {
+        let addReq = (typeof ev.ank.success === 'undefined');
+
+        if (addReq) {
+          let c = ev.ank.context;
+          AnkBase.downloading.pages.push(ev.ank);
+          AnkBase.downloading.images += c.info.path.image.images.length;
+          AnkBase.updateStatusBarText();
+
+          if (AnkBase.downloading.pages.length > 1)
+            return; // ダウンロード中なので新しいリクエストは保留
+        } else {
+          AnkBase.downloading.downloadedImages = 0;   // onErrorからだと0じゃないので
+          let c = AnkBase.downloading.pages.shift().context;
+          if (c) {
+            let success = ev.ank.success;
+            AnkBase.downloading.images -= c.info.path.image.images.length;
+            AnkBase.updateStatusBarText();
+            if (success)
+              AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, c.info.illust.R18, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED);
+            else
+              AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.FAILED);
+          }
+
+          if (AnkBase.downloading.pages.length == 0)
+            return; // キューが空なので終了
+        }
+
+        let ank = AnkBase.downloading.pages[0];
+        let context = ank.context;
+
+        AnkBase.downloading.downloadedImages = 0;
+        AnkBase.updateStatusBarText();
+        AnkBase.insertDownloadedDisplay(context.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADING);
+        
+        AnkBase.downloadExecuter(context, ank.useDialog, ank.debug);
+
+      } catch (e) {
+        AnkUtils.dumpError(e, true);
+      }
+    },
+
+    downloadExecuter: function (context, useDialog, debug) {
+      try {
+        function getSiteName (context) {
+          if (context.info.path.initDir) 
+            return null;                // サイト別初期ディレクトリが設定されていればそちらを優先
+
+          let v = AnkBase.Prefs.get('siteName.'+context.SITE_NAME);
+          if (v)
+            return v;                   // サイトの別名定義がされていればそちらを優先
+
+          return context.SITE_NAME;     // デフォルトサイト名を利用
+        }
+
         let destFiles;
         let metaText      = AnkBase.infoText(context);
-        let pageUrl       = AnkBase.currentLocation;
         let illust_id     = context.info.illust.id;
         let ext           = context.info.path.ext;
         let ref           = context.info.illust.referer;
@@ -624,6 +737,8 @@ try {
         let site_name     = getSiteName(context);
         let images        = context.info.path.image.images;
         let facing        = context.info.path.image.facing;
+        let imageUrl      = images[0];
+        let pageUrl       = context.info.illust.pageUrl;
         let prefInitDir   = context.info.path.initDir || AnkBase.Prefs.get('initialDirectory');
 
         if (AnkBase.Prefs.get('saveHistory', true)) {
@@ -653,16 +768,6 @@ try {
             }
           } catch (e) {
             AnkUtils.dumpError(e, true);
-          }
-        }
-
-        /* ダウンロード済みかの確認 */
-        if (AnkBase.isDownloaded(illust_id,service_id)) {
-          if (confirmDownloaded) {
-            if (!window.confirm(AnkBase.Locale('downloadExistingImage')))
-              return;
-          } else {
-            return;
           }
         }
 
@@ -758,20 +863,8 @@ try {
           service_id: service_id,
         };
 
-        let removeDownloading = function () {
-          delete AnkBase.downloadings[pageUrl];
-          AnkBase.updateStatusBarText();
-        };
-
-        let addDownloading = function () {
-          AnkBase.downloadings[pageUrl] = new Date();
-          AnkBase.updateStatusBarText();
-        };
-
         let onComplete = function (prefInitDir, local_path) {
           try {
-            removeDownloading();
-
             let caption = AnkBase.Locale('finishedDownload');
             let text = filenames[0];
             let relPath = prefInitDir ? AnkUtils.getRelativePath(local_path, prefInitDir)
@@ -795,9 +888,9 @@ try {
             if (AnkBase.Prefs.get('showCompletePopup', true))
               AnkBase.popupAlert(caption, text);
 
-            AnkBase.insertDownloadedDisplay(dlDispPoint, R18);
-
             AnkBase.Store.documents.forEach(function(it) (it.marked = false));
+
+            AnkBase.removeDownload(context, true);
 
             return true;
 
@@ -811,8 +904,6 @@ try {
         };
 
         let onError = function (responseStatus) {
-          removeDownloading();
-
           let desc = '\n' + title + ' / ' + memoized_name + '\n' + pageUrl + '\n';
           let msg =
             AnkBase.Locale('downloadFailed') + '\n' +
@@ -828,25 +919,22 @@ try {
 
           if (window.confirm(confirmMsg))
             AnkUtils.openTab(pageUrl);
-        };
 
-        // ダウンロード中だったらやめようぜ！
-        if (AnkBase.downloadings[pageUrl]) {
-          return window.alert(AnkBase.Locale('alreadyDownloading'));
-        }
+          AnkBase.removeDownload(context, false);
+        };
 
         // XXX 前方で宣言済み
         destFiles = AnkBase.getSaveFilePath(prefInitDir, filenames, context.in.manga ? '' : ext, useDialog, !context.in.manga);
-        if (!destFiles)
+        if (!destFiles) {
+          AnkBase.removeDownload(context, false);
           return;
+        }
 
         if (context.in.manga) {
           AnkBase.downloadFiles(images, ref, prefInitDir, destFiles.image, facing, onComplete, onError);
-          addDownloading();
         }
         else {
           AnkBase.downloadToRetryable(images[0], 3, ref, prefInitDir, destFiles.image, onComplete, onError);
-          addDownloading();
         }
 
       } catch (e) {
@@ -885,7 +973,7 @@ try {
      *    appendTo:     追加先の要素
      *    R18:          イラストはR18か？
      */
-    insertDownloadedDisplay: function (appendTo, R18) { // {{{
+    insertDownloadedDisplay: function (appendTo, R18, mode) { // {{{
       if (!AnkBase.Prefs.get('displayDownloaded', true))
         return;
 
@@ -900,12 +988,19 @@ try {
         return;
       }
 
-      if (!doc || doc.getElementById(ElementID))
+      if (!doc)
         return;
+
+      var elm = doc.getElementById(ElementID);
+      if (elm)
+        elm.parentNode.removeChild(elm);
+
+      if (!mode)
+        mode = AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED;
 
       let div = doc.createElement('div');
       let textNode = doc.createElement(R18 ? 'blink' : 'textnode');
-      textNode.textContent = AnkBase.Locale(R18 ? 'used' : 'downloaded');
+      textNode.textContent = AnkBase.Locale((mode === AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED && R18) ? AnkBase.DOWNLOAD_DISPLAY.USED : mode);
       div.setAttribute('style', AnkBase.Prefs.get('downloadedDisplayStyle', ''));
       div.setAttribute('id', ElementID);
       div.setAttribute('class', R18 ? 'R18' : '');
@@ -1232,8 +1327,8 @@ try {
     }, // }}}
 
     updateStatusBarText: function () { // {{{
-      let text = [k for (k in AnkBase.downloadings)].length;
-      AnkBase.statusbarText = text ? text : '';
+      let dp = AnkBase.downloading.pages.length;
+      AnkBase.statusbarText = dp ? dp+'('+(AnkBase.downloading.images-AnkBase.downloading.downloadedImages)+'/'+AnkBase.downloading.images+')' : '';
     }, // }}}
 
 
@@ -1342,6 +1437,7 @@ try {
       initStorage();
       AnkBase.updateDatabase();
       AnkBase.registerSheet();
+      window.addEventListener('ankDownload', AnkBase.downloadHandler, true);
     }, // }}}
 
     onFocus: function (ev) { // {{{
