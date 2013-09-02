@@ -95,7 +95,7 @@ try {
     info: (function () { // {{{
       let illust = {
         get id ()
-          AnkBase.currentLocation.match(/\/([^/]+)$/)[1],
+          AnkBase.currentLocation.match(/p\.twipple\.jp\/([^/]+?)(?:\?|$)/)[1],
 
         get dateTime () {
           let dtext  = self.elements.illust.datetime.textContent;
