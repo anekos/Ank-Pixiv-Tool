@@ -858,19 +858,9 @@ try {
         return findBox(e.parentNode, limit - 1, cls);
       }
 
-      if (self.in.medium || !self.in.site)
-        return;
-
-      if (!AnkBase.Prefs.get('markDownloaded', false) && !ignorePref)
-        return;
-
-      if (!force && AnkBase.Store.document.marked)
-        return;
-
-      AnkBase.Store.document.marked = true;
-
+      node = AnkBase.getMarkableNode(self, node, force, ignorePref);
       if (!node)
-        node = self.elements.doc;
+        return;
 
       [
         ['a > img', 1],
@@ -884,15 +874,14 @@ try {
           filter(function (m) m) .
           map(function ([link, m]) [link, parseInt(m[1], 10)]) .
           forEach(function ([link, id]) {
-            AnkBase.markDownloaded(findBox(link, 3), id, self.SERVICE_ID);
+            AnkBase.markBoxNode(findBox(link, 3), id, self.SERVICE_ID);
           });
       });
     }, // }}}
 
-
     /********************************************************************************
-     * その他
-     ********************************************************************************/
+    * その他
+    ********************************************************************************/
 
     /*
      * 評価する

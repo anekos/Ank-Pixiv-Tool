@@ -300,19 +300,9 @@ try {
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
 
-      if (self.in.medium || !self.in.site)
-        return;
-
-      if (!AnkBase.Prefs.get('markDownloaded', false) && !ignorePref)
-        return;
-
-      if (!force && AnkBase.Store.document.marked)
-        return;
-
-      AnkBase.Store.document.marked = true;
-
+      node = AnkBase.getMarkableNode(self, node, force, ignorePref);
       if (!node)
-        node = self.elements.doc;
+        return;
 
       [
         ['.simple_list_photo > div > a', 1],             // 一覧
@@ -321,15 +311,15 @@ try {
           map(function (link) link.href && let (m = link.href.split(/\//)) m.length >= 2 && [link, m.pop()]) .
           filter(function (m) m) .
           forEach(function ([link, id]) {
-            AnkBase.markDownloaded(AnkUtils.trackbackParentNode(link, nTrackback), id, self.SERVICE_ID, true);
+            AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, self.SERVICE_ID, true);
           });
       });
     }, // }}}
 
 
     /********************************************************************************
-     * その他
-     ********************************************************************************/
+    * その他
+    ********************************************************************************/
 
     rate: function (pt) { // {{{
       return true;

@@ -371,11 +371,27 @@ try {
     /*
      * isDownloaded
      *    illust_id:     イラストID
+     *    service_id:    サイト識別子
      *    return:        ダウンロード済み？
      */
     isDownloaded: function (illust_id,service_id) { // {{{
       return AnkBase.Storage.exists('histories', 'illust_id = \'' + illust_id + '\' and service_id = \'' + service_id + '\'');
     }, // }}}
+
+    /*
+     * isDownloading
+     *    illust_id:     イラストID
+     *    service_id:    サイト識別子
+     *    return:        ダウンロード中？
+     */
+    isDownloading: function (illust_id, service_id) {
+      function find (v, i, a) {
+        // illust_idは === ではなく == で比較する
+        return (v.context.SERVICE_ID === service_id) && (v.context.info.illust.id == illust_id);
+      }
+
+      return AnkBase.downloading.pages.some(find);
+    },
 
     /*
      * downloadTo
@@ -643,15 +659,6 @@ try {
       } catch (e) {
         AnkUtils.dumpError(e, true);
       }
-    },
-
-    isDownloading: function (illust_id, service_id) {
-      function find (v, i, a) {
-        // illust_idは === ではなく == で比較する
-        return (v.context.SERVICE_ID === service_id) && (v.context.info.illust.id == illust_id);
-      }
-
-      return AnkBase.downloading.pages.some(find);
     },
 
     findDownload: function (download, remove) {
@@ -964,9 +971,10 @@ try {
             if (AnkBase.Prefs.get('showCompletePopup', true))
               AnkBase.popupAlert(caption, text);
 
-            AnkBase.Store.documents.forEach(function(it) (it.marked = false));
-
             AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED);
+
+            if (AnkModule && AnkModule.SERVICE_ID === service_id)
+              AnkModule.markDownloaded(null,true);
 
             return true;
 
@@ -1006,7 +1014,7 @@ try {
           return;
         }
 
-        AnkBase.Store.documents.forEach(function(it) (it.marked = false));
+        AnkBase.clearMarked();
 
         if (context.in.manga) {
           AnkBase.downloadFiles(images, ref, prefInitDir, destFiles.image, facing, download, onComplete, onError);
@@ -1496,7 +1504,27 @@ try {
       StyleSheetService.loadAndRegisterSheet(uri, StyleSheetService.USER_SHEET);
     }, // }}}
 
-    markDownloaded: function (box, illust_id, service_id, overlay) { // {{{
+
+    /********************************************************************************
+    * マーキング
+    ********************************************************************************/
+
+    getMarkableNode: function (mod, node, force, ignorePref) { // {{{
+      if (mod.in.medium || !mod.in.site)
+        return null;
+
+      if (!AnkBase.Prefs.get('markDownloaded', false) && !ignorePref)
+        return null;
+
+      if (!force && AnkBase.Store.document.marked)
+        return null;
+
+      AnkBase.Store.document.marked = true;
+
+      return node ? node : mod.elements.doc;
+    }, // }}}
+
+    markBoxNode: function (box, illust_id, service_id, overlay) { // {{{
       if (!box)
         return;
 
@@ -1517,6 +1545,9 @@ try {
       }
     }, // }}}
 
+    clearMarked: function () {
+      AnkBase.Store.documents.forEach(function(it) (it.marked = false));
+    },
 
     /********************************************************************************
     * イベント
@@ -1590,10 +1621,10 @@ try {
 
         AnkModule.markDownloaded();
 
+        AnkBase.installFunctions();
+
         if (!AnkBase.Store.document.onFocusDone) {
           AnkBase.Store.document.onFocusDone = true;
-
-          AnkBase.installFunctions();
 
           if (AnkModule.in.myPage && !AnkModule.elements.mypage.fantasyDisplay)
             AnkBase.displayYourFantasy();
