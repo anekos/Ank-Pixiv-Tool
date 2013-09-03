@@ -311,12 +311,12 @@ try {
           })(); // }}}
 
           // 保存済み表示
-          if (AnkBase.isDownloaded(self.info.illust.id,self.SERVICE_ID)) { // {{{
-            AnkBase.insertDownloadedDisplay(
-                self.elements.illust.downloadedDisplayParent,
-                self.info.illust.R18
-            );
-          } // }}}
+          AnkBase.insertDownloadedDisplayById(
+            self.elements.illust.downloadedDisplayParent,
+            self.info.illust.id,
+            self.SERVICE_ID,
+            self.info.illust.R18
+          );
 
           // コメント欄を開く
           if (openComment && AnkBase.Prefs.get('openComment', false)) // {{{
@@ -373,11 +373,7 @@ try {
           filter(function (m) m) .
           map(function ([link, m]) [link, parseInt(m[1], 10)]) .
           forEach(function ([link, id]) {
-            if (!AnkBase.isDownloaded(id,self.SERVICE_ID))
-              return;
-            let box = AnkUtils.trackbackParentNode(link, nTrackback);
-            if (box)
-              box.className += ' ' + AnkBase.CLASS_NAME.DOWNLOADED;
+            AnkBase.markDownloaded(AnkUtils.trackbackParentNode(link, nTrackback), id, self.SERVICE_ID);
           });
       });
     }, // }}}

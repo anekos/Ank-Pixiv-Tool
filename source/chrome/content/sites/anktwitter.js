@@ -313,10 +313,12 @@ try {
           // viewerは作らない
 
           // 保存済み表示
-          if (!self.in.illustGrid && AnkBase.isDownloaded(self.info.illust.id,self.SERVICE_ID)) { // {{{
-            AnkBase.insertDownloadedDisplay(
-                self.elements.illust.downloadedDisplayParent,
-                self.info.illust.R18
+          if (!self.in.illustGrid) {
+            AnkBase.insertDownloadedDisplayById(
+              self.elements.illust.downloadedDisplayParent,
+              self.info.illust.id,
+              self.SERVICE_ID,
+              self.info.illust.R18
             );
           }
 

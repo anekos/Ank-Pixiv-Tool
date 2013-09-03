@@ -44,6 +44,8 @@ try {
     CLASS_NAME: {
       DOWNLOADED: 'ank-pixiv-tool-downloaded',
       DOWNLOADED_OVERLAY: 'ank-pixiv-tool-downloaded-overlay',
+      DOWNLOADING: 'ank-pixiv-tool-downloading',
+      DOWNLOADING_OVERLAY: 'ank-pixiv-tool-downloading-overlay',
     },
 
     Prefs: new AnkPref('extensions.ankpixiv'),
@@ -620,7 +622,7 @@ try {
           return false;
 
         // ダウンロード中だったらやめようぜ！
-        if (AnkBase.isDownloading(context)) {
+        if (AnkBase.isDownloading(context.info.illust.id, context.SERVICE_ID)) {
           window.alert(AnkBase.Locale('alreadyDownloading'));
           return false;
         }
@@ -643,9 +645,10 @@ try {
       }
     },
 
-    isDownloading: function (context) {
+    isDownloading: function (illust_id, service_id) {
       function find (v, i, a) {
-        return (v.context.info.path.image.images[0] === context.info.path.image.images[0]);
+        // illust_idは === ではなく == で比較する
+        return (v.context.SERVICE_ID === service_id) && (v.context.info.illust.id == illust_id);
       }
 
       return AnkBase.downloading.pages.some(find);
@@ -1003,6 +1006,8 @@ try {
           return;
         }
 
+        AnkBase.Store.documents.forEach(function(it) (it.marked = false));
+
         if (context.in.manga) {
           AnkBase.downloadFiles(images, ref, prefInitDir, destFiles.image, facing, download, onComplete, onError);
         }
@@ -1068,9 +1073,6 @@ try {
       if (elm)
         elm.parentNode.removeChild(elm);
 
-      if (!mode)
-        mode = AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED;
-
       let div = doc.createElement('div');
       let textNode = doc.createElement(R18 ? 'blink' : 'textnode');
       textNode.textContent = AnkBase.Locale((mode === AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED && R18) ? AnkBase.DOWNLOAD_DISPLAY.USED : mode);
@@ -1080,6 +1082,25 @@ try {
       div.appendChild(textNode);
       if (appendTo)
         appendTo.appendChild(div);
+    }, // }}}
+
+    insertDownloadedDisplayById: function (appendTo, illust_id, service_id, R18) { // {{{
+      if (!appendTo)
+        return;
+
+      if (AnkBase.isDownloading(illust_id, service_id)) { // {{{
+        AnkBase.insertDownloadedDisplay(
+          appendTo,
+          false,
+          AnkBase.DOWNLOAD_DISPLAY.DOWNLOADING
+        );
+      } else if (AnkBase.isDownloaded(illust_id, service_id)) {
+        AnkBase.insertDownloadedDisplay(
+          appendTo,
+          R18,
+          AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED
+        );
+      } // }}}
     }, // }}}
 
     /*
@@ -1421,18 +1442,31 @@ try {
         '  background-position: bottom !important;',
         '  background-color: pink !important;',
         '}',
-        '#ankpixiv-downloaded-display.R18 {',
-        '  animation-duration: 10s;',
-        '  animation-name: slidein;',
-        '  animation-iteration-count: infinite !important;',
-        '  animation-direction: alternate;',
-        '}',
         '.ank-pixiv-tool-downloaded-overlay {',
         '  opacity: 0.5 !important;',
         '  border-width: thick;',
         '  border-color: red;',
         '  border-top-style: double;',
         '  border-left-style: double;',
+        '}',
+        '.ank-pixiv-tool-downloading {',
+        '  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAEklEQVR42mNkaGCAAyYGBmI4ABoEAIiZRp63AAAAAElFTkSuQmCC) !important;',
+        '  background-repeat: repeat-x !important;',
+        '  background-position: bottom !important;',
+        '  background-color: lime !important;',
+        '}',
+        '.ank-pixiv-tool-downloading-overlay {',
+        '  opacity: 0.5 !important;',
+        '  border-width: thick;',
+        '  border-color: green;',
+        '  border-top-style: double;',
+        '  border-left-style: double;',
+        '}',
+        '#ankpixiv-downloaded-display.R18 {',
+        '  animation-duration: 10s;',
+        '  animation-name: slidein;',
+        '  animation-iteration-count: infinite !important;',
+        '  animation-direction: alternate;',
         '}',
         '@keyframes slidein {',
         '  from {',
@@ -1460,6 +1494,27 @@ try {
 
       registered = uri;
       StyleSheetService.loadAndRegisterSheet(uri, StyleSheetService.USER_SHEET);
+    }, // }}}
+
+    markDownloaded: function (box, illust_id, service_id, overlay) { // {{{
+      if (!box)
+        return;
+
+      let cnDownloaded  = overlay ? AnkBase.CLASS_NAME.DOWNLOADED_OVERLAY  : AnkBase.CLASS_NAME.DOWNLOADED;
+      let cnDownloading = overlay ? AnkBase.CLASS_NAME.DOWNLOADING_OVERLAY : AnkBase.CLASS_NAME.DOWNLOADING;
+      
+      if (box.classList.contains(cnDownloaded))
+        return;
+
+      if (AnkBase.isDownloading(illust_id, service_id)) {
+        if (!box.classList.contains(cnDownloading))
+          box.classList.add(cnDownloading);
+      }
+      else if (AnkBase.isDownloaded(illust_id, service_id)) {
+        if (box.classList.contains(cnDownloading))
+          box.classList.remove(cnDownloading);
+        box.classList.add(cnDownloaded);
+      }
     }, // }}}
 
 

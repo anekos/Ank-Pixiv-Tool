@@ -268,12 +268,12 @@ try {
           } // }}}
 
           // 保存済み表示
-          if (AnkBase.isDownloaded(self.info.illust.id,self.SERVICE_ID)) { // {{{
-            AnkBase.insertDownloadedDisplay(
-                self.elements.illust.downloadedDisplayParent,
-                self.info.illust.R18
-            );
-          }
+          AnkBase.insertDownloadedDisplayById(
+            self.elements.illust.downloadedDisplayParent,
+            self.info.illust.id,
+            self.SERVICE_ID,
+            self.info.illust.R18
+          );
 
           AnkUtils.dump('installed: '+self.SITE_NAME);
 
@@ -321,11 +321,7 @@ try {
           map(function (link) link.href && let (m = link.href.split(/\//)) m.length >= 2 && [link, m.pop()]) .
           filter(function (m) m) .
           forEach(function ([link, id]) {
-            if (!AnkBase.isDownloaded(id,self.SERVICE_ID))
-              return;
-            let box = AnkUtils.trackbackParentNode(link, nTrackback);
-            if (box)
-              box.className += ' ' + AnkBase.CLASS_NAME.DOWNLOADED_OVERLAY;
+            AnkBase.markDownloaded(AnkUtils.trackbackParentNode(link, nTrackback), id, self.SERVICE_ID, true);
           });
       });
     }, // }}}
