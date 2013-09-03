@@ -34,10 +34,11 @@ try {
     },
 
     DOWNLOAD_DISPLAY: {
-      DOWNLOADED:  'downloaded',
-      USED:        'used',
-      DOWNLOADING: 'downloading',
-      FAILED:      'downloadFailed',
+      DOWNLOADED:   'downloaded',
+      USED:         'used',
+      DOWNLOADING:  'downloading',
+      FAILED:       'downloadFailed',
+      TIMEOUT:      'downloadTimeout',
     },
 
     CLASS_NAME: {
@@ -62,6 +63,14 @@ try {
 
     Locale: AnkUtils.getLocale('chrome://ankpixiv/locale/ankpixiv.properties'),
 
+    RETRY: {
+      INTERVAL: 10*1000,
+      MAXTIMES: 3,
+    },
+
+    DOWNLOAD: {
+      MAXRUNS: 1,
+    },
 
     /********************************************************************************
     * プロパティ
@@ -163,14 +172,8 @@ try {
     ********************************************************************************/
 
     downloading: {
-      pages:
-        [],
-
-      images:
-        0,
-
-      downloadedImages:
-        0,
+      pages:  [],
+      images: 0, 
     }, 
 
     /********************************************************************************
@@ -381,7 +384,7 @@ try {
      *    onError         エラー時に呼ばれる関数
      * ファイルをダウンロードする
      */
-    downloadTo: function (url, referer, prefInitDir, file, onComplete, onError) { // {{{
+    downloadTo: function (url, referer, prefInitDir, file, download, onComplete, onError) { // {{{
       // 何もしなーい
       if (!onError)
         onError = function () void 0;
@@ -429,7 +432,7 @@ try {
               return onError(responseStatus);
 
             if (onComplete) {
-              ++AnkBase.downloading.downloadedImages;
+              ++download.downloaded;
               AnkBase.updateStatusBarText();
               return onComplete(prefInitDir, file.path);
             }
@@ -461,20 +464,21 @@ try {
      *    onError         エラー時に呼ばれる関数
      * ファイルをダウンロードする
      */
-    downloadToRetryable: function (url, maxTimes, referer, prefInitDir, file, onComplete, onError) { // {{{
+    downloadToRetryable: function (url, maxTimes, referer, prefInitDir, file, download, onComplete, onError) { // {{{
       function call () {
         AnkBase.downloadTo(
           url,
           referer,
           prefInitDir,
           file,
+          download,
           onComplete,
           function (statusCode) {
             if (statusCode == 404)
               return onError(statusCode);
             ++times;
             if (times < maxTimes)
-              return setTimeout(call, times * 10 * 1000);
+              return setTimeout(call, times * AnkBase.RETRY.INTERVAL);
             return onError(statusCode);
           }
         );
@@ -512,7 +516,7 @@ try {
      *    onComplete      終了時のアラート
      * 複数のファイルをダウンロードする
      */
-    downloadFiles: function (urls, referer, prefInitDir, localdir, fp, onComplete, onError) { // {{{
+    downloadFiles: function (urls, referer, prefInitDir, localdir, fp, download, onComplete, onError) { // {{{
       const MAX_FILE = 1000;
 
       let index = 0;
@@ -573,7 +577,7 @@ try {
         lastFile = file;
         index++;
 
-        return AnkBase.downloadToRetryable(url, 3, ref, prefInitDir, file, downloadNext, _onError);
+        return AnkBase.downloadToRetryable(url, AnkBase.RETRY.MAXTIMES, ref, prefInitDir, file, download, downloadNext, _onError);
       }
 
       downloadNext();
@@ -616,8 +620,9 @@ try {
           return false;
 
         // ダウンロード中だったらやめようぜ！
-        if (AnkBase.downloading.pages.some(function (v) (v.context.info.path.image.images[0] === context.info.path.image.images[0]))) {
-          return window.alert(AnkBase.Locale('alreadyDownloading'));
+        if (AnkBase.isDownloading(context)) {
+          window.alert(AnkBase.Locale('alreadyDownloading'));
+          return false;
         }
 
         /* ダウンロード済みかの確認 */
@@ -638,73 +643,137 @@ try {
       }
     },
 
+    isDownloading: function (context) {
+      function find (v, i, a) {
+        return (v.context.info.path.image.images[0] === context.info.path.image.images[0]);
+      }
+
+      return AnkBase.downloading.pages.some(find);
+    },
+
+    findDownload: function (download, remove) {
+      let index = AnkBase.downloading.pages.indexOf(download);
+      if (index == -1)
+        return null;
+
+      if (remove)
+        AnkBase.downloading.pages.splice(index, 1);
+
+      return download;
+    },
+
     addDownload: function (context, useDialog, debug) {
       let (ev = document.createEvent('Event')) {
         ev.initEvent('ankDownload', true, false);
-        ev.ank = {
+        ev.download = {
           context: context,
           useDialog: useDialog,
           debug: debug,
+          downloaded: 0,
+          timer: undefined,
+          result: undefined,
         };
         window.dispatchEvent(ev);
       }
     },
 
-    removeDownload: function (context, success) {
+    removeDownload: function (download, result) {
       let (ev = document.createEvent('Event')) {
         ev.initEvent('ankDownload', true, false);
-        ev.ank = {
-          context: context,
-          success: success,
-        };
+        download.result = result;
+        ev.download = download;
         window.dispatchEvent(ev);
       }
     },
 
     downloadHandler: function (ev) {
       try {
-        let addReq = (typeof ev.ank.success === 'undefined');
+        function timeoutHandler (e) {
+          if (!download.timer)
+            return;
 
-        if (addReq) {
-          let c = ev.ank.context;
-          AnkBase.downloading.pages.push(ev.ank);
-          AnkBase.downloading.images += c.info.path.image.images.length;
-          AnkBase.updateStatusBarText();
+          clearTimeout(download.timer);
+          download.timer = null;
 
-          if (AnkBase.downloading.pages.length > 1)
-            return; // ダウンロード中なので新しいリクエストは保留
-        } else {
-          AnkBase.downloading.downloadedImages = 0;   // onErrorからだと0じゃないので
-          let c = AnkBase.downloading.pages.shift().context;
-          if (c) {
-            let success = ev.ank.success;
-            AnkBase.downloading.images -= c.info.path.image.images.length;
-            AnkBase.updateStatusBarText();
-            if (success)
-              AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, c.info.illust.R18, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED);
-            else
-              AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.FAILED);
-          }
+          let title         = context.info.illust.title;
+          let member_id     = context.info.member.id;
+          let member_name   = context.info.member.name || member_id;
+          let memoized_name = context.info.member.memoizedName || member_name;
+          let pageUrl       = context.info.illust.pageUrl;
 
-          if (AnkBase.downloading.pages.length == 0)
-            return; // キューが空なので終了
+          let desc = '\n' + title + ' / ' + memoized_name + '\n' + pageUrl + '\n';
+          let msg =
+            AnkBase.Locale('downloadTimeout') + '\n' +
+            desc;
+
+          window.alert(msg);
+          AnkUtils.dump(msg);
+
+          AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.TIMEOUT);
         }
 
-        let ank = AnkBase.downloading.pages[0];
-        let context = ank.context;
+        //
 
-        AnkBase.downloading.downloadedImages = 0;
+        if (typeof ev.download.timer === 'undefined') {
+          // add download
+          let c = ev.download.context;
+          AnkBase.downloading.pages.push(ev.download);
+          AnkBase.downloading.images += c.info.path.image.images.length;
+          AnkBase.updateStatusBarText();
+        } else {
+          // remove download
+          if (ev.download.timer) {
+            clearTimeout(ev.download.timer);
+            ev.download.timer = null;
+          }
+
+          if (AnkBase.findDownload(ev.download, true)) {
+            // タイムアウト関連ですでにキューから刈り取られている場合はここに入らない
+            let c = ev.download.context;
+            AnkBase.downloading.images -= c.info.path.image.images.length;
+            AnkBase.updateStatusBarText();
+          }
+
+          let c = ev.download.context;
+          let r = ev.download.result;
+          let r18 = (r === AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED) ? c.info.illust.R18 : false;
+          AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, r18, r);
+        }
+
+        let queued = AnkBase.downloading.pages.length;
+        if (queued == 0)
+          return;   // キューが空なので終了
+
+        let m = AnkBase.downloading.pages.filter(function (v) (typeof v.timer === 'undefined') && v);
+        if (m.length == 0) {
+          AnkUtils.dump('no runnable entry: queued='+queued)
+          return;   // 実行待ちがないので終了
+        }
+
+        let runs = queued - m.length;
+        if (runs >= AnkBase.DOWNLOAD.MAXRUNS) {
+          AnkUtils.dump('no slot: queued='+queued+' runs='+runs)
+          return;  // スロットが埋まっているので終了
+        }
+
+        let download = m[0];
+        let context = download.context;
+
         AnkBase.updateStatusBarText();
         AnkBase.insertDownloadedDisplay(context.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADING);
-        
-        AnkBase.downloadExecuter(context, ank.useDialog, ank.debug);
+
+        // a. ダウンロードが異常終了してremoveDownload()が実行されない場合に、時間が来たらそのキューを刈り取る
+        // b. あまりにダウンロードが遅い場合に、キューから切り離して次に進む
+        download.timer = setTimeout(timeoutHandler, AnkBase.RETRY.INTERVAL * context.info.path.image.images.length);
+
+        AnkBase.downloadExecuter(download);
 
       } catch (e) {
         AnkUtils.dumpError(e, true);
       }
     },
 
-    downloadExecuter: function (context, useDialog, debug) {
+    downloadExecuter: function (download) {
       try {
         function getSiteName (context) {
           if (context.info.path.initDir) 
@@ -716,6 +785,10 @@ try {
 
           return context.SITE_NAME;     // デフォルトサイト名を利用
         }
+
+        let context = download.context;
+        let useDialog = download.useDialog;
+        let debug = download.debug;
 
         let destFiles;
         let metaText      = AnkBase.infoText(context);
@@ -890,7 +963,7 @@ try {
 
             AnkBase.Store.documents.forEach(function(it) (it.marked = false));
 
-            AnkBase.removeDownload(context, true);
+            AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED);
 
             return true;
 
@@ -920,21 +993,21 @@ try {
           if (window.confirm(confirmMsg))
             AnkUtils.openTab(pageUrl);
 
-          AnkBase.removeDownload(context, false);
+          AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.FAILED);
         };
 
         // XXX 前方で宣言済み
         destFiles = AnkBase.getSaveFilePath(prefInitDir, filenames, context.in.manga ? '' : ext, useDialog, !context.in.manga);
         if (!destFiles) {
-          AnkBase.removeDownload(context, false);
+          AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.FAILED);
           return;
         }
 
         if (context.in.manga) {
-          AnkBase.downloadFiles(images, ref, prefInitDir, destFiles.image, facing, onComplete, onError);
+          AnkBase.downloadFiles(images, ref, prefInitDir, destFiles.image, facing, download, onComplete, onError);
         }
         else {
-          AnkBase.downloadToRetryable(images[0], 3, ref, prefInitDir, destFiles.image, onComplete, onError);
+          AnkBase.downloadToRetryable(images[0], AnkBase.RETRY.MAXTIMES, ref, prefInitDir, destFiles.image, download, onComplete, onError);
         }
 
       } catch (e) {
@@ -1328,7 +1401,9 @@ try {
 
     updateStatusBarText: function () { // {{{
       let dp = AnkBase.downloading.pages.length;
-      AnkBase.statusbarText = dp ? dp+'('+(AnkBase.downloading.images-AnkBase.downloading.downloadedImages)+'/'+AnkBase.downloading.images+')' : '';
+      let remainImages = AnkBase.downloading.images;
+      AnkBase.downloading.pages.forEach(function (e) remainImages -= e.downloaded);
+      AnkBase.statusbarText = dp ? dp+'('+remainImages+'/'+AnkBase.downloading.images+')' : '';
     }, // }}}
 
 
