@@ -57,7 +57,7 @@ try {
         (doc.__ank_pixiv_store || (doc.__ank_pixiv_store = {}));
 
       return {
-        get document () getDocStore(AnkModule.elements.doc),
+        get document () getDocStore(window.gBrowser.selectedBrowser.contentDocument),
         get documents ()
           AnkUtils.A(window.gBrowser.mTabs).map(function (it) getDocStore(it.linkedBrowser.contentDocument))
       };
@@ -79,8 +79,9 @@ try {
     ********************************************************************************/
 
     get inSupportedSite () { // {{{
-      AnkUtils.dump('inSupportedSite check: '+AnkBase.currentLocation+",\n"+Error().stack);
-      return AnkBase.siteModules.some(function (v) (AnkModule = v.in.site ? v : null));
+      let b = AnkBase.siteModules.some(function (v) (AnkModule = (v.in.site ? v : null)));
+      AnkUtils.dump('inSupportedSite check: '+b+', '+AnkBase.currentLocation+",\n"+Error().stack);
+      return b;
     }, // }}}
 
     get current () { // {{{
@@ -675,11 +676,12 @@ try {
     addDownload: function (context, useDialog, debug) {
       let (ev = document.createEvent('Event')) {
         ev.initEvent('ankDownload', true, false);
-        ev.download = {
+        ev.__download = {
           context: context,
           useDialog: useDialog,
           debug: debug,
           downloaded: 0,
+          start: new Date().getTime(),
           timer: undefined,
           result: undefined,
         };
@@ -690,8 +692,8 @@ try {
     removeDownload: function (download, result) {
       let (ev = document.createEvent('Event')) {
         ev.initEvent('ankDownload', true, false);
-        download.result = result;
-        ev.download = download;
+        ev.__download = download;
+        ev.__download.result = result;
         window.dispatchEvent(ev);
       }
     },
@@ -724,30 +726,30 @@ try {
 
         //
 
-        if (typeof ev.download.timer === 'undefined') {
-          // add download
-          let c = ev.download.context;
-          AnkBase.downloading.pages.push(ev.download);
-          AnkBase.downloading.images += c.info.path.image.images.length;
-          AnkBase.updateStatusBarText();
-        } else {
-          // remove download
-          if (ev.download.timer) {
-            clearTimeout(ev.download.timer);
-            ev.download.timer = null;
-          }
-
-          if (AnkBase.findDownload(ev.download, true)) {
-            // タイムアウト関連ですでにキューから刈り取られている場合はここに入らない
-            let c = ev.download.context;
-            AnkBase.downloading.images -= c.info.path.image.images.length;
+        let (d = ev.__download) {
+          if (typeof d.timer === 'undefined') {
+            // add download
+            AnkBase.downloading.pages.push(d);
+            AnkBase.downloading.images += d.context.info.path.image.images.length;
             AnkBase.updateStatusBarText();
+          } else {
+            // remove download
+            if (d.timer) {
+              clearTimeout(d.timer);
+              d.timer = null;
+            }
+  
+            if (AnkBase.findDownload(d, true)) {
+              // タイムアウト関連ですでにキューから刈り取られている場合はここに入らない
+              AnkBase.downloading.images -= d.context.info.path.image.images.length;
+              AnkBase.updateStatusBarText();
+            }
+  
+            let c = d.context;
+            let r = d.result;
+            let r18 = (r === AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED) ? c.info.illust.R18 : false;
+            AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, r18, r);
           }
-
-          let c = ev.download.context;
-          let r = ev.download.result;
-          let r18 = (r === AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED) ? c.info.illust.R18 : false;
-          AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, r18, r);
         }
 
         let queued = AnkBase.downloading.pages.length;
@@ -799,6 +801,7 @@ try {
         let context = download.context;
         let useDialog = download.useDialog;
         let debug = download.debug;
+        let start = download.start;
 
         let destFiles;
         let metaText      = AnkBase.infoText(context);
@@ -971,10 +974,12 @@ try {
             if (AnkBase.Prefs.get('showCompletePopup', true))
               AnkBase.popupAlert(caption, text);
 
+            AnkUtils.dump('download completed: '+images.length+' pics in '+(new Date().getTime() - start)+' msec');
+
             AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED);
 
             if (AnkModule && AnkModule.SERVICE_ID === service_id)
-              AnkModule.markDownloaded(null,true);
+              AnkModule.markDownloaded(illust_id,true);
 
             return true;
 
@@ -1014,7 +1019,7 @@ try {
           return;
         }
 
-        AnkBase.clearMarked();
+        AnkBase.clearMarkedFlags();
 
         if (context.in.manga) {
           AnkBase.downloadFiles(images, ref, prefInitDir, destFiles.image, facing, download, onComplete, onError);
@@ -1509,8 +1514,8 @@ try {
     * マーキング
     ********************************************************************************/
 
-    getMarkableNode: function (mod, node, force, ignorePref) { // {{{
-      if (mod.in.medium || !mod.in.site)
+    getMarkTarget: function (module, node, force, ignorePref) { // {{{
+      if (module.in.medium || !module.in.site)
         return null;
 
       if (!AnkBase.Prefs.get('markDownloaded', false) && !ignorePref)
@@ -1521,7 +1526,10 @@ try {
 
       AnkBase.Store.document.marked = true;
 
-      return node ? node : mod.elements.doc;
+      if (typeof node === 'string' || typeof node === 'number')
+        return { node: module.elements.doc, illust_id: node};
+
+      return { node: (node ? node : module.elements.doc), illust_id: undefined};
     }, // }}}
 
     markBoxNode: function (box, illust_id, service_id, overlay) { // {{{
@@ -1530,7 +1538,7 @@ try {
 
       let cnDownloaded  = overlay ? AnkBase.CLASS_NAME.DOWNLOADED_OVERLAY  : AnkBase.CLASS_NAME.DOWNLOADED;
       let cnDownloading = overlay ? AnkBase.CLASS_NAME.DOWNLOADING_OVERLAY : AnkBase.CLASS_NAME.DOWNLOADING;
-      
+
       if (box.classList.contains(cnDownloaded))
         return;
 
@@ -1545,7 +1553,7 @@ try {
       }
     }, // }}}
 
-    clearMarked: function () {
+    clearMarkedFlags: function () {
       AnkBase.Store.documents.forEach(function(it) (it.marked = false));
     },
 
@@ -1594,33 +1602,58 @@ try {
         );
       } // }}}
 
-      window.addEventListener('focus', AnkBase.onFocus, true);
       initStorage();
       AnkBase.updateDatabase();
       AnkBase.registerSheet();
       window.addEventListener('ankDownload', AnkBase.downloadHandler, true);
+      window.addEventListener('pageshow', AnkBase.onPageshow, true);
+      window.addEventListener('focus', AnkBase.onFocus, true);
+    }, // }}}
+
+    onPageshow: function (ev) { // {{{
+
+      let location = null;
+
+      try {
+        location = 'location: '+ev.target.location;
+
+        let doc = window.gBrowser.selectedBrowser.contentDocument;
+        if (typeof doc === 'undefined' || !doc || ev.target !== doc)
+          return;       // documentがない、またはタブ内のトップ要素以外がターゲットなら無視する
+
+        if (!AnkBase.inSupportedSite)
+          return;       // 対象外のサイト
+
+        AnkUtils.dump('triggered: pageshow, '+location);
+
+        AnkBase.changeEnabled.call(AnkBase, 'ankpixiv-toolbar-button-image');
+        AnkBase.changeEnabled.call(AnkBase, 'ankpixiv-menu-download');
+        AnkModule.markDownloaded(null,ev.persisted);  // 戻るボタンなどで、キャッシュ上のページに遷移した場合は、マーキング強制
+        AnkBase.installFunctions();
+
+      } catch (e) {
+        AnkUtils.dumpError(e,false,location);   // dead object対策
+      }
     }, // }}}
 
     onFocus: function (ev) { // {{{
+
+      let location = null;
+
       try {
-        let changeEnabled = function (id) {
-          let elem = document.getElementById(id);
-          if (!elem)
-            return;
-          elem.setAttribute('dark', !AnkModule.in.illustPage);
-        };
+        location = 'location: '+ev.target.location;
 
         if (!ev.target.toString().match(/\[object Window\]/,'i'))
-          return;
+          return;       // windowオブジェクト以外がターゲットなら無視する
 
         if (!AnkBase.inSupportedSite)
-          return;
+          return;       // 対象外のサイト
 
-        changeEnabled.call(AnkBase, 'ankpixiv-toolbar-button-image');
-        changeEnabled.call(AnkBase, 'ankpixiv-menu-download');
+        AnkUtils.dump('triggered: focus, '+location);
 
-        AnkModule.markDownloaded();
-
+        AnkBase.changeEnabled.call(AnkBase, 'ankpixiv-toolbar-button-image');
+        AnkBase.changeEnabled.call(AnkBase, 'ankpixiv-menu-download');
+        AnkModule.markDownloaded();                     // focus当たる度にDB検索されると困るので
         AnkBase.installFunctions();
 
         if (!AnkBase.Store.document.onFocusDone) {
@@ -1631,9 +1664,16 @@ try {
         }
 
       } catch (e) {
-        AnkUtils.dumpError(e);
+        AnkUtils.dumpError(e,false,location);
       }
     }, // }}}
+
+    changeEnabled: function (id) {
+      let elem = document.getElementById(id);
+      if (!elem)
+        return;
+      elem.setAttribute('dark', !AnkModule.in.illustPage);
+    },
 
     onDownloadButtonClick: function (event) { // {{{
       event.stopPropagation();

@@ -257,10 +257,6 @@ try {
         }
       };
 
-      'year month day hour minute'.split(/\s+/).forEach(function (name) {
-        illust.__defineGetter__(name, function () illust.dateTime[name]);
-      });
-
       let member = {
         get id ()
           AnkUtils.A(self.elements.doc.querySelectorAll('script'))
@@ -858,8 +854,8 @@ try {
         return findBox(e.parentNode, limit - 1, cls);
       }
 
-      node = AnkBase.getMarkableNode(self, node, force, ignorePref);
-      if (!node)
+      let target = AnkBase.getMarkTarget(self, node, force, ignorePref);
+      if (!target)
         return;
 
       [
@@ -868,13 +864,14 @@ try {
         ['a > div > img', 2],
         ['a > p > div > img', 3]
       ].forEach(function ([selector, nTrackback]) {
-        AnkUtils.A(node.querySelectorAll(selector)) .
+        AnkUtils.A(target.node.querySelectorAll(selector)) .
           map(function (img) AnkUtils.trackbackParentNode(img, nTrackback)) .
           map(function (link) link.href && let (m = IsIllust.exec(link.href)) m && [link, m]) .
           filter(function (m) m) .
           map(function ([link, m]) [link, parseInt(m[1], 10)]) .
           forEach(function ([link, id]) {
-            AnkBase.markBoxNode(findBox(link, 3), id, self.SERVICE_ID);
+            if (!(target.illust_id && target.illust_id != id))
+              AnkBase.markBoxNode(findBox(link, 3), id, self.SERVICE_ID);
           });
       });
     }, // }}}

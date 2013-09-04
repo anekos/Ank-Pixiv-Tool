@@ -178,10 +178,6 @@ try {
           null,
       };
 
-      'year month day hour minute'.split(/\s+/).forEach(function (name) {
-        illust.__defineGetter__(name, function () illust.dateTime[name]);
-      });
-
       let member = {
         get id ()
           self.elements.illust.memberLink.href.match(/id=(\d+)/)[1],
@@ -349,8 +345,8 @@ try {
     markDownloaded: function (node, force, ignorePref) { // {{{
       const IsIllust = /view\.php\?id=(\d+)/;
 
-      node = AnkBase.getMarkableNode(self, node, force, ignorePref);
-      if (!node)
+      let target = AnkBase.getMarkTarget(self, node, force, ignorePref);
+      if (!target)
         return;
 
       [
@@ -358,12 +354,13 @@ try {
         ['div.nijie > p.nijiedao > a', 2],                // "同人"の一覧
         ['div.nijie-bookmark > p > a', 2],                // "ブックマーク"の一覧
       ].forEach(function ([selector, nTrackback]) {
-        AnkUtils.A(node.querySelectorAll(selector)) .
+        AnkUtils.A(target.node.querySelectorAll(selector)) .
           map(function (link) link.href && let (m = IsIllust.exec(link.href)) m && [link, m]) .
           filter(function (m) m) .
           map(function ([link, m]) [link, parseInt(m[1], 10)]) .
           forEach(function ([link, id]) {
-            AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, self.SERVICE_ID);
+            if (!(target.illust_id && target.illust_id != id))
+              AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, self.SERVICE_ID);
           });
       });
     }, // }}}

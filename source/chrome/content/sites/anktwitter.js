@@ -139,7 +139,7 @@ try {
             return RegExp.$1;
 
           v = self.elements.illust.largeLink.href;  // ツイート
-          if (v && v.match(/\/([^/]+)$/))
+          if (v && v.match(/\/([^/]+)(?:\?|$)/))
             return RegExp.$1;
 
           return null;
@@ -207,10 +207,6 @@ try {
         get worksData ()
           null,
       };
-
-      'year month day hour minute'.split(/\s+/).forEach(function (name) {
-        illust.__defineGetter__(name, function () illust.dateTime[name]);
-      });
 
       let member = {
         get id ()

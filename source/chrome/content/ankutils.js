@@ -160,9 +160,10 @@ try {
       }
     }, // }}}
 
-    dumpError: function (error, doAlert) { // {{{
+    dumpError: function (error, doAlert, added) { // {{{
       let msg = "\n<<ANK<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
       msg += this.errorToString(error) ;
+      msg += (added ? added+"\n" : '');
       msg += ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
 
       dump(msg);

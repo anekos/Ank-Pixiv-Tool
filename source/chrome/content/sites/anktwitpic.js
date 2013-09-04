@@ -94,7 +94,7 @@ try {
     info: (function () { // {{{
       let illust = {
         get id ()
-          AnkBase.currentLocation.match(/^https?:\/\/twitpic\.com\/([^/]+)$/)[1],
+          AnkBase.currentLocation.match(/^https?:\/\/twitpic\.com\/([^/]+)(?:\?|$)/)[1],
 
         get dateTime () {
           let dtext = self.elements.illust.datetime.textContent;
@@ -164,13 +164,9 @@ try {
           null,
       };
 
-      'year month day hour minute'.split(/\s+/).forEach(function (name) {
-        illust.__defineGetter__(name, function () illust.dateTime[name]);
-      });
-
       let member = {
         get id ()
-          self.elements.illust.memberLink.href.match(/\/photos\/(.+)$/)[1],
+          self.elements.illust.memberLink.href.match(/\/photos\/(.+)(?:\?|$)/)[1],
 
         get pixivId ()
           member.id,
@@ -303,19 +299,20 @@ try {
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
 
-      node = AnkBase.getMarkableNode(self, node, force, ignorePref);
-      if (!node)
+      let target = AnkBase.getMarkTarget(self, node, force, ignorePref);
+      if (!target)
         return;
 
       [
         ['div.user-photo-wrap > div > a', 2],             // 一覧
         ['div#media-full > p > a', 2],                    // 'full'ページ
       ].forEach(function ([selector, nTrackback]) {
-        AnkUtils.A(node.querySelectorAll(selector)) .
+        AnkUtils.A(target.node.querySelectorAll(selector)) .
           map(function (link) link.href && let (m = link.href.split(/\//)) m.length >= 2 && [link, m.pop()]) .
           filter(function (m) m) .
           forEach(function ([link, id]) {
-            AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, self.SERVICE_ID);
+            if (!(target.illust_id && target.illust_id != id))
+              AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, self.SERVICE_ID);
           });
       });
     }, // }}}
