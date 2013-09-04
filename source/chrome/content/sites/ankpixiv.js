@@ -266,7 +266,7 @@ try {
         get pixivId ()
           (self.elements.illust.avatar.src.match(/\/profile\/([^\/]+)\//)
            ||
-           self.info.path.largeImage.match(/^https?:\/\/[^\.]+\.pixiv\.net\/(?:img\d+\/)?img\/([^\/]+)\//))[1],
+           self.info.path.largeStandardImage.match(/^https?:\/\/[^\.]+\.pixiv\.net\/(?:img\d+\/)?img\/([^\/]+)\//))[1],
 
         get name ()
           AnkUtils.trim(self.elements.illust.userName.textContent),
