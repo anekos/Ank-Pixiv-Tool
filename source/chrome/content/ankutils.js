@@ -336,16 +336,21 @@ try {
       call();
    }, // }}}
 
-   httpGET: function (url) { // {{{
+   httpGET: function (url,referer,params) { // {{{
+     let post = !!params;
      let text = null;
      let xhr = new XMLHttpRequest();
-     xhr.open('GET', url, false);
+     xhr.open((post ? 'POST' : 'GET'), url, false);
      xhr.onreadystatechange = function (e) {
        if (xhr.readyState == 4 && xhr.status == 200) {
          text = xhr.responseText;
        }
      };
-     xhr.send(null);
+     if (post)
+       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+     if (referer)
+       xhr.setRequestHeader('Referer', referer);
+     xhr.send(post ? params : null);
 
      return text;
    }, // }}}
