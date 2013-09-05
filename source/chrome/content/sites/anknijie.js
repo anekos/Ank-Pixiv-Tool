@@ -87,6 +87,13 @@ try {
         get downloadedDisplayParent ()
           query('div#view-honbun') ||
           query('div#infomation'),
+
+        get ads () {
+          let header1 = query('#header-Container');
+          let header2 = query('#top');
+
+          return ([]).concat(header1, header2);
+        },
       };
 
       let mypage = {
@@ -261,7 +268,8 @@ try {
         try {
           // インストールに必用な各種要素
           try { // {{{
-            var body = doc.getElementsByTagName('body')[0];
+            var body = doc.getElementsByTagName('body');
+            var wrapper = doc.getElementById('main');
             var medImg = self.elements.illust.mediumImage;
             var openComment = doc.querySelector('p.open');
             var noComment = doc.querySelector('div.co2') || doc.querySelector('div#dojin_comment');
@@ -270,11 +278,21 @@ try {
           } // }}}
 
           // 完全に読み込まれていないっぽいときは、遅延する
-          if (!(body && medImg && (openComment || noComment))) // {{{
+          if (!((body && body.length>0) && wrapper && medImg && (openComment || noComment))) // {{{
             return delay("delay installation by null");
           // }}}
 
-          // ニジエはデフォルトのviewerがあるので独自viewerはいらないと思う(fitは欲しいけど…)
+          // 大画像関係
+          if (AnkBase.Prefs.get('largeOnMiddle', true)) {
+            new AnkViewer(
+              self,
+              body[0],
+              wrapper,
+              openComment,
+              null,
+              function () self.info.path.image.images
+            );
+          }
 
           // 中画像クリック時に保存する
           if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{

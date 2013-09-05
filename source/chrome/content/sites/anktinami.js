@@ -45,6 +45,9 @@ try {
         self.elements.doc.querySelectorAll(q);
 
       let illust =  {
+        get mediumImage ()
+          illust.images[0],
+
         get images ()
           let (e = query('.captify'))
             e ? [e] : queryAll('.viewbody > * > img'),
@@ -77,6 +80,13 @@ try {
 
         get downloadedDisplayParent ()
           query('.description'),
+
+        get ads () {
+          let header = query('#header');
+          let controller = query('#controller');
+
+          return ([]).concat(header, controller);
+        },
       };
 
       let mypage = {
@@ -235,17 +245,30 @@ try {
   
             try {
               var body = doc.getElementsByTagName('body');
+              var wrapper = doc.getElementById('container');
               var images = self.elements.illust.images;
             } catch (e) {
               AnkUtils.dumpError(e);
               return true;
             }
   
-            if (!((body && body.length>0) && (images && images.length>0))) {
+            if (!((body && body.length>0) && wrapper && (images && images.length>0))) {
               AnkUtils.dump('delay installation: '+self.SITE_NAME+' remains '+counter);
               return false;   // リトライしてほしい
             }
   
+            // 大画像関係
+            if (AnkBase.Prefs.get('largeOnMiddle', true)) {
+              new AnkViewer(
+                self,
+                body[0],
+                wrapper,
+                null,
+                null,
+                function () self.info.path.image.images
+              );
+            }
+
             // 保存済み表示
             AnkBase.insertDownloadedDisplayById(
               self.elements.illust.downloadedDisplayParent,
