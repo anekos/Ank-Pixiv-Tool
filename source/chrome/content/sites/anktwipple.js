@@ -97,28 +97,8 @@ try {
         get id ()
           AnkBase.currentLocation.match(/p\.twipple\.jp\/([^/]+?)(?:\?|$)/)[1],
 
-        get dateTime () {
-          let dtext  = self.elements.illust.datetime.textContent;
-          let m = dtext.match(/(\d+).+?(\d+).+?(\d+).+?(\d+):(\d+):/);
-          let dd = new Date();
-          if (m) {
-            dd.setFullYear(parseInt(m[1]));
-            dd.setMonth(parseInt(m[2])-1);
-            dd.setDate(parseInt(m[3]));
-            dd.setHours(parseInt(m[4]));
-            dd.setMinutes(parseInt(m[5]));
-          } else {
-            AnkUtils.dump(self.SERVICE_ID+': unknown datetime format = '+dtext);
-          }
-
-          return {
-            year: AnkUtils.zeroPad(dd.getFullYear(), 4),
-            month: AnkUtils.zeroPad(dd.getMonth()+1, 2),
-            day: AnkUtils.zeroPad(dd.getDate(), 2),
-            hour: AnkUtils.zeroPad(dd.getHours(), 2),
-            minute: AnkUtils.zeroPad(dd.getMinutes(), 2),
-          };
-        },
+        get dateTime ()
+          AnkUtils.decodeDateTimeText(self.elements.illust.datetime.textContent),
 
         get size ()
           null,
@@ -168,7 +148,7 @@ try {
           member.id,
 
         get name ()
-          AnkUtils.trim(self.elements.illust.userName.textContent).replace(/さん$/,''),
+          AnkUtils.trim(self.elements.illust.userName.textContent).replace(/\u3055\u3093$/,''),   // ○○さん
 
         get memoizedName ()
           AnkBase.memoizedName(member.id, self.SERVICE_ID),

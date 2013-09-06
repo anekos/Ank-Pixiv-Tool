@@ -39,10 +39,10 @@ try {
 
     elements: (function () { // {{{
       function query (q)
-        self.elements.doc.querySelector(q);
+        self.elements.doc.querySelector(q)
 
       function queryAll (q)
-        self.elements.doc.querySelectorAll(q);
+        self.elements.doc.querySelectorAll(q)
 
       let illust =  {
         get mediumImage ()
@@ -116,19 +116,8 @@ try {
         get id ()
           AnkBase.currentLocation.match(/id=(\d+)/)[1],
 
-        get dateTime () {
-          let m = self.elements.illust.datetime.textContent.match(/(\d+)[^\d]+(\d+)[^\d]+(\d+)[^\d]+(\d+):(\d+)/)
-          if (!m)
-            return null;
-
-          return {
-            year: AnkUtils.zeroPad(m[1], 4),
-            month: AnkUtils.zeroPad(m[2], 2),
-            day: AnkUtils.zeroPad(m[3], 2),
-            hour: AnkUtils.zeroPad(m[4], 2),
-            minute: AnkUtils.zeroPad(m[5], 2),
-          };
-        },
+        get dateTime ()
+          AnkUtils.decodeDateTimeText(self.elements.illust.datetime.textContent),
 
         get size ()
           null,

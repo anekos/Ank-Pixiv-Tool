@@ -75,10 +75,10 @@ try {
 
     elements: (function () { // {{{
       function query (q)
-        self.elements.doc.querySelector(q);
+        self.elements.doc.querySelector(q)
 
       function queryAll (q)
-        self.elements.doc.querySelectorAll(q);
+        self.elements.doc.querySelectorAll(q)
 
       let illust =  {
         get mediumImage () {

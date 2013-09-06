@@ -39,10 +39,10 @@ try {
 
     elements: (function () { // {{{
       function query (q)
-        self.elements.doc.querySelector(q);
+        self.elements.doc.querySelector(q)
 
       function queryAll (q)
-        self.elements.doc.querySelectorAll(q);
+        self.elements.doc.querySelectorAll(q)
 
       let illust =  {
         get mediumImage ()
@@ -109,28 +109,8 @@ try {
         get id ()
           AnkBase.currentLocation.match(/www\.tinami\.com\/view\/([^/]+?)(?:\?|$)/)[1],
 
-        get dateTime () {
-          let dtext  = self.elements.illust.datetime.textContent;
-          let m = dtext.match(/(\d+).+?(\d+).+?(\d+).+?(\d+):(\d+):/);
-          let dd = new Date();
-          if (m) {
-            dd.setFullYear(parseInt(m[1]));
-            dd.setMonth(parseInt(m[2])-1);
-            dd.setDate(parseInt(m[3]));
-            dd.setHours(parseInt(m[4]));
-            dd.setMinutes(parseInt(m[5]));
-          } else {
-            AnkUtils.dump(self.SERVICE_ID+': unknown datetime format = '+dtext);
-          }
-
-          return {
-            year: AnkUtils.zeroPad(dd.getFullYear(), 4),
-            month: AnkUtils.zeroPad(dd.getMonth()+1, 2),
-            day: AnkUtils.zeroPad(dd.getDate(), 2),
-            hour: AnkUtils.zeroPad(dd.getHours(), 2),
-            minute: AnkUtils.zeroPad(dd.getMinutes(), 2),
-          };
-        },
+        get dateTime ()
+          AnkUtils.decodeDateTimeText(self.elements.illust.datetime.textContent),
 
         get size ()
           null,
@@ -243,15 +223,10 @@ try {
               return true;
             }
   
-            try {
-              var body = doc.getElementsByTagName('body');
-              var wrapper = doc.getElementById('container');
-              var images = self.elements.illust.images;
-              var medImg = self.elements.illust.mediumImage;
-            } catch (e) {
-              AnkUtils.dumpError(e);
-              return true;
-            }
+            var body = doc.getElementsByTagName('body');
+            var wrapper = doc.getElementById('container');
+            var images = self.elements.illust.images;
+            var medImg = self.elements.illust.mediumImage;
   
             if (!((body && body.length>0) && wrapper && (images && images.length>0) && medImg)) {
               AnkUtils.dump('delay installation: '+self.SITE_NAME+' remains '+counter);
@@ -283,7 +258,7 @@ try {
             if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
               medImg.addEventListener(
                 'click',
-                function (e) {
+                function () {
                   AnkBase.downloadCurrentImageAuto();
                 },
                 true
@@ -314,14 +289,14 @@ try {
             clearInterval(timer);   // 今回で終了
             timer = null;
           }
-        }
+        };
 
         //
 
-        let doc = self.elements.doc;
-        let counter = 20;
+        var doc = self.elements.doc;
+        var counter = 20;
         let interval = 500;
-        let timer = undefined;
+        var timer;
         if (!proc())
           timer = setInterval(installer, interval);
       }, // }}}
@@ -338,12 +313,7 @@ try {
             return true;
           }
 
-          try {
-            var body = doc.getElementsByTagName('body');
-          } catch (e) {
-            AnkUtils.dumpError(e);
-            return true;
-          }
+          var body = doc.getElementsByTagName('body');
 
           if (!((body && body.length>0) && doc.readyState === 'complete')) {
             AnkUtils.dump('delay installation: '+self.SITE_NAME+' list remains '+counter);
@@ -369,14 +339,14 @@ try {
           clearInterval(timer);
           timer = null;
         }
-      }
+      };
 
       //
 
-      let doc = self.elements.doc;
-      let counter = 20;
-      let interval = 500;
-      let timer = undefined;
+      var doc = self.elements.doc;
+      var counter = 20;
+      var interval = 500;
+      var timer;
       if (!proc())
         timer = setInterval(installer, interval);
       AnkUtils.dump('installed: '+self.SITE_NAME+' list');
@@ -413,7 +383,7 @@ try {
     * その他
     ********************************************************************************/
 
-    rate: function (pt) { // {{{
+    rate: function () { // {{{
       return true;
     },
 

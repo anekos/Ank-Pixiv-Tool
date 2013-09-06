@@ -200,6 +200,28 @@ try {
       return msg;
     }, // }}}
 
+    decodeDateTimeText: function (dtext) { // {{{
+      let m = dtext.match(/(\d+)\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})\D+?(\d{1,2})\s*[\u6642:\-](\d+)/);
+      let dd = new Date();
+      if (m) {
+        dd.setFullYear(parseInt(m[1]));
+        dd.setMonth(parseInt(m[2])-1);
+        dd.setDate(parseInt(m[3]));
+        dd.setHours(parseInt(m[4]));
+        dd.setMinutes(parseInt(m[5]));
+      } else {
+        AnkUtils.dump(self.SERVICE_ID+': unknown datetime format = '+dtext);
+      }
+
+      return {
+        year: AnkUtils.zeroPad(dd.getFullYear(), 4),
+        month: AnkUtils.zeroPad(dd.getMonth()+1, 2),
+        day: AnkUtils.zeroPad(dd.getDate(), 2),
+        hour: AnkUtils.zeroPad(dd.getHours(), 2),
+        minute: AnkUtils.zeroPad(dd.getMinutes(), 2),
+      };
+    }, // }}}
+
 
     /********************************************************************************
       配列
@@ -341,7 +363,7 @@ try {
      let text = null;
      let xhr = new XMLHttpRequest();
      xhr.open((post ? 'POST' : 'GET'), url, false);
-     xhr.onreadystatechange = function (e) {
+     xhr.onreadystatechange = function () {
        if (xhr.readyState == 4 && xhr.status == 200) {
          text = xhr.responseText;
        }
@@ -523,7 +545,6 @@ try {
             break;
           case nsIPrefBranch.PREF_INT:
             return this.prefs.getIntPref(name);
-            break;
           case nsIPrefBranch.PREF_BOOL:
             return this.prefs.getBoolPref(name);
           default:

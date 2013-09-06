@@ -145,28 +145,8 @@ try {
           return null;
         },  // いずれも 'http://t.co/'+id で作品のページに飛べる
 
-        get dateTime () {
-          let dtext  = self.elements.illust.datetime.title;
-          let m = dtext.match(/(\d+).+?(\d+).+?(\d+).+?(\d+):(\d+)/);
-          let dd = new Date();
-          if (m) {
-            dd.setFullYear(parseInt(m[1]));
-            dd.setMonth(parseInt(m[2])-1);
-            dd.setDate(parseInt(m[3]));
-            dd.setHours(parseInt(m[4]));
-            dd.setMinutes(parseInt(m[5]));
-          } else {
-            AnkUtils.dump(self.SERVICE_ID+': unknown datetime format = '+dtext);
-          }
-
-          return {
-            year: AnkUtils.zeroPad(dd.getFullYear(), 4),
-            month: AnkUtils.zeroPad(dd.getMonth()+1, 2),
-            day: AnkUtils.zeroPad(dd.getDate(), 2),
-            hour: AnkUtils.zeroPad(dd.getHours(), 2),
-            minute: AnkUtils.zeroPad(dd.getMinutes(), 2),
-          };
-        },
+        get dateTime ()
+          AnkUtils.decodeDateTimeText(self.elements.illust.datetime.title),
 
         get size ()
           null,

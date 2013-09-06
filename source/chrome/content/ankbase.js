@@ -72,6 +72,7 @@ try {
 
     DOWNLOAD: {
       MAXRUNS: 1,
+      CLEANUP_INTERVAL: 15*1000,
     },
 
     /********************************************************************************
@@ -683,6 +684,7 @@ try {
           downloaded: 0,
           start: new Date().getTime(),
           timer: undefined,
+          limit: undefined,
           result: undefined,
         };
         window.dispatchEvent(ev);
@@ -698,47 +700,65 @@ try {
       }
     },
 
+    cleanupDownload: function () {
+      let (ev = document.createEvent('Event')) {
+        ev.initEvent('ankDownload', true, false);
+        ev.__download = undefined;
+        window.dispatchEvent(ev);
+      }
+    },
+
+    get livingDownloads ()
+      let (curtime = new Date().getTime())
+        AnkBase.downloading.pages.filter(function (d) (typeof d.result === 'undefined') && d),
+
+    get zombieDownloads ()
+      let (curtime = new Date().getTime())
+        AnkBase.downloading.pages.filter(function (d) (typeof d.timer !== 'undefined' && d.limit < curtime) && d),
+
     downloadHandler: function (ev) {
       try {
-        function timeoutHandler (e) {
-          if (!download.timer)
+        let (d = ev.__download) {
+          if (typeof d === 'undefined') {
+            // cleanup timer
+            // a. ダウンロードが正常終了したあと時間が経ったらキューを刈り取る
+            // b. あまりにダウンロードが遅い場合に、キューから切り離して次に進む
+            let m = AnkBase.zombieDownloads;
+            AnkUtils.dump('rise cleanup: queued='+AnkBase.downloading.pages.length+' zombie='+m.length);
+            m.forEach(function (d) {
+              let index = AnkBase.downloading.pages.indexOf(d);
+              if (index != -1) {
+                AnkBase.downloading.pages.splice(index, 1);
+
+                let c = d.context;
+
+                AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.TIMEOUT);
+                AnkBase.downloading.images -= c.info.path.image.images.length;
+                AnkBase.updateStatusBarText();
+
+                let title         = c.info.illust.title;
+                let member_id     = c.info.member.id;
+                let member_name   = c.info.member.name || member_id;
+                let memoized_name = c.info.member.memoizedName || member_name;
+                let pageUrl       = c.info.illust.pageUrl;
+                let desc = '\n' + title + ' / ' + memoized_name + '\n' + pageUrl + '\n';
+                let msg =
+                  AnkBase.Locale('downloadTimeout') + '\n' +
+                  desc;
+
+                AnkUtils.dump(msg);
+              }
+            });
+
             return;
 
-          clearTimeout(download.timer);
-          download.timer = null;
-
-          let title         = context.info.illust.title;
-          let member_id     = context.info.member.id;
-          let member_name   = context.info.member.name || member_id;
-          let memoized_name = context.info.member.memoizedName || member_name;
-          let pageUrl       = context.info.illust.pageUrl;
-
-          let desc = '\n' + title + ' / ' + memoized_name + '\n' + pageUrl + '\n';
-          let msg =
-            AnkBase.Locale('downloadTimeout') + '\n' +
-            desc;
-
-          window.alert(msg);
-          AnkUtils.dump(msg);
-
-          AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.TIMEOUT);
-        }
-
-        //
-
-        let (d = ev.__download) {
-          if (typeof d.timer === 'undefined') {
+          } else if (typeof d.timer === 'undefined') {
             // add download
             AnkBase.downloading.pages.push(d);
             AnkBase.downloading.images += d.context.info.path.image.images.length;
             AnkBase.updateStatusBarText();
           } else {
             // remove download
-            if (d.timer) {
-              clearTimeout(d.timer);
-              d.timer = null;
-            }
-  
             if (AnkBase.findDownload(d, true)) {
               // タイムアウト関連ですでにキューから刈り取られている場合はここに入らない
               AnkBase.downloading.images -= d.context.info.path.image.images.length;
@@ -752,31 +772,27 @@ try {
           }
         }
 
-        let queued = AnkBase.downloading.pages.length;
-        if (queued == 0)
+        let queued = AnkBase.livingDownloads; 
+        if (queued.length == 0)
           return;   // キューが空なので終了
 
-        let m = AnkBase.downloading.pages.filter(function (v) (typeof v.timer === 'undefined') && v);
-        if (m.length == 0) {
-          AnkUtils.dump('no runnable entry: queued='+queued)
+        let waited = queued.filter(function (d) (typeof d.timer === 'undefined') && d);
+        if (waited.length == 0) {
+          AnkUtils.dump('no runnable entry: queued='+queued.length)
           return;   // 実行待ちがないので終了
         }
 
-        let runs = queued - m.length;
+        let runs = queued.length - waited.length;
         if (runs >= AnkBase.DOWNLOAD.MAXRUNS) {
-          AnkUtils.dump('no slot: queued='+queued+' runs='+runs)
+          AnkUtils.dump('no slot: queued='+queued.length+' runs='+runs)
           return;  // スロットが埋まっているので終了
         }
 
-        let download = m[0];
-        let context = download.context;
-
+        let download = waited[0];
+        download.timer = new Date().getTime();
+        download.limit = download.timer + AnkBase.RETRY.INTERVAL * download.context.info.path.image.images.length;
         AnkBase.updateStatusBarText();
-        AnkBase.insertDownloadedDisplay(context.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADING);
-
-        // a. ダウンロードが異常終了してremoveDownload()が実行されない場合に、時間が来たらそのキューを刈り取る
-        // b. あまりにダウンロードが遅い場合に、キューから切り離して次に進む
-        download.timer = setTimeout(timeoutHandler, AnkBase.RETRY.INTERVAL * context.info.path.image.images.length);
+        AnkBase.insertDownloadedDisplay(download.context.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADING);
 
         AnkBase.downloadExecuter(download);
 
@@ -801,7 +817,7 @@ try {
         let context = download.context;
         let useDialog = download.useDialog;
         let debug = download.debug;
-        let start = download.start;
+        let timer = download.timer;
 
         let destFiles;
         let metaText      = AnkBase.infoText(context);
@@ -974,7 +990,7 @@ try {
             if (AnkBase.Prefs.get('showCompletePopup', true))
               AnkBase.popupAlert(caption, text);
 
-            AnkUtils.dump('download completed: '+images.length+' pics in '+(new Date().getTime() - start)+' msec');
+            AnkUtils.dump('download completed: '+images.length+' pics in '+(new Date().getTime() - timer)+' msec');
 
             AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED);
 
@@ -1434,9 +1450,10 @@ try {
     }, // }}}
 
     updateStatusBarText: function () { // {{{
-      let dp = AnkBase.downloading.pages.length;
+      let queued = AnkBase.livingDownloads;
+      let dp = queued.length;
       let remainImages = AnkBase.downloading.images;
-      AnkBase.downloading.pages.forEach(function (e) remainImages -= e.downloaded);
+      queued.forEach(function (d) remainImages -= d.downloaded);
       AnkBase.statusbarText = dp ? dp+'('+remainImages+'/'+AnkBase.downloading.images+')' : '';
     }, // }}}
 
@@ -1608,6 +1625,7 @@ try {
       window.addEventListener('ankDownload', AnkBase.downloadHandler, true);
       window.addEventListener('pageshow', AnkBase.onPageshow, true);
       window.addEventListener('focus', AnkBase.onFocus, true);
+      setInterval(function (e) AnkBase.cleanupDownload(), AnkBase.DOWNLOAD.CLEANUP_INTERVAL);
     }, // }}}
 
     onPageshow: function (ev) { // {{{

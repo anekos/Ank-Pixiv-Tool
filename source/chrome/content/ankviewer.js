@@ -7,7 +7,7 @@ function AnkViewer (module, body, wrapper, openComment, getImages) {
   let self = this;
 
   /********************************************************************************
-  * XXX
+  * ハンドラの定義
   ********************************************************************************/
 
   // 他のハンドラをキックさせない
@@ -22,7 +22,7 @@ function AnkViewer (module, body, wrapper, openComment, getImages) {
   // エレメントの作成
   let createElement = function (tagName, id) {
     function IDPrefix (id)
-      ('ank-pixiv-large-viewer-' + id);
+      ('ank-pixiv-large-viewer-' + id)
 
     let elem = doc.createElement(tagName);
     if (id)
@@ -46,21 +46,26 @@ function AnkViewer (module, body, wrapper, openComment, getImages) {
 
   // ボタンパネルを隠す
   let hideButtons = function () {
-    function clearFadeOutTimer () {
+    function proc () {
+      try {
+        if (buttonOpacity > 0) {
+          buttonOpacity -= 10;
+          buttonPanel.style.opacity = buttonOpacity / 100.0;
+          return false;   // please retry
+        }
+      } catch (e if e instanceof TypeError) {
+        // XXX for "can't access dead object"
+      }
+      return true;
+    }
+
+    function fadeOutTimerHandler () {
+      if (!proc())
+        return;
+
       clearInterval(fadeOutTimer);
       fadeOutTimer = void 0;
       buttonOpacity = 0;
-    }
-    function fadeOutTimerHandler () {
-      try {
-        if (buttonOpacity <= 0)
-          return clearFadeOutTimer();
-        buttonOpacity -= 10;
-        buttonPanel.style.opacity = buttonOpacity / 100.0;
-      } catch (e if e instanceof TypeError) {
-        // XXX for "can't access dead object"
-        clearFadeOutTimer();
-      }
     }
 
     if (AnkBase.Prefs.get('dontHidePanel', false))
@@ -78,7 +83,7 @@ function AnkViewer (module, body, wrapper, openComment, getImages) {
       bigImg.style.width = w + 'px';
       bigImg.style.height = h + 'px';
       if (ch > h) {
-        bigImg.style.marginTop = parseInt(ch / 2 - h / 2) + 'px';
+        bigImg.style.marginTop = parseInt(ch / 2 - h / 2, 10) + 'px';
       } else {
         bigImg.style.marginTop = '0px';
       }
@@ -95,15 +100,15 @@ function AnkViewer (module, body, wrapper, openComment, getImages) {
 
     switch (fitMode) {
     case AnkBase.FIT.IN_WINDOW_SIZE:
-      resize(parseInt(iw * pp), parseInt(ih * pp));
+      resize(parseInt(iw * pp, 10), parseInt(ih * pp, 10));
       resizeButton.innerHTML = 'FIT in Window';
       break;
     case AnkBase.FIT.IN_WINDOW_WIDTH:
-      resize(parseInt(iw * pw), parseInt(ih * pw));
+      resize(parseInt(iw * pw, 10), parseInt(ih * pw, 10));
       resizeButton.innerHTML = 'FIT in Width';
       break;
     case AnkBase.FIT.IN_WINDOW_HEIGHT:
-      resize(parseInt(iw * ph), parseInt(ih * ph));
+      resize(parseInt(iw * ph, 10), parseInt(ih * ph, 10));
       resizeButton.innerHTML = 'FIT in Height';
       break;
     default:
@@ -125,7 +130,7 @@ function AnkViewer (module, body, wrapper, openComment, getImages) {
     qresize = setTimeout(function(e) {
       qresize = null;
       autoResize();
-    },200)
+    },200);
   };
 
   let qresize;
@@ -146,7 +151,7 @@ function AnkViewer (module, body, wrapper, openComment, getImages) {
       if (ads)
         ads.forEach(function (ad) {
           if (ad)
-            return (ad.style.display = ad.__ank_pixiv__style_display);
+            (ad.style.display = ad.__ank_pixiv__style_display);
         });
 
       return true;
@@ -199,9 +204,9 @@ function AnkViewer (module, body, wrapper, openComment, getImages) {
       hide();
     } else {
       // 画像のリストが取得できなければviewerを開かない
-      if (typeof images === 'undefined' || images.length == 0) {
+      if (typeof images === 'undefined' || images.length === 0) {
         images = getImages();
-        if (images.length == 0)
+        if (images.length === 0)
           return false; // server error.
 
         scrollbarSize = AnkUtils.scrollbarSize;
@@ -243,7 +248,7 @@ function AnkViewer (module, body, wrapper, openComment, getImages) {
   };
 
   /********************************************************************************
-  * XXX
+  * クロージャー
   ********************************************************************************/
 
   // closure {{{
@@ -251,11 +256,11 @@ function AnkViewer (module, body, wrapper, openComment, getImages) {
   let doc = module.elements.doc;
   let medImg = module.elements.illust.mediumImage;
   let bgImage = doc.defaultView.getComputedStyle(doc.body, '').backgroundImage;
-  let images = undefined;
+  let images;
   let currentMangaPage = 0;
   let fitMode = AnkBase.Prefs.get('largeImageSize', AnkBase.FIT.NONE);
   let bigMode = false;
-  let scrollbarSize = undefined;
+  let scrollbarSize;
   // }}}
 
   /********************************************************************************
@@ -398,7 +403,7 @@ function AnkViewer (module, body, wrapper, openComment, getImages) {
     'click',
     noMoreEvent(function (e) {
       if (module.in.manga && (currentMangaPage < images.length))
-        goNextPage(1, false)
+        goNextPage(1, false);
       else
         changeImageSize();
     }),
