@@ -1,5 +1,5 @@
 
-function AnkViewer (module, body, wrapper, openComment, bgImage, getImages) {
+function AnkViewer (module, body, wrapper, openComment, getImages) {
 
   if (!module)
     return null;
@@ -19,6 +19,7 @@ function AnkViewer (module, body, wrapper, openComment, bgImage, getImages) {
     };
   }; // }}}
 
+  // エレメントの作成
   let createElement = function (tagName, id) {
     function IDPrefix (id)
       ('ank-pixiv-large-viewer-' + id);
@@ -29,6 +30,7 @@ function AnkViewer (module, body, wrapper, openComment, bgImage, getImages) {
     return elem;
   };
 
+  // 大画像のロード
   let loadBigImage = function (bigImg, bigImgPath) {
     bigImg.setAttribute('src', bigImgPath);
   };
@@ -82,7 +84,7 @@ function AnkViewer (module, body, wrapper, openComment, bgImage, getImages) {
       }
     }
 
-    let cw = win.innerWidth, ch = win.innerHeight;
+    let cw = win.innerWidth - scrollbarSize, ch = win.innerHeight;
     let iw = bigImg.naturalWidth, ih = bigImg.naturalHeight;
     let pw = cw / iw, ph = ch / ih;
     if (AnkBase.Prefs.get('dontResizeIfSmall')) {
@@ -142,7 +144,10 @@ function AnkViewer (module, body, wrapper, openComment, bgImage, getImages) {
           wrapper.style.marginTop = wrapperTopMargin;
       }
       if (ads)
-        ads.forEach(function (ad) (ad.style.display = ad.__ank_pixiv__style_display));
+        ads.forEach(function (ad) {
+          if (ad)
+            return (ad.style.display = ad.__ank_pixiv__style_display);
+        });
 
       return true;
     }
@@ -177,27 +182,33 @@ function AnkViewer (module, body, wrapper, openComment, bgImage, getImages) {
       if (ads) {
         ads.forEach(
           function (ad) {
-            ad.__ank_pixiv__style_display = ad.style.display;
-            ad.style.display = 'none';
+            if (ad) {
+              ad.__ank_pixiv__style_display = ad.style.display;
+              ad.style.display = 'none';
+            }
           }
         );
       }
       updateButtons();
     }
 
-    if (typeof images === 'undefined' || images.length == 0) {
-      images = getImages();
-      if (images.length == 0)
-        return false; // server error.
-    }
-
     let ads = module.elements.illust.ads;
     let wrapperTopMargin;
 
-    if (bigMode)
+    if (bigMode) {
       hide();
-    else
+    } else {
+      // 画像のリストが取得できなければviewerを開かない
+      if (typeof images === 'undefined' || images.length == 0) {
+        images = getImages();
+        if (images.length == 0)
+          return false; // server error.
+
+        scrollbarSize = AnkUtils.scrollbarSize;
+      }
+
       show();
+    }
 
     bigMode = !bigMode;
   };
@@ -239,10 +250,12 @@ function AnkViewer (module, body, wrapper, openComment, bgImage, getImages) {
   let win = window.content.window;
   let doc = module.elements.doc;
   let medImg = module.elements.illust.mediumImage;
+  let bgImage = doc.defaultView.getComputedStyle(doc.body, '').backgroundImage;
   let images = undefined;
   let currentMangaPage = 0;
   let fitMode = AnkBase.Prefs.get('largeImageSize', AnkBase.FIT.NONE);
   let bigMode = false;
+  let scrollbarSize = undefined;
   // }}}
 
   /********************************************************************************
@@ -318,6 +331,15 @@ function AnkViewer (module, body, wrapper, openComment, bgImage, getImages) {
   * イベントリスナーの設定
   ********************************************************************************/
 
+  // 中画像をクリックしたら開く
+  medImg.addEventListener(
+    'click',
+    function (e) {
+      noMoreEvent(changeImageSize)(e);
+    },
+    false
+  );
+
   // 画像を読み込んだら表示サイズの調整を行う
   bigImg.addEventListener('load', autoResize, true);
 
@@ -380,15 +402,6 @@ function AnkViewer (module, body, wrapper, openComment, bgImage, getImages) {
       else
         changeImageSize();
     }),
-    false
-  );
-
-  // 中画像をクリックしたら開く
-  medImg.addEventListener(
-    'click',
-    function (e) {
-      noMoreEvent(changeImageSize)(e);
-    },
     false
   );
 

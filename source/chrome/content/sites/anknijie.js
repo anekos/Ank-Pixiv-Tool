@@ -289,7 +289,6 @@ try {
               body[0],
               wrapper,
               openComment,
-              null,
               function () self.info.path.image.images
             );
           }

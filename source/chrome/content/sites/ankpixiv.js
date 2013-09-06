@@ -389,7 +389,6 @@ try {
               body,
               wrapper,
               openComment,
-              bgImage,
               function () self.getImageInfo(false).images
             );
           }

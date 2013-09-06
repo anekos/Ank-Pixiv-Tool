@@ -247,27 +247,48 @@ try {
               var body = doc.getElementsByTagName('body');
               var wrapper = doc.getElementById('container');
               var images = self.elements.illust.images;
+              var medImg = self.elements.illust.mediumImage;
             } catch (e) {
               AnkUtils.dumpError(e);
               return true;
             }
   
-            if (!((body && body.length>0) && wrapper && (images && images.length>0))) {
+            if (!((body && body.length>0) && wrapper && (images && images.length>0) && medImg)) {
               AnkUtils.dump('delay installation: '+self.SITE_NAME+' remains '+counter);
               return false;   // リトライしてほしい
             }
   
             // 大画像関係
             if (AnkBase.Prefs.get('largeOnMiddle', true)) {
+              try {
+                // jQuery.click()をunbindする
+                let jq = doc.defaultView.wrappedJSObject.jQuery;
+                jq(doc).ready(function () {
+                  jq(medImg).unbind('click');
+                });
+              } catch (e) {
+                AnkUtils.dumpError(e);
+              }
+
               new AnkViewer(
                 self,
                 body[0],
                 wrapper,
                 null,
-                null,
                 function () self.info.path.image.images
               );
             }
+
+            // 中画像クリック時に保存する
+            if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
+              medImg.addEventListener(
+                'click',
+                function (e) {
+                  AnkBase.downloadCurrentImageAuto();
+                },
+                true
+              );
+            } // }}}
 
             // 保存済み表示
             AnkBase.insertDownloadedDisplayById(
