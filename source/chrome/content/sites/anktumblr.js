@@ -7,10 +7,10 @@ try {
     * 定数
     ********************************************************************************/
 
-    URL:        'http://www.tinami.com/', // イラストページ以外でボタンを押したときに開くトップページのURL
-    DOMAIN:     'tinami.com',             // CSSの適用対象となるドメイン
-    SERVICE_ID: 'TNM',                    // 履歴DBに登録するサイト識別子
-    SITE_NAME:  'Tinami',                 // ?site-name?で置換されるサイト名のデフォルト値
+    URL:        'https://www.tumblr.com/', // イラストページ以外でボタンを押したときに開くトップページのURL
+    DOMAIN:     'tumblr.com',              // CSSの適用対象となるドメイン
+    SERVICE_ID: 'TBR',                     // 履歴DBに登録するサイト識別子
+    SITE_NAME:  'Tumblr',                  // ?site-name?で置換されるサイト名のデフォルト値
 
 
     /********************************************************************************
@@ -19,16 +19,17 @@ try {
 
     in: { // {{{
       get site () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/[^/]*tinami\.com\//), // }}}
+        AnkBase.currentLocation.match(/^https?:\/\/[^/]*tumblr\.com\//), // }}}
 
       get manga () // {{{
-        AnkUtils.A(self.elements.illust.typeImages).some(function (v) v.src.match(/\/ma\.gif$/)), // }}}
+        false, // }}}
 
       get medium () // {{{
         self.in.illustPage, // }}}
 
       get illustPage () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/www\.tinami\.com\/view\//), // }}}
+        AnkBase.currentLocation.match(/^https?:\/\/[^/]+?\.tumblr\.com\/post\//) &&
+        !!self.elements.illust.largeImageLink, // }}}
 
       get myPage ()
         false,  // under construction
@@ -45,47 +46,42 @@ try {
         self.elements.doc.querySelectorAll(q)
 
       let illust =  {
+        get largeImageLink ()
+          let (e = query('.photo > div > a') || query('.post > a')) 
+            (e && e.href.match(/\.tumblr\.com\/image\//) && e),
+
         get mediumImage ()
-          illust.images[0],
+          query('.photo > div > a > img') ||
+          query('.post > a > img'),
 
-        get images ()
-          let (e = query('.captify'))
-            e ? [e] : queryAll('.viewbody > * > img'),
-
-        get datetime ()
-          query('.view_info'),
+        get date ()
+          query('.date'),
 
         get title ()
-          query('.viewdata > h1 > span'),
-
-        get comment ()
-          query('.description'),
+          query('.caption > p') ||
+          query('.post > p+p'),
 
         get userName ()
-          query('.prof > p > a > strong'),
+          query('.footer-content > h5'),
 
         get memberLink ()
-          query('.prof > p > a'),
+          let (e = query('#header > * > .profile-image'))
+            (e && e.parentNode),
 
-        get tags ()
-          queryAll('.tag > span'),
-
-        get typeImages ()
-          queryAll('.viewdata > p > img'),
-
-        get postParams ()
-          queryAll('#open_original_content > input'),
+        get wrapper ()
+          query('.container.section') ||
+          query('#newDay'),
 
         // elements.illust中ではdownloadedDisplayParentのみankpixiv.jsから呼ばれるので必須、他はこのソース内でしか使わない
 
         get downloadedDisplayParent ()
-          query('.description'),
+          query('.caption > p'),
 
         get ads () {
           let header = query('#header');
-          let controller = query('#controller');
+          let header2 = query('#fb-root');
 
-          return ([]).concat(header, controller);
+          return ([]).concat(header, header2);
         },
       };
 
@@ -107,16 +103,16 @@ try {
     info: (function () { // {{{
       let illust = {
         get id ()
-          AnkBase.currentLocation.match(/www\.tinami\.com\/view\/([^/]+?)(?:\?|$)/)[1],
+          AnkBase.currentLocation.match(/\.tumblr\.com\/post\/([^/]+?)(?:\?|\/|$)/)[1],
 
         get dateTime ()
-          AnkUtils.decodeDateTimeText(self.elements.illust.datetime.textContent),
+          AnkUtils.decodeDateTimeText(self.elements.illust.date.textContent),
 
         get size ()
           null,
 
         get tags ()
-          AnkUtils.A(self.elements.illust.tags).filter(function (e) AnkUtils.trim(e.textContent)),
+          [],
 
         get shortTags () {
           let limit = AnkBase.Prefs.get('shortTagsMaxLength', 8);
@@ -142,22 +138,22 @@ try {
           AnkUtils.trim(self.elements.illust.title.textContent),
 
         get comment ()
-          AnkUtils.trim(self.elements.illust.comment.textContent),
+          illust.title,
 
         get R18 ()
-          false,
+          !!AnkBase.currentLocation.match(/\.tumblr\.com\/post\/[^/]+?\/[^/]*r-?18/),
 
       };
 
       let member = {
         get id ()
-          self.elements.illust.memberLink.href.match(/\/profile\/(.+)(?:\?|$)/)[1],
+          AnkBase.currentLocation.match(/^https?:\/\/([^/]+?)\.tumblr\.com\/post\//)[1],
 
         get pixivId ()
           member.id,
 
         get name ()
-          AnkUtils.trim(self.elements.illust.userName.textContent),
+          AnkUtils.trim(self.elements.illust.userName ? self.elements.illust.userName.textContent : self.info.member.id),
 
         get memoizedName ()
           AnkBase.memoizedName(member.id, self.SERVICE_ID),
@@ -174,24 +170,7 @@ try {
           null,
 
         get image () {
-          let images;
-          if (self.in.manga) {
-            // マンガの大サイズ画像はないらしい
-            images = AnkUtils.A(self.elements.illust.images).map(function (e) e.src);
-          } else {
-            let params = AnkUtils.A(self.elements.illust.postParams).
-              map(function (e) (e.getAttribute('name')+'='+e.getAttribute('value'))).
-              join('&');
-            let html = AnkUtils.httpGET(self.info.illust.referer, self.info.illust.referer, params);
-            let doc = AnkUtils.createHTMLDocument(html);
-
-            // 大サイズ画像ページが取れないことがある（セッション切れとか？）ので、その場合はalert等したいが、とりあえずダウンロード無効までで
-            images = AnkUtils.A(doc.querySelectorAll('img')).
-              filter(function (e) e.src.match(/^https?:\/\/img\.tinami\.com\/illust\d*\/img\//)).
-              map(function (e) e.src);
-          }
-
-          return { images: images, facing: null, };
+          return { images: [self.elements.illust.mediumImage.src], facing: null, };
         },
       };
 
@@ -225,27 +204,16 @@ try {
             }
   
             var body = doc.getElementsByTagName('body');
-            var wrapper = doc.getElementById('container');
-            var images = self.elements.illust.images;
+            var wrapper = self.elements.illust.wrapper;
             var medImg = self.elements.illust.mediumImage;
   
-            if (!((body && body.length>0) && wrapper && (images && images.length>0) && medImg)) {
+            if (!((body && body.length>0) && wrapper && medImg)) {
               AnkUtils.dump('delay installation: '+self.SITE_NAME+' remains '+counter);
               return false;   // リトライしてほしい
             }
   
             // 大画像関係
             if (AnkBase.Prefs.get('largeOnMiddle', true)) {
-              try {
-                // jQuery.click()をunbindする
-                let jq = doc.defaultView.wrappedJSObject.jQuery;
-                jq(doc).ready(function () {
-                  jq(medImg).unbind('click');
-                });
-              } catch (e) {
-                AnkUtils.dumpError(e);
-              }
-
               new AnkViewer(
                 self,
                 body[0],
@@ -306,7 +274,7 @@ try {
      * リストページ用ファンクション
      */
     installListPageFunctions: function () { /// {
-
+/*
       function proc () {
         try {
           if (--counter <= 0) {
@@ -350,6 +318,7 @@ try {
       var timer;
       if (!proc())
         timer = setInterval(installer, interval);
+*/
       AnkUtils.dump('installed: '+self.SITE_NAME+' list');
     }, // }}}
 
@@ -365,16 +334,14 @@ try {
         return;
 
       [
-        ['td > p.capt + a', 1],                         // 一覧
-        ['.title > .collection_form_checkbox + a', 1],  // コレクション
-        ['.thumbs > li > ul > li > a', 1],              // 最近の投稿作品
+        ['#portfolio > div > * > .item > a', 1],              // 一覧
       ].forEach(function ([selector, nTrackback]) {
         AnkUtils.A(target.node.querySelectorAll(selector)) .
-          map(function (link) link.href && let (m = link.href.split(/\//)) m.length >= 2 && [link, m.pop()]) .
+          map(function (link) link.href && let (m = link.href.match(/\.tumblr\.com\/post\/([^/]+?)(?:\?|\/|$)/)) m && [link, m[1]]) .
           filter(function (m) m) .
           forEach(function ([link, id]) {
             if (!(target.illust_id && target.illust_id != id))
-              AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, self.SERVICE_ID, false);
+              AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, self.SERVICE_ID, true);
           });
       });
     }, // }}}

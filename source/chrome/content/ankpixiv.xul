@@ -16,6 +16,7 @@
   <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anknijie.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/ankpixiv.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktinami.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktumblr.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktwipple.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktwitpic.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktwitter.js" />

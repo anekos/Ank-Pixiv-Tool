@@ -54,7 +54,7 @@ try {
 
     Store: (function () { // {{{
       function getDocStore (doc)
-        (doc.__ank_pixiv_store || (doc.__ank_pixiv_store = {}));
+        (doc.__ank_pixiv_store || (doc.__ank_pixiv_store = {}))
 
       return {
         get document () getDocStore(window.gBrowser.selectedBrowser.contentDocument),
@@ -112,7 +112,7 @@ try {
 
       ignore = [];
       function indent (s)
-        (typeof s === 'undefined' ? '---' : s).toString().split(/\n/).map(function (v) "\t" + v).join("\n");
+        (typeof s === 'undefined' ? '---' : s).toString().split(/\n/).map(function (v) "\t" + v).join("\n")
 
       function textize (names, value) {
         let name = names.join('.');
@@ -176,8 +176,8 @@ try {
     ********************************************************************************/
 
     downloading: {
-      pages:  [],
-      images: 0, 
+      pages:  [],     // ダウンロード情報のリスト（__download）
+      images: 0,      // キューに載ったダウンロード対象の画像の合計枚数
     }, 
 
     /********************************************************************************
@@ -337,10 +337,10 @@ try {
           url: url,
           file: AnkBase.newLocalFile(url)
         };
-      };
+      }
 
       function _exists (file)
-        (file.file.exists() || AnkBase.filenameExists(file.filename));
+        (file.file.exists() || AnkBase.filenameExists(file.filename))
 
       try {
         let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
@@ -387,7 +387,7 @@ try {
      *    return:        ダウンロード中？
      */
     isDownloading: function (illust_id, service_id) {
-      function find (v, i, a) {
+      function find (v) {
         // illust_idは === ではなく == で比較する
         return (v.context.SERVICE_ID === service_id) && (v.context.info.illust.id == illust_id);
       }
@@ -443,7 +443,7 @@ try {
             let responseStatus, orig_args = arguments;
 
             try {
-              responseStatus = _request.responseStatus
+              responseStatus = _request.responseStatus;
             } catch (e) {
               return onError(void 0);
             }
@@ -682,8 +682,8 @@ try {
           useDialog: useDialog,
           debug: debug,
           downloaded: 0,
-          start: new Date().getTime(),
-          timer: undefined,
+          queuein: new Date().getTime(),
+          start: undefined,
           limit: undefined,
           result: undefined,
         };
@@ -709,12 +709,11 @@ try {
     },
 
     get livingDownloads ()
-      let (curtime = new Date().getTime())
-        AnkBase.downloading.pages.filter(function (d) (typeof d.result === 'undefined') && d),
+      AnkBase.downloading.pages.filter(function (d) (typeof d.result === 'undefined') && d),
 
     get zombieDownloads ()
       let (curtime = new Date().getTime())
-        AnkBase.downloading.pages.filter(function (d) (typeof d.timer !== 'undefined' && d.limit < curtime) && d),
+        AnkBase.downloading.pages.filter(function (d) (typeof d.start !== 'undefined' && d.limit < curtime) && d),
 
     downloadHandler: function (ev) {
       try {
@@ -725,12 +724,12 @@ try {
             // b. あまりにダウンロードが遅い場合に、キューから切り離して次に進む
             let m = AnkBase.zombieDownloads;
             AnkUtils.dump('rise cleanup: queued='+AnkBase.downloading.pages.length+' zombie='+m.length);
-            m.forEach(function (d) {
-              let index = AnkBase.downloading.pages.indexOf(d);
+            m.forEach(function (z) {
+              let index = AnkBase.downloading.pages.indexOf(z);
               if (index != -1) {
                 AnkBase.downloading.pages.splice(index, 1);
 
-                let c = d.context;
+                let c = z.context;
 
                 AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.TIMEOUT);
                 AnkBase.downloading.images -= c.info.path.image.images.length;
@@ -752,7 +751,7 @@ try {
 
             return;
 
-          } else if (typeof d.timer === 'undefined') {
+          } else if (typeof d.start === 'undefined') {
             // add download
             AnkBase.downloading.pages.push(d);
             AnkBase.downloading.images += d.context.info.path.image.images.length;
@@ -776,21 +775,21 @@ try {
         if (queued.length == 0)
           return;   // キューが空なので終了
 
-        let waited = queued.filter(function (d) (typeof d.timer === 'undefined') && d);
+        let waited = queued.filter(function (d) (typeof d.start === 'undefined') && d);
         if (waited.length == 0) {
-          AnkUtils.dump('no runnable entry: queued='+queued.length)
+          AnkUtils.dump('no runnable entry: queued='+queued.length);
           return;   // 実行待ちがないので終了
         }
 
         let runs = queued.length - waited.length;
         if (runs >= AnkBase.DOWNLOAD.MAXRUNS) {
-          AnkUtils.dump('no slot: queued='+queued.length+' runs='+runs)
+          AnkUtils.dump('no slot: queued='+queued.length+' runs='+runs);
           return;  // スロットが埋まっているので終了
         }
 
         let download = waited[0];
-        download.timer = new Date().getTime();
-        download.limit = download.timer + AnkBase.RETRY.INTERVAL * download.context.info.path.image.images.length;
+        download.start = new Date().getTime();
+        download.limit = download.start + AnkBase.RETRY.INTERVAL * download.context.info.path.image.images.length;
         AnkBase.updateStatusBarText();
         AnkBase.insertDownloadedDisplay(download.context.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADING);
 
@@ -817,7 +816,7 @@ try {
         let context = download.context;
         let useDialog = download.useDialog;
         let debug = download.debug;
-        let timer = download.timer;
+        let start = download.start;
 
         let destFiles;
         let metaText      = AnkBase.infoText(context);
@@ -831,15 +830,12 @@ try {
         let tags          = context.info.illust.tags;
         let title         = context.info.illust.title;
         let comment       = context.info.illust.comment;
-        let R18           = context.info.illust.R18;
-        let dlDispPoint   = context.elements.illust.downloadedDisplayParent;
         let filenames     = [];
         let shortTags     = context.info.illust.shortTags;
         let service_id    = context.SERVICE_ID;
         let site_name     = getSiteName(context);
         let images        = context.info.path.image.images;
         let facing        = context.info.path.image.facing;
-        let imageUrl      = images[0];
         let pageUrl       = context.info.illust.pageUrl;
         let prefInitDir   = context.info.path.initDir || AnkBase.Prefs.get('initialDirectory');
 
@@ -913,7 +909,7 @@ try {
             }
           });
           function repl (s) {
-            ps.forEach(function ([re, val]) (s = s.replace(re, val).trim()))
+            ps.forEach(function ([re, val]) (s = s.replace(re, val).trim()));
             return s;
           }
           filenames.push(repl(defaultFilename));
@@ -990,7 +986,7 @@ try {
             if (AnkBase.Prefs.get('showCompletePopup', true))
               AnkBase.popupAlert(caption, text);
 
-            AnkUtils.dump('download completed: '+images.length+' pics in '+(new Date().getTime() - timer)+' msec');
+            AnkUtils.dump('download completed: '+images.length+' pics in '+(new Date().getTime() - start)+' msec');
 
             AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED);
 

@@ -201,7 +201,8 @@ try {
     }, // }}}
 
     decodeDateTimeText: function (dtext) { // {{{
-      let m = dtext.match(/(\d+)\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})\D+?(\d{1,2})\s*[\u6642:\-](\d+)/);
+      let m = dtext.match(/(\d+)\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})\D+?(\d{1,2})\s*[\u6642:\-]\s*(\d+)/);
+      let m2 = !m && dtext.match(/(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})\s*,\s*(\d{4})/);
       let dd = new Date();
       if (m) {
         dd.setFullYear(parseInt(m[1]));
@@ -209,6 +210,12 @@ try {
         dd.setDate(parseInt(m[3]));
         dd.setHours(parseInt(m[4]));
         dd.setMinutes(parseInt(m[5]));
+      } else if (m2) {
+        dd.setFullYear(parseInt(m2[3]));
+        dd.setMonth(parseInt(m2[1])-1);
+        dd.setDate(parseInt(m2[2]));
+        dd.setHours(0);
+        dd.setMinutes(0);
       } else {
         AnkUtils.dump(self.SERVICE_ID+': unknown datetime format = '+dtext);
       }
@@ -224,7 +231,7 @@ try {
 
 
     /********************************************************************************
-      配列
+    * 配列
     ********************************************************************************/
 
     A: function (v) Array.slice(v),
