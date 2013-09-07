@@ -217,7 +217,12 @@ try {
         dd.setHours(0);
         dd.setMinutes(0);
       } else {
-        AnkUtils.dump(self.SERVICE_ID+': unknown datetime format = '+dtext);
+        let dx = new Date(dtext);
+        if (dx) {
+          dd = dx;
+        } else {
+          AnkUtils.dump(self.SERVICE_ID+': unknown datetime format = '+dtext);
+        }
       }
 
       return {
