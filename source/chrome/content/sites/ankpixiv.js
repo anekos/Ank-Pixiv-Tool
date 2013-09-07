@@ -383,7 +383,7 @@ try {
           } // }}}
 
           // 大画像関係
-          if (AnkBase.Prefs.get('largeOnMiddle', true)) {
+          if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true)) {
             new AnkViewer(
               self,
               body,
@@ -440,73 +440,76 @@ try {
      */
     installListPageFunctions: function () { /// {
 
-      // 伸びるおすすめリストに追随する
-      function followExpansion () {
-        let recommend = self.elements.illust.recommendList;
-        let feed = self.elements.illust.feedList;
+      let followExpansion = function () {
+        function proc () {
+          if (counter-- <= 0) {
+            AnkUtils.dump('installation failed fe: '+self.SITE_NAME);
+            return true;
+          }
 
-        let installTimer = setInterval(
-          function () {
-            if (!AnkBase.Prefs.get('markDownloaded', false))
-              return;
+          try { // {{{
+            var recommend = self.elements.illust.recommendList;
+            var feed = self.elements.illust.feedList;
+          } catch (e) {
+            AnkUtils.dumpError(e);
+            return true;
+          } // }}}
 
-            let elm = recommend || feed;
-            if (!elm && counter > 0) {
-              AnkUtils.dump('delay fe: '+self.SITE_NAME+', '+counter--);
-              return;
-            }
-  
-            clearInterval(installTimer);
-            installTimer = null;
+          let elm = recommend || feed;
+          if (!elm) {
+            AnkUtils.dump('delay installation fe: '+self.SITE_NAME+' remains '+counter);
+            return false;     // リトライしてほしい
+          }
 
-            if (!elm) {
-              AnkUtils.dump('installation failed fe: '+self.SITE_NAME);
-              return;
-            }
+          // 伸びるおすすめリストに追随する
+          if (MutationObserver) {
+            new MutationObserver(function (o) {
+              o.forEach(function (e) self.markDownloaded(e.target, true));
+            }).observe(elm, {childList: true});
+          }
 
-            if (MutationObserver) {
-              new MutationObserver(function (o) {
-                o.forEach(function (e) self.markDownloaded(e.target, true));
-              }).observe(elm, {childList: true});
-            }
-  
-            AnkUtils.dump('installed fe: '+self.SITE_NAME);
-          },
-          interval
-        );
+          AnkUtils.dump('installed fe: '+self.SITE_NAME);
+          return true;
+        }
+
+        if (!AnkBase.Prefs.get('markDownloaded', false))
+          return;
+
+        if (!proc())
+          setTimeout(followExpansion, interval);
+      };
+
+      let delayMarking = function () {
+        function proc () {
+          if (counter-- <= 0) {
+            AnkUtils.dump('installation failed dm: '+self.SITE_NAME);
+            return true;
+          }
+
+          if (typeof doc === 'undefined' || !doc || doc.readyState !== "complete") {
+            AnkUtils.dump('delay installation dm: '+self.SITE_NAME+' remains '+counter);
+            return false;     // リトライしてほしい
+          }
+
+          // プレミアムユーザーでない絵師さんの作品一覧は遅延が発生するのでonFocusによる処理だけではマークがつかない
+          self.markDownloaded(doc,true);
+
+          AnkUtils.dump('installed dm: '+self.SITE_NAME);
+          return true;
+        }
+
+        if (!AnkBase.Prefs.get('markDownloaded', false))
+          return;
+
+        if (!proc())
+          setTimeout(delayMarking, interval);
       }
 
-      // プレミアムユーザーでない絵師さんの作品一覧は遅延が発生するのでonFocusによる処理だけではマークがつかない
-      function delayMarking () {
-        let doc = self.elements.doc;
-
-        let installTimer = setInterval(
-            function () {
-              if (typeof doc === 'undefined' || !doc || doc.readyState !== "complete") {
-                if (counter > 0) {
-                  AnkUtils.dump('delay dm: '+counter--);
-                  return;
-                }
-              }
-
-              clearInterval(installTimer);
-              installTimer = null;
-
-              if (typeof doc === 'undefined' || !doc ) {
-                AnkUtils.dump('installation failed dm: '+self.SITE_NAME);
-                return;
-              }
-
-              self.markDownloaded(doc,true);
-
-              AnkUtils.dump('installed dm: '+self.SITE_NAME);
-            },
-            interval
-          );
-      }
-
-      let counter = 20;
+      // closure {{{
+      let doc = self.elements.doc;
       let interval = 500;
+      let counter = 20;
+      // }}}
 
       if (!(self.in.illustList || self.in.bookmarkNew || self.in.bookmarkAdd))
         followExpansion();

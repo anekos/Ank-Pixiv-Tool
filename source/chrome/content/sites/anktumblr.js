@@ -29,7 +29,7 @@ try {
 
       get illustPage () // {{{
         AnkBase.currentLocation.match(/^https?:\/\/[^/]+?\.tumblr\.com\/post\//) &&
-        !!self.elements.illust.largeImageLink, // }}}
+        !!self.elements.illust.largeLink, // }}}
 
       get myPage ()
         false,  // under construction
@@ -46,7 +46,7 @@ try {
         self.elements.doc.querySelectorAll(q)
 
       let illust =  {
-        get largeImageLink ()
+        get largeLink ()
           let (e = query('.photo > div > a') || query('.post > a')) 
             (e && e.href.match(/\.tumblr\.com\/image\//) && e),
 
@@ -194,18 +194,24 @@ try {
     /*
      * 遅延インストールのためにクロージャに doc などを保存しておく
      */
-      installMediumPageFunctions: function () { // {{{
+    installMediumPageFunctions: function () { // {{{
 
+      let installer = function () {
         function proc () {
           try {
-            if (--counter <= 0) {
+            if (counter-- <= 0) {
               AnkUtils.dump('installation failed: '+self.SITE_NAME);
               return true;
             }
   
-            var body = doc.getElementsByTagName('body');
-            var wrapper = self.elements.illust.wrapper;
-            var medImg = self.elements.illust.mediumImage;
+            try {
+              var body = doc.getElementsByTagName('body');
+              var wrapper = self.elements.illust.wrapper;
+              var medImg = self.elements.illust.mediumImage;
+            } catch (e) {
+              AnkUtils.dumpError(e);
+              return true;
+            }
   
             if (!((body && body.length>0) && wrapper && medImg)) {
               AnkUtils.dump('delay installation: '+self.SITE_NAME+' remains '+counter);
@@ -213,7 +219,7 @@ try {
             }
   
             // 大画像関係
-            if (AnkBase.Prefs.get('largeOnMiddle', true)) {
+            if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true)) {
               new AnkViewer(
                 self,
                 body[0],
@@ -222,7 +228,7 @@ try {
                 function () self.info.path.image.images
               );
             }
-
+  
             // 中画像クリック時に保存する
             if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
               medImg.addEventListener(
@@ -233,7 +239,7 @@ try {
                 true
               );
             } // }}}
-
+  
             // 保存済み表示
             AnkBase.insertDownloadedDisplayById(
               self.elements.illust.downloadedDisplayParent,
@@ -250,75 +256,24 @@ try {
           return true;
         }
 
-        let installer = function () {
-          if (!proc())
-            return;                 // 次回に続く
-
-          if (timer) {
-            clearInterval(timer);   // 今回で終了
-            timer = null;
-          }
-        };
-
-        //
-
-        var doc = self.elements.doc;
-        var counter = 20;
-        let interval = 500;
-        var timer;
         if (!proc())
-          timer = setInterval(installer, interval);
-      }, // }}}
+          timer = setTimeout(installer, interval);
+      };
+
+      // closure {{{
+      let doc = self.elements.doc;
+      let interval = 500;
+      let counter = 20;
+      // }}}
+
+      return installer();
+    }, // }}}
 
     /*
      * リストページ用ファンクション
      */
     installListPageFunctions: function () { /// {
-/*
-      function proc () {
-        try {
-          if (--counter <= 0) {
-            AnkUtils.dump('installation failed: '+self.SITE_NAME+' list');
-            return true;
-          }
-
-          var body = doc.getElementsByTagName('body');
-
-          if (!((body && body.length>0) && doc.readyState === 'complete')) {
-            AnkUtils.dump('delay installation: '+self.SITE_NAME+' list remains '+counter);
-            return false;   // リトライしてほしい
-          }
-
-          // リスト表示が遅くてダウンロードマーク表示が漏れることがあるので、再度処理を実行
-          self.markDownloaded(doc,true);
-
-          AnkUtils.dump('installed: '+self.SITE_NAME+' list');
-        }
-        catch (e) {
-          AnkUtils.dumpError(e);
-        }
-        return true;
-      }
-
-      let installer = function () {
-        if (!proc())
-          return;
-
-        if (timer) {
-          clearInterval(timer);
-          timer = null;
-        }
-      };
-
-      //
-
-      var doc = self.elements.doc;
-      var counter = 20;
-      var interval = 500;
-      var timer;
-      if (!proc())
-        timer = setInterval(installer, interval);
-*/
+      // under construction
       AnkUtils.dump('installed: '+self.SITE_NAME+' list');
     }, // }}}
 

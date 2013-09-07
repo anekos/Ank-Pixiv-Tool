@@ -234,103 +234,105 @@ try {
      * 遅延インストールのためにクロージャに doc などを保存しておく
      */
     installMediumPageFunctions: function () { // {{{
-      function delay (msg, e) { // {{{
-        if (installTryed == 10) {
-          AnkUtils.dump(msg);
-          if (e)
-            AnkUtils.dumpError(e, AnkBase.Prefs.get('showErrorDialog'));
-        }
-        if (installTryed >= 20)
-          return;
-        setTimeout(installer, installInterval);
-        installTryed++;
-        AnkUtils.dump('tried: ' + installTryed);
-      } // }}}
-
-      // closure {{{
-      let installInterval = 500;
-      let installTryed = 0;
-      let doc = self.elements.doc;
-      // }}}
 
       let installer = function () { // {{{
-        try {
-          // インストールに必用な各種要素
-          try { // {{{
-            var body = doc.getElementsByTagName('body');
-            var wrapper = doc.getElementById('main');
-            var medImg = self.elements.illust.mediumImage;
-            var openComment = doc.querySelector('p.open');
-            var noComment = doc.querySelector('div.co2') || doc.querySelector('div#dojin_comment');
-          } catch (e) {
-            return delay("delay installation by error", e);
-          } // }}}
+        function proc () {
+          try {
+            if (counter-- <= 0) {
+              AnkUtils.dump('installation failed: '+self.SITE_NAME);
+              return true;
+            }
 
-          // 完全に読み込まれていないっぽいときは、遅延する
-          if (!((body && body.length>0) && wrapper && medImg && (openComment || noComment))) // {{{
-            return delay("delay installation by null");
-          // }}}
+            // インストールに必用な各種要素
+            try { // {{{
+              var body = doc.getElementsByTagName('body');
+              var wrapper = doc.getElementById('main');
+              var medImg = self.elements.illust.mediumImage;
+              var openComment = doc.querySelector('.open');
+              var noComment = doc.querySelector('.co2') || doc.querySelector('#dojin_comment');
+            } catch (e) {
+              AnkUtils.dumpError(e);
+              return true;
+            } // }}}
+  
+            // 完全に読み込まれていないっぽいときは、遅延する
+            if (!((body && body.length>0) && wrapper && medImg && (openComment || noComment))) { // {{{
+              AnkUtils.dump('delay installation: '+self.SITE_NAME+' remains '+counter);
+              return false;   // リトライしてほしい
+            } // }}}
 
-          // 大画像関係
-          if (AnkBase.Prefs.get('largeOnMiddle', true)) {
-            new AnkViewer(
-              self,
-              body[0],
-              wrapper,
-              openComment,
-              function () self.info.path.image.images
+            // 大画像関係
+            if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true)) {
+              new AnkViewer(
+                self,
+                body[0],
+                wrapper,
+                openComment,
+                function () self.info.path.image.images
+              );
+            }
+
+            // 中画像クリック時に保存する
+            if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
+              medImg.addEventListener(
+                'click',
+                function (e) {
+                  AnkBase.downloadCurrentImageAuto();
+                },
+                true
+              );
+            } // }}}
+
+            // レイティング("抜いた","いいね")によるダウンロード
+            (function () { // {{{
+              if (!AnkBase.Prefs.get('downloadWhenRate', false))
+                return;
+
+              ['a#nuita','a#good'].forEach(function (v) {
+                let e = doc.querySelector(v)
+                if (e) {
+                  e.addEventListener(
+                    'click',
+                    function () {
+                      AnkBase.downloadCurrentImageAuto();
+                    },
+                    true
+                  );
+                }
+              });
+            })(); // }}}
+
+            // 保存済み表示
+            AnkBase.insertDownloadedDisplayById(
+              self.elements.illust.downloadedDisplayParent,
+              self.info.illust.id,
+              self.SERVICE_ID,
+              self.info.illust.R18
             );
+  
+            // コメント欄を開く
+            if (openComment && AnkBase.Prefs.get('openComment', false)) // {{{
+              setTimeout(function () openComment.click(), 1000);
+            // }}}
+  
+            AnkUtils.dump('installed: '+self.SITE_NAME);
           }
+          catch (e) {
+            AnkUtils.dumpError(e);
+          }
+          return true;
+        } // }}}
 
-          // 中画像クリック時に保存する
-          if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
-            medImg.addEventListener(
-              'click',
-              function (e) {
-                AnkBase.downloadCurrentImageAuto();
-              },
-              true
-            );
-          } // }}}
+        //
+        if (!proc())
+          setTimeout(installer, interval);
+      };
 
-          // レイティング("抜いた","いいね")によるダウンロード
-          (function () { // {{{
-            if (!AnkBase.Prefs.get('downloadWhenRate', false))
-              return;
-
-            ['a#nuita','a#good'].forEach(function (v) {
-              let e = doc.querySelector(v)
-              if (e) {
-                e.addEventListener(
-                  'click',
-                  function () {
-                    AnkBase.downloadCurrentImageAuto();
-                  },
-                  true
-                );
-              }
-            });
-          })(); // }}}
-
-          // 保存済み表示
-          AnkBase.insertDownloadedDisplayById(
-            self.elements.illust.downloadedDisplayParent,
-            self.info.illust.id,
-            self.SERVICE_ID,
-            self.info.illust.R18
-          );
-
-          // コメント欄を開く
-          if (openComment && AnkBase.Prefs.get('openComment', false)) // {{{
-            setTimeout(function () openComment.click(), 1000);
-          // }}}
-
-          AnkUtils.dump('installed: '+self.SITE_NAME);
-
-        } catch (e) {
-          AnkUtils.dumpError(e);
-        }
-      }; // }}}
+      // closure {{{
+      let doc = self.elements.doc;
+      let interval = 500;
+      let counter = 20;
+      // }}}
 
       return installer();
     }, // }}}

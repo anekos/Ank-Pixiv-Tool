@@ -72,7 +72,7 @@ try {
 
     DOWNLOAD: {
       MAXRUNS: 1,
-      CLEANUP_INTERVAL: 15*1000,
+      CLEANUP_INTERVAL: 30*1000,
     },
 
     /********************************************************************************
@@ -681,11 +681,11 @@ try {
           context: context,
           useDialog: useDialog,
           debug: debug,
-          downloaded: 0,
-          queuein: new Date().getTime(),
-          start: undefined,
-          limit: undefined,
-          result: undefined,
+          downloaded: 0,                  // ダウンロードの完了した画像数
+          queuein: new Date().getTime(),  // キューに入れた時刻
+          start: undefined,               // ダウンロードを開始した時刻
+          limit: undefined,               // キューから追い出される時刻
+          result: undefined,              // ダウンロード結果
         };
         window.dispatchEvent(ev);
       }

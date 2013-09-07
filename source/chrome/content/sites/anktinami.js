@@ -215,42 +215,49 @@ try {
     /*
      * 遅延インストールのためにクロージャに doc などを保存しておく
      */
-      installMediumPageFunctions: function () { // {{{
+    installMediumPageFunctions: function () { // {{{
 
+      let installer = function () {
         function proc () {
           try {
-            if (--counter <= 0) {
+            if (counter-- <= 0) {
               AnkUtils.dump('installation failed: '+self.SITE_NAME);
               return true;
             }
-  
-            var body = doc.getElementsByTagName('body');
-            var wrapper = doc.getElementById('container');
-            var images = self.elements.illust.images;
-            var medImg = self.elements.illust.mediumImage;
-  
-            if (!((body && body.length>0) && wrapper && (images && images.length>0) && medImg)) {
+
+            try {
+              var body = doc.getElementsByTagName('body');
+              var wrapper = doc.getElementById('container');
+              var openComment = doc.querySelector('#show_all');
+              var images = self.elements.illust.images;
+              var medImg = self.elements.illust.mediumImage;
+              var jq = doc.defaultView.wrappedJSObject.jQuery;
+            } catch (e) {
+              AnkUtils.dumpError(e);
+              return true;
+            }
+
+            if (!((body && body.length>0) && wrapper && (images && images.length>0) && medImg && jq)) {
               AnkUtils.dump('delay installation: '+self.SITE_NAME+' remains '+counter);
               return false;   // リトライしてほしい
             }
-  
+
             // 大画像関係
-            if (AnkBase.Prefs.get('largeOnMiddle', true)) {
-              try {
-                // jQuery.click()をunbindする
-                let jq = doc.defaultView.wrappedJSObject.jQuery;
-                jq(doc).ready(function () {
+            if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true)) {
+              // jQuery.click()をunbindする
+              jq(doc).ready(function () {
+                try {
                   jq(medImg).unbind('click');
-                });
-              } catch (e) {
-                AnkUtils.dumpError(e);
-              }
+                } catch (e) {
+                  AnkUtils.dumpError(e);
+                }
+              });
 
               new AnkViewer(
                 self,
                 body[0],
                 wrapper,
-                null,
+                openComment,
                 function () self.info.path.image.images
               );
             }
@@ -273,7 +280,12 @@ try {
               self.SERVICE_ID,
               self.info.illust.R18
             );
-  
+
+            // 続きを表示
+            if (openComment && AnkBase.Prefs.get('openComment', false)) // {{{
+              setTimeout(function () openComment.click(), 1000);
+            // }}}
+
             AnkUtils.dump('installed: '+self.SITE_NAME);
           }
           catch (e) {
@@ -282,75 +294,68 @@ try {
           return true;
         }
 
-        let installer = function () {
-          if (!proc())
-            return;                 // 次回に続く
-
-          if (timer) {
-            clearInterval(timer);   // 今回で終了
-            timer = null;
-          }
-        };
-
         //
-
-        var doc = self.elements.doc;
-        var counter = 20;
-        let interval = 500;
-        var timer;
         if (!proc())
-          timer = setInterval(installer, interval);
-      }, // }}}
+          setTimeout(installer, interval);
+      };
+
+      // closure {{{
+      let doc = self.elements.doc;
+      let counter = 20;
+      let interval = 500;
+      // }}}
+
+      return installer();
+    }, // }}}
 
     /*
      * リストページ用ファンクション
      */
     installListPageFunctions: function () { /// {
 
-      function proc () {
-        try {
-          if (--counter <= 0) {
-            AnkUtils.dump('installation failed: '+self.SITE_NAME+' list');
-            return true;
+      function installer () {
+        function proc () {
+          try {
+            if (counter-- <= 0) {
+              AnkUtils.dump('installation failed: '+self.SITE_NAME+' list');
+              return true;
+            }
+
+            try {
+              var body = doc.getElementsByTagName('body');
+            } catch (e) {
+              AnkUtils.dumpError(e);
+              return true;
+            }
+
+            if (!((body && body.length>0) && doc.readyState === 'complete')) {
+              AnkUtils.dump('delay installation: '+self.SITE_NAME+' list remains '+counter);
+              return false;   // リトライしてほしい
+            }
+
+            // リスト表示が遅くてダウンロードマーク表示が漏れることがあるので、再度処理を実行
+            self.markDownloaded(doc,true);
+
+            AnkUtils.dump('installed: '+self.SITE_NAME+' list');
           }
-
-          var body = doc.getElementsByTagName('body');
-
-          if (!((body && body.length>0) && doc.readyState === 'complete')) {
-            AnkUtils.dump('delay installation: '+self.SITE_NAME+' list remains '+counter);
-            return false;   // リトライしてほしい
+          catch (e) {
+            AnkUtils.dumpError(e);
           }
-
-          // リスト表示が遅くてダウンロードマーク表示が漏れることがあるので、再度処理を実行
-          self.markDownloaded(doc,true);
-
-          AnkUtils.dump('installed: '+self.SITE_NAME+' list');
+          return true;
         }
-        catch (e) {
-          AnkUtils.dumpError(e);
-        }
-        return true;
+
+        //
+        if (!proc())
+          setTimeout(installer, interval);
       }
 
-      let installer = function () {
-        if (!proc())
-          return;
+      // closure {{{
+      let doc = self.elements.doc;
+      let counter = 20;
+      let interval = 500;
+      // }}}
 
-        if (timer) {
-          clearInterval(timer);
-          timer = null;
-        }
-      };
-
-      //
-
-      var doc = self.elements.doc;
-      var counter = 20;
-      var interval = 500;
-      var timer;
-      if (!proc())
-        timer = setInterval(installer, interval);
-      AnkUtils.dump('installed: '+self.SITE_NAME+' list');
+      return installer();
     }, // }}}
 
     /*

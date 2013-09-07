@@ -267,18 +267,6 @@ function AnkViewer (module, body, wrapper, openComment, getImages) {
   * viewerのコンポーネントの生成
   ********************************************************************************/
 
-  if (!wrapper) {
-    let childs = body.childNodes;
-    wrapper = doc.createElement('ank-wrapper');
-    AnkUtils.A(childs).
-      forEach(function (e) {
-        body.removeChild(e);
-        wrapper.appendChild(e);
-      }
-    );
-    body.appendChild(wrapper);
-  }
-
   let viewer = createElement('div', 'panel');
   let bigImg = createElement('img', 'image');
   let imgPanel = createElement('div', 'image-panel');

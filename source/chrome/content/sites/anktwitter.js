@@ -60,11 +60,11 @@ try {
 
     elements: (function () { // {{{
       function query (q)
-        self.elements.doc.querySelector(q);
+        self.elements.doc.querySelector(q)
 
       function queryEither (gQuery, tQuery)
         self.in.gallery ? illust.gallery.querySelector(gQuery) :
-                          (illust.tweet && illust.tweet.querySelector(tQuery));
+                          (illust.tweet && illust.tweet.querySelector(tQuery))
 
       let illust =  {
         get mediumImage ()
@@ -247,65 +247,68 @@ try {
      * 遅延インストールのためにクロージャに doc などを保存しておく
      */
     installMediumPageFunctions: function () { // {{{
-      function delay (msg, e) { // {{{
-        if (installTryed == 10) {
-          AnkUtils.dump(msg);
-          if (e)
-            AnkUtils.dumpError(e, AnkBase.Prefs.get('showErrorDialog'));
-        }
-        if (installTryed >= 20)
-          return;
-        setTimeout(installer, installInterval);
-        installTryed++;
-        AnkUtils.dump('tried: ' + installTryed);
-      } // }}}
-
-      // closure {{{
-      let installInterval = 500;
-      let installTryed = 0;
-      let doc = self.elements.doc;
-      // }}}
 
       let installer = function () { // {{{
-        try {
-          // インストールに必用な各種要素
-          try { // {{{
-            var body = doc.getElementsByTagName('body')[0];
-            var gallery = self.elements.illust.gallery;
-            var tweet = self.elements.illust.tweet;
-            var largeLink = self.elements.illust.largeLink;
-            var photoFrame = self.in.tweet ? self.elements.illust.photoFrame : null;
-          } catch (e) {
-            return delay("delay installation by error", e);
-          } // }}}
+        function proc () { // {{{
+          try {
+            if (counter-- <= 0) {
+              AnkUtils.dump('installation failed: '+self.SITE_NAME);
+              return true;
+            }
 
-          // 完全に読み込まれていないっぽいときは、遅延する
-          let cond = self.in.illustGrid ? true :
-                     photoFrame         ? self.elements.illust.photoImage :
-                                          largeLink;
-          if (!(body && cond))
-            return delay("delay installation by null");
+            // インストールに必用な各種要素
+            try { // {{{
+              var body = doc.getElementsByTagName('body')[0];
+              var gallery = self.elements.illust.gallery;
+              var tweet = self.elements.illust.tweet;
+              var largeLink = self.elements.illust.largeLink;
+              var photoFrame = self.in.tweet ? self.elements.illust.photoFrame : null;
+            } catch (e) {
+              AnkUtils.dumpError(e);
+              return true;
+            } // }}}
 
-          // viewerは作らない
+            // 完全に読み込まれていないっぽいときは、遅延する
+            let cond = self.in.illustGrid ? true :
+                       photoFrame         ? self.elements.illust.photoImage :
+                                            largeLink;
+            if (!(body && cond)) {
+              AnkUtils.dump('delay installation: '+self.SITE_NAME+' remains '+counter);
+              return false;   // リトライしてほしい
+            }
 
-          // 保存済み表示
-          if (!self.in.illustGrid) {
-            AnkBase.insertDownloadedDisplayById(
-              self.elements.illust.downloadedDisplayParent,
-              self.info.illust.id,
-              self.SERVICE_ID,
-              self.info.illust.R18
-            );
+            // viewerは作らない
+
+            // 保存済み表示
+            if (!self.in.illustGrid) {
+              AnkBase.insertDownloadedDisplayById(
+                self.elements.illust.downloadedDisplayParent,
+                self.info.illust.id,
+                self.SERVICE_ID,
+                self.info.illust.R18
+              );
+            }
+
+            // ギャラリー移動にあわせて保存済み表示 - under construction
+
+            AnkUtils.dump('installed: '+self.SITE_NAME);
           }
-
-          // ギャラリー移動にあわせて保存済み表示 - under construction
-
-          AnkUtils.dump('installed: '+self.SITE_NAME);
-
-        } catch (e) {
-          AnkUtils.dumpError(e);
+          catch (e) {
+            AnkUtils.dumpError(e);
+          }
+          return true;
         }
-      }; // }}}
+
+        //
+        if (!proc())
+          setTimeout(installer, interval);
+      };
+
+      // closure {{{
+      let doc = self.elements.doc;
+      let interval = 500;
+      let counter = 20;
+      // }}}
 
       return installer();
     }, // }}}
@@ -332,7 +335,7 @@ try {
      * その他
      ********************************************************************************/
 
-    rate: function (pt) { // {{{
+    rate: function () { // {{{
       return true;
     },
 
