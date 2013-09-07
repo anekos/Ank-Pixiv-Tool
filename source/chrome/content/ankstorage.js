@@ -171,12 +171,7 @@ try {
       }
       if (this.options.index) {
         for (let tableName in this.options.index) {
-          let self = this;
-          this.options.index[tableName].forEach(function (columnName) {
-            let indexName = tableName + '_index_' + columnName;
-            if (!self.database.indexExists(indexName))
-              self.database.executeSimpleSQL('create index ' + indexName + ' on ' + tableName + '(' + columnName + ');');
-          })
+          this.createIndexes(tableName, this.options.index[tableName]);
         }
       }
     }, // }}}
@@ -235,6 +230,28 @@ try {
       }
     }, // }}}
 
+    createIndexes: function(tableName, columns) {
+      let self = this;
+      columns.forEach(function (columnName) {
+        let indexName = self.indexName(tableName, columnName);
+        if (!self.database.indexExists(indexName))
+          self.database.executeSimpleSQL('create index ' + indexName + ' on ' + tableName + '(' + columnName + ');');
+      })
+    },
+
+    dropIndexes: function(tableName, columns) {
+      let self = this;
+      columns.forEach(function (columnName) {
+        let indexName = self.indexName(tableName, columnName);
+        if (self.database.indexExists(indexName))
+          self.database.executeSimpleSQL('drop index ' + indexName + ';');
+      })
+    },
+
+    indexName: function (tableName, columnName) { // {{{
+      return tableName + '_index_' + columnName.replace(/,/,'_');
+    }, // }}}
+
     delete: function (table, conditions) { // {{{
       let q = 'delete from ' + table + (conditions ? ' where ' + conditions : '');
       return this.database.executeSimpleSQL(q);
@@ -246,12 +263,24 @@ try {
       });
     }, // }}}
 
-    count: function (tableName) { // {{{
-      let query = 'select count(*) from ' + tableName;
+    count: function (tableName, conditions) { // {{{
+      let query = 'select count(*) from ' + tableName + (conditions ? ' where ' + conditions : '');
       return this.createStatement(query, function (stmt) {
         return stmt.executeStep() && stmt.getInt32(0);
       });
-    } // }}}
+    }, // }}}
+
+    setUserVersion: function (version) { // {{{
+      let query = 'pragma user_version = '+version;
+      return this.database.executeSimpleSQL(query);
+    }, // }}}
+
+    getUserVersion: function () { // {{{
+      let query = 'pragma user_version';
+      return this.createStatement(query, function (stmt) {
+        return stmt.executeStep() && stmt.getInt32(0);
+      });
+    }, // }}}
   };
 
 

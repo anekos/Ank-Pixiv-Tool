@@ -48,7 +48,7 @@ try {
       if (!opts.token)
         filename = filename.replace(/[\?]/g, '_');
       filename = filename.replace(/\.+$/, '');
-      return filename.replace(/[:;\*\"\<\>\|\#]/g, '_').replace(/\xa0/g, ' ').trim();
+      return filename.replace(/[:;\*\"\<\>\|\#]/g, '_').replace(/[\n\xa0]/g, ' ').trim();
     }, // }}}
 
     /*
@@ -160,9 +160,10 @@ try {
       }
     }, // }}}
 
-    dumpError: function (error, doAlert) { // {{{
+    dumpError: function (error, doAlert, added) { // {{{
       let msg = "\n<<ANK<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
       msg += this.errorToString(error) ;
+      msg += (added ? added+"\n" : '');
       msg += ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
 
       dump(msg);
@@ -199,9 +200,43 @@ try {
       return msg;
     }, // }}}
 
+    decodeDateTimeText: function (dtext) { // {{{
+      let m = dtext.match(/(\d+)\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})\D+?(\d{1,2})\s*[\u6642:\-]\s*(\d+)/);
+      let m2 = !m && dtext.match(/(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})\s*,\s*(\d{4})/);
+      let dd = new Date();
+      if (m) {
+        dd.setFullYear(parseInt(m[1]));
+        dd.setMonth(parseInt(m[2])-1);
+        dd.setDate(parseInt(m[3]));
+        dd.setHours(parseInt(m[4]));
+        dd.setMinutes(parseInt(m[5]));
+      } else if (m2) {
+        dd.setFullYear(parseInt(m2[3]));
+        dd.setMonth(parseInt(m2[1])-1);
+        dd.setDate(parseInt(m2[2]));
+        dd.setHours(0);
+        dd.setMinutes(0);
+      } else {
+        let dx = new Date(dtext);
+        if (dx) {
+          dd = dx;
+        } else {
+          AnkUtils.dump(self.SERVICE_ID+': unknown datetime format = '+dtext);
+        }
+      }
+
+      return {
+        year: AnkUtils.zeroPad(dd.getFullYear(), 4),
+        month: AnkUtils.zeroPad(dd.getMonth()+1, 2),
+        day: AnkUtils.zeroPad(dd.getDate(), 2),
+        hour: AnkUtils.zeroPad(dd.getHours(), 2),
+        minute: AnkUtils.zeroPad(dd.getMinutes(), 2),
+      };
+    }, // }}}
+
 
     /********************************************************************************
-      配列
+    * 配列
     ********************************************************************************/
 
     A: function (v) Array.slice(v),
@@ -290,7 +325,7 @@ try {
       xhr.open('HEAD', url, !!callback);
       xhr.onreadystatechange = function (e) {
         if (xhr.readyState == 4) {
-          callback(xhr.status == 200);
+          callback && callback(xhr.status == 200);
         }
       };
       xhr.send(null);
@@ -335,6 +370,24 @@ try {
       call();
    }, // }}}
 
+   httpGET: function (url,referer,params) { // {{{
+     let post = !!params;
+     let text = null;
+     let xhr = new XMLHttpRequest();
+     xhr.open((post ? 'POST' : 'GET'), url, false);
+     xhr.onreadystatechange = function () {
+       if (xhr.readyState == 4 && xhr.status == 200) {
+         text = xhr.responseText;
+       }
+     };
+     if (post)
+       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+     if (referer)
+       xhr.setRequestHeader('Referer', referer);
+     xhr.send(post ? params : null);
+
+     return text;
+   }, // }}}
 
     /********************************************************************************
     * 手抜き用関数
@@ -450,7 +503,13 @@ try {
       let temp = doc.createElement('div');
       temp.innerHTML = elem.innerHTML.replace(/<br[\s\/]*>/g, '\n');
       return temp.textContent;
-    } // }}}
+    }, // }}}
+
+    trackbackParentNode: function (node, n) { // {{{
+      for (let i = 0; node && i < n; i++)
+        node = node.parentNode;
+      return node;
+    }, // }}}
   };
 
 
@@ -498,7 +557,6 @@ try {
             break;
           case nsIPrefBranch.PREF_INT:
             return this.prefs.getIntPref(name);
-            break;
           case nsIPrefBranch.PREF_BOOL:
             return this.prefs.getBoolPref(name);
           default:
