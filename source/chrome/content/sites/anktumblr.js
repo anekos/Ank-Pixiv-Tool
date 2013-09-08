@@ -46,23 +46,35 @@ try {
         self.elements.doc.querySelectorAll(q)
 
       let illust =  {
-        get largeLink ()
-          let (e = query('.photo > div > a') || query('.post > a')) 
-            (e && e.href.match(/\.tumblr\.com\/image\//) && e),
+        get largeLink () {
+          let m;
+          [
+            query('.photo > div > a'),
+            query('.post > a'),
+            query('.photo > a'),
+          ] .
+          some(function (e) e && e.href.match(/\.tumblr\.com\/image\//) && !!(m = e));
+
+          return m;
+        },
 
         get mediumImage ()
           query('.photo > div > a > img') ||
-          query('.post > a > img'),
+          query('.post > a > img') ||
+          query('.photo > a > img'),
 
         get date ()
-          query('.date'),
+          query('.date') ||
+          query('.postmeta > a'),
 
         get title ()
           query('.caption > p') ||
-          query('.post > p+p'),
+          query('.post > p+p') ||
+          query('.photo > p+p'),
 
         get userName ()
-          query('.footer-content > h5'),
+          query('.footer-content > h5') ||
+          query('#header > h1 > a'),
 
         get memberLink ()
           let (e = query('#header > * > .profile-image'))
@@ -70,7 +82,8 @@ try {
 
         get wrapper ()
           query('.container.section') ||
-          query('#newDay'),
+          query('#newDay') ||
+          query('body'),
 
         // elements.illust中ではdownloadedDisplayParentのみankpixiv.jsから呼ばれるので必須、他はこのソース内でしか使わない
 
@@ -135,7 +148,7 @@ try {
           AnkBase.currentLocation,
 
         get title ()
-          AnkUtils.trim(self.elements.illust.title.textContent),
+          self.elements.illust.title && AnkUtils.trim(self.elements.illust.title.textContent),
 
         get comment ()
           illust.title,

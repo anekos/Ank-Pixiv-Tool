@@ -748,9 +748,6 @@ try {
                 AnkUtils.dump(msg);
               }
             });
-
-            return;
-
           } else if (typeof d.start === 'undefined') {
             // add download
             AnkBase.downloading.pages.push(d);

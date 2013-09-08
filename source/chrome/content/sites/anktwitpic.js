@@ -96,33 +96,8 @@ try {
         get id ()
           AnkBase.currentLocation.match(/^https?:\/\/twitpic\.com\/([^/]+)(?:\?|$)/)[1],
 
-        get dateTime () {
-          let dtext = self.elements.illust.datetime.textContent;
-          let diff = 0;         // 'less than a minute ago', etc.
-
-          let m = dtext.match(/(an?|\d+) (minute|hour|day)/)
-          if (m) {
-            let d = m[1].match(/an?/) ? 1 : m[1];
-            diff = 60 * 1000 * (
-              m[2] === 'day'  ? d*1440 :
-              m[2] === 'hour' ? d*60 :
-                                d);
-          } else if (!dtext.match(/less than a minute ago/)) {
-            AnkUtils.dump(self.SERVICE_ID+': unknown datetime format = '+dtext);
-          }
-
-          let dd = new Date();
-          if (diff)
-            dd.setTime(dd.getTime() - diff);
-
-          return {
-            year: AnkUtils.zeroPad(dd.getFullYear(), 4),
-            month: AnkUtils.zeroPad(dd.getMonth()+1, 2),
-            day: AnkUtils.zeroPad(dd.getDate(), 2),
-            hour: AnkUtils.zeroPad(dd.getHours(), 2),
-            minute: AnkUtils.zeroPad(dd.getMinutes(), 2),
-          };
-        },
+        get dateTime ()
+          AnkUtils.decodeDateTimeText(self.elements.illust.datetime.textContent),
 
         get size ()
           null,

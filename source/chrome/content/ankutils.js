@@ -201,28 +201,66 @@ try {
     }, // }}}
 
     decodeDateTimeText: function (dtext) { // {{{
-      let m = dtext.match(/(\d+)\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})\D+?(\d{1,2})\s*[\u6642:\-]\s*(\d+)/);
-      let m2 = !m && dtext.match(/(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})\s*,\s*(\d{4})/);
-      let dd = new Date();
-      if (m) {
-        dd.setFullYear(parseInt(m[1]));
-        dd.setMonth(parseInt(m[2])-1);
-        dd.setDate(parseInt(m[3]));
-        dd.setHours(parseInt(m[4]));
-        dd.setMinutes(parseInt(m[5]));
-      } else if (m2) {
-        dd.setFullYear(parseInt(m2[3]));
-        dd.setMonth(parseInt(m2[1])-1);
-        dd.setDate(parseInt(m2[2]));
-        dd.setHours(0);
-        dd.setMinutes(0);
-      } else {
-        let dx = new Date(dtext);
-        if (dx) {
-          dd = dx;
-        } else {
-          AnkUtils.dump(self.SERVICE_ID+': unknown datetime format = '+dtext);
-        }
+      // 年月日時分
+      function calc1 () {
+        let m = dtext.match(/(\d+)\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})\D+?(\d{1,2})\s*[\u6642:\-]\s*(\d+)/);
+        if (!m)
+          return;
+
+        d = new Date();
+        d.setFullYear(parseInt(m[1]));
+        d.setMonth(parseInt(m[2])-1);
+        d.setDate(parseInt(m[3]));
+        d.setHours(parseInt(m[4]));
+        d.setMinutes(parseInt(m[5]));
+
+        return d;
+      }
+
+      // 年月日
+      function calc2 () {
+        let m = dtext.match(/(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})\s*,\s*(\d{4})/)
+        if (!m)
+          return;
+
+        d = new Date();
+        d.setFullYear(parseInt(m[3]));
+        d.setMonth(parseInt(m[1])-1);
+        d.setDate(parseInt(m[2]));
+        d.setHours(0);
+        d.setMinutes(0);
+
+        return d;
+      }
+
+      // 相対表記
+      function calc3 () {
+        let m = dtext.match(/(an?|\d+) (minute|hour|day)/)
+        if (!m)
+          return;
+
+        let diff = 0;         // 'less than a minute ago', etc.
+        let d = m[1].match(/an?/) ? 1 : m[1];
+        diff = 60 * 1000 * (
+          m[2] === 'day'  ? d*1440 :
+          m[2] === 'hour' ? d*60 :
+                            d);
+
+        d = new Date();
+        if (diff)
+          d.setTime(d.getTime() - diff);
+
+        return d;
+      }
+
+      // 洋式
+      function calcx ()
+        new Date(dtext)
+
+      let dd = calc1() || calc2() || calc3() || calcx();
+      if (!dd) {
+        dd = new Date();
+        AnkUtils.dump(self.SERVICE_ID+': unknown datetime format = '+dtext);
       }
 
       return {
