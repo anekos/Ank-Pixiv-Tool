@@ -389,7 +389,7 @@ try {
               body,
               wrapper,
               openComment,
-              function () self.getImageInfo(false).images
+              function () self.getImageInfo(false)
             );
           }
 

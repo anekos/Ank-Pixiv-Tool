@@ -214,7 +214,7 @@ try {
                 body[0],
                 wrapper,
                 null,
-                function () self.info.path.image.images
+                function () self.info.path.image
               );
             }
   

@@ -258,7 +258,7 @@ try {
                 body[0],
                 wrapper,
                 openComment,
-                function () self.info.path.image.images
+                function () self.info.path.image
               );
             }
 

@@ -17,3 +17,5 @@ pref("extensions.ankpixiv.infoText.ignore",  "illust.width, illust.height, illus
 pref("extensions.ankpixiv.saveMeta", true);
 pref("extensions.ankpixiv.downloadOriginalSize", false);
 pref("extensions.ankpixiv.largeImageSize", 0);
+pref("extensions.ankpixiv.dontHidePanel", false);
+pref("extensions.ankpixiv.useFacingView", true);

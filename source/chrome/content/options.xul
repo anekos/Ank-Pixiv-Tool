@@ -95,6 +95,7 @@
         <preference id="large-image-size" name="extensions.ankpixiv.largeImageSize" type="int" />
         <preference id="dont-resize-if-small" name="extensions.ankpixiv.dontResizeIfSmall" type="bool" />
         <preference id="dont-hide-panel" name="extensions.ankpixiv.dontHidePanel" type="bool" />
+        <preference id="use-facing-view" name="extensions.ankpixiv.useFacingView" type="bool" />
       </preferences>
 
       <tabbox>
@@ -197,6 +198,7 @@
               </groupbox>
               <checkbox preference="open-comment" label="&openComment;" />
               <checkbox preference="dont-hide-panel" label="&dontHidePanel;" />
+              <checkbox preference="use-facing-view" label="&useFacingView;" />
             </vbox>
           </tabpanel>
         </tabpanels>

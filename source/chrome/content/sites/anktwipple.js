@@ -322,7 +322,6 @@ try {
       // }}}
 
       return installer();
-      AnkUtils.dump('installed: '+self.SITE_NAME+' list');
     }, // }}}
 
     /*
