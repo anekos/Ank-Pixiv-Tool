@@ -31,27 +31,31 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
   };
 
   // 大画像のロード
-  let loadBigImage = function (bigImg, pageno) {
-    fpImg.setAttribute('facing','');
+  let loadBigImage = function (pageno) {
+    function setImgSrc (is) {
+      if (is.length > 0)
+        bigImg.setAttribute('src', is[0]);
 
-    if (!facing) {
-      bigImg.setAttribute('src', images[pageno]);
-      return;
+      if (is.length > 1) {
+        fpImg.setAttribute('facing', 'true');
+        fpImg.setAttribute('src', is[1]);
+      }
     }
-    
+
+    fpImg.setAttribute('facing', '');
+
     let imgs = [];
-    facing.forEach(function (v,i) {
-      if (v == 1+pageno)
-        imgs.push(images[i]);
-    });
-
-    if (imgs.length > 0)
-      bigImg.setAttribute('src', imgs[0]);
-
-    if (imgs.length > 1) {
-      fpImg.setAttribute('src', imgs[1]);
-      fpImg.setAttribute('facing','true');
+    if (!facing) {
+      imgs.push(images[pageno]);
     }
+    else {
+      facing.forEach(function (v,i) {
+        if (v == 1+pageno)
+          imgs.push(images[i]);
+      });
+    }
+
+    setImgSrc(imgs);
   };
 
   // ボタンパネルを表示する
@@ -114,10 +118,11 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
 
       viewer.style.height = (ch > cvh ? ch : cvh) + 'px';
 
-      window.content.scrollTo(((cvw > cw) ? parseInt((cvw - cw) / 2) : 0), 0);
-
       bigImg.style.display = '';
-      fpImg.style.display = '';
+      if (fpImg.getAttribute('facing') === 'true')
+        fpImg.style.display = '';
+
+      window.content.scrollTo(((cvw > cw) ? parseInt((cvw - cw) / 2) : 0), 0);
     }
 
     if (!bigImg.complete || !fpImg.complete)
@@ -219,7 +224,7 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
 
       currentMangaPage = 0;
 
-      if (module.in.manga) {
+      if (module.in.manga && pageSelector.childNodes.length == 0) {
         for (let i = 0; i < totalMangaPages; i++) {
           let option = doc.createElement('option');
           option.textContent = (i + 1) + '/' + totalMangaPages;
@@ -230,7 +235,7 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
 
       body.style.backgroundImage = 'none';
       bigImg.style.display = fpImg.style.display = 'none';  // 最初の１枚は描画が完了するまで表示しない 
-      loadBigImage(bigImg, currentMangaPage);
+      loadBigImage(currentMangaPage);
       viewer.style.display = '';
       if (wrapper) {
         wrapper.setAttribute('style', 'opacity: 0.1;');
@@ -289,7 +294,7 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
       return changeImageSize();
     updateButtons();
     AnkUtils.dump('goto ' + num + ' page');
-    loadBigImage(bigImg, currentMangaPage);
+    loadBigImage(currentMangaPage);
   };
 
   // 次のページへ
