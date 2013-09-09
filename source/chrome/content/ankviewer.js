@@ -106,6 +106,7 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
       let ivw = parseInt(iw*p), ivh = parseInt(ih*p);
       let fvw = parseInt(fw*p), fvh = parseInt(fh*p);
       let cvw = (ivw+fvw), cvh = (ivh > fvh ? ivh : fvh);
+      let vh = ch > cvh ? ch : cvh;
 
       bigImg.style.width = ivw + 'px';
       bigImg.style.height = ivh + 'px';
@@ -114,21 +115,42 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
 
       imgContainer.style.width = cvw + 'px';
       imgContainer.style.height = cvh + 'px';
-      imgContainer.style.marginTop = ((ch > cvh) ? parseInt((ch - cvh) / 2) : 0)+ 'px';
+      imgContainer.style.setProperty('padding-top', ((ch > cvh) ? parseInt((ch - cvh) / 2) : 0)+ 'px');
 
-      viewer.style.height = (ch > cvh ? ch : cvh) + 'px';
+      viewer.style.height =  vh + 'px';
 
       bigImg.style.display = '';
       if (fpImg.getAttribute('facing') === 'true')
         fpImg.style.display = '';
 
-      window.content.scrollTo(((cvw > cw) ? parseInt((cvw - cw) / 2) : 0), 0);
+      // 表示位置を固定して、スクロールバーのon・offに操作を邪魔されないようにする
+      buttonPanel.style.setProperty('top', (ch - buttonPanel.clientHeight - scrollbarSize.height)+'px');
+
+      window.content.scrollTo(
+        (cvw > cw) ? parseInt((cvw - cw) / 2) : 0,
+        (pos.outside) ? vh + pos.Y : vh * pos.Y
+      );
     }
 
     if (!bigImg.complete || !fpImg.complete)
       return;
 
-    let cw = win.innerWidth - scrollbarSize, ch = win.innerHeight;
+    let cw = win.innerWidth - scrollbarSize.width,    // 横はスクロールバーを含まない幅が最大値
+        ch = win.innerHeight;
+
+    let (cvh = imgContainer.style.height && imgContainer.style.height.match(/(\d+)\s*px/) && RegExp.$1) {
+      pos.Y = window.content.scrollY;
+      let h =  (ch > cvh) ? ch : cvh;
+      if (pos.Y > h) {
+        pos.Y -= h;
+        pos.outside = true;
+      }
+      else {
+        pos.Y = (h > 0) ? pos.Y / h : 0;
+        pos.outside = false;
+      }
+    }
+
     let iw = bigImg.naturalWidth, ih = bigImg.naturalHeight;
     let fw = (fpImg.getAttribute('facing') === 'true' ? fpImg.naturalWidth : 0),
         fh = (fpImg.getAttribute('facing') === 'true' ? fpImg.naturalHeight : 0);
@@ -163,8 +185,10 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
   let delayResize = function () {
     if (!bigMode)
       return;
+
     if (qresize)
-      clearTimeout(qresize);
+      clearTimeout(qresize);  // 前のイベントはキャンセル
+
     qresize = setTimeout(function(e) {
       qresize = null;
       autoResize();
@@ -172,6 +196,25 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
   };
 
   let qresize;
+
+  // Fitボタンを押したらFit Modeを変更する
+  let rotateFitMode = function() {
+    function nextFitMode (fit) {
+      switch (fit) {
+      case AnkBase.FIT.IN_WINDOW_SIZE:
+        return AnkBase.FIT.IN_WINDOW_HEIGHT;
+      case AnkBase.FIT.IN_WINDOW_HEIGHT:
+        return AnkBase.FIT.IN_WINDOW_WIDTH;
+      case AnkBase.FIT.IN_WINDOW_WIDTH:
+        return AnkBase.FIT.NONE;
+      default:
+        return AnkBase.FIT.IN_WINDOW_SIZE;
+      }
+    }
+
+    fitMode = nextFitMode(fitMode);
+    autoResize();
+  };
 
   // 画像の読み込みに失敗した
   let loadError = function (e) {
@@ -186,8 +229,8 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
     changeImageSize();
   };
 
-  //
-  let clickedImg = function (e) {
+  // 大画像をクリックしたら次に行くか閉じる
+  let clickedBigImg = function () {
     if (module.in.manga && (currentMangaPage < totalMangaPages))
       goNextPage(1, false);
     else
@@ -213,6 +256,9 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
             (ad.style.display = ad.__ank_pixiv__style_display);
         });
 
+      // オープン時の位置に戻る
+      window.content.scrollTo(openpos.X, openpos.Y);
+
       return true;
     }
 
@@ -221,6 +267,14 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
         showButtons();
       else
         hideButtons();
+
+      // オープン時の位置を保存
+      openpos.X = window.content.scrollX;
+      openpos.Y = window.content.scrollY;
+
+      // 画像の表示開始位置をリセット
+      pos.Y = 0;
+      window.content.scrollTo(openpos.X, pos.Y);
 
       currentMangaPage = 0;
 
@@ -277,8 +331,6 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
           facing = null;
           totalMangaPages = images.length;
         }
-
-        scrollbarSize = AnkUtils.scrollbarSize;
       }
 
       show();
@@ -312,7 +364,7 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
     }
   };
 
-  let updateButtons = function (v) {
+  let updateButtons = function () {
     (pageSelector.value = currentMangaPage);
   };
 
@@ -331,17 +383,19 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
   let currentMangaPage = 0;
   let fitMode = AnkBase.Prefs.get('largeImageSize', AnkBase.FIT.NONE);
   let bigMode = false;
-  let scrollbarSize;
+  let pos = {};
+  let openpos = {};
+  let scrollbarSize = AnkUtils.scrollbarSize;
   // }}}
 
   /********************************************************************************
-  * viewerのコンポーネントの生成
+  * コンポーネントの生成
   ********************************************************************************/
 
   let viewer = createElement('div', 'panel');
   let bigImg = createElement('img', 'image');
   let fpImg = createElement('img', 'image');
-  let imgContainer = createElement('div', 'container');
+  let imgContainer = createElement('div', 'image-container');
   let imgPanel = createElement('div', 'image-panel');
   let buttonPanel = createElement('div', 'button-panel');
   let prevButton = createElement('button', 'previous-button');
@@ -355,10 +409,10 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
   nextButton.innerHTML = '>>';
   resizeButton.innerHTML = 'RESIZE';
   closeButton.innerHTML = '\xD7';
-  buttonPanel.setAttribute('style', 'position: fixed !important; bottom: 0px; width: 100%; opacity: 0; z-index: 666');
-  bigImg.setAttribute('style', 'margin: 0px');
-  fpImg.setAttribute('style', 'margin: 0px');
-  imgContainer.setAttribute('style', 'margin: 0px auto 0px auto; background: #FFFFFF');
+  buttonPanel.setAttribute('style', 'position: fixed !important; width: 100%; opacity: 0; z-index: 666');
+  bigImg.setAttribute('style', 'margin: 0px; background: #FFFFFF');
+  fpImg.setAttribute('style', 'margin: 0px; background: #FFFFFF');
+  imgContainer.setAttribute('style', 'margin: auto');
   imgPanel.setAttribute('style', 'margin: 0px');
 
   [prevButton, nextButton, resizeButton, closeButton].forEach(function (button) {
@@ -369,7 +423,9 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
   /*
    * viewer
    *    - imgPanel
-   *      - bigImg
+   *      - imgContainer
+   *        - fpImg
+   *        - bigImg
    *    - buttonPanel
    *      - pageSelector
    *      - prevButton
@@ -395,7 +451,9 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
     buttonPanel.appendChild(resizeButton);
     buttonPanel.appendChild(closeButton);
   }
+
   body.insertBefore(viewer, body.firstChild);
+
 
   /********************************************************************************
   * イベントリスナーの設定
@@ -406,13 +464,7 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
     AnkUtils.A(imgPanel.querySelectorAll('#ank-pixiv-large-viewer-image')).forEach(function (e) func(e))
 
   // 中画像をクリックしたら開く
-  medImg.addEventListener(
-    'click',
-    function (e) {
-      noMoreEvent(changeImageSize)(e);
-    },
-    false
-  );
+  medImg.addEventListener('click', function (e) noMoreEvent(changeImageSize)(e), false);
 
   // 画像を読み込んだら表示サイズの調整を行う
   imgCtrl(function (e) e.addEventListener('load', autoResize, true));
@@ -421,7 +473,7 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
   imgCtrl(function (e) e.addEventListener('error', loadError, true));
 
   // 大画像をクリックしたら、状態に応じてページを進めたり閉じたりする
-  imgCtrl(function (e) e.addEventListener('click', noMoreEvent(clickedImg), false));
+  imgCtrl(function (e) e.addEventListener('click', noMoreEvent(clickedBigImg), false));
 
   // ボタンパネルの出し入れ
   buttonPanel.addEventListener('mouseover', showButtons, false);
@@ -431,38 +483,14 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
   prevButton.addEventListener('click', noMoreEvent(function () goNextPage(-1, true)), false);
   nextButton.addEventListener('click', noMoreEvent(function () goNextPage(1, true)), false);
 
-  // 大画像をリサイズする
-  resizeButton.addEventListener(
-    'click',
-    noMoreEvent(function() {
-      function rotateFitMode (fit) {
-        switch (fit) {
-        case AnkBase.FIT.IN_WINDOW_SIZE:
-          return AnkBase.FIT.IN_WINDOW_HEIGHT;
-        case AnkBase.FIT.IN_WINDOW_HEIGHT:
-          return AnkBase.FIT.IN_WINDOW_WIDTH;
-        case AnkBase.FIT.IN_WINDOW_WIDTH:
-          return AnkBase.FIT.NONE;
-        default:
-          return AnkBase.FIT.IN_WINDOW_SIZE;
-        }
-      }
-
-      fitMode = rotateFitMode(fitMode);
-      autoResize();
-    }),
-    false
-  );
+  // リサイズ方法を変更する
+  resizeButton.addEventListener('click', noMoreEvent(rotateFitMode), false);
 
   // 大画像を閉じる
   closeButton.addEventListener('click', noMoreEvent(changeImageSize), false);
 
   // ページを番号で選択
-  pageSelector.addEventListener(
-    'change',
-    noMoreEvent(function () goPage(parseInt(pageSelector.value, 10))),
-    true
-  );
+  pageSelector.addEventListener('change', noMoreEvent(function () goPage(parseInt(pageSelector.value, 10))), true);
 
   // セレクタをクリックしても何も実行させない
   pageSelector.addEventListener('click', noMoreEvent(function () void 0), false);
@@ -480,8 +508,8 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
   // ウィンドウサイズにあわせて画像をリサイズする
   win.addEventListener('resize', delayResize, false);
 
-  // 大画像のロードのブログレスエフェクト
-  if (!AnkBase.Prefs.get('dontShowImageLoadProgress', false) && MutationObserver) {
+  // 画像の読込中エフェクト
+  if (AnkBase.Prefs.get('useLoadProgress', true) && MutationObserver) {
     let loadingFunc = function () {
       imgCtrl(function (e) e.style.setProperty('opacity', '0.5', 'important'));
     };

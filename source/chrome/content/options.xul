@@ -96,6 +96,7 @@
         <preference id="dont-resize-if-small" name="extensions.ankpixiv.dontResizeIfSmall" type="bool" />
         <preference id="dont-hide-panel" name="extensions.ankpixiv.dontHidePanel" type="bool" />
         <preference id="use-facing-view" name="extensions.ankpixiv.useFacingView" type="bool" />
+        <preference id="use-load-progress" name="extensions.ankpixiv.useLoadProgress" type="bool" />
       </preferences>
 
       <tabbox>
@@ -199,6 +200,7 @@
               <checkbox preference="open-comment" label="&openComment;" />
               <checkbox preference="dont-hide-panel" label="&dontHidePanel;" />
               <checkbox preference="use-facing-view" label="&useFacingView;" />
+              <checkbox preference="use-load-progress" label="&useLoadProgress;" />
             </vbox>
           </tabpanel>
         </tabpanels>

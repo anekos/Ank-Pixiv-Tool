@@ -340,14 +340,16 @@ try {
       s.position = 'fixed';
       s.left = s.top = '-200px';
       s.height = s.width = '100px';
-      s.overflowY = 'scroll';
+      s.overflowX = s.overflowY = 'scroll';
       doc.body.appendChild(div);
-      let result = 100 - div.clientWidth;
+      let result = {
+          width: 100 - div.clientWidth,
+          height: 100 - div.clientHeight,
+      };
       doc.body.removeChild(div);
       AnkUtils.__defineGetter__('scrollbarSize', function () result);
       return result;
     }, // }}}
-
 
     /********************************************************************************
     * ネットワーク
