@@ -409,7 +409,7 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
   nextButton.innerHTML = '>>';
   resizeButton.innerHTML = 'RESIZE';
   closeButton.innerHTML = '\xD7';
-  buttonPanel.setAttribute('style', 'position: fixed !important; width: 100%; opacity: 0; z-index: 666');
+  buttonPanel.setAttribute('style', 'position: fixed !important; width: 100%; opacity: 0; z-index: 666; text-align: center');
   bigImg.setAttribute('style', 'margin: 0px; background: #FFFFFF');
   fpImg.setAttribute('style', 'margin: 0px; background: #FFFFFF');
   imgContainer.setAttribute('style', 'margin: auto');
@@ -417,7 +417,7 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
 
   [prevButton, nextButton, resizeButton, closeButton].forEach(function (button) {
     button.setAttribute('class', 'submit_btn');
-    button.setAttribute('style', 'width: 100px !important');
+    button.setAttribute('style', 'width: 100px !important; text-align: center');
   });
 
   /*

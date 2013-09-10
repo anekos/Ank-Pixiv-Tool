@@ -214,19 +214,27 @@ try {
               var medImg = self.elements.illust.mediumImage;
               var container = doc.getElementById('img_overlay_container');
               var wrapper = doc.getElementById('wrapper');
-              var jq = doc.defaultView.wrappedJSObject.jQuery;
             } catch (e) {
               AnkUtils.dumpError(e);
               return true;
             } // }}}
 
             // 完全に読み込まれていないっぽいときは、遅延する
-            if (!((body && body.length>0) && largeLink && medImg && wrapper && jq)) { // {{{
+            if (!((body && body.length>0) && largeLink && medImg && wrapper)) { // {{{
               AnkUtils.dump('delay installation: '+self.SITE_NAME+' remains '+counter);
               return false;   // リトライしてほしい
             } // }}}
 
-            // viewerは作らない
+            // TODO javascript有効時は、タブのload完了時にサイト側からbindされるので、ここでunbindしても効果がない。保留
+            if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true)) {
+              new AnkViewer(
+                self,
+                body[0],
+                wrapper,
+                null,
+                function () self.info.path.image
+              );
+            }
 
             // 中画像クリック時に保存する
             if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{

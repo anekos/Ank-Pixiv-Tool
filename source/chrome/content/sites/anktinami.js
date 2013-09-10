@@ -231,13 +231,12 @@ try {
               var openComment = doc.querySelector('#show_all');
               var images = self.elements.illust.images;
               var medImg = self.elements.illust.mediumImage;
-              var jq = doc.defaultView.wrappedJSObject.jQuery;
             } catch (e) {
               AnkUtils.dumpError(e);
               return true;
             }
 
-            if (!((body && body.length>0) && wrapper && (images && images.length>0) && medImg && jq)) {
+            if (!((body && body.length>0) && wrapper && (images && images.length>0) && medImg)) {
               AnkUtils.dump('delay installation: '+self.SITE_NAME+' remains '+counter);
               return false;   // リトライしてほしい
             }
@@ -245,13 +244,16 @@ try {
             // 大画像関係
             if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true)) {
               // jQuery.click()をunbindする
-              jq(doc).ready(function () {
-                try {
-                  jq(medImg).unbind('click');
-                } catch (e) {
-                  AnkUtils.dumpError(e);
-                }
-              });
+              let jq = doc.defaultView.wrappedJSObject.jQuery;
+              if (jq) {
+                jq(doc).ready(function () {
+                  try {
+                    jq(medImg).unbind('click');
+                  } catch (e) {
+                    AnkUtils.dumpError(e);
+                  }
+                });
+              }
 
               new AnkViewer(
                 self,

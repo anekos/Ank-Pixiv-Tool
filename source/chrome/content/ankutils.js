@@ -260,7 +260,7 @@ try {
       let dd = calc1() || calc2() || calc3() || calcx();
       if (!dd) {
         dd = new Date();
-        AnkUtils.dump(self.SERVICE_ID+': unknown datetime format = '+dtext);
+        AnkUtils.dump('unknown datetime format = '+dtext);
       }
 
       return {
