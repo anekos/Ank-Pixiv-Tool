@@ -1072,6 +1072,7 @@ try {
      * ダウンロード済みの表示をページに挿入する
      *    appendTo:     追加先の要素
      *    R18:          イラストはR18か？
+     *    mode:         メッセージ本文　※nullの場合は削除
      */
     insertDownloadedDisplay: function (appendTo, R18, mode) { // {{{
       if (!AnkBase.Prefs.get('displayDownloaded', true))
@@ -1094,6 +1095,9 @@ try {
       var elm = doc.getElementById(ElementID);
       if (elm)
         elm.parentNode.removeChild(elm);
+
+      if (!mode)
+        return; // 表示削除
 
       let div = doc.createElement('div');
       let textNode = doc.createElement(R18 ? 'blink' : 'textnode');
@@ -1121,6 +1125,12 @@ try {
           appendTo,
           R18,
           AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED
+        );
+      } else {
+        AnkBase.insertDownloadedDisplay(
+          appendTo,
+          R18,
+          null
         );
       } // }}}
     }, // }}}
@@ -1466,7 +1476,7 @@ try {
         '  background-color: pink !important;',
         '}',
         '.ank-pixiv-tool-downloaded-overlay {',
-        '  opacity: 0.5 !important;',
+        '  opacity: 0.3 !important;',
         '  border-width: thick;',
         '  border-color: red;',
         '  border-top-style: double;',
@@ -1479,7 +1489,7 @@ try {
         '  background-color: lime !important;',
         '}',
         '.ank-pixiv-tool-downloading-overlay {',
-        '  opacity: 0.5 !important;',
+        '  opacity: 0.3 !important;',
         '  border-width: thick;',
         '  border-color: green;',
         '  border-top-style: double;',

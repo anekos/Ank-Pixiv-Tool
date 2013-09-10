@@ -235,16 +235,18 @@ try {
 
       // 相対表記
       function calc3 () {
-        let m = dtext.match(/(an?|\d+) (minute|hour|day)/)
+        let m = dtext.match(/(an?|\d+) (minute|hour|day|month|year)/)
         if (!m)
           return;
 
         let diff = 0;         // 'less than a minute ago', etc.
         let d = m[1].match(/an?/) ? 1 : m[1];
         diff = 60 * 1000 * (
-          m[2] === 'day'  ? d*1440 :
-          m[2] === 'hour' ? d*60 :
-                            d);
+          m[2] === 'year'  ? d*1440*365 :
+          m[2] === 'month' ? d*1440*31 :
+          m[2] === 'day'   ? d*1440 :
+          m[2] === 'hour'  ? d*60 :
+                             d);
 
         d = new Date();
         if (diff)

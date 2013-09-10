@@ -134,13 +134,19 @@ try {
     info: (function () { // {{{
       let illust = {
         get id () {
-          let v = self.elements.illust.largeLink.getAttribute('data-url');  // pic.twitter
-          if (v && v.match(/^https?:\/\/pbs\.twimg\.com\/media\/([^/]+?)\./))
-            return RegExp.$1;
+          let e = self.elements.illust.largeLink;
+          if (!e)
+            return null;
 
-          v = self.elements.illust.largeLink.href;  // ツイート
-          if (v && v.match(/\/([^/]+)(?:\?|$)/))
-            return RegExp.$1;
+          let (v = e.getAttribute('data-url')) {  // pic.twitter
+            if (v && v.match(/^https?:\/\/pbs\.twimg\.com\/media\/([^/]+?)\./))
+              return RegExp.$1;
+          };
+
+          let (v = e.href) {  // ツイート
+            if (v && v.match(/\/([^/]+)(?:\?|$)/))
+              return RegExp.$1;
+          };
 
           return null;
         },  // いずれも 'http://t.co/'+id で作品のページに飛べる
@@ -289,8 +295,6 @@ try {
               );
             }
 
-            // ギャラリー移動にあわせて保存済み表示 - under construction
-
             AnkUtils.dump('installed: '+self.SITE_NAME);
           }
           catch (e) {
@@ -318,6 +322,22 @@ try {
      */
     installListPageFunctions: function () { /// {
       // 実装しない（外部の画像サービスを使っていると、DOMの情報とillust_idを関連付けしづらいため）
+
+      // ギャラリーの移動時に保存済み表示を行う
+      let tw = self.elements.doc.querySelector('.tweet-inverted');
+      if (tw && MutationObserver) {
+        new MutationObserver(function (o) {
+          if (!self.info.illust.id)
+            return;
+          AnkBase.insertDownloadedDisplayById(
+            self.elements.illust.downloadedDisplayParent,
+            self.info.illust.id,
+            self.SERVICE_ID,
+            self.info.illust.R18
+          );
+        }).observe(tw, {childList: true});
+      }
+
       AnkUtils.dump('installed: '+self.SITE_NAME+' list');
     }, // }}}
 
