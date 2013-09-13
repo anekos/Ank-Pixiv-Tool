@@ -337,7 +337,7 @@ try {
      * 保存する対象にあわせてファイル名テンプレートを整形する
      */
     fixPageNumberToken: function (filenames, isFile) {
-      return filenames.map(
+      return filenames.map(function (filename) filename.replace(/\s*\?page-number\?\s*/g, '')).map(
         function (filename)
           (isFile)                           ? filename.replace(/[/\\]?\s*#page-number#\s*/g, '') :
           (!filename.match(/#page-number#/)) ? filename+"/#page-number#" :
@@ -600,7 +600,7 @@ try {
      *    onComplete      終了時のアラート
      * 複数のファイルをダウンロードする
      */
-    downloadFiles: function (urls, referer, prefInitDir, localdir, metatext, fp, download, onComplete, onError) { // {{{
+    downloadFiles: function (urls, referer, prefInitDir, localdir, fp, download, onComplete, onError) { // {{{
       const MAX_FILE = 1000;
 
       let index = 0;
@@ -610,11 +610,6 @@ try {
       //localdir.exists() || localdir.create(localdir.DIRECTORY_TYPE, 0755);
 
       function _onComplete () {
-        let (p = AnkBase.getSaveMangaPath(localdir.path, '.txt')) {
-          metatext.initWithPath(p.path);
-          metatext.append(p.name);
-        }
-
         return onComplete.apply(null, arguments);
       }
 
@@ -1112,7 +1107,7 @@ try {
         AnkBase.clearMarkedFlags();
 
         if (context.in.manga) {
-          AnkBase.downloadFiles(images, ref, prefInitDir, destFiles.image, destFiles.meta, facing, download, onComplete, onError);
+          AnkBase.downloadFiles(images, ref, prefInitDir, destFiles.image, facing, download, onComplete, onError);
         }
         else {
           AnkBase.downloadToRetryable(images[0], AnkBase.RETRY.MAXTIMES, ref, prefInitDir, destFiles.image, download, onComplete, onError);
