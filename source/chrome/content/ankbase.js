@@ -317,6 +317,60 @@ try {
     }, // }}}
 
     /*
+     * invalidPageNumberToken
+     *    filenames:          ファイル名テンプレートのリスト
+     *    return:             不正なファイル名のテンプレート
+     * ファイル名テンプレートに、パスの最後以外に #page-number# の指定のあるものが存在していたら、そのテンプレートの値を返す
+     */
+    invalidPageNumberToken: function(filenames) {
+      let invalid = null;
+      filenames.some(function (f)
+        let (a = f.split(/[/\\]/))
+          a.some(function (v,i) (i < a.length-1) && v.match(/#page-number#/)) && (invalid = f)
+      );
+      return invalid;
+    },
+
+    /*
+     * fixPageNumberToken
+     *    filenames:          ファイル名のテンプレートのリスト
+     * 保存する対象にあわせてファイル名テンプレートを整形する
+     */
+    fixPageNumberToken: function (filenames, isFile) {
+      return filenames.map(
+        function (filename)
+          (isFile)                           ? filename.replace(/[/\\]?\s*#page-number#\s*/g, '') :
+          (!filename.match(/#page-number#/)) ? filename+"/#page-number#" :
+                                               filename
+      );
+    },
+
+    /*
+     * getSaveMangaPath
+     *    path:               ファイル名のテンプレート
+     *    ext:                拡張子
+     *    imgno:              ファイル通番
+     *    pageno:             ページ番号
+     *    return:             {path: パス（ファイル名は含まない）, name: ファイル名}
+     * マンガ形式の保存のためにパス指定中の　#page-number#　をページ番号に置換して返す
+     */
+    getSaveMangaPath: function (path, ext, imgno, pageno) {
+      let ps = path.split(/[/\\]/);
+      let name = ps.pop();
+      if (imgno) {
+        let imgNumber = AnkUtils.zeroPad(imgno, 2);
+        let pageNumber = pageno ? (AnkUtils.zeroPad(pageno, 2) + '_') : '';
+        name = name.replace(/#page-number#/,pageNumber+imgNumber);
+      }
+      else {
+        name = name.replace(/\s*#page-number#\s*/,'');
+        if (name === '')
+          name = 'meta';
+      }
+      return { path: ps.join(AnkUtils.SYS_SLASH), name: name+ext};
+    },
+
+    /*
      * getSaveFilePath
      *    prefInitDir:        出力先ベースディレクトリ
      *    filenames:          ファイル名の候補のリスト(一個以上必須)
@@ -327,20 +381,27 @@ try {
      * ファイルを保存すべきパスを返す
      * 設定によっては、ダイアログを表示する
      */
-    getSaveFilePath: function (prefInitDir, filenames, ext, useDialog, isFile) { // {{{
+    getSaveFilePath: function (prefInitDir, filenames, ext, useDialog, isFile, facing) { // {{{
       function _file (initDir, basename, ext, isMeta) {
         // TODO File#join
-        let filename = (isMeta && !isFile) ? basename + AnkUtils.SYS_SLASH + 'meta.txt' : basename + ext;
-        let url =   initDir + AnkUtils.SYS_SLASH + filename;
+        let filename = isFile ? basename + ext :
+                                let (p = isMeta ? AnkBase.getSaveMangaPath(basename,ext) :
+                                                  AnkBase.getSaveMangaPath(basename,ext,1,facing ? facing[0] : undefined))
+                                  p.path + AnkUtils.SYS_SLASH + p.name;
+        let filepath = initDir + AnkUtils.SYS_SLASH + filename;
+        let url = (isFile || isMeta) ? filepath :
+                                       initDir + AnkUtils.SYS_SLASH + basename;
         return {
           filename: filename,
-          url: url,
+          filepath: filepath,   // マンガ形式の場合、１ページ目の画像のパス
+          url: url,             // マンガ形式の場合、初期パス＋ファイル名テンプレート
           file: AnkBase.newLocalFile(url)
         };
       }
 
       function _exists (file)
-        (file.file.exists() || AnkBase.filenameExists(file.filename))
+        let (f = isFile ? file.file : AnkBase.newLocalFile(file.filepath))
+          (f.exists() || AnkBase.filenameExists(file.filename))
 
       try {
         let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
@@ -515,6 +576,9 @@ try {
      * テキストをローカルに保存します。
      */
     saveTextFile: function (file, text) { // {{{
+
+      AnkUtils.dump('SAVE => ' + file.path);
+
       let dir = file.parent;
       dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
 
@@ -536,7 +600,7 @@ try {
      *    onComplete      終了時のアラート
      * 複数のファイルをダウンロードする
      */
-    downloadFiles: function (urls, referer, prefInitDir, localdir, fp, download, onComplete, onError) { // {{{
+    downloadFiles: function (urls, referer, prefInitDir, localdir, metatext, fp, download, onComplete, onError) { // {{{
       const MAX_FILE = 1000;
 
       let index = 0;
@@ -546,7 +610,11 @@ try {
       //localdir.exists() || localdir.create(localdir.DIRECTORY_TYPE, 0755);
 
       function _onComplete () {
-        arguments[0] = localdir.path;
+        let (p = AnkBase.getSaveMangaPath(localdir.path, '.txt')) {
+          metatext.initWithPath(p.path);
+          metatext.append(p.name);
+        }
+
         return onComplete.apply(null, arguments);
       }
 
@@ -592,7 +660,11 @@ try {
         let fileExt =
           let (m = url.match(/(\.\w+)(?:$|\?)/))
             ((m && m[1]) || '.jpg');
-        file.append(((fp!=null)?(AnkUtils.zeroPad(fp[index], 2) + '_'):'') + AnkUtils.zeroPad(index + 1, 2) + fileExt);
+
+        let (p = AnkBase.getSaveMangaPath(file.path, fileExt, index+1, fp ? fp[index] : undefined)) {
+          file.initWithPath(p.path);
+          file.append(p.name);
+        }
 
         lastFile = file;
         index++;
@@ -911,7 +983,7 @@ try {
           }
           filenames.push(repl(defaultFilename));
           filenames.push(repl(alternateFilename));
-          filenames = filenames.map(function (filename) filename.replace(/\s*\?page-number\?\s*/g, ''));
+
           if (debug) {
             let tokens = [
               'site-name     = ?site-name?',
@@ -1021,8 +1093,17 @@ try {
           AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.FAILED);
         };
 
+        let (invalid = AnkBase.invalidPageNumberToken(filenames)) {
+          if (invalid) {
+            window.alert(AnkBase.Locale('invalidPageNumberToken')+" : \n "+invalid);
+            AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.FAILED);
+            return;
+          }
+        }
+        filenames = AnkBase.fixPageNumberToken(filenames, !context.in.manga);
+
         // XXX 前方で宣言済み
-        destFiles = AnkBase.getSaveFilePath(prefInitDir, filenames, context.in.manga ? '' : ext, useDialog, !context.in.manga);
+        destFiles = AnkBase.getSaveFilePath(prefInitDir, filenames, ext, useDialog, !context.in.manga, facing);
         if (!destFiles) {
           AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.FAILED);
           return;
@@ -1031,7 +1112,7 @@ try {
         AnkBase.clearMarkedFlags();
 
         if (context.in.manga) {
-          AnkBase.downloadFiles(images, ref, prefInitDir, destFiles.image, facing, download, onComplete, onError);
+          AnkBase.downloadFiles(images, ref, prefInitDir, destFiles.image, destFiles.meta, facing, download, onComplete, onError);
         }
         else {
           AnkBase.downloadToRetryable(images[0], AnkBase.RETRY.MAXTIMES, ref, prefInitDir, destFiles.image, download, onComplete, onError);
