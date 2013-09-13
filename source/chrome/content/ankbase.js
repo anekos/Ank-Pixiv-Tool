@@ -381,12 +381,12 @@ try {
      * ファイルを保存すべきパスを返す
      * 設定によっては、ダイアログを表示する
      */
-    getSaveFilePath: function (prefInitDir, filenames, ext, useDialog, isFile, facing) { // {{{
+    getSaveFilePath: function (prefInitDir, filenames, ext, useDialog, isFile, lastImgno, lastPageno) { // {{{
       function _file (initDir, basename, ext, isMeta) {
         // TODO File#join
         let filename = isFile ? basename + ext :
-                                let (p = isMeta ? AnkBase.getSaveMangaPath(basename,ext) :
-                                                  AnkBase.getSaveMangaPath(basename,ext,1,facing ? facing[0] : undefined))
+                                let (p = isMeta ? AnkBase.getSaveMangaPath(basename, ext) :
+                                                  AnkBase.getSaveMangaPath(basename, ext, lastImgno, lastPageno))
                                   p.path + AnkUtils.SYS_SLASH + p.name;
         let filepath = initDir + AnkUtils.SYS_SLASH + filename;
         let url = (isFile || isMeta) ? filepath :
@@ -399,12 +399,13 @@ try {
         };
       }
 
-      function _exists (file)
-        let (f = isFile ? file.file : AnkBase.newLocalFile(file.filepath))
-          (f.exists() || AnkBase.filenameExists(file.filename))
+      function _exists (file) {
+        let f = isFile ? file.file : AnkBase.newLocalFile(file.filepath);
+        return (f.exists() || AnkBase.filenameExists(AnkUtils.getRelativePath(f.path, prefInitDir)));
+      }
 
       try {
-        let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
+        //let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
         let initDir = AnkBase.newLocalFile(prefInitDir);
 
         if (!initDir.exists())
@@ -1098,7 +1099,7 @@ try {
         filenames = AnkBase.fixPageNumberToken(filenames, !context.in.manga);
 
         // XXX 前方で宣言済み
-        destFiles = AnkBase.getSaveFilePath(prefInitDir, filenames, ext, useDialog, !context.in.manga, facing);
+        destFiles = AnkBase.getSaveFilePath(prefInitDir, filenames, ext, useDialog, !context.in.manga, images.length, facing ? facing[facing.length-1] : undefined);
         if (!destFiles) {
           AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.FAILED);
           return;
