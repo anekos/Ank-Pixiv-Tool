@@ -41,7 +41,7 @@ function AnkContext (module) {
   self.info = {
     illust: {
       pageUrl:
-        AnkBase.currentLocation,
+        module.info.illust.pageUrl,
 
       id:
         module.info.illust.id,
@@ -65,7 +65,7 @@ function AnkContext (module) {
         module.info.illust.width,
 
       height:
-        module.info.illust.width,
+        module.info.illust.height,
 
       server:
         module.info.illust.server,

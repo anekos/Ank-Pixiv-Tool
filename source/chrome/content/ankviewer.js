@@ -33,12 +33,15 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
   // 大画像のロード
   let loadBigImage = function (pageno) {
     function setImgSrc (is) {
-      if (is.length > 0)
+      if (is.length > 0) {
         bigImg.setAttribute('src', is[0]);
+        AnkUtils.dump('VIEW => ' + is[0]);
+      }
 
       if (is.length > 1) {
         fpImg.setAttribute('facing', 'true');
         fpImg.setAttribute('src', is[1]);
+        AnkUtils.dump('VIEW FP => ' + is[1]);
       }
     }
 
@@ -317,7 +320,7 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
       hide();
     } else {
       // 画像のリストが取得できなければviewerを開かない
-      if (typeof images === 'undefined' || images.length === 0) {
+      if (!images || images.length === 0) {
         let image = getImage();
         if (image.images.length === 0)
           return false; // server error.
@@ -377,8 +380,8 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
   let doc = module.elements.doc;
   let medImg = module.elements.illust.mediumImage;
   let bgImage = doc.defaultView.getComputedStyle(doc.body, '').backgroundImage;
-  let images;
-  let facing;
+  let images = null;
+  let facing = null;
   let totalMangaPages = 0;
   let currentMangaPage = 0;
   let fitMode = AnkBase.Prefs.get('largeImageSize', AnkBase.FIT.NONE);
@@ -417,7 +420,7 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
 
   [prevButton, nextButton, resizeButton, closeButton].forEach(function (button) {
     button.setAttribute('class', 'submit_btn');
-    button.setAttribute('style', 'width: 100px !important; text-align: center');
+    button.setAttribute('style', 'width: 100px !important; text-align: center; font-size: 12px');
   });
 
   /*
@@ -527,3 +530,9 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
 
   return self;
 }
+
+AnkViewer.prototype.reset = function () {
+  this.images = null;
+  this.facing = null;
+};
+

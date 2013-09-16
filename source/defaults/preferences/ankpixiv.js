@@ -20,3 +20,4 @@ pref("extensions.ankpixiv.largeImageSize", 0);
 pref("extensions.ankpixiv.dontHidePanel", false);
 pref("extensions.ankpixiv.useFacingView", true);
 pref("extensions.ankpixiv.useLoadProgress", true);
+pref("extensions.ankpixiv.viewOriginalSize", false);

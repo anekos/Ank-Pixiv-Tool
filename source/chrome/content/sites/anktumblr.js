@@ -19,7 +19,7 @@ try {
 
     in: { // {{{
       get site () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/[^/]*tumblr\.com\//), // }}}
+        self.info.illust.pageUrl.match(/^https?:\/\/[^/]*tumblr\.com\//), // }}}
 
       get manga () // {{{
         false, // }}}
@@ -28,7 +28,7 @@ try {
         self.in.illustPage, // }}}
 
       get illustPage () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/[^/]+?\.tumblr\.com\/post\//) &&
+        self.info.illust.pageUrl.match(/^https?:\/\/[^/]+?\.tumblr\.com\/post\//) &&
         !!self.elements.illust.largeLink, // }}}
 
       get myPage ()
@@ -115,8 +115,11 @@ try {
 
     info: (function () { // {{{
       let illust = {
+        get pageUrl ()
+          self.elements.doc.location.href,
+
         get id ()
-          AnkBase.currentLocation.match(/\.tumblr\.com\/post\/([^/]+?)(?:\?|\/|$)/)[1],
+          self.info.illust.pageUrl.match(/\.tumblr\.com\/post\/([^/]+?)(?:\?|\/|$)/)[1],
 
         get dateTime ()
           AnkUtils.decodeDateTimeText(self.elements.illust.date.textContent),
@@ -145,7 +148,7 @@ try {
           null,
 
         get referer ()
-          AnkBase.currentLocation,
+          self.info.illust.pageUrl,
 
         get title ()
           self.elements.illust.title && AnkUtils.trim(self.elements.illust.title.textContent),
@@ -154,13 +157,13 @@ try {
           illust.title,
 
         get R18 ()
-          !!AnkBase.currentLocation.match(/\.tumblr\.com\/post\/[^/]+?\/[^/]*r-?18/),
+          !!self.info.illust.pageUrl.match(/\.tumblr\.com\/post\/[^/]+?\/[^/]*r-?18/),
 
       };
 
       let member = {
         get id ()
-          AnkBase.currentLocation.match(/^https?:\/\/([^/]+?)\.tumblr\.com\/post\//)[1],
+          self.info.illust.pageUrl.match(/^https?:\/\/([^/]+?)\.tumblr\.com\/post\//)[1],
 
         get pixivId ()
           member.id,

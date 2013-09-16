@@ -19,7 +19,7 @@ try {
 
     in: { // {{{
       get site () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/[^/]*tinami\.com\//), // }}}
+        self.info.illust.pageUrl.match(/^https?:\/\/[^/]*tinami\.com\//), // }}}
 
       get manga () // {{{
         AnkUtils.A(self.elements.illust.typeImages).some(function (v) v.src.match(/\/ma\.gif$/)), // }}}
@@ -28,7 +28,7 @@ try {
         self.in.illustPage, // }}}
 
       get illustPage () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/www\.tinami\.com\/view\//), // }}}
+        self.info.illust.pageUrl.match(/^https?:\/\/www\.tinami\.com\/view\//), // }}}
 
       get myPage ()
         false,  // under construction
@@ -106,8 +106,11 @@ try {
 
     info: (function () { // {{{
       let illust = {
+        get pageUrl ()
+          self.elements.doc.location.href,
+
         get id ()
-          AnkBase.currentLocation.match(/www\.tinami\.com\/view\/([^/]+?)(?:\?|$)/)[1],
+          self.info.illust.pageUrl.match(/www\.tinami\.com\/view\/([^/]+?)(?:\?|$)/)[1],
 
         get dateTime ()
           AnkUtils.decodeDateTimeText(self.elements.illust.datetime.textContent),
@@ -136,7 +139,7 @@ try {
           null,
 
         get referer ()
-          AnkBase.currentLocation,
+          self.info.illust.pageUrl,
 
         get title ()
           AnkUtils.trim(self.elements.illust.title.textContent),

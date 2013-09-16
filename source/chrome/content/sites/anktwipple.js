@@ -19,7 +19,7 @@ try {
 
     in: { // {{{
       get site () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/[^/]*twipple\.jp\//), // }}}
+        self.info.illust.pageUrl.match(/^https?:\/\/[^/]*twipple\.jp\//), // }}}
 
       get manga () // {{{
         false, // }}}
@@ -28,8 +28,8 @@ try {
         self.in.illustPage, // }}}
 
       get illustPage () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/p\.twipple\.jp\//) &&
-        !AnkBase.currentLocation.match(/\/user\//),
+        self.info.illust.pageUrl.match(/^https?:\/\/p\.twipple\.jp\//) &&
+        !self.info.illust.pageUrl.match(/\/user\//),
       // }}}
 
       get myPage ()
@@ -101,8 +101,11 @@ try {
 
     info: (function () { // {{{
       let illust = {
+        get pageUrl ()
+          self.elements.doc.location.href,
+
         get id ()
-          AnkBase.currentLocation.match(/p\.twipple\.jp\/([^/]+?)(?:\?|$)/)[1],
+          self.info.illust.pageUrl.match(/p\.twipple\.jp\/([^/]+?)(?:\?|$)/)[1],
 
         get dateTime ()
           AnkUtils.decodeDateTimeText(self.elements.illust.datetime.textContent),

@@ -97,6 +97,7 @@
         <preference id="dont-hide-panel" name="extensions.ankpixiv.dontHidePanel" type="bool" />
         <preference id="use-facing-view" name="extensions.ankpixiv.useFacingView" type="bool" />
         <preference id="use-load-progress" name="extensions.ankpixiv.useLoadProgress" type="bool" />
+        <preference id="view-original-size" name="extensions.ankpixiv.viewOriginalSize" type="bool" />
       </preferences>
 
       <tabbox>
@@ -202,6 +203,7 @@
               <checkbox preference="dont-hide-panel" label="&dontHidePanel;" />
               <checkbox preference="use-facing-view" label="&useFacingView;" />
               <checkbox preference="use-load-progress" label="&useLoadProgress;" />
+              <checkbox preference="view-original-size" label="&viewOriginalSize;" />
             </vbox>
           </tabpanel>
         </tabpanels>

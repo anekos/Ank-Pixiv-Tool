@@ -19,7 +19,7 @@ try {
 
     in: { // {{{
       get site () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/nijie\.info\//), // }}}
+        self.info.illust.pageUrl.match(/^https?:\/\/nijie\.info\//), // }}}
 
       get manga () // {{{
         (self.info.illust.mangaPages > 1), // }}}
@@ -28,7 +28,7 @@ try {
         self.in.illustPage, // }}}
 
       get illustPage () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/nijie\.info\/view\.php\?id=/), // }}}
+        self.info.illust.pageUrl.match(/^https?:\/\/nijie\.info\/view\.php\?id=/), // }}}
 
       get myPage ()
         false,  // under construction
@@ -113,8 +113,11 @@ try {
 
     info: (function () { // {{{
       let illust = {
+        get pageUrl ()
+          self.elements.doc.location.href,
+
         get id ()
-          AnkBase.currentLocation.match(/id=(\d+)/)[1],
+          self.info.illust.pageUrl.match(/id=(\d+)/)[1],
 
         get dateTime ()
           AnkUtils.decodeDateTimeText(self.elements.illust.datetime.textContent),
@@ -155,7 +158,7 @@ try {
           self.info.path.image.images[0].match(/^https?:\/\/([^\/\.]+)\./i)[1],
 
         get referer ()
-          AnkBase.currentLocation,
+          self.info.illust.pageUrl,
 
         get title ()
           AnkUtils.trim(self.elements.illust.title.textContent),
@@ -316,14 +319,14 @@ try {
             // }}}
   
             AnkUtils.dump('installed: '+self.SITE_NAME);
-          }
-          catch (e) {
+
+          } catch (e) {
             AnkUtils.dumpError(e);
           }
+
           return true;
         } // }}}
 
-        //
         if (!proc())
           setTimeout(installer, interval);
       };

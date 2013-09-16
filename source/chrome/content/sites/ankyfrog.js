@@ -1,25 +1,27 @@
 
 try {
 
-  let self = {
+  let AnkModule = function (currentDoc) {
 
     /********************************************************************************
     * 定数
     ********************************************************************************/
 
-    URL:        'http://twitter.yfrog.com/', // イラストページ以外でボタンを押したときに開くトップページのURL
-    DOMAIN:     'yfrog.com',                 // CSSの適用対象となるドメイン
-    SERVICE_ID: 'YFR',                       // 履歴DBに登録するサイト識別子
-    SITE_NAME:  'Yfrog',                     // ?site-name?で置換されるサイト名のデフォルト値
+    var self = this;
+
+    self.URL        = 'http://twitter.yfrog.com/'; // イラストページ以外でボタンを押したときに開くトップページのURL
+    self.DOMAIN     = 'yfrog.com';                 // CSSの適用対象となるドメイン
+    self.SERVICE_ID = 'YFR';                       // 履歴DBに登録するサイト識別子
+    self.SITE_NAME  = 'Yfrog';                     // ?site-name?で置換されるサイト名のデフォルト値
 
 
     /********************************************************************************
     * プロパティ
     ********************************************************************************/
 
-    in: { // {{{
+    self.in = { // {{{
       get site () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/twitter\.yfrog\.com\//), // }}}
+        self.info.illust.pageUrl.match(/^https?:\/\/twitter\.yfrog\.com\//), // }}}
 
       get manga () // {{{
         false, // }}}
@@ -28,21 +30,18 @@ try {
         self.in.illustPage, // }}}
 
       get illustPage () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/twitter\.yfrog\.com\/[^/?]+(?:\?|$)/), // }}}
+        self.info.illust.pageUrl.match(/^https?:\/\/twitter\.yfrog\.com\/[^/?]+(?:\?|$)/), // }}}
 
       get myPage ()
         false,  // under construction
 
       get myIllust ()
         false,  // under construction
-    }, // }}}
+    }; // }}}
 
-    elements: (function () { // {{{
+    self.elements = (function () { // {{{
       function query (q)
         self.elements.doc.querySelector(q)
-
-      function queryAll (q)
-        self.elements.doc.querySelectorAll(q)
 
       let illust =  {
         get largeLink ()
@@ -86,12 +85,15 @@ try {
       return {
         illust: illust,
         mypage: mypage,
-        get doc () window.content.document
+        get doc () currentDoc ? currentDoc : window.content.document
       };
-    })(), // }}}
+    })(); // }}}
 
-    info: (function () { // {{{
+    self.info = (function () { // {{{
       let illust = {
+        get pageUrl ()
+          self.elements.doc.location.href,
+
         get id ()
           let (m = self.elements.illust.mediumImage.src.match(/\/([^/]+?)\.[^/]+$/))
             m && m[1],
@@ -121,7 +123,7 @@ try {
           null,
 
         get referer ()
-          AnkBase.currentLocation,
+          self.info.illust.pageUrl,
 
         get title ()
           AnkUtils.trim(self.elements.illust.title.textContent),
@@ -169,21 +171,26 @@ try {
         member: member,
         path: path
       };
-    })(), // }}}
-
-    get downloadable ()
-      true,
-
-
-    /********************************************************************************
-    * ダウンロード＆ファイル関連
-    ********************************************************************************/
-
-    // ボタン押下でのダウンロードまでの実装であれば、以下の３つのメソッドは空のメソッドのままでＯＫ
+    })(); // }}}
 
     /*
-     * 遅延インストールのためにクロージャに doc などを保存しておく
+     * ダウンロード可能状態かどうか
      */
+    self.downloadable = true;
+
+  };
+
+  /********************************************************************************
+  * メソッド
+  ********************************************************************************/
+
+  // ボタン押下でのダウンロードまでの実装であれば、以下のメソッドは空のメソッドのままでＯＫ
+
+  /*
+   * イラストページにviewerたダウンロードトリガーのインストールを行う
+   */
+  AnkModule.prototype = {
+
     installMediumPageFunctions: function () { // {{{
 
       let installer = function () {
@@ -191,22 +198,23 @@ try {
         function proc () {
           try {
             if (counter-- <= 0) {
-              AnkUtils.dump('installation failed: '+self.SITE_NAME);
+              AnkUtils.dump('installation failed: '+mod.SITE_NAME);
               return true;
             }
-  
+
             try {
+              var doc = mod.elements.doc;
               var body = doc.getElementsByTagName('body');
-              var wrapper = self.elements.illust.wrapper;
-              var medImg = self.elements.illust.mediumImage;
-              var title = self.elements.illust.title;
+              var wrapper = mod.elements.illust.wrapper;
+              var medImg = mod.elements.illust.mediumImage;
+              var title = mod.elements.illust.title;
             } catch (e) {
               AnkUtils.dumpError(e);
               return true;
             }
-  
+
             if (!((body && body.length>0) && wrapper && medImg && title)) {
-              AnkUtils.dump('delay installation: '+self.SITE_NAME+' remains '+counter);
+              AnkUtils.dump('delay installation: '+mod.SITE_NAME+' remains '+counter);
               return false;   // リトライしてほしい
             }
 
@@ -216,11 +224,14 @@ try {
             medImg.addEventListener(
               'load',
               function () {
+                if (viewer)
+                  viewer.reset();
+
                 AnkBase.insertDownloadedDisplayById(
-                  self.elements.illust.downloadedDisplayParent,
-                  self.info.illust.id,
-                  self.SERVICE_ID,
-                  self.info.illust.R18
+                  mod.elements.illust.downloadedDisplayParent,
+                  mod.info.illust.id,
+                  mod.SERVICE_ID,
+                  mod.info.illust.R18
                 );
               },
               false
@@ -228,16 +239,16 @@ try {
 
             // 大画像関係
             // FIXME 一度viewerを開くと、'<'、'>'ボタンで隣のイラストに移動した場合、一回目の画像が表示されてしまう
-            if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true)) {
-              new AnkViewer(
-                self,
+            if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
+              viewer = new AnkViewer(
+                mod,
                 body[0],
                 wrapper,
                 null,
-                function () self.info.path.image
+                function () mod.info.path.image
               );
             }
-  
+
             // 中画像クリック時に保存する
             if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
               medImg.addEventListener(
@@ -248,16 +259,16 @@ try {
                 true
               );
             } // }}}
-  
+
             // 保存済み表示
             AnkBase.insertDownloadedDisplayById(
-              self.elements.illust.downloadedDisplayParent,
-              self.info.illust.id,
-              self.SERVICE_ID,
-              self.info.illust.R18
+              mod.elements.illust.downloadedDisplayParent,
+              mod.info.illust.id,
+              mod.SERVICE_ID,
+              mod.info.illust.R18
             );
-  
-            AnkUtils.dump('installed: '+self.SITE_NAME);
+
+            AnkUtils.dump('installed: '+mod.SITE_NAME);
           }
           catch (e) {
             AnkUtils.dumpError(e);
@@ -270,7 +281,8 @@ try {
       };
 
       // closure {{{
-      let doc = self.elements.doc;
+      let mod = new AnkModule(this.elements.doc);
+      let viewer;
       let interval = 500;
       let counter = 20;
       // }}}
@@ -279,7 +291,7 @@ try {
     }, // }}}
 
     /*
-     * リストページ用ファンクション
+     * リストページのアイテムにダウンロード済みマークなどをつける
      */
     installListPageFunctions: function () { /// {
 
@@ -287,26 +299,35 @@ try {
         function proc () {
           try {
             if (counter-- <= 0) {
-              AnkUtils.dump('installation failed: '+self.SITE_NAME+' list');
+              AnkUtils.dump('installation failed: '+mod.SITE_NAME+' list');
               return true;
             }
 
             try {
+              var doc = mod.elements.doc;
               var body = doc.getElementsByTagName('body');
+              var gallery = doc.getElementById('media-results');
             } catch (e) {
               AnkUtils.dumpError(e);
               return true;
             }
 
-            if (!((body && body.length>0) && doc.readyState === 'complete')) {
-              AnkUtils.dump('delay installation: '+self.SITE_NAME+' list remains '+counter);
+            if (!((body && body.length>0) && doc.readyState === 'complete' && gallery)) {
+              AnkUtils.dump('delay installation: '+mod.SITE_NAME+' list remains '+counter);
               return false;   // リトライしてほしい
             }
 
             // リスト表示が遅くてダウンロードマーク表示が漏れることがあるので、再度処理を実行
-            self.markDownloaded(doc,true);
+            mod.markDownloaded(mod.elements.doc,true);
 
-            AnkUtils.dump('installed: '+self.SITE_NAME+' list');
+            // 伸びるリストに追随する
+            if (MutationObserver) {
+              new MutationObserver(function (o) {
+                o.forEach(function (e) mod.markDownloaded(e.target, true));
+              }).observe(gallery, {childList: true});
+            }
+
+            AnkUtils.dump('installed: '+mod.SITE_NAME+' list');
           }
           catch (e) {
             AnkUtils.dumpError(e);
@@ -320,8 +341,8 @@ try {
       }
 
       // closure {{{
-      let doc = self.elements.doc;
-      let interval = 1000;    // おそい
+      let mod = new AnkModule(this.elements.doc);
+      let interval = 500;
       let counter = 20;
       // }}}
 
@@ -334,45 +355,50 @@ try {
      *    force:    追加済みであっても、強制的にマークする
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
+      function marking () {
+        let target = AnkBase.getMarkTarget(mod, node, force, ignorePref);
+        if (!target)
+          return;
 
-      let target = AnkBase.getMarkTarget(self, node, force, ignorePref);
-      if (!target)
-        return;
+        [
+          ['.media-result-item > img', 0],              // 一覧
+        ].forEach(function ([selector, nTrackback]) {
+          AnkUtils.A(target.node.querySelectorAll(selector)) .
+            map(function (img) img.src && let (m = img.src.match(/\/scaled\/landing\/\d+\/([^/]+?)\./)) m && [img, m[1]]) .
+            filter(function (m) m) .
+            forEach(function ([img, id]) {
+              if (!(target.illust_id && target.illust_id != id))
+                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(img, nTrackback), id, mod.SERVICE_ID, true);
+            });
+        });
+      }
 
-      [
-        ['.media-result-item > img', 0],              // 一覧
-      ].forEach(function ([selector, nTrackback]) {
-        AnkUtils.A(target.node.querySelectorAll(selector)) .
-          map(function (img) img.src && let (m = img.src.match(/\/scaled\/landing\/\d+\/([^/]+?)\./)) m && [img, m[1]]) .
-          filter(function (m) m) .
-          forEach(function ([img, id]) {
-            if (!(target.illust_id && target.illust_id != id))
-              AnkBase.markBoxNode(AnkUtils.trackbackParentNode(img, nTrackback), id, self.SERVICE_ID, true);
-          });
-      });
+      // closure {{{
+      let mod = new AnkModule(this.elements.doc);
+      // }}}
+
+      return marking();
     }, // }}}
 
-
-    /********************************************************************************
-    * その他
-    ********************************************************************************/
-
+    /*
+     * 評価
+     */
     rate: function () { // {{{
       return true;
-    },
-
+    }, // }}}
   };
 
   /********************************************************************************
-  * インストール - ankpixiv.xulにも登録を
+  * ベースとなるインスタンスの生成＋本体へのインストール - ankpixiv.xulにも登録を
   ********************************************************************************/
 
-  AnkBase.addModule(self);
+  AnkBase.addModule(new AnkModule());
+
 
 } catch (error) {
- dump("[" + error.name + "]\n" +
-      "  message: " + error.message + "\n" +
-      "  filename: " + error.fileName + "\n" +
-      "  linenumber: " + error.lineNumber + "\n" +
-      "  stack: " + error.stack + "\n");
-}
+  dump("[" + error.name + "]\n" +
+       "  message: " + error.message + "\n" +
+       "  filename: " + error.fileName + "\n" +
+       "  linenumber: " + error.lineNumber + "\n" +
+       "  stack: " + error.stack + "\n");
+ }

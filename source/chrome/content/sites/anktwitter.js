@@ -19,7 +19,7 @@ try {
 
     in: { // {{{
       get site () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/twitter\.com\//), // }}}
+        self.info.illust.pageUrl.match(/^https?:\/\/twitter\.com\//), // }}}
 
       get manga () // {{{
         false, // }}} // under construction
@@ -44,7 +44,7 @@ try {
        */
 
       get tweet () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/twitter\.com\/[^/]+\/status\//), // }}}
+        self.info.illust.pageUrl.match(/^https?:\/\/twitter\.com\/[^/]+\/status\//), // }}}
 
       // elementを見ているが、これに関しては問題ないはず
       get illustTweet() // {{{
@@ -55,7 +55,7 @@ try {
         self.elements.illust.galleryEnabled, // }}}
 
       get illustGrid () // {{{
-        AnkBase.currentLocation.match(/^https?:\/\/twitter\.com\/[^/]+\/media\/grid/),
+        self.info.illust.pageUrl.match(/^https?:\/\/twitter\.com\/[^/]+\/media\/grid/),
     }, // }}}
 
     elements: (function () { // {{{
@@ -133,6 +133,9 @@ try {
 
     info: (function () { // {{{
       let illust = {
+        get pageUrl ()
+          self.elements.doc.location.href,
+
         get id () {
           let e = self.elements.illust.largeLink;
           if (!e)
@@ -176,7 +179,7 @@ try {
           null,
 
         get referer ()
-          AnkBase.currentLocation,
+          self.info.illust.pageUrl,
 
         get title ()
           AnkUtils.trim(self.elements.illust.title.textContent),
