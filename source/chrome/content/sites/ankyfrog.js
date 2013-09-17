@@ -47,9 +47,6 @@ try {
         get largeLink ()
           query('#input-direct'),
 
-        get mediumImage ()
-          query('#main_image'),
-
         get date ()
           query('.tweet-info > .user > .date'),
 
@@ -59,13 +56,22 @@ try {
         get memberLink ()
           query('.username'),
 
-        get wrapper ()
-          query('#body'),
-
-        // elements.illust中ではdownloadedDisplayParentのみankpixiv.jsから呼ばれるので必須、他はこのソース内でしか使わない
+        // requires for AnkBase
 
         get downloadedDisplayParent ()
           query('.tweet-info'),
+
+        // requires for AnkViewer
+
+        get body ()
+          let (e = queryAll('body'))
+            e && e.length > 0 && e[0],
+
+        get wrapper ()
+          query('#body'),
+
+        get mediumImage ()
+          query('#main_image'),
 
         get ads () {
           let header = query('#menu-search-wrapper-big-daddy');
@@ -187,7 +193,7 @@ try {
   // ボタン押下でのダウンロードまでの実装であれば、以下のメソッドは空のメソッドのままでＯＫ
 
   /*
-   * イラストページにviewerたダウンロードトリガーのインストールを行う
+   * イラストページにviewerやダウンロードトリガーのインストールを行う
    */
   AnkModule.prototype = {
 
@@ -204,7 +210,7 @@ try {
 
             try {
               var doc = mod.elements.doc;
-              var body = doc.getElementsByTagName('body');
+              var body = mod.elements.illust.body;
               var wrapper = mod.elements.illust.wrapper;
               var medImg = mod.elements.illust.mediumImage;
               var title = mod.elements.illust.title;
@@ -213,7 +219,7 @@ try {
               return true;
             }
 
-            if (!((body && body.length>0) && wrapper && medImg && title)) {
+            if (!(body && wrapper && medImg && title)) {
               AnkUtils.dump('delay installation: '+mod.SITE_NAME+' remains '+counter);
               return false;   // リトライしてほしい
             }
@@ -242,7 +248,7 @@ try {
             if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
               viewer = new AnkViewer(
                 mod,
-                body[0],
+                body,
                 wrapper,
                 null,
                 function () mod.info.path.image

@@ -256,13 +256,17 @@ try {
       }
 
       // 洋式
-      function calcx ()
-        new Date(dtext)
+      function calcx () {
+        let d = new Date(dtext);
+        return isNaN(d.getFullYear()) ? null : d;
+      }
 
+      let fault = false;
       let dd = calc1() || calc2() || calc3() || calcx();
       if (!dd) {
         dd = new Date();
         AnkUtils.dump('unknown datetime format = '+dtext);
+        fault = true;
       }
 
       return {
@@ -271,6 +275,7 @@ try {
         day: AnkUtils.zeroPad(dd.getDate(), 2),
         hour: AnkUtils.zeroPad(dd.getHours(), 2),
         minute: AnkUtils.zeroPad(dd.getMinutes(), 2),
+        fault: fault,
       };
     }, // }}}
 

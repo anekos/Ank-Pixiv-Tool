@@ -48,17 +48,12 @@ try {
         self.elements.doc.querySelectorAll(q)
 
       let illust =  {
-        get body ()
-          queryAll('body'),
-
-        get mediumImage ()
-          query('div#media > img'),
 
         get largeLink ()
           query('div#media-overlay > div > span > a'),
 
         get datetime ()
-          query('div#media-stats > div.media-stat'),
+          queryAll('div.media-stat > p'),
 
         get title ()
           self.elements.illust.mediumImage,
@@ -78,10 +73,20 @@ try {
         get tags ()
           null,
 
-        // elements.illust中ではdownloadedDisplayParentのみankpixiv.jsから呼ばれるので必須、他はこのソース内でしか使わない
+        // requires for AnkBase
 
         get downloadedDisplayParent ()
           query('div#content'),
+
+        // requires for AnkViewer
+
+        get body ()
+          let (e = queryAll('body'))
+            e && e.length > 0 && e[0],
+
+        get mediumImage ()
+          query('div#media > img'),
+
       };
 
       let mypage = {
@@ -107,8 +112,12 @@ try {
         get id ()
           self.info.illust.pageUrl.match(/^https?:\/\/twitpic\.com\/([^/]+)(?:\?|$)/)[1],
 
-        get dateTime ()
-          AnkUtils.decodeDateTimeText(self.elements.illust.datetime.textContent),
+       get dateTime () {
+          let d;
+          AnkUtils.A(self.elements.illust.datetime) .
+            some(function (e) let (s = AnkUtils.decodeDateTimeText(e.textContent)) ! s.fault && (d = s));
+          return d;
+       },
 
         get size ()
           null,
@@ -221,15 +230,15 @@ try {
             try { // {{{
               var doc = mod.elements.doc;
               var body = mod.elements.illust.body;
-              var largeLink = mod.elements.illust.largeLink;
               var medImg = mod.elements.illust.mediumImage;
+              var largeLink = mod.elements.illust.largeLink;
             } catch (e) {
               AnkUtils.dumpError(e);
               return true;
             } // }}}
 
             // 完全に読み込まれていないっぽいときは、遅延する
-            if (!((body && body.length > 0) && largeLink && medImg)) { // {{{
+            if (!(body && medImg && largeLink)) { // {{{
               AnkUtils.dump('delay installation: '+mod.SITE_NAME+' remains '+counter);
               return false;   // リトライしてほしい
             } // }}}
@@ -270,7 +279,7 @@ try {
 
       // closure {{{
       let mod = new AnkModule(this.elements.doc);
-      let interval = 500;
+      let interval = 1000;  // おそい
       let counter = 20;
       // }}}
 

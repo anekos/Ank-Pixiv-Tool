@@ -131,7 +131,8 @@ try {
         // requires for AnkViewer
 
         get body ()
-          queryAll('body'),
+          let (e = queryAll('body'))
+            e && e.length > 0 && e[0],
 
         get wrapper ()
           query('#wrapper'),
@@ -250,10 +251,10 @@ try {
             e && e.href.match(/\/member\.php\?id=(\d+)/) && RegExp.$1,
 
         get pixivId ()
-          let (e = (self.elements.illust.avatar.src.match(/\/profile\/([^\/]+)\//)
+          let (m = (self.elements.illust.avatar.src.match(/\/profile\/([^\/]+)\//)
                     ||
                     self.info.path.largeStandardImage.match(/^https?:\/\/[^\.]+\.pixiv\.net\/(?:img\d+\/)?img\/([^\/]+)\//)))
-            RegExp.$1,
+            m.length > 0 && m[1],
 
         get name ()
           let (e = self.elements.illust.userName)
@@ -302,7 +303,7 @@ try {
   AnkModule.prototype = {
 
     /*
-     * イラストページにviewerたダウンロードトリガーのインストールを行う
+     * イラストページにviewerやダウンロードトリガーのインストールを行う
      */
     installMediumPageFunctions: function () { // {{{
 
@@ -328,7 +329,7 @@ try {
             } // }}}
 
             // 完全に読み込まれていないっぽいときは、遅延する
-            if (!((body && body.length > 0) && medImg && wrapper && openComment)) { // {{{
+            if (!(body && medImg && wrapper && openComment)) { // {{{
               AnkUtils.dump('delay installation: '+self.SITE_NAME+' remains '+counter);
               return false;   // リトライしてほしい
             } // }}}
@@ -348,7 +349,7 @@ try {
             if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
               new AnkViewer(
                 mod,
-                body[0],
+                body,
                 wrapper,
                 openComment,
                 function () mod.getImageInfo(AnkBase.Prefs.get('viewOriginalSize', false))
