@@ -1,5 +1,5 @@
 
-function AnkViewer (module, body, wrapper, openComment, getImage) {
+function AnkViewer (module, getImage) {
 
   if (!module)
     return null;
@@ -378,7 +378,10 @@ function AnkViewer (module, body, wrapper, openComment, getImage) {
   // closure {{{
   let win = window.content.window;
   let doc = module.elements.doc;
+  let body = module.elements.illust.body;
+  let wrapper = module.elements.illust.wrapper;
   let medImg = module.elements.illust.mediumImage;
+  let openComment = module.elements.illust.openComment; 
   let bgImage = doc.defaultView.getComputedStyle(doc.body, '').backgroundImage;
   let images = null;
   let facing = null;

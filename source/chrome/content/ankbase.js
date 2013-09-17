@@ -337,11 +337,20 @@ try {
      * 保存する対象にあわせてファイル名テンプレートを整形する
      */
     fixPageNumberToken: function (filenames, isFile) {
-      return filenames.map(function (filename) filename.replace(/\s*\?page-number\?\s*/g, '')).map(
-        function (filename)
-          (isFile)                           ? filename.replace(/[/\\]?\s*#page-number#\s*/g, '') :
-          (!filename.match(/#page-number#/)) ? filename+"/#page-number#" :
-                                               filename
+      return filenames.map(
+        function (filename) {
+          if (isFile) {
+            let expr = /[/\\]?\s*#page-number#\s*$/;
+            if (filename.match(expr))
+              filename = filename.replace(expr, '');                    // フォルダごとカット
+            else
+              filename = filename.replace(/\s*#page-number#\s*/, '');   // ページ番号だけカット
+          }
+          else if (!filename.match(/#page-number#/)) {
+            filename += "/#page-number#";                               // ページ番号指定がない場合（前verまでの設定とか）
+          }
+          return filename;
+        }
       );
     },
 
@@ -405,9 +414,9 @@ try {
       }
 
       try {
-        //let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
         let initDir = AnkBase.newLocalFile(prefInitDir);
 
+        // FIXME マンガ形式タイトルフォルダありでpickerを使うとmeta.txtが不正な位置に作成される
         if (!initDir.exists())
           return AnkBase.showFilePickerWithMeta(prefInitDir, filenames[0], ext, isFile);
 
@@ -935,8 +944,8 @@ try {
         }
 
         let savedDateTime = new Date();
-        let defaultFilename = AnkBase.Prefs.get('defaultFilename', '?member-name? - ?title?');
-        let alternateFilename = AnkBase.Prefs.get('alternateFilename', '?member-name? - ?title? - (?illust-id?)');
+        let defaultFilename = AnkBase.Prefs.get('defaultFilename', '?member-name? - ?title?/#page-number#');
+        let alternateFilename = AnkBase.Prefs.get('alternateFilename', '?member-name? - ?title? - (?illust-id?)/#page-number#');
         (function () {
           let i = context.info;
           let ii = i.illust;
@@ -1809,7 +1818,7 @@ try {
     * 外部向け
     ********************************************************************************/
 
-    call: {
+    expose: {
       /*
        * 他拡張からAnkPixiv.downloadCurrentImageが呼び出された時に実行する
        */

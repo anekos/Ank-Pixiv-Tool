@@ -43,6 +43,9 @@ try {
       function query (q)
         self.elements.doc.querySelector(q)
 
+      function queryAll (q)
+        self.elements.doc.querySelectorAll(q)
+
       let illust =  {
         get largeLink ()
           query('#input-direct'),
@@ -56,12 +59,12 @@ try {
         get memberLink ()
           query('.username'),
 
-        // requires for AnkBase
+        // require for AnkBase
 
         get downloadedDisplayParent ()
           query('.tweet-info'),
 
-        // requires for AnkViewer
+        // require for AnkViewer
 
         get body ()
           let (e = queryAll('body'))
@@ -248,9 +251,6 @@ try {
             if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
               viewer = new AnkViewer(
                 mod,
-                body,
-                wrapper,
-                null,
                 function () mod.info.path.image
               );
             }

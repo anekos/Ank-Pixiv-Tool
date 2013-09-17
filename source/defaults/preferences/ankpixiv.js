@@ -1,11 +1,11 @@
 pref("extensions.ankpixiv.showSaveDialog", true);
 pref("extensions.ankpixiv.checkExistingDownload", true);
 pref("extensions.ankpixiv.saveHistory", true);
-pref("extensions.ankpixiv.defaultFilename", '?memoized-name? - ?title?');
+pref("extensions.ankpixiv.defaultFilename", '?memoized-name? - ?title?/#page-number#');
 pref("extensions.ankpixiv.defaultMangaFilename", '?memoized-name? - ?title? - ?page-number?');
 pref("extensions.ankpixiv.largeOnMiddle", true);
 pref("extensions.ankpixiv.openComment", false);
-pref("extensions.ankpixiv.alternateFilename", '?memoized-name? - ?title? (?illust-id?)');
+pref("extensions.ankpixiv.alternateFilename", '?memoized-name? - ?title? (?illust-id?)/#page-number#');
 pref("extensions.ankpixiv.alternateMangaFilename", '?memoized-name? - ?title? (?illust-id?) - ?page-number?');
 pref("extensions.ankpixiv.confirmExistingDownload", true);
 pref("extensions.ankpixiv.downloadWhenClickMiddle", false);

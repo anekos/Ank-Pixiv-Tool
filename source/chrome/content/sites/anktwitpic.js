@@ -73,12 +73,12 @@ try {
         get tags ()
           null,
 
-        // requires for AnkBase
+        // require for AnkBase
 
         get downloadedDisplayParent ()
           query('div#content'),
 
-        // requires for AnkViewer
+        // require for AnkViewer
 
         get body ()
           let (e = queryAll('body'))
@@ -204,18 +204,16 @@ try {
 
   };
 
-  
+
   /********************************************************************************
-  * ダウンロード＆ファイル関連
+  * メソッド
   ********************************************************************************/
 
-  // ボタン押下でのダウンロードまでの実装であれば、以下の３つのメソッドは空のメソッドのままでＯＫ
-
-  /*
-   * 遅延インストールのためにクロージャに doc などを保存しておく
-   */
   AnkModule.prototype = {
 
+    /*
+     * イラストページにviewerやダウンロードトリガーのインストールを行う
+     */
     installMediumPageFunctions: function () { // {{{
 
       let installer = function () { // {{{
@@ -243,7 +241,13 @@ try {
               return false;   // リトライしてほしい
             } // }}}
 
-            // viewerは作らない
+            // 大画像関係
+            if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
+              new AnkViewer(
+                mod,
+                function () mod.info.path.image
+              );
+            }
 
             // 中画像クリック時に保存する
             if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
@@ -376,6 +380,7 @@ try {
       return true;
     },
   };
+
 
   /********************************************************************************
   * ベースとなるインスタンスの生成＋本体へのインストール - ankpixiv.xulにも登録を

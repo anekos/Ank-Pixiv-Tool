@@ -123,12 +123,12 @@ try {
         get feedList()
           query('#stacc_timeline'),
 
-        // requires for AnkBase
+        // require for AnkBase
 
         get downloadedDisplayParent ()
           query('.work-info'),
 
-        // requires for AnkViewer
+        // require for AnkViewer
 
         get body ()
           let (e = queryAll('body'))
@@ -349,9 +349,6 @@ try {
             if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
               new AnkViewer(
                 mod,
-                body,
-                wrapper,
-                openComment,
                 function () mod.getImageInfo(AnkBase.Prefs.get('viewOriginalSize', false))
               );
             }

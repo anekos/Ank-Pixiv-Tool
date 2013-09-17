@@ -1,23 +1,25 @@
 
 try {
 
-  let self = {
+  let AnkModule = function (currentDoc) {
 
     /********************************************************************************
     * 定数
     ********************************************************************************/
 
-    URL:        'https://www.tumblr.com/', // イラストページ以外でボタンを押したときに開くトップページのURL
-    DOMAIN:     'tumblr.com',              // CSSの適用対象となるドメイン
-    SERVICE_ID: 'TBR',                     // 履歴DBに登録するサイト識別子
-    SITE_NAME:  'Tumblr',                  // ?site-name?で置換されるサイト名のデフォルト値
+    var self = this;
+
+    self.URL        = 'https://www.tumblr.com/'; // イラストページ以外でボタンを押したときに開くトップページのURL
+    self.DOMAIN     = 'tumblr.com';              // CSSの適用対象となるドメイン
+    self.SERVICE_ID = 'TBR';                     // 履歴DBに登録するサイト識別子
+    self.SITE_NAME  = 'Tumblr';                  // ?site-name?で置換されるサイト名のデフォルト値
 
 
     /********************************************************************************
     * プロパティ
     ********************************************************************************/
 
-    in: { // {{{
+    self.in = { // {{{
       get site () // {{{
         self.info.illust.pageUrl.match(/^https?:\/\/[^/]*tumblr\.com\//), // }}}
 
@@ -29,16 +31,16 @@ try {
 
       get illustPage () // {{{
         self.info.illust.pageUrl.match(/^https?:\/\/[^/]+?\.tumblr\.com\/post\//) &&
-        !!self.elements.illust.largeLink, // }}}
+        !!self.elements.illust.mediumImage, // }}}
 
       get myPage ()
         false,  // under construction
 
       get myIllust ()
         false,  // under construction
-    }, // }}}
+    }; // }}}
 
-    elements: (function () { // {{{
+    self.elements = (function () { // {{{
       function query (q)
         self.elements.doc.querySelector(q)
 
@@ -46,23 +48,6 @@ try {
         self.elements.doc.querySelectorAll(q)
 
       let illust =  {
-        get largeLink () {
-          let m;
-          [
-            query('.photo > div > a'),
-            query('.post > a'),
-            query('.photo > a'),
-          ] .
-          some(function (e) e && e.href.match(/\.tumblr\.com\/image\//) && !!(m = e));
-
-          return m;
-        },
-
-        get mediumImage ()
-          query('.photo > div > a > img') ||
-          query('.post > a > img') ||
-          query('.photo > a > img'),
-
         get date ()
           query('.date') ||
           query('.postmeta > a'),
@@ -80,15 +65,27 @@ try {
           let (e = query('#header > * > .profile-image'))
             (e && e.parentNode),
 
+        // require for AnkBase
+
+        get downloadedDisplayParent ()
+          query('.caption > p'),
+
+        // require for AnkViewer
+
+        get body ()
+          let (e = queryAll('body'))
+            e && e.length > 0 && e[0],
+
         get wrapper ()
           query('.container.section') ||
           query('#newDay') ||
           query('body'),
 
-        // elements.illust中ではdownloadedDisplayParentのみankpixiv.jsから呼ばれるので必須、他はこのソース内でしか使わない
-
-        get downloadedDisplayParent ()
-          query('.caption > p'),
+        get mediumImage ()
+          query('.photo > div > a > img') ||
+          query('.photo > div > img') ||
+          query('.post > a > img') ||
+          query('.photo > a > img'),
 
         get ads () {
           let header = query('#header');
@@ -109,11 +106,11 @@ try {
       return {
         illust: illust,
         mypage: mypage,
-        get doc () window.content.document
+        get doc () currentDoc ? currentDoc : window.content.document
       };
-    })(), // }}}
+    })(); // }}}
 
-    info: (function () { // {{{
+    self.info = (function () { // {{{
       let illust = {
         get pageUrl ()
           self.elements.doc.location.href,
@@ -151,7 +148,8 @@ try {
           self.info.illust.pageUrl,
 
         get title ()
-          self.elements.illust.title && AnkUtils.trim(self.elements.illust.title.textContent),
+          let (e = self.elements.illust.title)
+           e && AnkUtils.trim(e.textContent),
 
         get comment ()
           illust.title,
@@ -180,7 +178,7 @@ try {
           AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext ()
-          '.jpg',   // 読み込んでみないとわからないのでとりあえずjpgで
+          (self.info.path.image.images[0].match(/(\.\w+)(?:$|\?)/)[1].toLowerCase() || '.jpg'),
 
         get mangaIndexPage ()
           null,
@@ -195,56 +193,55 @@ try {
         member: member,
         path: path
       };
-    })(), // }}}
+    })(); // }}}
 
-    get downloadable ()
-      true,
+    self.downloadable = true;
+
+  };
 
 
-    /********************************************************************************
-    * ダウンロード＆ファイル関連
-    ********************************************************************************/
+  /********************************************************************************
+   * メソッド
+   ********************************************************************************/
 
-    // ボタン押下でのダウンロードまでの実装であれば、以下の３つのメソッドは空のメソッドのままでＯＫ
+  AnkModule.prototype = {
 
-    /*
-     * 遅延インストールのためにクロージャに doc などを保存しておく
-     */
+     /*
+      * イラストページにviewerやダウンロードトリガーのインストールを行う
+      */
     installMediumPageFunctions: function () { // {{{
 
       let installer = function () {
         function proc () {
           try {
             if (counter-- <= 0) {
-              AnkUtils.dump('installation failed: '+self.SITE_NAME);
+              AnkUtils.dump('installation failed: '+mod.SITE_NAME);
               return true;
             }
-  
+
             try {
-              var body = doc.getElementsByTagName('body');
-              var wrapper = self.elements.illust.wrapper;
-              var medImg = self.elements.illust.mediumImage;
+              var doc = mod.elements.doc;
+              var body = mod.elements.illust.body;
+              var wrapper = mod.elements.illust.wrapper;
+              var medImg = mod.elements.illust.mediumImage;
             } catch (e) {
               AnkUtils.dumpError(e);
               return true;
             }
-  
-            if (!((body && body.length>0) && wrapper && medImg)) {
-              AnkUtils.dump('delay installation: '+self.SITE_NAME+' remains '+counter);
+
+            if (!(body && wrapper && medImg)) {
+              AnkUtils.dump('delay installation: '+mod.SITE_NAME+' remains '+counter);
               return false;   // リトライしてほしい
             }
-  
+
             // 大画像関係
-            if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true)) {
+            if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
               new AnkViewer(
-                self,
-                body[0],
-                wrapper,
-                null,
-                function () self.info.path.image
+                mod,
+                function () mod.info.path.image
               );
             }
-  
+
             // 中画像クリック時に保存する
             if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
               medImg.addEventListener(
@@ -255,16 +252,16 @@ try {
                 true
               );
             } // }}}
-  
+
             // 保存済み表示
             AnkBase.insertDownloadedDisplayById(
-              self.elements.illust.downloadedDisplayParent,
-              self.info.illust.id,
-              self.SERVICE_ID,
-              self.info.illust.R18
+              mod.elements.illust.downloadedDisplayParent,
+              mod.info.illust.id,
+              mod.SERVICE_ID,
+              mod.info.illust.R18
             );
-  
-            AnkUtils.dump('installed: '+self.SITE_NAME);
+
+            AnkUtils.dump('installed: '+mod.SITE_NAME);
           }
           catch (e) {
             AnkUtils.dumpError(e);
@@ -277,7 +274,7 @@ try {
       };
 
       // closure {{{
-      let doc = self.elements.doc;
+      let mod = new AnkModule(this.elements.doc);
       let interval = 500;
       let counter = 20;
       // }}}
@@ -290,7 +287,7 @@ try {
      */
     installListPageFunctions: function () { /// {
       // under construction
-      AnkUtils.dump('installed: '+self.SITE_NAME+' list');
+      AnkUtils.dump('installed: '+this.SITE_NAME+' list');
     }, // }}}
 
     /*
@@ -299,40 +296,47 @@ try {
      *    force:    追加済みであっても、強制的にマークする
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
+      function marking () {
+        let target = AnkBase.getMarkTarget(mod, node, force, ignorePref);
+        if (!target)
+          return;
 
-      let target = AnkBase.getMarkTarget(self, node, force, ignorePref);
-      if (!target)
-        return;
+        [
+          ['#portfolio > div > * > .item > a', 1],              // 一覧
+        ].forEach(function ([selector, nTrackback]) {
+          AnkUtils.A(target.node.querySelectorAll(selector)) .
+            map(function (link) link.href && let (m = link.href.match(/\.tumblr\.com\/post\/([^/]+?)(?:\?|\/|$)/)) m && [link, m[1]]) .
+            filter(function (m) m) .
+            forEach(function ([link, id]) {
+              if (!(target.illust_id && target.illust_id != id))
+                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, mod.SERVICE_ID, true);
+            });
+        });
+      }
 
-      [
-        ['#portfolio > div > * > .item > a', 1],              // 一覧
-      ].forEach(function ([selector, nTrackback]) {
-        AnkUtils.A(target.node.querySelectorAll(selector)) .
-          map(function (link) link.href && let (m = link.href.match(/\.tumblr\.com\/post\/([^/]+?)(?:\?|\/|$)/)) m && [link, m[1]]) .
-          filter(function (m) m) .
-          forEach(function ([link, id]) {
-            if (!(target.illust_id && target.illust_id != id))
-              AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, self.SERVICE_ID, true);
-          });
-      });
+      // closure {{{
+      let mod = new AnkModule(this.elements.doc);
+      // }}}
+
+      return marking();
     }, // }}}
 
-
-    /********************************************************************************
-    * その他
-    ********************************************************************************/
-
+    /*
+     * 評価する
+     */
     rate: function () { // {{{
       return true;
     },
 
   };
 
-  /********************************************************************************
-  * インストール - ankpixiv.xulにも登録を
-  ********************************************************************************/
 
-  AnkBase.addModule(self);
+    /********************************************************************************
+    * ベースとなるインスタンスの生成＋本体へのインストール - ankpixiv.xulにも登録を
+    ********************************************************************************/
+
+    AnkBase.addModule(new AnkModule());
+
 
 } catch (error) {
  dump("[" + error.name + "]\n" +

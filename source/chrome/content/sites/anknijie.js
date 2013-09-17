@@ -82,13 +82,13 @@ try {
         get noComment ()
           query('.co2') || query('#dojin_comment'),
 
-        // requires for AnkBase
+        // require for AnkBase
 
         get downloadedDisplayParent ()
           query('div#view-honbun') ||
           query('div#infomation'),
 
-        // requires for AnkViewer
+        // require for AnkViewer
 
         get body ()
           let (e = queryAll('body'))
@@ -243,6 +243,7 @@ try {
 
   };
 
+
   /********************************************************************************
   * メソッド
   ********************************************************************************/
@@ -285,9 +286,6 @@ try {
             if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
               new AnkViewer(
                 mod,
-                body,
-                wrapper,
-                openComment,
                 function () mod.info.path.image
               );
             }
@@ -362,7 +360,7 @@ try {
      */
     installListPageFunctions: function () { /// {
       // under construction
-      AnkUtils.dump('installed: '+mod.SITE_NAME+' list');
+      AnkUtils.dump('installed: '+this.SITE_NAME+' list');
     }, // }}}
 
     /*
