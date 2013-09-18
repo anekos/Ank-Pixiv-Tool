@@ -1725,8 +1725,11 @@ try {
         if (typeof doc === 'undefined' || !doc || ev.target !== doc)
           return;       // documentがない、またはタブ内のトップ要素以外がターゲットなら無視する
 
-        if (!AnkBase.inSupportedSite)
+        if (!AnkBase.inSupportedSite) {
+          AnkBase.changeEnabled.call(AnkBase, 'ankpixiv-toolbar-button-image');
+          AnkBase.changeEnabled.call(AnkBase, 'ankpixiv-menu-download');
           return;       // 対象外のサイト
+        }
 
         AnkUtils.dump('triggered: pageshow, '+location);
 
@@ -1750,8 +1753,11 @@ try {
         if (!ev.target.toString().match(/\[object Window\]/,'i'))
           return;       // windowオブジェクト以外がターゲットなら無視する
 
-        if (!AnkBase.inSupportedSite)
+        if (!AnkBase.inSupportedSite) {
+          AnkBase.changeEnabled.call(AnkBase, 'ankpixiv-toolbar-button-image');
+          AnkBase.changeEnabled.call(AnkBase, 'ankpixiv-menu-download');
           return;       // 対象外のサイト
+        }
 
         AnkUtils.dump('triggered: focus, '+location);
 
@@ -1776,7 +1782,14 @@ try {
       let elem = document.getElementById(id);
       if (!elem)
         return;
-      elem.setAttribute('dark', !AnkModule.in.illustPage);
+      if (!AnkModule) {
+        elem.setAttribute('lost', true);
+        elem.setAttribute('dark', false);
+      }
+      else {
+        elem.setAttribute('lost', false);
+        elem.setAttribute('dark', !AnkModule.in.illustPage);
+      }
     },
 
     onDownloadButtonClick: function (event) { // {{{

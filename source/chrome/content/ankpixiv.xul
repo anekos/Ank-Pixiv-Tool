@@ -32,7 +32,7 @@
   </stringbundleset>
 
   <menupopup id="menu_ToolsPopup">
-    <menuitem insertafter="devToolsSeparator" label="&downloadCurrentImage;" id="ankpixiv-menu-download"
+    <menuitem insertafter="devToolsSeparator" label="&downloadCurrentImage;" class="menuitem-iconic" id="ankpixiv-menu-download"
               oncommand="AnkBase.onDownloadButtonClick(event)" />
   </menupopup>
 
