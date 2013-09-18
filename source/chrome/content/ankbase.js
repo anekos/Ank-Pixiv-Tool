@@ -52,16 +52,13 @@ try {
 
     AllPrefs: new AnkPref(),
 
-    Store: (function () { // {{{
-      function getDocStore (doc)
-        (doc.__ank_pixiv_store || (doc.__ank_pixiv_store = {}))
+    Store: { // {{{
+      get: function (doc)
+        (doc.__ank_pixiv_store || (doc.__ank_pixiv_store = {})),
 
-      return {
-        get document () getDocStore(window.gBrowser.selectedBrowser.contentDocument),
-        get documents ()
-          AnkUtils.A(window.gBrowser.mTabs).map(function (it) getDocStore(it.linkedBrowser.contentDocument))
-      };
-    })(), // }}}
+      getAll: function ()
+        AnkUtils.A(window.gBrowser.mTabs).map(function (it) AnkBase.Store.get(it.linkedBrowser.contentDocument)),
+    }, // }}}
 
     Locale: AnkUtils.getLocale('chrome://ankpixiv/locale/ankpixiv.properties'),
 
@@ -81,7 +78,10 @@ try {
 
     get inSupportedSite () { // {{{
       let b = AnkBase.siteModules.some(function (v) (AnkModule = (v.in.site ? v : null)));
-      AnkUtils.dump('inSupportedSite check: '+b+', '+AnkBase.currentLocation+",\n"+Error().stack);
+      if (AnkModule)
+        AnkUtils.dump('inSupportedSite check: '+b+', '+AnkModule.info.illust.pageUrl+",\n"+Error().stack);
+      else
+        AnkUtils.dump('inSupportedSite check: '+b+', '+window.content.document.location.href);
       return b;
     }, // }}}
 
@@ -101,9 +101,6 @@ try {
         {}
       );
     }, // }}}
-
-    get currentLocation () // {{{
-      window.content.document.location.href, // }}}
 
     infoText: function (context) { // {{{
       let ignore =
@@ -1141,9 +1138,9 @@ try {
      */
     installFunctions: function () { // {{{
       try {
-        if (AnkBase.Store.document.functionsInstalled)
+        if (AnkBase.Store.get(AnkModule.elements.doc).functionsInstalled)
           return;
-        AnkBase.Store.document.functionsInstalled = true;
+        AnkBase.Store.get(AnkModule.elements.doc).functionsInstalled = true;
         if (AnkModule.in.medium) {
           AnkModule.installMediumPageFunctions();
         } else {
@@ -1627,10 +1624,10 @@ try {
       if (!AnkBase.Prefs.get('markDownloaded', false) && !ignorePref)
         return null;
 
-      if (!force && AnkBase.Store.document.marked)
+      if (!force && AnkBase.Store.get(module.elements.doc).marked)
         return null;
 
-      AnkBase.Store.document.marked = true;
+      AnkBase.Store.get(module.elements.doc).marked = true;
 
       if (typeof node === 'string' || typeof node === 'number')
         return { node: module.elements.doc, illust_id: node};
@@ -1660,7 +1657,7 @@ try {
     }, // }}}
 
     clearMarkedFlags: function () {
-      AnkBase.Store.documents.forEach(function(it) (it.marked = false));
+      AnkBase.Store.getAll().forEach(function(it) (it.marked = false));
     },
 
     /********************************************************************************
@@ -1722,7 +1719,7 @@ try {
       let location = null;
 
       try {
-        location = 'location: '+ev.target.location;
+        location = ev.target.location.href;
 
         let doc = window.gBrowser.selectedBrowser.contentDocument;
         if (typeof doc === 'undefined' || !doc || ev.target !== doc)
@@ -1763,8 +1760,8 @@ try {
         AnkModule.markDownloaded();                     // focus当たる度にDB検索されると困るので
         AnkBase.installFunctions();
 
-        if (!AnkBase.Store.document.onFocusDone) {
-          AnkBase.Store.document.onFocusDone = true;
+        if (!AnkBase.Store.get(AnkModule.elements.doc).onFocusDone) {
+          AnkBase.Store.get(AnkModule.elements.doc).onFocusDone = true;
 
           if (AnkModule.in.myPage && !AnkModule.elements.mypage.fantasyDisplay)
             AnkBase.displayYourFantasy();

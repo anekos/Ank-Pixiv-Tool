@@ -376,13 +376,13 @@ function AnkViewer (module, getImage) {
   ********************************************************************************/
 
   // closure {{{
-  let win = window.content.window;
   let doc = module.elements.doc;
+  let win = doc.defaultView;
   let body = module.elements.illust.body;
   let wrapper = module.elements.illust.wrapper;
   let medImg = module.elements.illust.mediumImage;
   let openComment = module.elements.illust.openComment; 
-  let bgImage = doc.defaultView.getComputedStyle(doc.body, '').backgroundImage;
+  let bgImage = win.getComputedStyle(doc.body, '').backgroundImage;
   let images = null;
   let facing = null;
   let totalMangaPages = 0;
