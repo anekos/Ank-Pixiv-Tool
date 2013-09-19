@@ -52,13 +52,18 @@ try {
 
     AllPrefs: new AnkPref(),
 
-    Store: { // {{{
-      get: function (doc)
-        (doc.__ank_pixiv_store || (doc.__ank_pixiv_store = {})),
+    Store: (function () { // {{{
+      let _get = function (doc)
+        (doc.__ank_pixiv_store || (doc.__ank_pixiv_store = {}));
 
-      getAll: function ()
-        AnkUtils.A(window.gBrowser.mTabs).map(function (it) AnkBase.Store.get(it.linkedBrowser.contentDocument)),
-    }, // }}}
+      let _getAll = function ()
+        AnkUtils.A(window.gBrowser.mTabs).map(function (it) _get(it.linkedBrowser.contentDocument));
+
+      return {
+        get: _get,
+        getAll: _getAll,
+      };
+    })(), // }}}
 
     Locale: AnkUtils.getLocale('chrome://ankpixiv/locale/ankpixiv.properties'),
 
@@ -71,6 +76,9 @@ try {
       MAXRUNS: 1,
       CLEANUP_INTERVAL: 30*1000,
     },
+
+    HOME_DIR: null,
+
 
     /********************************************************************************
     * プロパティ
@@ -908,7 +916,7 @@ try {
         let images        = context.info.path.image.images;
         let facing        = context.info.path.image.facing;
         let pageUrl       = context.info.illust.pageUrl;
-        let prefInitDir   = context.info.path.initDir || AnkBase.Prefs.get('initialDirectory') || AnkUtils.findHomeDir();
+        let prefInitDir   = context.info.path.initDir || AnkBase.Prefs.get('initialDirectory') || AnkBase.HOME_DIR;
 
         if (AnkBase.Prefs.get('saveHistory', true)) {
           try {
@@ -1704,6 +1712,8 @@ try {
           }
         );
       } // }}}
+
+      AnkBase.HOME_DIR = AnkUtils.findHomeDir();
 
       initStorage();
       AnkBase.updateDatabase();

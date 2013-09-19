@@ -535,7 +535,18 @@ try {
 
     findHomeDir: function () { // {{{
       let ds = AnkUtils.ccgs("@mozilla.org/file/directory_service;1", Ci.nsIProperties);
-      let file = ds.get("Home", Ci.nsIFile);
+      let file;
+      [ 'Pict',     // Windows
+        'XDGPict',  // Un*x
+        'Pct',      // Mach
+        'Home' ] .
+        some(function (k) {
+          try {
+            return !!(file = ds.get(k, Ci.nsIFile));
+          } catch (e) {
+            AnkUtils.dump('unsupported name of directory: '+k);
+          }
+        });
       return file ? file.path : null;
     }, // }}}
 
