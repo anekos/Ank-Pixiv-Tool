@@ -533,6 +533,12 @@ try {
       return file;
     }, // }}}
 
+    findHomeDir: function () { // {{{
+      let ds = AnkUtils.ccgs("@mozilla.org/file/directory_service;1", Ci.nsIProperties);
+      let file = ds.get("Home", Ci.nsIFile);
+      return file ? file.path : null;
+    }, // }}}
+
     // Vim 風に返す
     platform: (function () { // {{{
       if (navigator.platform.match(/^win\d+$/i))

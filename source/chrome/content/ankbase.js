@@ -337,7 +337,7 @@ try {
       return filenames.map(
         function (filename) {
           if (isFile) {
-            let expr = /[/\\]?\s*#page-number#\s*$/;
+            let expr = /[/\\]\s*#page-number#\s*$/;
             if (filename.match(expr))
               filename = filename.replace(expr, '');                    // フォルダごとカット
             else
@@ -908,7 +908,7 @@ try {
         let images        = context.info.path.image.images;
         let facing        = context.info.path.image.facing;
         let pageUrl       = context.info.illust.pageUrl;
-        let prefInitDir   = context.info.path.initDir || AnkBase.Prefs.get('initialDirectory');
+        let prefInitDir   = context.info.path.initDir || AnkBase.Prefs.get('initialDirectory') || AnkUtils.findHomeDir();
 
         if (AnkBase.Prefs.get('saveHistory', true)) {
           try {
