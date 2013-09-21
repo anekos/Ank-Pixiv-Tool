@@ -424,58 +424,32 @@ try {
           }
 
           try { // {{{
-            var doc = mod.elements.doc;
             var recommend = mod.elements.illust.recommendList;
             var feed = mod.elements.illust.feedList;
-            var aptarget = mod.elements.illust.autoPagerizeTarget;
           } catch (e) {
             AnkUtils.dumpError(e);
             return true;
           } // }}}
 
           let elm = recommend || feed;
-          if (!(elm || aptarget)) {
+          if (!elm) {
             AnkUtils.dump('delay installation fe: '+mod.SITE_NAME+' remains '+counter);
             return false;     // リトライしてほしい
           }
 
           // 伸びるおすすめリストに追随する
           if (MutationObserver) {
-            // Pixivの機能による継ぎ足し動作
-            if (elm) {
-              new MutationObserver(function (o) {
-                o.forEach(function (e) mod.markDownloaded(e.target, true));
-              }).observe(elm, {childList: true});
-            }
-
-            // AutoPagerizeによる継ぎ足し動作
-            // TODO サイト別.jsに個別に書くのはよくない気がする
-            if (aptarget) {
-              doc.addEventListener(
-                'AutoPagerize_DOMNodeInserted',
-                function (e) {
-                  let a;
-                  [
-                     '.image-items > li',               // フォロー新着作品
-                     '.display_works > ul > li',        // おすすめ
-                     '.ranking-items > .ranking-item',  // ランキング
-                  ] .
-                    some(function (q)
-                      let (n = e.target.querySelectorAll(q))
-                        n && n.length > 0 && !!(a = n)
-                    );
-                  AnkUtils.A(a) .
-                    forEach(function (node) mod.markDownloaded(node, true));
-                },
-                false
-              );
-            }
+            new MutationObserver(function (o) {
+              o.forEach(function (e) mod.markDownloaded(e.target, true));
+            }).observe(elm, {childList: true});
           }
 
           AnkUtils.dump('installed fe: '+mod.SITE_NAME);
           return true;
         }
 
+        if (mod.in.illustList || mod.in.bookmarkNew || mod.in.bookmarkAdd)
+          return;
 
         if (!AnkBase.Prefs.get('markDownloaded', false))
           return;
@@ -483,6 +457,58 @@ try {
         if (!proc())
           setTimeout(followExpansion, interval);
       };
+
+      let autoPagerize = function () {
+        function proc () {
+          if (counter-- <= 0) {
+            AnkUtils.dump('installation failed ap: '+mod.SITE_NAME);
+            return true;
+          }
+
+          try { // {{{
+            var doc = mod.elements.doc;
+            var aptarget = mod.elements.illust.autoPagerizeTarget;
+          } catch (e) {
+            AnkUtils.dumpError(e);
+            return true;
+          } // }}}
+
+          if (!(doc && aptarget)) {
+            AnkUtils.dump('delay installation ap: '+mod.SITE_NAME+' remains '+counter);
+            return false;     // リトライしてほしい
+          }
+
+          // AutoPagerizeによる継ぎ足し動作
+          // TODO サイト別.jsに個別に書くのはよくない気がする
+          doc.addEventListener(
+            'AutoPagerize_DOMNodeInserted',
+            function (e) {
+              let a;
+              [
+                 '.image-items > li',               // フォロー新着作品
+                 '.display_works > ul > li',        // おすすめ
+                 '.ranking-items > .ranking-item',  // ランキング
+              ] .
+                some(function (q)
+                  let (n = e.target.querySelectorAll(q))
+                    n && n.length > 0 && !!(a = n)
+                );
+              AnkUtils.A(a) .
+                forEach(function (node) mod.markDownloaded(node, true));
+            },
+            false
+          );
+
+          AnkUtils.dump('installed ap: '+mod.SITE_NAME);
+          return true;
+        }
+
+        if (!AnkBase.Prefs.get('markDownloaded', false))
+          return;
+
+        if (!proc())
+          setTimeout(autoPagerize, interval);
+      }
 
       let delayMarking = function () {
         function proc () {
@@ -520,10 +546,12 @@ try {
       // closure {{{
       let mod = new AnkModule(this.elements.doc);
       let interval = 500;
+      // FIXME counterが３つのインストールで共用されてしまっている
       let counter = 20;
       // }}}
 
       followExpansion();
+      autoPagerize();
       delayMarking();
     },
 
