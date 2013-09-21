@@ -84,9 +84,17 @@ try {
           let (e = queryAll('body'))
             e && e.length > 0 && e[0],
 
+        get wrapper ()
+          query('#content'),
+
         get mediumImage ()
           query('div#media > img'),
 
+        get ads () {
+          let header = query('#infobar-wrap');
+
+          return ([]).concat(header);
+        },
       };
 
       let mypage = {
