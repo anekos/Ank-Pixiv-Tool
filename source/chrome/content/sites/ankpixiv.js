@@ -403,7 +403,7 @@ try {
       };
 
       // closure {{{
-      let mod = new AnkModule(this.elements.doc);
+      let mod = this;
       let interval = 500;
       let counter = 20;
       // }}}
@@ -544,7 +544,7 @@ try {
       };
 
       // closure {{{
-      let mod = new AnkModule(this.elements.doc);
+      let mod = this;
       let interval = 500;
       // FIXME counterが３つのインストールで共用されてしまっている
       let counter = 20;
@@ -600,7 +600,7 @@ try {
       }
 
       // closure {{{
-      let mod = new AnkModule(this.elements.doc);
+      let mod = this;
       // }}}
 
       return marking();
@@ -630,7 +630,7 @@ try {
       }
 
       // closure {{{
-      let mod = new AnkModule(this.elements.doc);
+      let mod = this;
       // }}}
 
       return setRating(pt);
@@ -736,6 +736,8 @@ try {
   /********************************************************************************
   * ベースとなるインスタンスの生成＋本体へのインストール - ankpixiv.xulにも登録を
   ********************************************************************************/
+
+  AnkModule.prototype.dup = function () new AnkModule(this.elements.doc);
 
   AnkBase.addModule(new AnkModule());
 

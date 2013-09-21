@@ -85,12 +85,12 @@ try {
     ********************************************************************************/
 
     get inSupportedSite () { // {{{
-      let b = AnkBase.siteModules.some(function (v) (AnkModule = (v.in.site ? v : null)));
+      AnkBase.siteModules.some(function (v) (AnkModule = (v.in.site ? v.dup() : null)));
       if (AnkModule)
-        AnkUtils.dump('inSupportedSite check: '+b+', '+AnkModule.info.illust.pageUrl+",\n"+Error().stack);
+        AnkUtils.dump('SUPPORTED: '+AnkModule.info.illust.pageUrl+",\n"+Error().stack);
       else
-        AnkUtils.dump('inSupportedSite check: '+b+', '+window.content.document.location.href);
-      return b;
+        AnkUtils.dump('unsupported: '+window.content.document.location.href+",\n"+Error().stack);
+      return !!AnkModule;
     }, // }}}
 
     get current () { // {{{

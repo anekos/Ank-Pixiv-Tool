@@ -347,7 +347,7 @@ try {
       };
 
       // closure {{{
-      let mod = new AnkModule(this.elements.doc);
+      let mod = this;
       let interval = 500;
       let counter = 20;
       // }}}
@@ -393,7 +393,7 @@ try {
       }
 
       // closure {{{
-      let mod = new AnkModule(this.elements.doc);
+      let mod = this;
       // }}}
 
       return marking();
@@ -412,6 +412,8 @@ try {
   /********************************************************************************
   * ベースとなるインスタンスの生成＋本体へのインストール - ankpixiv.xulにも登録を
   ********************************************************************************/
+
+  AnkModule.prototype.dup = function () new AnkModule(this.elements.doc);
 
   AnkBase.addModule(new AnkModule());
 
