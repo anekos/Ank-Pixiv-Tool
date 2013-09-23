@@ -531,7 +531,14 @@ function AnkViewer (module, getImage) {
     imgCtrl(function (e) e.addEventListener('load', loadedFunc, false));
   }
 
-  return self;
+  /********************************************************************************
+  * 外部向け - 他拡張と連携して処理を行う
+  ********************************************************************************/
+
+  doc.changeImageSize = changeImageSize;
+  doc.goNextMangaPage = goNextPage;
+  doc.rotateFitMode = rotateFitMode;
+
 }
 
 AnkViewer.prototype.reset = function () {
