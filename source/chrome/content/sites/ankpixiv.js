@@ -399,7 +399,7 @@ try {
         }; // }}}
 
         if (!proc())
-          setTimeout(delayMarking, interval);
+          setTimeout(installer, interval);
       };
 
       // closure {{{
