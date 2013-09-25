@@ -188,7 +188,7 @@ try {
     self.info = (function () { // {{{
       let illust = {
         get pageUrl ()
-          self.elements.doc.location.href,
+          self.elements.doc ? self.elements.doc.location.href : '',
 
         get id ()
           let (e = self.elements.illust.largeLink)
