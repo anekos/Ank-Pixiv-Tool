@@ -1706,7 +1706,7 @@ try {
           },
           {
             index: {
-              histories: ['illust_id,service_id'],
+              histories: ['illust_id,service_id','filename'],
               members: ['id,service_id']
             }
           }
