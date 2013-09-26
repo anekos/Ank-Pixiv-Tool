@@ -258,7 +258,7 @@ try {
                   e.addEventListener(
                     'click',
                     function (e) {
-                      AnkBase.downloadCurrentImageAuto();
+                      AnkBase.downloadCurrentImageAuto(mod);
                     },
                     true
                   );

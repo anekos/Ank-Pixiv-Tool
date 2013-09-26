@@ -253,6 +253,7 @@ try {
           let (e = self.elements.illust.memberLink)
             e && e.href.match(/\/member\.php\?id=(\d+)/) && RegExp.$1,
 
+        // XXX 遅延が酷いとavatar.srcで例外発生？
         get pixivId ()
           let (m = (self.elements.illust.avatar.src.match(/\/profile\/([^\/]+)\//)
                     ||
@@ -325,6 +326,7 @@ try {
               var wrapper = mod.elements.illust.wrapper;
               var medImg = mod.elements.illust.mediumImage;
               var openComment = mod.elements.illust.openComment;
+              var avatar = mod.elements.illust.avatar;
               var fitMode = AnkBase.Prefs.get('largeImageSize', AnkBase.FIT.NONE);
             } catch (e) {
               AnkUtils.dumpError(e);
@@ -332,7 +334,7 @@ try {
             } // }}}
 
             // 完全に読み込まれていないっぽいときは、遅延する
-            if (!(body && medImg && wrapper && openComment)) { // {{{
+            if (!(body && medImg && wrapper && openComment && avatar)) { // {{{
               AnkUtils.dump('delay installation: '+self.SITE_NAME+' remains '+counter);
               return false;   // リトライしてほしい
             } // }}}
@@ -342,7 +344,7 @@ try {
               medImg.addEventListener(
                 'click',
                 function (e) {
-                  AnkBase.downloadCurrentImageAuto();
+                  AnkBase.downloadCurrentImageAuto(mod);
                 },
                 true
               );
@@ -369,7 +371,7 @@ try {
                     let klass = e.getAttribute('class', '');
                     let m = klass.match(/rate-(\d+)/);
                     if (m && (point <= parseInt(m[1], 10)))
-                      AnkBase.downloadCurrentImageAuto();
+                      AnkBase.downloadCurrentImageAuto(mod);
                   },
                   true
                 );

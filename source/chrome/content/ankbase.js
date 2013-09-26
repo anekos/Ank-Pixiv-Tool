@@ -84,13 +84,14 @@ try {
     * プロパティ
     ********************************************************************************/
 
-    get inSupportedSite () { // {{{
-      AnkBase.siteModules.some(function (v) (AnkModule = (v.in.site ? v.dup() : null)));
-      if (AnkModule)
-        AnkUtils.dump('SUPPORTED: '+AnkModule.info.illust.pageUrl+",\n"+Error().stack);
+    get SupportedModule () { // {{{
+      let curmod;
+      AnkBase.siteModules.some(function (v) (curmod = (v.in.site ? v.dup() : null)));
+      if (curmod)
+        AnkUtils.dump('SUPPORTED: '+curmod.info.illust.pageUrl+",\n"+Error().stack);
       else
         AnkUtils.dump('unsupported: '+window.content.document.location.href+",\n"+Error().stack);
-      return !!AnkModule;
+      return curmod;
     }, // }}}
 
     get current () { // {{{
@@ -159,8 +160,6 @@ try {
     /********************************************************************************
     * モジュール関連
     ********************************************************************************/
-
-    AnkModule: null,
 
     siteModules: [],
 
@@ -693,10 +692,10 @@ try {
      *    return:               成功？
      * 現在表示されている画像を保存する
      */
-    downloadCurrentImage: function (useDialog, confirmDownloaded, debug) { // {{{
+    downloadCurrentImage: function (module, useDialog, confirmDownloaded, debug) { // {{{
       try {
         // ダウンロード用のコンテキストの収集
-        let context = new AnkContext(AnkModule);
+        let context = new AnkContext(module);
         if (!context)
           return false;
 
@@ -1069,8 +1068,11 @@ try {
 
             AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED);
 
-            if (AnkModule && AnkModule.SERVICE_ID === service_id)
-              AnkModule.markDownloaded(illust_id,true);
+            // たまたま開いているタブがダウンロードが完了したのと同じサイトだったならマーキング処理
+            let (curmod = AnkBase.SupportedModule) {
+              if (curmod && curmod.SERVICE_ID === service_id)
+                curmod.markDownloaded(illust_id,true);
+            }
 
             return true;
 
@@ -1137,22 +1139,22 @@ try {
      * downloadCurrentImageAuto
      * 自動的にダウンロードする場合はこっちを使う
      */
-    downloadCurrentImageAuto: function () { // {{{
-      AnkBase.downloadCurrentImage(undefined, AnkBase.Prefs.get('confirmExistingDownloadWhenAuto'));
+    downloadCurrentImageAuto: function (module) { // {{{
+      AnkBase.downloadCurrentImage(module, undefined, AnkBase.Prefs.get('confirmExistingDownloadWhenAuto'));
     }, // }}}
 
     /*
      * ページ毎の関数をインストール
      */
-    installFunctions: function () { // {{{
+    installFunctions: function (module) { // {{{
       try {
-        if (AnkBase.Store.get(AnkModule.elements.doc).functionsInstalled)
+        if (AnkBase.Store.get(module.elements.doc).functionsInstalled)
           return;
-        AnkBase.Store.get(AnkModule.elements.doc).functionsInstalled = true;
-        if (AnkModule.in.medium) {
-          AnkModule.installMediumPageFunctions();
+        AnkBase.Store.get(module.elements.doc).functionsInstalled = true;
+        if (module.in.medium) {
+          module.installMediumPageFunctions();
         } else {
-          AnkModule.installListPageFunctions();
+          module.installListPageFunctions();
         }
       } catch (e) {
         AnkUtils.dumpError(e);
@@ -1337,10 +1339,10 @@ try {
 
     }, // }}}
 
-    displayYourFantasy: function () { // {{{
+    displayYourFantasy: function (module) { // {{{
       return;
 
-      let doc = AnkModule.elements.doc;
+      let doc = module.elements.doc;
 
       function append ({parent, name, text, style, klass}) {
         let elem = doc.createElement(name);
@@ -1359,7 +1361,7 @@ try {
       if (sum < 100)
         return;
 
-      let nextElem = AnkModule.elements.mypage.fantasyDisplayNext;
+      let nextElem = module.elements.mypage.fantasyDisplayNext;
 
       let area = append({
         name: 'div',
@@ -1733,18 +1735,19 @@ try {
         if (typeof doc === 'undefined' || !doc || ev.target !== doc)
           return;       // documentがない、またはタブ内のトップ要素以外がターゲットなら無視する
 
-        if (!AnkBase.inSupportedSite) {
-          AnkBase.changeEnabled.call(AnkBase, 'ankpixiv-toolbar-button-image');
-          AnkBase.changeEnabled.call(AnkBase, 'ankpixiv-menu-download');
+        let curmod = AnkBase.SupportedModule;
+        if (!curmod) {
+          AnkBase.changeEnabled.call(AnkBase, null, 'ankpixiv-toolbar-button-image');
+          AnkBase.changeEnabled.call(AnkBase, null, 'ankpixiv-menu-download');
           return;       // 対象外のサイト
         }
 
         AnkUtils.dump('triggered: pageshow, '+location);
 
-        AnkBase.changeEnabled.call(AnkBase, 'ankpixiv-toolbar-button-image');
-        AnkBase.changeEnabled.call(AnkBase, 'ankpixiv-menu-download');
-        AnkModule.markDownloaded(null,ev.persisted);  // 戻るボタンなどで、キャッシュ上のページに遷移した場合は、マーキング強制
-        AnkBase.installFunctions();
+        AnkBase.changeEnabled.call(AnkBase, curmod, 'ankpixiv-toolbar-button-image');
+        AnkBase.changeEnabled.call(AnkBase, curmod, 'ankpixiv-menu-download');
+        curmod.markDownloaded(null,ev.persisted);  // 戻るボタンなどで、キャッシュ上のページに遷移した場合は、マーキング強制
+        AnkBase.installFunctions(curmod);
 
       } catch (e) {
         AnkUtils.dumpError(e,false,location);   // dead object対策
@@ -1761,24 +1764,25 @@ try {
         if (!ev.target.toString().match(/\[object Window\]/,'i'))
           return;       // windowオブジェクト以外がターゲットなら無視する
 
-        if (!AnkBase.inSupportedSite) {
-          AnkBase.changeEnabled.call(AnkBase, 'ankpixiv-toolbar-button-image');
-          AnkBase.changeEnabled.call(AnkBase, 'ankpixiv-menu-download');
+        let curmod = AnkBase.SupportedModule;
+        if (!curmod) {
+          AnkBase.changeEnabled.call(AnkBase, null, 'ankpixiv-toolbar-button-image');
+          AnkBase.changeEnabled.call(AnkBase, null, 'ankpixiv-menu-download');
           return;       // 対象外のサイト
         }
 
         AnkUtils.dump('triggered: focus, '+location);
 
-        AnkBase.changeEnabled.call(AnkBase, 'ankpixiv-toolbar-button-image');
-        AnkBase.changeEnabled.call(AnkBase, 'ankpixiv-menu-download');
-        AnkModule.markDownloaded();                     // focus当たる度にDB検索されると困るので
-        AnkBase.installFunctions();
+        AnkBase.changeEnabled.call(AnkBase, curmod, 'ankpixiv-toolbar-button-image');
+        AnkBase.changeEnabled.call(AnkBase, curmod, 'ankpixiv-menu-download');
+        curmod.markDownloaded();                     // focus当たる度にDB検索されると困るので引数なし
+        AnkBase.installFunctions(curmod);
 
-        if (!AnkBase.Store.get(AnkModule.elements.doc).onFocusDone) {
-          AnkBase.Store.get(AnkModule.elements.doc).onFocusDone = true;
+        if (!AnkBase.Store.get(curmod.elements.doc).onFocusDone) {
+          AnkBase.Store.get(curmod.elements.doc).onFocusDone = true;
 
-          if (AnkModule.in.myPage && !AnkModule.elements.mypage.fantasyDisplay)
-            AnkBase.displayYourFantasy();
+          if (curmod.in.myPage && !curmod.elements.mypage.fantasyDisplay)
+            AnkBase.displayYourFantasy(curmod);
         }
 
       } catch (e) {
@@ -1786,42 +1790,43 @@ try {
       }
     }, // }}}
 
-    changeEnabled: function (id) {
+    changeEnabled: function (module, id) {
       let elem = document.getElementById(id);
       if (!elem)
         return;
-      if (!AnkModule) {
+      if (!module) {
         elem.setAttribute('lost', true);
         elem.setAttribute('dark', false);
       }
       else {
         elem.setAttribute('lost', false);
-        elem.setAttribute('dark', !AnkModule.in.illustPage);
+        elem.setAttribute('dark', !module.in.illustPage);
       }
     },
 
     onDownloadButtonClick: function (event) { // {{{
       event.stopPropagation();
       event.preventDefault();
-      if (!AnkBase.inSupportedSite)
+      let curmod = AnkBase.SupportedModule;
+      if (!curmod)
         return;
-      if (!AnkModule.downloadable)
+      if (!curmod.downloadable)
         return;
       let useDialog = AnkBase.Prefs.get('showSaveDialog', true);
       let button = (typeof event.button == 'undefined') ? 0 : event.button;
-      if (AnkModule.in.illustPage) {
+      if (curmod.in.illustPage) {
         switch(button) {
-          case 0: AnkBase.downloadCurrentImage(useDialog); break;
-          case 1: AnkBase.downloadCurrentImage(!useDialog); break;
+          case 0: AnkBase.downloadCurrentImage(curmod, useDialog); break;
+          case 1: AnkBase.downloadCurrentImage(curmod, !useDialog); break;
           case 2: AnkBase.openPrefWindow(); break;
         }
       } else {
         let open = function (left) {
           let tab = AnkBase.AllPrefs.get('extensions.tabmix.opentabfor.bookmarks', false);
           if (!!left ^ !!tab)
-            AnkUtils.loadURI(AnkModule.URL);
+            AnkUtils.loadURI(curmod.URL);
           else
-            AnkUtils.openTab(AnkModule.URL);
+            AnkUtils.openTab(curmod.URL);
         };
         switch(button) {
           case 0: open(true); break;
@@ -1841,16 +1846,18 @@ try {
        * 他拡張からAnkPixiv.downloadCurrentImageが呼び出された時に実行する
        */
       downloadCurrentImage: function (useDialog, confirmDownloaded, debug) { // {{{
-        if (AnkBase.inSupportedSite)
-          return AnkBase.downloadCurrentImage(useDialog, confirmDownloaded, debug);
+        let curmod = AnkBase.SupportedModule;
+        if (curmod)
+          return AnkBase.downloadCurrentImage(curmod, useDialog, confirmDownloaded, debug);
       }, // }}}
 
       /*
        * 他拡張からAnkPixiv.rateが呼び出された時に実行する
        */
       rate: function (pt) { // {{{
-        if (AnkBase.inSupportedSite && typeof AnkModule.rate === 'function')
-          return AnkModule.rate(pt);
+        let curmod = AnkBase.SupportedModule;
+        if (curmod)
+          return curmod.rate(pt);
       }, // }}}
     },
 

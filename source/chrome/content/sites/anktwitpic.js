@@ -262,7 +262,7 @@ try {
               largeLink.addEventListener(
                 'click',
                 function (e) {
-                  AnkBase.downloadCurrentImageAuto();
+                  AnkBase.downloadCurrentImageAuto(mod);
                 },
                 true
               );
@@ -343,7 +343,7 @@ try {
       // closure {{{
       let mod = this;
       let interval = 1000;    // おそい
-      let counter = 20;
+      let counter = 40;       // おそい
       // }}}
 
       return installer();

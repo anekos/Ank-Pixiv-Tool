@@ -295,7 +295,7 @@ try {
               medImg.addEventListener(
                 'click',
                 function (e) {
-                  AnkBase.downloadCurrentImageAuto();
+                  AnkBase.downloadCurrentImageAuto(mod);
                 },
                 true
               );
@@ -312,7 +312,7 @@ try {
                   e.addEventListener(
                     'click',
                     function () {
-                      AnkBase.downloadCurrentImageAuto();
+                      AnkBase.downloadCurrentImageAuto(mod);
                     },
                     true
                   );
