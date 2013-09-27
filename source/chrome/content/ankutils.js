@@ -203,7 +203,7 @@ try {
     decodeDateTimeText: function (dtext) { // {{{
       // 年月日時分
       function calc1 () {
-        let m = dtext.match(/(\d+)\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})\D+?(\d{1,2})\s*[\u6642:\-]\s*(\d+)/);
+        let m = dtext.match(/(\d{4})\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})(?:\D{1,2}(\d{1,2})\s*[\u6642:\-]\s*(\d{1,2}))?/);
         if (!m)
           return;
 
@@ -211,8 +211,8 @@ try {
         d.setFullYear(parseInt(m[1]));
         d.setMonth(parseInt(m[2])-1);
         d.setDate(parseInt(m[3]));
-        d.setHours(parseInt(m[4]));
-        d.setMinutes(parseInt(m[5]));
+        d.setHours(m[4] ? parseInt(m[4]) : 0);
+        d.setMinutes(m[5] ? parseInt(m[5]) : 0);
 
         return d;
       }
