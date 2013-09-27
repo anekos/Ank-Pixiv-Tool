@@ -265,7 +265,9 @@ try {
       let dd = calc1() || calc2() || calc3() || calcx();
       if (!dd) {
         dd = new Date();
-        AnkUtils.dump('unknown datetime format = '+dtext);
+        let msg = 'use current datetime, because unsupported format = \''+dtext+'\'';
+        AnkUtils.dump(msg);
+        window.alert(msg);
         fault = true;
       }
 
