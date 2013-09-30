@@ -235,7 +235,7 @@ try {
 
       // 相対表記
       function calc3 () {
-        let m = dtext.match(/(an?|\d+) (minute|hour|day|month|year)/)
+        let m = dtext.match(/(an?|\d+) (min|hour|day|month|year)/)
         if (!m)
           return;
 
@@ -266,6 +266,7 @@ try {
       let fault = false;
       let dd = calc1() || calc2() || calc3() || calcx();
       if (!dd) {
+        // TODO 日時解析失敗時に、自動で現在日時で代替するのか、それとも他の処理を行うのかは、要検討課題
         dd = new Date();
         let msg = 'use current datetime, because unsupported format = \''+dtext+'\'';
         AnkUtils.dump(msg);
