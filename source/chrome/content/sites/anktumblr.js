@@ -42,10 +42,33 @@ try {
 
     self.elements = (function () { // {{{
       function query (q)
-        self.elements.doc.querySelector(q)
+        self.elements.doc.querySelector(q);
 
       function queryAll (q)
-        self.elements.doc.querySelectorAll(q)
+        self.elements.doc.querySelectorAll(q);
+
+      // 画像の面積を返す
+      // XXX 過度に長細いものなどは、1 とかにするほうがいいかも…
+      function getImageSize (e)
+        ((e.offsetHeight || 1) * (e.offsetWidth || 1));
+
+      function getLargestImage () {
+        let maxSize = 0, maxElement = null;
+
+        for (let root of Array.slice(arguments)) {
+          if (!root)
+            continue;
+          for (let it of root.querySelectorAll('img')) {
+            let size = getImageSize(it);
+            if (maxSize < size) {
+              maxSize = size;
+              maxElement = it;
+            }
+          }
+        }
+
+        return maxElement;
+      }
 
       let illust =  {
         get date ()
@@ -82,10 +105,7 @@ try {
           query('body'),
 
         get mediumImage ()
-          query('.photo > div > a > img') ||
-          query('.photo > div > img') ||
-          query('.post > a > img') ||
-          query('.photo > a > img'),
+          getLargestImage(query('.post'), query('.photo')),
 
         get ads () {
           let header = query('#header');
