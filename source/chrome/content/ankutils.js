@@ -261,6 +261,8 @@ try {
         return isNaN(d.getFullYear()) ? null : d;
       }
 
+      // まずは明らかなゴミを排除 && 連続の空白をまとめる
+      dtext = dtext.replace(/[^-0-9a-zA-Z:\/\u5E74\u6708\u6642\s]/g, '').replace(/\s+/g, ' ').trim();
       let fault = false;
       let dd = calc1() || calc2() || calc3() || calcx();
       if (!dd) {
