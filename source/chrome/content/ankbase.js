@@ -168,8 +168,12 @@ try {
         if (m.length > 0) {
           AnkUtils.dump('error ! duplicated service id: '+m[0].SITE_NAME+' <=> '+module.SITE_NAME+', '+module.SERVICE_ID);
         } else {
-          AnkUtils.dump('installed module: '+module.SITE_NAME+', '+module.SERVICE_ID);
-          AnkBase.siteModules.push(module);
+          if (!AnkBase.Prefs.get('useExperimentalModules', false) && module.EXPERIMENTAL) {
+            AnkUtils.dump('skip experimental module: '+module.SITE_NAME+', '+module.SERVICE_ID);
+          } else {
+            AnkUtils.dump('installed module: '+module.SITE_NAME+', '+module.SERVICE_ID);
+            AnkBase.siteModules.push(module);
+          }
         }
       }
     },

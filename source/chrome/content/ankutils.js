@@ -201,7 +201,7 @@ try {
     }, // }}}
 
     decodeDateTimeText: function (dtext) { // {{{
-      // 年月日時分
+      // 年/月/日 時:分
       function calc1 () {
         let m = dtext.match(/(\d{4})\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})(?:\D{1,2}(\d{1,2})\s*[\u6642:\-]\s*(\d{1,2}))?/);
         if (!m)
@@ -217,7 +217,7 @@ try {
         return d;
       }
 
-      // 年月日
+      // 月日,年
       function calc2 () {
         let m = dtext.match(/(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})\s*,\s*(\d{4})/)
         if (!m)
@@ -267,8 +267,15 @@ try {
       let dd = calc1() || calc2() || calc3() || calcx();
       if (!dd) {
         // TODO 日時解析失敗時に、自動で現在日時で代替するのか、それとも他の処理を行うのかは、要検討課題
+        let msg = 'unsupported datetime format = \''+dtext+'\'';
+        AnkUtils.dump(msg);
+
+        if (!AnkBase.Prefs.get('warnWrongDatetimeFormat', false)) {
+          // (暫定)呼び出し元でnull pointer exceptionを起こさせて処理を中断させる
+          return null;
+        }
+
         dd = new Date();
-        let msg = 'use current datetime, because unsupported format = \''+dtext+'\'';
         AnkUtils.dump(msg);
         window.alert(msg);
         fault = true;

@@ -53,7 +53,8 @@ try {
           query('div#media-overlay > div > span > a'),
 
         get datetime ()
-          queryAll('div.media-stat > p'),
+          let (e = queryAll('div.media-stat > p'))
+            e && e.length >= 2 && e[1],
 
         get title ()
           self.elements.illust.mediumImage,
@@ -120,12 +121,9 @@ try {
         get id ()
           self.info.illust.pageUrl.match(/^https?:\/\/twitpic\.com\/([^/]+)(?:\?|$)/)[1],
 
-       get dateTime () {
-          let d;
-          AnkUtils.A(self.elements.illust.datetime) .
-            some(function (e) let (s = AnkUtils.decodeDateTimeText(e.textContent)) ! s.fault && (d = s));
-          return d;
-       },
+        get dateTime ()
+          let (e = self.elements.illust.datetime)
+            e && AnkUtils.decodeDateTimeText(e.textContent),
 
         get size ()
           null,
