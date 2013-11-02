@@ -151,6 +151,9 @@ try {
         get openComment ()
           query('.comment-show-button'),
 
+        get openCaption ()
+          query('.expand>.button'),
+
         get ads () {
           let obj = AnkUtils.A(queryAll('object'));
           let iframe = AnkUtils.A(queryAll('iframe'));
@@ -326,6 +329,7 @@ try {
               var wrapper = mod.elements.illust.wrapper;
               var medImg = mod.elements.illust.mediumImage;
               var openComment = mod.elements.illust.openComment;
+              var openCaption = mod.elements.illust.openCaption;
               var avatar = mod.elements.illust.avatar;
               var fitMode = AnkBase.Prefs.get('largeImageSize', AnkBase.FIT.NONE);
             } catch (e) {
@@ -389,6 +393,11 @@ try {
             // コメント欄を開く
             if (AnkBase.Prefs.get('openComment', false)) // {{{
               setTimeout(function () openComment.click(), 1000);
+            // }}}
+
+            // キャプションを開く
+            if (AnkBase.Prefs.get('openCaption', false) && openCaption) // {{{
+              setTimeout(function () openCaption.click(), 1000);
             // }}}
 
             AnkUtils.dump('installed: '+mod.SITE_NAME);

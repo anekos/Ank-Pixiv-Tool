@@ -80,6 +80,7 @@
         <preference id="save-history" name="extensions.ankpixiv.saveHistory" type="bool" />
         <preference id="large-on-middle" name="extensions.ankpixiv.largeOnMiddle" type="bool" />
         <preference id="open-comment" name="extensions.ankpixiv.openComment" type="bool" />
+        <preference id="open-caption" name="extensions.ankpixiv.openCaption" type="bool" />
         <preference id="confirm-existing" name="extensions.ankpixiv.confirmExistingDownload" type="bool" />
         <preference id="confirm-existing-when-auto" name="extensions.ankpixiv.confirmExistingDownloadWhenAuto" type="bool" />
         <preference id="download-when-middle" name="extensions.ankpixiv.downloadWhenClickMiddle" type="bool" />
@@ -200,6 +201,7 @@
                 <checkbox preference="dont-resize-if-small" label="&dontResizeIfSmall;" />
               </groupbox>
               <checkbox preference="open-comment" label="&openComment;" />
+              <checkbox preference="open-caption" label="&openCaption;" />
               <checkbox preference="dont-hide-panel" label="&dontHidePanel;" />
               <checkbox preference="use-facing-view" label="&useFacingView;" />
               <checkbox preference="use-load-progress" label="&useLoadProgress;" />

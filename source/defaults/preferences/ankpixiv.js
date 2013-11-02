@@ -5,6 +5,7 @@ pref("extensions.ankpixiv.defaultFilename", '?memoized-name? - ?title?/#page-num
 pref("extensions.ankpixiv.defaultMangaFilename", '?memoized-name? - ?title? - ?page-number?');
 pref("extensions.ankpixiv.largeOnMiddle", true);
 pref("extensions.ankpixiv.openComment", false);
+pref("extensions.ankpixiv.openCaption", false);
 pref("extensions.ankpixiv.alternateFilename", '?memoized-name? - ?title? (?illust-id?)/#page-number#');
 pref("extensions.ankpixiv.alternateMangaFilename", '?memoized-name? - ?title? (?illust-id?) - ?page-number?');
 pref("extensions.ankpixiv.confirmExistingDownload", true);
@@ -21,3 +22,5 @@ pref("extensions.ankpixiv.dontHidePanel", false);
 pref("extensions.ankpixiv.useFacingView", true);
 pref("extensions.ankpixiv.useLoadProgress", true);
 pref("extensions.ankpixiv.viewOriginalSize", false);
+pref("extensions.ankpixiv.useExperimentalModules", false);
+pref("extensions.ankpixiv.warnWrongDatetimeFormat", false);

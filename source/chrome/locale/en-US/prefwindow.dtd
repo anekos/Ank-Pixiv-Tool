@@ -8,6 +8,7 @@
 <!ENTITY defaultFilename "Default filename">
 <!ENTITY largeOnMiddle "Show the large image on the same tab when you click the middle image.">
 <!ENTITY openComment "Automatically open the comment box.">
+<!ENTITY openCaption "Automatically open the long caption.">
 <!ENTITY alternateFilename "Alternate filename">
 <!ENTITY confirmExistingDownload "Confirmation of re-download.">
 <!ENTITY confirmExistingDownloadWhenAuto "Confirmation of re-download when automatic download.">
