@@ -152,7 +152,7 @@ try {
           query('.comment-show-button'),
 
         get openCaption ()
-          query('.expand>.button'),
+          query('.ui-expander-container > .ui-expander-target > .expand'),
 
         get ads () {
           let obj = AnkUtils.A(queryAll('object'));
@@ -396,7 +396,7 @@ try {
             // }}}
 
             // キャプションを開く
-            if (AnkBase.Prefs.get('openCaption', false) && openCaption) // {{{
+            if (AnkBase.Prefs.get('openCaption', false) && openCaption && openCaption.style.display === 'block') // {{{
               setTimeout(function () openCaption.click(), 1000);
             // }}}
 
