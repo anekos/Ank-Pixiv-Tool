@@ -229,13 +229,20 @@ try {
       if (!image)
         return;
 
-      let meta = isFile ? AnkBase.newLocalFile(image.path + '.txt') // XXX path or nativePath
-                        : let (file = image.clone())
-                            (file.append('meta.txt'), file);
+      if (isFile) {
+        return  {
+          image: image,
+          meta: AnkBase.newLocalFile(image.path.replace(/\.\w+$/,'.txt'))
+        };
+      }
 
       return {
-        image: image,
-        meta: meta
+        image: AnkBase.newLocalFile(image.path.replace(/\.\w+$/,'')),
+        meta: AnkBase.newLocalFile(
+                image.leafName.match(/^#page-number#\.\w+$/) ?
+                  image.path.replace(/#page-number#\.\w+$/,'meta.txt') :
+                  image.path.replace(/\s*#page-number#/,'').replace(/\.\w+$/,'.txt')
+              )
       };
     }, // }}}
 
@@ -375,12 +382,14 @@ try {
       let ps = path.split(/[/\\]/);
       let name = ps.pop();
       if (imgno) {
+        // images
         let imgNumber = AnkUtils.zeroPad(imgno, 2);
         let pageNumber = pageno ? (AnkUtils.zeroPad(pageno, 2) + '_') : '';
         name = name.replace(/#page-number#/,pageNumber+imgNumber);
       }
       else {
-        name = name.replace(/\s*#page-number#\s*/,'');
+        // meta text
+        name = name.replace(/\s*#page-number#/,'');
         if (name === '')
           name = 'meta';
       }
@@ -424,7 +433,6 @@ try {
       try {
         let initDir = AnkBase.newLocalFile(prefInitDir);
 
-        // FIXME マンガ形式タイトルフォルダありでpickerを使うとmeta.txtが不正な位置に作成される
         if (!initDir.exists())
           return AnkBase.showFilePickerWithMeta(prefInitDir, filenames[0], ext, isFile);
 

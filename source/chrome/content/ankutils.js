@@ -276,7 +276,6 @@ try {
         }
 
         dd = new Date();
-        AnkUtils.dump(msg);
         window.alert(msg);
         fault = true;
       }
