@@ -77,8 +77,6 @@ try {
       CLEANUP_INTERVAL: 30*1000,
     },
 
-    HOME_DIR: null,
-
 
     /********************************************************************************
     * プロパティ
@@ -927,7 +925,7 @@ try {
         let images        = context.info.path.image.images;
         let facing        = context.info.path.image.facing;
         let pageUrl       = context.info.illust.pageUrl;
-        let prefInitDir   = context.info.path.initDir || AnkBase.Prefs.get('initialDirectory') || AnkBase.HOME_DIR;
+        let prefInitDir   = context.info.path.initDir || AnkBase.Prefs.get('initialDirectory') || AnkUtils.findHomeDir();
 
         if (AnkBase.Prefs.get('saveHistory', true)) {
           try {
@@ -1726,8 +1724,6 @@ try {
           }
         );
       } // }}}
-
-      HOME_DIR = AnkUtils.findHomeDir();
 
       initStorage();
       AnkBase.updateDatabase();
