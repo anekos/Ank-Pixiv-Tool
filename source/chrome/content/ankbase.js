@@ -77,7 +77,7 @@ try {
       CLEANUP_INTERVAL: 30*1000,
     },
 
-    HOME_DIR: AnkUtils.findHomeDir(),
+    HOME_DIR: null,
 
 
     /********************************************************************************
@@ -1726,6 +1726,8 @@ try {
           }
         );
       } // }}}
+
+      HOME_DIR = AnkUtils.findHomeDir();
 
       initStorage();
       AnkBase.updateDatabase();
