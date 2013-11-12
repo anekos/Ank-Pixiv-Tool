@@ -617,10 +617,12 @@ try {
 
     /*
      * downloadFiles
-     *    urls:           URL
+     *    urls:           URLリスト
      *    referer:        リファラ
      *    prefInitDir:    出力先ベースディレクトリ
      *    localdir:       出力先ディレクトリ nsilocalFile
+     *    fp:             見開きページ情報
+     *    download:       ダウンロードキューエントリー
      *    onComplete      終了時のアラート
      * 複数のファイルをダウンロードする
      */
@@ -692,6 +694,32 @@ try {
       }
 
       downloadNext();
+    }, // }}}
+
+    /*
+     * downloadIllust
+     *    url:            URL
+     *    referer:        リファラ
+     *    prefInitDir:    出力先ベースディレクトリ
+     *    localdir:       出力先ディレクトリ nsilocalFile
+     *    download:       ダウンロードキューエントリー
+     *    onComplete      終了時のアラート
+     * 一枚絵のファイルをダウンロードする
+     */
+    downloadIllust: function (url, referer, prefInitDir, localdir, download, onComplete, onError) { // {{{
+      function _onComplete () {
+        // ファイル名の修正
+        try {
+          if (AnkBase.fixFileExt(localdir))
+            AnkUtils.dump('Fix file ext: ' + localdir.path);
+        } catch (e) {
+          AnkUtils.dump('Failed to fix file ext. => ' + e);
+        }
+
+        return onComplete.apply(null, arguments);
+      }
+
+      return AnkBase.downloadToRetryable(url, AnkBase.RETRY.MAXTIMES, referer, prefInitDir, localdir, download, _onComplete, onError);
     }, // }}}
 
     /*
@@ -1137,7 +1165,7 @@ try {
           AnkBase.downloadFiles(images, ref, prefInitDir, destFiles.image, facing, download, onComplete, onError);
         }
         else {
-          AnkBase.downloadToRetryable(images[0], AnkBase.RETRY.MAXTIMES, ref, prefInitDir, destFiles.image, download, onComplete, onError);
+          AnkBase.downloadIllust(images[0], ref, prefInitDir, destFiles.image, download, onComplete, onError);
         }
 
       } catch (e) {
