@@ -427,9 +427,9 @@ try {
      */
     installListPageFunctions: function () { /// {
 
-      let followExpansion = function () {
-        function proc () {
-          if (counter-- <= 0) {
+      let followExpansion = function (cnt) {
+        function proc (counter) {
+          if (counter <= 0) {
             AnkUtils.dump('installation failed fe: '+mod.SITE_NAME);
             return true;
           }
@@ -465,13 +465,13 @@ try {
         if (!AnkBase.Prefs.get('markDownloaded', false))
           return;
 
-        if (!proc())
-          setTimeout(followExpansion, interval);
+        if (!proc(cnt))
+          setTimeout(function() followExpansion(cnt-1), interval);
       };
 
-      let autoPagerize = function () {
-        function proc () {
-          if (counter-- <= 0) {
+      let autoPagerize = function (cnt) {
+        function proc (counter) {
+          if (counter <= 0) {
             AnkUtils.dump('installation failed ap: '+mod.SITE_NAME);
             return true;
           }
@@ -517,13 +517,13 @@ try {
         if (!AnkBase.Prefs.get('markDownloaded', false))
           return;
 
-        if (!proc())
-          setTimeout(autoPagerize, interval);
+        if (!proc(cnt))
+          setTimeout(function() autoPagerize(cnt-1), interval);
       }
 
-      let delayMarking = function () {
-        function proc () {
-          if (counter-- <= 0) {
+      let delayMarking = function (cnt) {
+        function proc (counter) {
+          if (counter <= 0) {
             AnkUtils.dump('installation failed dm: '+mod.SITE_NAME);
             return true;
           }
@@ -550,20 +550,19 @@ try {
         if (!AnkBase.Prefs.get('markDownloaded', false))
           return;
 
-        if (!proc())
-          setTimeout(delayMarking, interval);
+        if (!proc(cnt))
+          setTimeout(function() delayMarking(cnt-1), interval);
       };
 
       // closure {{{
       let mod = this;
       let interval = 500;
-      // FIXME counterが３つのインストールで共用されてしまっている
-      let counter = 20;
+      let counter_init = 20;
       // }}}
 
-      followExpansion();
-      autoPagerize();
-      delayMarking();
+      followExpansion(counter_init);
+      autoPagerize(counter_init);
+      delayMarking(counter_init);
     },
 
     /*
