@@ -14,8 +14,6 @@ try {
     self.SERVICE_ID = 'NCS';                  // 履歴DBに登録するサイト識別子
     self.SITE_NAME  = 'Nicosei';              // ?site-name?で置換されるサイト名のデフォルト値 
 
-    self.EXPERIMENTAL = true;                    // 試験実装中のモジュール
-
 
     /********************************************************************************
     * プロパティ
@@ -23,15 +21,17 @@ try {
 
     self.in = { // {{{
       get site () // {{{
-        self.info.illust.pageUrl.match(/^https?:\/\/seiga\.nicovideo\.jp\//), // }}}
+        self.info.illust.pageUrl.match(/^https?:\/\/seiga\.nicovideo\.jp\/(?:seiga|shunga|watch|comic|my|user\/illust)\//), // }}}
 
       get manga () // {{{
-        self.info.illust.pageUrl.match(/seiga\.nicovideo\.jp\/comic\//), // }}}
+        self.info.illust.pageUrl.match(/seiga\.nicovideo\.jp\/watch\/mg/), // }}}
 
       get medium () // {{{
         self.in.illustPage, // }}}
 
       get illustPage () // {{{
+        self.in.manga
+        ||
         self.info.illust.pageUrl.match(/seiga\.nicovideo\.jp\/seiga\/im/), // }}}
 
       get myPage ()
@@ -49,31 +49,49 @@ try {
         self.elements.doc.querySelectorAll(q)
 
       let illust =  {
+        get images ()
+          self.in.manga && queryAll('.image_container > * > * > img.base_img'),
+
         get datetime ()
+          self.in.manga && query('.watch_header > .date')
+          ||
           query('.bold'),
 
         get title ()
+          self.in.manga && queryAll('.title > h2 > *')
+          ||
           query('.title_text'),
 
         get comment ()
+          self.in.manga && query('.description_table > * > * > td+td')
+          ||
           query('.illust_user_exp'),
 
         get avatar ()
-          query('.illust_user_icon > a > img'),        // "同人"ページではimgが存在しない
+          !self.in.manga && query('.illust_user_icon > a > img'),
 
         get userName ()
+          self.in.manga && query('.author_name')
+          ||
           query('.illust_user_name > a'),
 
         get memberLink ()
+          self.in.manga && query('.author > .name > a')
+          ||
           illust.userName,
 
         get tags ()
           query('#tag_block'),
 
+        get illustType ()
+          query('.illust_type > a'),
+
         // require for AnkBase
 
         get downloadedDisplayParent ()
-          query('.title_block'),
+          self.in.manga && query('.title_area')
+          ||
+          query('.exp_header'),
 
         // require for AnkViewer
 
@@ -85,6 +103,8 @@ try {
           query('#main'),
 
         get mediumImage ()
+          self.in.manga && self.elements.illust.images[0]
+          ||
           query('#illust_link'),
 
 /* future use.
@@ -93,10 +113,15 @@ try {
 */
 
         get ads () {
-          let header1 = query('#siteHeaderInner');
-          let header2 = query('#header_cnt');
+          let ads = [] ;
+          ['#siteHeaderInner','#header_cnt','.content_right'].
+            forEach(function (v) {
+              let e = query(v);
+              if (e)
+                ads.push(e);
+            });
 
-          return ([]).concat(header1, header2);
+          return ads;
         },
       };
 
@@ -121,6 +146,8 @@ try {
           self.elements.doc ? self.elements.doc.location.href : '',
 
         get id ()
+          self.in.manga && self.info.illust.pageUrl.match(/\/watch\/(mg\d+)/)[1]
+          ||
           self.info.illust.pageUrl.match(/\/seiga\/(im\d+)/)[1],
 
         get dateTime ()
@@ -160,15 +187,24 @@ try {
         get referer ()
           self.info.illust.pageUrl,
 
-        get title ()
-          AnkUtils.trim(self.elements.illust.title.textContent),
+        get title () {
+          if (self.in.manga) {
+            let title = self.elements.illust.title[0].textContent;
+            let episode = self.elements.illust.title[1].textContent;
+            return title+' '+episode;
+          }
+          else {
+            return AnkUtils.trim(self.elements.illust.title.textContent);
+          }
+        },
 
         get comment ()
           let (e = self.elements.illust.comment)
             (e ? AnkUtils.textContent(e) : ''),
 
         get R18 ()
-          true,
+          let (e = self.elements.illust.illustType)
+            (e && e.href.match(/\/shunga\//)),
 
         get mangaPages ()
           self.info.path.image.images.length,
@@ -179,6 +215,8 @@ try {
 
       let member = {
         get id ()
+          self.in.manga && self.elements.illust.memberLink.href.match(/\/manga\/list\?user_id=(.+?)(?:$|\?)/)[1]
+          ||
           self.elements.illust.memberLink.href.match(/\/user\/illust\/(.+?)(?:$|\?)/)[1],
 
         get pixivId ()
@@ -203,7 +241,15 @@ try {
           null,
 
         get image () {
-          return { images: [self.elements.illust.mediumImage.href], facing: null, };
+          let images;
+          if (self.in.manga) {
+            // マンガの大サイズ画像はないらしい
+            images = AnkUtils.A(self.elements.illust.images).map(function (e) e.getAttribute('data-original'));
+          } else {
+            images = [self.elements.illust.mediumImage.href];
+          }
+
+          return { images: images, facing: null, };
         }
       };
 
@@ -274,12 +320,12 @@ try {
               );
             } // }}}
 
-            // レイティング("クリップ")によるダウンロード
+            // レイティング("クリップ","マイリスト登録","とりあえず一発登録",""お気に入り登録)によるダウンロード
             (function () { // {{{
               if (!AnkBase.Prefs.get('downloadWhenRate', false))
                 return;
 
-              ['#clip_add_button'].forEach(function (v) {
+              ['#clip_add_button','.mylist_area > a','.mylist_area > a+a','.favorites_navigator > .favorite'].forEach(function (v) {
                 let e = doc.querySelector(v)
                 if (e) {
                   e.addEventListener(
@@ -351,9 +397,11 @@ try {
 
         [
           ['div.illust_list_img > div > a', 2],          // ○○さんのイラスト
+          ['div.illust_thumb > div > a', 2],             // マイページ
+          ['.episode_item > .episode > .thumb > a', 3],  // マンガ一覧
         ].forEach(function ([selector, nTrackback]) {
           AnkUtils.A(target.node.querySelectorAll(selector)) .
-            map(function (link) link.href && let (m = link.href.split(/\//)) m.length >= 2 && [link, m.pop()]) .
+            map(function (link) link.href && let (m = link.href.split(/\//)) m.length >= 2 && [link, m.pop().match(/^(.+?)(?:$|\?)/)[1]]) .
             filter(function (m) m) .
             forEach(function ([link, id]) {
               if (!(target.illust_id && target.illust_id != id))

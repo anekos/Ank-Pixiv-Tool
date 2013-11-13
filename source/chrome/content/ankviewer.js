@@ -348,7 +348,7 @@ function AnkViewer (module, getImage) {
     if ((num >= totalMangaPages) || (num < 0))
       return changeImageSize();
     updateButtons();
-    AnkUtils.dump('goto ' + num + ' page');
+    AnkUtils.dump('goto ' + (num+1) + ' page');
     loadBigImage(currentMangaPage);
   };
 
