@@ -75,8 +75,9 @@ try {
     }; // }}}
 
     self.elements = (function () { // {{{
-      function query (q)
-        self.elements.doc.querySelector(q)
+      function query (q,parentq)
+        let (e = !parentq && self.elements.doc || query(parentq))
+          e && e.querySelector(q)
 
       function queryAll (q)
         self.elements.doc.querySelectorAll(q)
@@ -93,10 +94,10 @@ try {
           query('.meta > li+li'),
 
         get title ()
-          query('.work-info > .title'),
+          query('.title', '.work-info'),
 
         get comment ()
-          query('.work-info > .caption'),
+          query('.caption', '.work-info'),
 
         get avatar ()
           query('.profile-unit > a > img.user-image'),
@@ -125,6 +126,12 @@ try {
 
         get autoPagerizeTarget()
           queryAll('._unit'),
+
+        get nextLink()
+          query('.before > a'),
+
+        get prevLink()
+          query('.after > a'),
 
         // require for AnkBase
 

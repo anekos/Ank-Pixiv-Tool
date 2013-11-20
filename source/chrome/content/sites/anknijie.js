@@ -82,6 +82,12 @@ try {
         get noComment ()
           query('.co2') || query('#dojin_comment'),
 
+        get nextLink()
+          query('a#nextIllust'),
+
+        get prevLink()
+          query('a#backIllust'),
+
         // require for AnkBase
 
         get downloadedDisplayParent ()
