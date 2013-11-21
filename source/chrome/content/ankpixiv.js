@@ -143,10 +143,11 @@ try {
           AnkPixiv.elements.doc.querySelector('.work-info'),
 
         get title ()
-          AnkPixiv.elements.doc.querySelector('.work-info > .title'),
+          illust.worksData.querySelector('.title'),
 
         get comment ()
-          AnkPixiv.elements.doc.querySelector('.work-info > .caption'),
+          illust.worksData.querySelector('.caption'),
+
 
         get avatar ()
           AnkPixiv.elements.doc.querySelector('.profile-unit > a > img.user-image'),
@@ -199,7 +200,8 @@ try {
     info: (function () { // {{{
       let illust = {
         get id ()
-          parseInt(AnkPixiv.elements.doc.querySelector('#rpc_i_id').textContent, 10),
+          let (e = AnkPixiv.elements.illust.largeLink)
+            e && e.href.match(/illust_id=(\d+)/) && parseInt(RegExp.$1, 10),
 
         get dateTime ()
           AnkPixiv.info.illust.worksData.dateTime,
