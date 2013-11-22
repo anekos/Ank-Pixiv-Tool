@@ -203,7 +203,7 @@ try {
     decodeDateTimeText: function (dtext) { // {{{
       // 年/月/日 時:分
       function calc1 () {
-        let m = dtext.match(/(\d{4})\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})(?:\D{1,2}(\d{1,2})\s*[\u6642:\-]\s*(\d{1,2}))?/);
+        let m = dtext.match(/(\d{4})\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})(?:\s*\D{1,2}\s*(\d{1,2})\s*[\u6642:\-]\s*(\d{1,2}))?/);
         if (!m)
           return;
 

@@ -167,7 +167,8 @@ try {
         },  // いずれも 'http://t.co/'+id で作品のページに飛べる
 
         get dateTime ()
-          AnkUtils.decodeDateTimeText(self.elements.illust.datetime.title),
+          let (v = self.elements.illust.datetime.title)
+            AnkUtils.decodeDateTimeText(v ? v : self.elements.illust.datetime.textContent),
 
         get size ()
           null,
