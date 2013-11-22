@@ -136,7 +136,7 @@ try {
         // require for AnkBase
 
         get downloadedDisplayParent ()
-          query('.work-info'),
+          query('.meta', '.work-info'),
 
         // require for AnkViewer
 
