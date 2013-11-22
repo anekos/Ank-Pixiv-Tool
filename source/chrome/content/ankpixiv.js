@@ -162,7 +162,7 @@ try {
           AnkPixiv.elements.doc.querySelector('.tags'),
 
         get downloadedDisplayParent ()
-          AnkPixiv.elements.doc.querySelector('.work-info'),
+          illust.worksData.querySelector('.meta'),
 
         get ads () {
           let obj = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('object'));
