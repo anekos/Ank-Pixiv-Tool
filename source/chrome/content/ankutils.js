@@ -590,6 +590,9 @@ try {
     }, // }}}
 
     trackbackParentNode: function (node, n) { // {{{
+      if (n < 0)
+        return node.firstChild;
+
       for (let i = 0; node && i < n; i++)
         node = node.parentNode;
       return node;
