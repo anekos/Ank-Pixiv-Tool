@@ -584,38 +584,26 @@ try {
     markDownloaded: function (node, force, ignorePref) { // {{{
       function marking () {
         const IsIllust = /&illust_id=(\d+)/;
-        const BoxTag = /^(li|div|article|section)$/i;
-
-        function findBox (e, limit, cls) {
-          if (limit <= 0)
-            return null;
-          if (BoxTag.test(e.tagName)) {
-            if (!cls && mod.in.feed)
-              cls = 'stacc_ref_thumb_left';
-            if (!cls || e.className.split(/ /).some(function (v) (v === cls)))
-              return e;
-          }
-          return findBox(e.parentNode, limit - 1, cls);
-        }
 
         let target = AnkBase.getMarkTarget(mod, node, force, ignorePref);
         if (!target)
           return;
 
         [
-          ['a > img', 1],
-          ['a > p > img', 2],
-          ['a > div > img', 2],
-          ['a > p > div > img', 3]
+          ['li > a.work', 1],                       // 作品一覧、ブックマーク
+          ['li.rank-detail > a', 1],                // ホーム（ランキング）
+          ['.ranking-item > a.work', 1],            // ランキング
+          ['.worksListOthersImg > ul > li > a', 1], // ブックマーク（プロファイル）、イメージレスポンス（プロファイル）
+          ['.search_a2_result > ul > li > a', 1],   // イメージレスポンス
+          ['.stacc_ref_illust_img > a', 3]          // フィード
         ].forEach(function ([selector, nTrackback]) {
           AnkUtils.A(target.node.querySelectorAll(selector)) .
-            map(function (img) AnkUtils.trackbackParentNode(img, nTrackback)) .
             map(function (link) link.href && let (m = IsIllust.exec(link.href)) m && [link, m]) .
             filter(function (m) m) .
             map(function ([link, m]) [link, parseInt(m[1], 10)]) .
             forEach(function ([link, id]) {
               if (!(target.illust_id && target.illust_id != id))
-                AnkBase.markBoxNode(findBox(link, 3), id, mod.SERVICE_ID);
+                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, mod.SERVICE_ID);
             });
         });
       }

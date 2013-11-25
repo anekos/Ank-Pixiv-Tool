@@ -339,6 +339,9 @@ try {
               setTimeout(function () openComment.click(), 1000);
             // }}}
 
+            // こんな絵でも…にマーキング
+            mod.markDownloaded(doc,true);
+
             AnkUtils.dump('installed: '+mod.SITE_NAME);
 
           } catch (e) {
@@ -386,6 +389,7 @@ try {
           ['div.nijie > div.picture > p.nijiedao > a', 3],  // 通常の一覧
           ['div.nijie > p.nijiedao > a', 2],                // "同人"の一覧
           ['div.nijie-bookmark > p > a', 2],                // "ブックマーク"の一覧
+          ['#carouselInner-view > ul > li > a', 1],         // "こんな絵でも"
         ].forEach(function ([selector, nTrackback]) {
           AnkUtils.A(target.node.querySelectorAll(selector)) .
             map(function (link) link.href && let (m = IsIllust.exec(link.href)) m && [link, m]) .
