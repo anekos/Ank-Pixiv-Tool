@@ -124,6 +124,9 @@ try {
         get feedList()
           query('#stacc_timeline'),
 
+        get rankingList()
+          query('.ranking-items'),
+
         get autoPagerizeTarget()
           queryAll('._unit'),
 
@@ -444,12 +447,13 @@ try {
           try { // {{{
             var recommend = mod.elements.illust.recommendList;
             var feed = mod.elements.illust.feedList;
+            var ranking = mod.elements.illust.rankingList;
           } catch (e) {
             AnkUtils.dumpError(e);
             return true;
           } // }}}
 
-          let elm = recommend || feed;
+          let elm = recommend || feed || ranking;
           if (!elm) {
             AnkUtils.dump('delay installation fe: '+mod.SITE_NAME+' remains '+counter);
             return false;     // リトライしてほしい
@@ -576,11 +580,11 @@ try {
      * ダウンロード済みイラストにマーカーを付ける
      *    node:     対象のノード (AutoPagerize などで追加されたノードのみに追加するためにあるよ)
      *    force:    追加済みであっても、強制的にマークする
-     */
+     */ 
     markDownloaded: function (node, force, ignorePref) { // {{{
       function marking () {
         const IsIllust = /&illust_id=(\d+)/;
-        const BoxTag = /^(li|div|article)$/i;
+        const BoxTag = /^(li|div|article|section)$/i;
 
         function findBox (e, limit, cls) {
           if (limit <= 0)
