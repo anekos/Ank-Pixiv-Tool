@@ -113,6 +113,9 @@ try {
         get galleryEnabled ()
           query('.gallery-enabled'),
 
+        get media ()
+          query('.media'),
+
         // require for AnkBase
 
         get downloadedDisplayParent ()
@@ -125,7 +128,8 @@ try {
             e && e.length > 0 && e[0],
 
         get mediumImage ()
-          queryEither('img.media-image', '.media-thumbnail > img'),
+          self.in.gallery ? illust.gallery.querySelector('img.media-image') :
+            (illust.tweet && (illust.tweet.querySelector('.media img') || illust.photoImage)),
       };
 
       let mypage = {
@@ -238,7 +242,7 @@ try {
           let m = [
             self.in.gallery                 ? self.elements.illust.mediumImage.src :
             self.elements.illust.photoFrame ? self.elements.illust.photoImage.src :
-                                              self.elements.illust.mediumImage.parentNode.getAttribute('data-url')
+                                              self.elements.illust.media.getAttribute('data-url')
           ];
           return { images: m, facing: null, };
         },
@@ -306,7 +310,12 @@ try {
               return false;   // リトライしてほしい
             }
 
-            // viewerは作らない
+            // デフォルトのviewerを有効にする
+            if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true) && mod.in.tweet) {
+              let media = mod.elements.illust.media;
+              if (media && !media.classList.contains('media-thumbnail'))
+                media.classList.add('media-thumbnail')
+            }
 
             // 中画像クリック時に保存する
             if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
