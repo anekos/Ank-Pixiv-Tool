@@ -7,14 +7,15 @@
 
     <em:id>ankpixiv@snca.net</em:id>
     <em:name>Ank Pixiv Tool</em:name>
-    <em:version>1.19.0</em:version>
+    <em:version>2.0.0pre</em:version>
     <em:localized>
       <Description>
         <em:name>Ank Pixiv Tool</em:name>
         <em:locale>en-US</em:locale>
         <em:description>Easy Pixiv-illustration downloader</em:description>
         <em:creator>anekos</em:creator>
-        <em:homepageURL>http://d.hatena.ne.jp/nokturnalmortum/20080617/1213645393</em:homepageURL>
+        <em:creator>ginzu</em:creator>
+        <em:homepageURL>https://github.com/anekos/Ank-Pixiv-Tool/</em:homepageURL>
         <em:translator>winiah</em:translator>
         <em:translator>erglo</em:translator>
         <em:translator>Leszek(teo)Życzkowski</em:translator>
@@ -36,7 +37,8 @@
         <em:locale>ja-JP</em:locale>
         <em:description>簡単Pixivイラストダウンローダ</em:description>
         <em:creator>anekos</em:creator>
-        <em:homepageURL>http://d.hatena.ne.jp/nokturnalmortum/20080617/1213645393</em:homepageURL>
+        <em:creator>ginzu</em:creator>
+        <em:homepageURL>https://github.com/anekos/Ank-Pixiv-Tool/</em:homepageURL>
         <em:translator>winiah</em:translator>
         <em:translator>erglo</em:translator>
         <em:translator>Leszek(teo)Życzkowski</em:translator>
@@ -58,7 +60,8 @@
         <em:locale>de-DE</em:locale>
         <em:description>Pixiv-Bilder einfacher herunterladen</em:description>
         <em:creator>anekos</em:creator>
-        <em:homepageURL>http://d.hatena.ne.jp/nokturnalmortum/20080617/1213645393</em:homepageURL>
+        <em:creator>ginzu</em:creator>
+        <em:homepageURL>https://github.com/anekos/Ank-Pixiv-Tool/</em:homepageURL>
         <em:translator>winiah</em:translator>
         <em:translator>erglo</em:translator>
         <em:translator>Leszek(teo)Życzkowski</em:translator>
@@ -80,7 +83,8 @@
         <em:locale>fr</em:locale>
         <em:description>Télécharger plus facilement les illustrations pixiv</em:description>
         <em:creator>anekos</em:creator>
-        <em:homepageURL>http://d.hatena.ne.jp/nokturnalmortum/20080617/1213645393</em:homepageURL>
+        <em:creator>ginzu</em:creator>
+        <em:homepageURL>https://github.com/anekos/Ank-Pixiv-Tool/</em:homepageURL>
         <em:translator>winiah</em:translator>
         <em:translator>erglo</em:translator>
         <em:translator>Leszek(teo)Życzkowski</em:translator>
@@ -106,7 +110,7 @@
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
         <em:minVersion>4.0</em:minVersion>
-        <em:maxVersion>23.0</em:maxVersion>
+        <em:maxVersion>28.0</em:maxVersion>
       </Description>
     </em:targetApplication>
 
