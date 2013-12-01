@@ -1666,7 +1666,7 @@ try {
     ********************************************************************************/
 
     getMarkTarget: function (module, node, force, ignorePref) { // {{{
-      if (module.in.medium || !module.in.site)
+      if (!module.in.site)
         return null;
 
       if (!AnkBase.Prefs.get('markDownloaded', false) && !ignorePref)

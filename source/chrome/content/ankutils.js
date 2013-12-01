@@ -203,7 +203,7 @@ try {
     decodeDateTimeText: function (dtext) { // {{{
       // 年/月/日 時:分
       function calc1 () {
-        let m = dtext.match(/(\d{4})\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})(?:\D{1,2}(\d{1,2})\s*[\u6642:\-]\s*(\d{1,2}))?/);
+        let m = dtext.match(/(\d{4})\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})(?:\s*\D{1,2}\s*(\d{1,2})\s*[\u6642:\-]\s*(\d{1,2}))?/);
         if (!m)
           return;
 
@@ -378,16 +378,25 @@ try {
      *    url:          チェックする
      *    callback:     function (exists) 存在していれば exists が真
      */
-   remoteFileExists: function (url, callback) { // {{{
-      let xhr = new XMLHttpRequest();
-      xhr.open('HEAD', url, !!callback);
-      xhr.onreadystatechange = function (e) {
-        if (xhr.readyState == 4) {
-          callback && callback(xhr.status == 200);
-        }
-      };
-      xhr.send(null);
-      return callback || (xhr.status === 200);
+   remoteFileExists: function (url, callback, redirect_loop) { // {{{
+
+     const REDIRECT_LOOP_MAX = 2;
+
+     let ios = AnkUtils.ccgs("@mozilla.org/network/io-service;1", Components.interfaces.nsIIOService);
+     let ch = ios.newChannel(url, null, null).QueryInterface(Components.interfaces.nsIHttpChannel);;
+     ch.requestMethod = "HEAD";
+     ch.redirectionLimit = 0;
+     ch.open();
+
+     // TODO 利用されていないのでcallbackの処理は未実装
+
+     if (ch.responseStatus == 302) {
+       let redirect_to = ch.getResponseHeader('Location');
+       AnkUtils.dump('redirect: from='+url+' to='+redirect_to);
+       return redirect_loop > REDIRECT_LOOP_MAX ? null : AnkUtils.remoteFileExists(redirect_to, callback, ++redirect_loop);
+     }
+
+     return ch.requestSucceeded && [ch.responseStatus, url, ch.getResponseHeader('Content-Type')];
    }, // }}}
 
 
@@ -581,6 +590,9 @@ try {
     }, // }}}
 
     trackbackParentNode: function (node, n) { // {{{
+      if (n < 0)
+        return node.firstChild;
+
       for (let i = 0; node && i < n; i++)
         node = node.parentNode;
       return node;

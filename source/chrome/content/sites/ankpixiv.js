@@ -75,8 +75,9 @@ try {
     }; // }}}
 
     self.elements = (function () { // {{{
-      function query (q)
-        self.elements.doc.querySelector(q)
+      function query (q,parentq)
+        let (e = !parentq && self.elements.doc || query(parentq))
+          e && e.querySelector(q)
 
       function queryAll (q)
         self.elements.doc.querySelectorAll(q)
@@ -93,10 +94,10 @@ try {
           query('.meta > li+li'),
 
         get title ()
-          query('.work-info > .title'),
+          query('.title', '.work-info'),
 
         get comment ()
-          query('.work-info > .caption'),
+          query('.caption', '.work-info'),
 
         get avatar ()
           query('.profile-unit > a > img.user-image'),
@@ -123,13 +124,22 @@ try {
         get feedList()
           query('#stacc_timeline'),
 
+        get rankingList()
+          query('.ranking-items'),
+
         get autoPagerizeTarget()
           queryAll('._unit'),
+
+        get nextLink()
+          query('.before > a'),
+
+        get prevLink()
+          query('.after > a'),
 
         // require for AnkBase
 
         get downloadedDisplayParent ()
-          query('.work-info'),
+          query('.meta', '.work-info'),
 
         // require for AnkViewer
 
@@ -437,12 +447,13 @@ try {
           try { // {{{
             var recommend = mod.elements.illust.recommendList;
             var feed = mod.elements.illust.feedList;
+            var ranking = mod.elements.illust.rankingList;
           } catch (e) {
             AnkUtils.dumpError(e);
             return true;
           } // }}}
 
-          let elm = recommend || feed;
+          let elm = recommend || feed || ranking;
           if (!elm) {
             AnkUtils.dump('delay installation fe: '+mod.SITE_NAME+' remains '+counter);
             return false;     // リトライしてほしい
@@ -569,42 +580,30 @@ try {
      * ダウンロード済みイラストにマーカーを付ける
      *    node:     対象のノード (AutoPagerize などで追加されたノードのみに追加するためにあるよ)
      *    force:    追加済みであっても、強制的にマークする
-     */
+     */ 
     markDownloaded: function (node, force, ignorePref) { // {{{
       function marking () {
         const IsIllust = /&illust_id=(\d+)/;
-        const BoxTag = /^(li|div|article)$/i;
-
-        function findBox (e, limit, cls) {
-          if (limit <= 0)
-            return null;
-          if (BoxTag.test(e.tagName)) {
-            if (!cls && mod.in.feed)
-              cls = 'stacc_ref_thumb_left';
-            if (!cls || e.className.split(/ /).some(function (v) (v === cls)))
-              return e;
-          }
-          return findBox(e.parentNode, limit - 1, cls);
-        }
 
         let target = AnkBase.getMarkTarget(mod, node, force, ignorePref);
         if (!target)
           return;
 
         [
-          ['a > img', 1],
-          ['a > p > img', 2],
-          ['a > div > img', 2],
-          ['a > p > div > img', 3]
+          ['li > a.work', 1],                       // 作品一覧、ブックマーク
+          ['li.rank-detail > a', 1],                // ホーム（ランキング）
+          ['.ranking-item > a.work', 1],            // ランキング
+          ['.worksListOthersImg > ul > li > a', 1], // ブックマーク（プロファイル）、イメージレスポンス（プロファイル）
+          ['.search_a2_result > ul > li > a', 1],   // イメージレスポンス
+          ['.stacc_ref_illust_img > a', 3]          // フィード
         ].forEach(function ([selector, nTrackback]) {
           AnkUtils.A(target.node.querySelectorAll(selector)) .
-            map(function (img) AnkUtils.trackbackParentNode(img, nTrackback)) .
             map(function (link) link.href && let (m = IsIllust.exec(link.href)) m && [link, m]) .
             filter(function (m) m) .
             map(function ([link, m]) [link, parseInt(m[1], 10)]) .
             forEach(function ([link, id]) {
               if (!(target.illust_id && target.illust_id != id))
-                AnkBase.markBoxNode(findBox(link, 3), id, mod.SERVICE_ID);
+                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, mod.SERVICE_ID);
             });
         });
       }

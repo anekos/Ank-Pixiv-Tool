@@ -21,7 +21,7 @@ try {
 
     self.in = { // {{{
       get site () // {{{
-        self.info.illust.pageUrl.match(/^https?:\/\/seiga\.nicovideo\.jp\/(?:seiga|shunga|watch|comic|my|user\/illust)\//), // }}}
+        self.info.illust.pageUrl.match(/^https?:\/\/seiga\.nicovideo\.jp\/(?:seiga|shunga|watch|comic|search|my|user\/illust)\//), // }}}
 
       get manga () // {{{
         self.info.illust.pageUrl.match(/seiga\.nicovideo\.jp\/watch\/mg/), // }}}
@@ -55,17 +55,23 @@ try {
         get datetime ()
           self.in.manga && query('.watch_header > .date')
           ||
-          query('.bold'),
+          query('.inner.cfix > .other_info > .date')  // seiga
+          ||
+          query('.bold'),                             // shunga
 
         get title ()
           self.in.manga && queryAll('.title > h2 > *')
           ||
-          query('.title_text'),
+          query('.inner.cfix > .title')               // seiga
+          ||
+          query('.title_text'),                       // shunga
 
         get comment ()
           self.in.manga && query('.description_table > * > * > td+td')
           ||
-          query('.illust_user_exp'),
+          query('.inner.cfix > .discription')         // seiga
+          ||
+          query('.illust_user_exp'),                  // shunga
 
         get avatar ()
           !self.in.manga && query('.illust_user_icon > a > img'),
@@ -73,7 +79,9 @@ try {
         get userName ()
           self.in.manga && query('.author_name')
           ||
-          query('.illust_user_name > a'),
+          query('.user_link > a')                     // seiga
+          ||
+          query('.illust_user_name > a'),             // shunga
 
         get memberLink ()
           self.in.manga && query('.author > .name > a')
@@ -81,7 +89,9 @@ try {
           illust.userName,
 
         get tags ()
-          query('#tag_block'),
+          query('.illust_tag.cfix.static')            // seiga
+          ||
+          query('#tag_block'),                        // shunga & manga
 
         get illustType ()
           query('.illust_type > a'),
@@ -91,7 +101,9 @@ try {
         get downloadedDisplayParent ()
           self.in.manga && query('.title_area')
           ||
-          query('.exp_header'),
+          query('.other_info')                        // seiga
+          ||
+          query('.exp_header > .info'),
 
         // require for AnkViewer
 
@@ -161,7 +173,7 @@ try {
           if (!elem)
             return [];
 
-          let tags = AnkUtils.A(elem.querySelectorAll('a.tag'))
+          let tags = AnkUtils.A(elem.querySelectorAll('.tag'))
             .map(function (e) AnkUtils.trim(e.textContent))
             .filter(function (s) s && s.length);
           return tags;
@@ -204,7 +216,7 @@ try {
 
         get R18 ()
           let (e = self.elements.illust.illustType)
-            (e && e.href.match(/\/shunga\//)),
+            (e && !!e.href.match(/\/shunga\//)),
 
         get mangaPages ()
           self.info.path.image.images.length,
@@ -246,7 +258,16 @@ try {
             // マンガの大サイズ画像はないらしい
             images = AnkUtils.A(self.elements.illust.images).map(function (e) e.getAttribute('data-original'));
           } else {
-            images = [self.elements.illust.mediumImage.href];
+            let s = AnkUtils.remoteFileExists(self.elements.illust.mediumImage.href);
+            let href = s[1];
+            if (!s[2].match(/^image\//)) {
+              // 2013/11の改編で、新構成ページでは大サイズ画像リンクのリダイレクト先が image/... でなくなってしまった
+              let html = AnkUtils.httpGET(href);
+              let doc = AnkUtils.createHTMLDocument(html);
+              let src = doc.querySelector('.illust_view_big > img').src;
+              href = href.replace(/^(https?:\/\/.+?)(?:\/.*)$/,"$1")+src;
+            }
+            images = [href];
           }
 
           return { images: images, facing: null, };
@@ -396,16 +417,17 @@ try {
           return;
 
         [
-          ['div.illust_list_img > div > a', 2],          // ○○さんのイラスト
+          ['li.list_item > a', 1],                       // ○○さんのイラスト
           ['div.illust_thumb > div > a', 2],             // マイページ
           ['.episode_item > .episode > .thumb > a', 3],  // マンガ一覧
+          ['div.illust_list_img > div > a', 2],          // 検索結果
         ].forEach(function ([selector, nTrackback]) {
           AnkUtils.A(target.node.querySelectorAll(selector)) .
             map(function (link) link.href && let (m = link.href.split(/\//)) m.length >= 2 && [link, m.pop().match(/^(.+?)(?:$|\?)/)[1]]) .
             filter(function (m) m) .
             forEach(function ([link, id]) {
               if (!(target.illust_id && target.illust_id != id))
-                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, mod.SERVICE_ID, false);
+                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, mod.SERVICE_ID, true);
             });
         });
       }

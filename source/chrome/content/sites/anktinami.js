@@ -75,6 +75,12 @@ try {
         get postParams ()
           queryAll('#open_original_content > input'),
 
+        get nextLink()
+          query('.mvnext > a'),
+
+        get prevLink()
+          query('.mvprev > a'),
+
         // require for AnkBase
 
         get downloadedDisplayParent ()

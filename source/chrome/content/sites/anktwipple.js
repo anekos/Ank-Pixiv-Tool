@@ -73,6 +73,14 @@ try {
         get tags ()
           null,
 
+        get nextLink()
+          let (e = query('a > img#prev_icon'))
+            e && e.parentNode,
+
+        get prevLink()
+          let (e = query('a > img#next_icon'))
+            e && e.parentNode,
+
         // require for AnkBase
 
         get downloadedDisplayParent ()
