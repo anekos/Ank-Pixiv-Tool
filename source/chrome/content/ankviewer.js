@@ -382,6 +382,7 @@ function AnkViewer (module, getImage) {
   let wrapper = module.elements.illust.wrapper;
   let medImg = module.elements.illust.mediumImage;
   let openComment = module.elements.illust.openComment; 
+  let openCaption = module.elements.illust.openCaption; 
   let bgImage = win.getComputedStyle(doc.body, '').backgroundImage;
   let images = null;
   let facing = null;
@@ -505,7 +506,7 @@ function AnkViewer (module, getImage) {
   doc.addEventListener(
     'click',
     function (e) {
-      if (e.button === 0 && bigMode && e.target !== openComment)
+      if (e.button === 0 && bigMode && e.target !== openComment && e.target !== openCaption)
         noMoreEvent(changeImageSize)(e);
     },
     false

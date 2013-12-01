@@ -466,8 +466,10 @@ try {
      *    service:
      * Components.classes[klass].getService(service)
      */
-    ccgs: function (klass, service) // {{{
-      Components.classes[klass].getService(service), // }}}
+     ccgs: function (klass, service) { // {{{
+       let cc = Components.classes[klass];
+       return cc && cc.getService(service);
+     }, // }}}
 
     /*
      * ccci
