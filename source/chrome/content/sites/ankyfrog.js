@@ -217,12 +217,13 @@ try {
               var wrapper = mod.elements.illust.wrapper;
               var medImg = mod.elements.illust.mediumImage;
               var title = mod.elements.illust.title;
+              var largeLink = mod.elements.illust.largeLink;
             } catch (e) {
               AnkUtils.dumpError(e);
               return true;
             }
 
-            if (!(body && wrapper && medImg && title)) {
+            if (!(body && wrapper && medImg && title && largeLink)) {
               AnkUtils.dump('delay installation: '+mod.SITE_NAME+' remains '+counter);
               return false;   // リトライしてほしい
             }
@@ -367,14 +368,14 @@ try {
           return;
 
         [
-          ['.media-result-item > img', 0],              // 一覧
+          ['.media-result-item > img', 1],              // 一覧
         ].forEach(function ([selector, nTrackback]) {
           AnkUtils.A(target.node.querySelectorAll(selector)) .
             map(function (img) img.src && let (m = img.src.match(/\/scaled\/landing\/\d+\/([^/]+?)\./)) m && [img, m[1]]) .
             filter(function (m) m) .
             forEach(function ([img, id]) {
               if (!(target.illust_id && target.illust_id != id))
-                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(img, nTrackback), id, mod.SERVICE_ID, true);
+                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(img, nTrackback), id, mod, true);
             });
         });
       }

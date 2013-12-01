@@ -367,7 +367,7 @@ try {
             filter(function (m) m) .
             forEach(function ([link, id]) {
               if (!(target.illust_id && target.illust_id != id))
-                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, mod.SERVICE_ID);
+                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, mod);
             });
         });
       }

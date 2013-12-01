@@ -50,7 +50,7 @@ try {
 
       let illust =  {
         get images ()
-          self.in.manga && queryAll('.image_container > * > * > img.base_img'),
+          self.in.manga && queryAll('.image_container img.base_img'),
 
         get datetime ()
           self.in.manga && query('.watch_header > .date')
@@ -95,6 +95,9 @@ try {
 
         get illustType ()
           query('.illust_type > a'),
+
+        get flvPlayer ()
+          self.in.manga && query('#main > #player'),
 
         // require for AnkBase
 
@@ -193,8 +196,10 @@ try {
         get height ()
           0,
 
-        get server ()
-          self.info.path.image.images[0].match(/^https?:\/\/([^\/\.]+)\./i)[1],
+        get server () {
+          if (!self.elements.illust.flvPlayer)
+            return self.info.path.image.images[0].match(/^https?:\/\/([^\/\.]+)\./i)[1];
+        },
 
         get referer ()
           self.info.illust.pageUrl,
@@ -245,9 +250,12 @@ try {
         get initDir ()
           AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
-        get ext ()
-          let (m = path.image.images[0].match(/(\.\w+)(?:$|\?)/))
-            ((m && m[1]) || '.jpg'),
+        get ext () {
+          if (!self.elements.illust.flvPlayer) {
+            let m = path.image.images[0].match(/(\.\w+)(?:$|\?)/);
+            return (m && m[1]) || '.jpg';
+          }
+        },
 
         get mangaIndexPage ()
           null,
@@ -311,16 +319,22 @@ try {
               var body = mod.elements.illust.body;
               var wrapper = mod.elements.illust.wrapper;
               var medImg = mod.elements.illust.mediumImage;
+              var flvPlayer = mod.elements.illust.flvPlayer;
             } catch (e) {
               AnkUtils.dumpError(e);
               return true;
             }// }}}
 
             // 完全に読み込まれていないっぽいときは、遅延する
-            if (!(body && wrapper && medImg)) { // {{{
+            if (!(body && wrapper && (medImg || flvPlayer))) { // {{{
               AnkUtils.dump('delay installation: '+mod.SITE_NAME+' remains '+counter);
               return false;   // リトライしてほしい
             } // }}}
+
+            // ニコニコ形式マンガはDL対象外
+            if (flvPlayer) {
+              return true;
+            }
 
             // 大画像関係
             if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
@@ -375,6 +389,9 @@ try {
             // }}}
 */
 
+            // 他のイラスト・関連イラストなどにマーキング
+            mod.markDownloaded(doc,true);
+
             AnkUtils.dump('installed: '+mod.SITE_NAME);
 
           } catch (e) {
@@ -421,13 +438,14 @@ try {
           ['div.illust_thumb > div > a', 2],             // マイページ
           ['.episode_item > .episode > .thumb > a', 3],  // マンガ一覧
           ['div.illust_list_img > div > a', 2],          // 検索結果
+          ['.list_item_cutout > a', 1],                  // イラストページ（他のイラスト・関連イラストなど）
         ].forEach(function ([selector, nTrackback]) {
           AnkUtils.A(target.node.querySelectorAll(selector)) .
             map(function (link) link.href && let (m = link.href.split(/\//)) m.length >= 2 && [link, m.pop().match(/^(.+?)(?:$|\?)/)[1]]) .
             filter(function (m) m) .
             forEach(function ([link, id]) {
               if (!(target.illust_id && target.illust_id != id))
-                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, mod.SERVICE_ID, true);
+                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, mod, true);
             });
         });
       }
