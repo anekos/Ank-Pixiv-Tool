@@ -21,7 +21,7 @@ try {
 
     self.in = { // {{{
       get site () // {{{
-        self.info.illust.pageUrl.match(/^https?:\/\/seiga\.nicovideo\.jp\/(?:seiga|shunga|watch|comic|search|my|user\/illust)\//), // }}}
+        self.info.illust.pageUrl.match(/^https?:\/\/seiga\.nicovideo\.jp\/(?:seiga|shunga|watch|comic|search|my|user\/illust)(?:\/|\?|$)/), // }}}
 
       get manga () // {{{
         self.info.illust.pageUrl.match(/seiga\.nicovideo\.jp\/watch\/mg/), // }}}
@@ -418,8 +418,51 @@ try {
      * リストページ用ファンクション
      */
     installListPageFunctions: function () { /// {
-      // under construction
-      AnkUtils.dump('installed: '+this.SITE_NAME+' list');
+
+      function installer () {
+        function proc () {
+          try {
+            if (counter-- <= 0) {
+              AnkUtils.dump('installation failed: '+mod.SITE_NAME+' list');
+              return true;
+            }
+
+            try {
+              var doc = mod.elements.doc;
+              var body = mod.elements.illust.body;
+            } catch (e) {
+              AnkUtils.dumpError(e);
+              return true;
+            }
+
+            if (!(body && doc.readyState === 'complete')) {
+              AnkUtils.dump('delay installation: '+mod.SITE_NAME+' list remains '+counter);
+              return false;   // リトライしてほしい
+            }
+
+            // リスト表示が遅くてダウンロードマーク表示が漏れることがあるので、再度処理を実行
+            mod.markDownloaded(doc,true);
+
+            AnkUtils.dump('installed: '+mod.SITE_NAME+' list');
+          }
+          catch (e) {
+            AnkUtils.dumpError(e);
+          }
+          return true;
+        }
+
+        //
+        if (!proc())
+          setTimeout(installer, interval);
+      }
+
+      // closure {{{
+      let mod = this;
+      let counter = 20;
+      let interval = 500;
+      // }}}
+
+      return installer();
     }, // }}}
 
     /*
