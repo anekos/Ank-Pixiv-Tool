@@ -395,9 +395,9 @@ try {
           return;
 
         [
-          ['td > p.capt + a', 1],                         // 一覧
-          ['.title > .collection_form_checkbox + a', 1],  // コレクション
-          ['.thumbs > li > ul > li > a', 1],              // 最近の投稿作品
+          ['td > p.capt + a', 1],                              // 一覧
+          ['td > .title > .collection_form_checkbox + a', 2],  // コレクション
+          ['.thumbs > li > ul > li > a', 1],                   // 最近の投稿作品
         ].forEach(function ([selector, nTrackback]) {
           AnkUtils.A(target.node.querySelectorAll(selector)) .
             map(function (link) link.href && let (m = link.href.split(/\//)) m.length >= 2 && [link, m.pop()]) .

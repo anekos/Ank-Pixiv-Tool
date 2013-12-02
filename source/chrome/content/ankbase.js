@@ -1617,8 +1617,8 @@ try {
         '  background-color: transparent !important;',
         '  border-radius: 4px 4px 4px 4px !important;',
         '  box-shadow: 2px 2px 2px #000 !important;',
-        '  position: relative !important;',
-        '  top: -20px;',
+        '  position: absolute;',
+        '  top: 2px;',
         '  left: 2px;',
         '  width: 16px;',
         '  height: 16px;',
@@ -1634,8 +1634,8 @@ try {
         '  background-color: transparent !important;',
         '  border-radius: 4px 4px 4px 4px !important;',
         '  box-shadow: 2px 2px 2px #000 !important;',
-        '  position: relative !important;',
-        '  top: -20px;',
+        '  position: absolute;',
+        '  top: 2px;',
         '  left: 2px;',
         '  width: 16px;',
         '  height: 16px;',
@@ -1723,9 +1723,26 @@ try {
         // DLアイコンのオーバーレイ形式
         function appendIcon (div) {
           let st = window.getComputedStyle(box, null);
-          let (m = st.height.match(/(\d+(?:\.\d+)?)px/))
-            m && (div.style.top = (2-parseFloat(m[1]))+'px');
-
+          let pos = st.position;
+          if (box.tagName.toLowerCase() === 'div') {
+            // 親がボックス要素
+            if (st.position === 'static') {
+              box.style.setProperty('position', 'relative', 'important');
+              box.style.removeProperty('top');
+              box.style.removeProperty('bottom');
+              box.style.removeProperty('left');
+              box.style.removeProperty('right');
+            }
+            div.style.setProperty('position', 'absolute', 'important');
+            div.style.setProperty('top', '2px', 'important');
+            div.style.setProperty('left', '2px', 'important');
+          }
+          else {
+            // 親がボックス要素以外
+            div.style.setProperty('position', 'relative', 'important');
+            let (m = st.height.match(/(\d+(?:\.\d+)?)px/))
+              m && div.style.setProperty('top', (2-parseFloat(m[1]))+'px', 'important');
+          }
           box.appendChild(div);
         }
 
