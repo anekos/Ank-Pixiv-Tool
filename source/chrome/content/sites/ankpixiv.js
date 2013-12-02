@@ -76,7 +76,7 @@ try {
 
     self.elements = (function () { // {{{
       function query (q)
-        self.elements.querySelector(q)
+        self.elements.doc.querySelector(q)
 
       function queryAll (q)
         self.elements.doc.querySelectorAll(q)

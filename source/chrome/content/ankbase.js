@@ -1613,13 +1613,15 @@ try {
         '  background-color: pink !important;',
         '}',
         '.ank-pixiv-tool-downloaded-overlay {',
-        '  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA5UlEQVQ4y2PwKP7PAMJA8J8UPG39f4b5W4FMcjTD8PI9YL0IgaT2//+zeiG4eMr//zWz//9vXQjBvSv+g2z9/x/TINI0/797F90QCIMozWfOIDA2A0CCODXv3o2JkQ0AK1q1CkxjaAaJo2NkF4AVzZyJwJBowhRHkoeHAVhRRwcmxiN+6MJ/1EAEKy4vJ4yhmk9d/48ZC2BD0tJwYyTNl+9iMQDu59BQTIymGacBwLQNMcTFBYGxaL7zBIsB0LT9f8NhqCHGxsRo/s8AylXYMsp/IjLTtx9ACpQlobmKpJwI0gxyKwBC5DBdUpsi5AAAAABJRU5ErkJggg==) !important;',
-        '  position: relative;',
+        '  background-image: url("chrome://ankpixiv/content/downloaded.png");',
+        '  background-color: transparent !important;',
+        '  border-radius: 4px 4px 4px 4px !important;',
+        '  box-shadow: 2px 2px 2px #000 !important;',
+        '  position: relative !important;',
         '  top: -20px;',
         '  left: 2px;',
         '  width: 16px;',
         '  height: 16px;',
-        '  box-shadow: 2px 2px 2px #000;',
         '}',
         '.ank-pixiv-tool-downloading {',
         '  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAEklEQVR42mNkaGCAAyYGBmI4ABoEAIiZRp63AAAAAElFTkSuQmCC) !important;',
@@ -1628,13 +1630,15 @@ try {
         '  background-color: lime !important;',
         '}',
         '.ank-pixiv-tool-downloading-overlay {',
-        '  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABIElEQVQ4y42ToY7CQBCG9xVwaHIPQMIr8Ap9AAzuNOEBSLAnK+4FKhEkd3gEIQgEggTEicoKxAnE/HSGne1sWxqafGm6s9/f7nbHIXOOKS80+PG01HD4dDjOKxmr/pP1B/A7FFguqJA7tgmwm7AoiHNadMvMhS6ChHi5fDPL+jUuklXc076BhHgZ5y8TYOQNbTqRkFKOA7ycUdaJlXH9bgaklAZ0KfbZyvjLqgAuLmkZ0A3TcZU1lOVGwIxmARtg5aier+OAKU0D9d3WgPqcKCChJCABRpYNa5lTbWJ5wnhgTONAOMaeeg3FwQT49Y5o9BYScDvHAbxmLgxo0InK+M+fAdxVvjGiX9WjXkT4I0bG/eakJX1Xtbfyi5ZmGYB7ABonWqqLbyhnAAAAAElFTkSuQmCC) !important;',
-        '  position: relative;',
+        '  background-image: url("chrome://ankpixiv/content/downloading.png");',
+        '  background-color: transparent !important;',
+        '  border-radius: 4px 4px 4px 4px !important;',
+        '  box-shadow: 2px 2px 2px #000 !important;',
+        '  position: relative !important;',
         '  top: -20px;',
         '  left: 2px;',
         '  width: 16px;',
         '  height: 16px;',
-        '  box-shadow: 2px 2px 2px #000;',
         '}',
         '#ankpixiv-downloaded-display.R18 {',
         '  animation-duration: 10s;',
@@ -1697,40 +1701,56 @@ try {
       if (!box)
         return;
 
-      let cnDownloaded  = overlay ? AnkBase.CLASS_NAME.DOWNLOADED_OVERLAY  : AnkBase.CLASS_NAME.DOWNLOADED;
-      let cnDownloading = overlay ? AnkBase.CLASS_NAME.DOWNLOADING_OVERLAY : AnkBase.CLASS_NAME.DOWNLOADING;
+      if (!overlay) {
+        // 従来形式
+        let cnDownloaded  = AnkBase.CLASS_NAME.DOWNLOADED;
+        let cnDownloading = AnkBase.CLASS_NAME.DOWNLOADING;
 
-      if (box.querySelector('.'+cnDownloaded))
-        return;
+        if (box.classList.contains(cnDownloaded))
+          return;
 
-      if (AnkBase.isDownloading(illust_id, mod.SERVICE_ID)) {
-        if (!overlay) {
-          if (!box.classList.contains(cnDownloading))
-            box.classList.add(cnDownloading);
-        } else {
-          if (!box.querySelector('.'+cnDownloading)) {
-            let div = mod.elements.doc.createElement('div');
-            box.appendChild(div);
-            div.classList.add(cnDownloading);
-          }
-        }
-      }
-      else if (AnkBase.isDownloaded(illust_id, mod.SERVICE_ID)) {
-        if (!overlay) {
-          // 従来形式
+        if (AnkBase.isDownloaded(illust_id, mod.SERVICE_ID)) {
           if (box.classList.contains(cnDownloading))
             box.classList.remove(cnDownloading);
           box.classList.add(cnDownloaded);
-        } else {
-          // DLアイコンのオーバーレイ形式
+        }
+        else if (AnkBase.isDownloading(illust_id, mod.SERVICE_ID)) {
+          if (!box.classList.contains(cnDownloading))
+            box.classList.add(cnDownloading);
+        }
+      }
+      else {
+        // DLアイコンのオーバーレイ形式
+        function appendIcon (div) {
+          let st = window.getComputedStyle(box, null);
+          let (m = st.height.match(/(\d+(?:\.\d+)?)px/))
+            m && (div.style.top = (2-parseFloat(m[1]))+'px');
+
+          box.appendChild(div);
+        }
+
+        let cnDownloaded  = AnkBase.CLASS_NAME.DOWNLOADED_OVERLAY;
+        let cnDownloading = AnkBase.CLASS_NAME.DOWNLOADING_OVERLAY;
+
+        if (box.querySelector('.'+cnDownloaded))
+          return;
+
+        if (AnkBase.isDownloaded(illust_id, mod.SERVICE_ID)) {
           let div = box.querySelector('.'+cnDownloading);
           if (div) {
             div.classList.remove(cnDownloading);
           } else {
             div = mod.elements.doc.createElement('div');
-            box.appendChild(div);
+            appendIcon(div);
           }
           div.classList.add(cnDownloaded);
+        }
+        else if (AnkBase.isDownloading(illust_id, mod.SERVICE_ID)) {
+          if (!box.querySelector('.'+cnDownloading)) {
+            let div = mod.elements.doc.createElement('div');
+            appendIcon(div);
+            div.classList.add(cnDownloading);
+          }
         }
       }
     }, // }}}

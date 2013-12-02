@@ -138,6 +138,10 @@ function AnkViewer (module, getImage) {
     if (!bigImg.complete || !fpImg.complete)
       return;
 
+    // 画像の表示開始位置をリセット
+    pos.Y = 0;
+    window.content.scrollTo(openpos.X, pos.Y);
+
     let cw = win.innerWidth - scrollbarSize.width,    // 横はスクロールバーを含まない幅が最大値
         ch = win.innerHeight;
 
@@ -274,10 +278,6 @@ function AnkViewer (module, getImage) {
       // オープン時の位置を保存
       openpos.X = window.content.scrollX;
       openpos.Y = window.content.scrollY;
-
-      // 画像の表示開始位置をリセット
-      pos.Y = 0;
-      window.content.scrollTo(openpos.X, pos.Y);
 
       currentMangaPage = 0;
 
