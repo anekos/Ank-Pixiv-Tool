@@ -361,29 +361,12 @@ try {
      *    force:    追加済みであっても、強制的にマークする
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
-      function marking () {
-        let target = AnkBase.getMarkTarget(mod, node, force, ignorePref);
-        if (!target)
-          return;
+      const IsIllust = /\/([^/]+?)(?:\?|$)/;
+      const Targets = [
+                        ['.simple_list_photo > div > a', 1],             // 一覧
+                      ];
 
-        [
-          ['.simple_list_photo > div > a', 1],             // 一覧
-        ].forEach(function ([selector, nTrackback]) {
-          AnkUtils.A(target.node.querySelectorAll(selector)) .
-            map(function (link) link.href && let (m = link.href.split(/\//)) m.length >= 2 && [link, m.pop()]) .
-            filter(function (m) m) .
-            forEach(function ([link, id]) {
-              if (!(target.illust_id && target.illust_id != id))
-                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, mod, true);
-            });
-        });
-      }
-
-      // closure {{{
-      let mod = this;
-      // }}}
-
-      return marking();
+      return AnkBase.markDownloaded(IsIllust, Targets, true, this, node, force, ignorePref);
     }, // }}}
 
     /*

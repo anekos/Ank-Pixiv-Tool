@@ -318,29 +318,12 @@ try {
      *    force:    追加済みであっても、強制的にマークする
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
-      function marking () {
-        let target = AnkBase.getMarkTarget(mod, node, force, ignorePref);
-        if (!target)
-          return;
+      const IsIllust = /\.tumblr\.com\/post\/([^/]+?)(?:\?|\/|$)/;
+      const Targets = [
+                        ['#portfolio  div.item > a', 1],   // 一覧
+                      ];
 
-        [
-          ['#portfolio > div > * > .item > a', 1],              // 一覧
-        ].forEach(function ([selector, nTrackback]) {
-          AnkUtils.A(target.node.querySelectorAll(selector)) .
-            map(function (link) link.href && let (m = link.href.match(/\.tumblr\.com\/post\/([^/]+?)(?:\?|\/|$)/)) m && [link, m[1]]) .
-            filter(function (m) m) .
-            forEach(function ([link, id]) {
-              if (!(target.illust_id && target.illust_id != id))
-                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, mod, true);
-            });
-        });
-      }
-
-      // closure {{{
-      let mod = this;
-      // }}}
-
-      return marking();
+      return AnkBase.markDownloaded(IsIllust, Targets, true, this, node, force, ignorePref);
     }, // }}}
 
     /*

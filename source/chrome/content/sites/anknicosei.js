@@ -471,33 +471,16 @@ try {
      *    force:    追加済みであっても、強制的にマークする
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
-      function marking () {
-        let target = AnkBase.getMarkTarget(mod, node, force, ignorePref);
-        if (!target)
-          return;
+      const IsIllust = /\/([^/]+?)(?:\?|$)/;
+      const Targets = [
+                        ['li.list_item > a', 1],                       // ○○さんのイラスト
+                        ['.episode_item > .episode > .thumb > a', 3],  // マンガ一覧
+                        ['div.illust_list_img > div > a', 2],          // 検索結果
+                        ['.list_item_cutout > a', 1],                  // イラストページ（他のイラスト・関連イラストなど）
+                        ['.center_img > a', 1],                        // マイページ、春画ページ（他のイラスト・関連イラストなど）、イラストランキング
+                      ];
 
-        [
-          ['li.list_item > a', 1],                       // ○○さんのイラスト
-          ['.episode_item > .episode > .thumb > a', 3],  // マンガ一覧
-          ['div.illust_list_img > div > a', 2],          // 検索結果
-          ['.list_item_cutout > a', 1],                  // イラストページ（他のイラスト・関連イラストなど）
-          ['.center_img > a', 1],                        // マイページ、春画ページ（他のイラスト・関連イラストなど）、イラストランキング
-        ].forEach(function ([selector, nTrackback]) {
-          AnkUtils.A(target.node.querySelectorAll(selector)) .
-            map(function (link) link.href && let (m = link.href.split(/\//)) m.length >= 2 && [link, m.pop().match(/^(.+?)(?:$|\?)/)[1]]) .
-            filter(function (m) m) .
-            forEach(function ([link, id]) {
-              if (!(target.illust_id && target.illust_id != id))
-                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, mod, true);
-            });
-        });
-      }
-
-      // closure {{{
-      let mod = this;
-      // }}}
-
-      return marking();
+      return AnkBase.markDownloaded(IsIllust, Targets, true, this, node, force, ignorePref);
     }, // }}}
 
     /*

@@ -585,39 +585,21 @@ try {
      *    force:    追加済みであっても、強制的にマークする
      */ 
     markDownloaded: function (node, force, ignorePref) { // {{{
-      function marking () {
-        const IsIllust = /&illust_id=(\d+)/;
+      const IsIllust = /&illust_id=(\d+)/;
+      const Targets = [
+                        ['li > a.work', 1],                       // 作品一覧、ブックマーク
+                        ['li.rank-detail > a', 1],                // ホーム（ランキング）
+                        ['.ranking-item > a.work', 1],            // ランキング
+                        ['.worksListOthersImg > ul > li > a', 1], // プロファイル（ブックマーク、イメージレスポンス）
+                        ['.worksImageresponseImg > a', 2],        // イラストページ（イメージレスポンス）
+                        ['li > a.response-in-work', 1],           // イラストページ（イメージレスポンス）
+                        ['.search_a2_result > ul > li > a', 1],   // イメージレスポンス
+                        ['.stacc_ref_illust_img > a', 3],         // フィード
+                        ['.hotimage > a', 1],                     // タグページ（週間ベスト）
+                        ['.image > a', 1],                        // タグページ（全期間＆新着）
+                      ];
 
-        let target = AnkBase.getMarkTarget(mod, node, force, ignorePref);
-        if (!target)
-          return;
-
-        [
-          ['li > a.work', 1],                       // 作品一覧、ブックマーク
-          ['li.rank-detail > a', 1],                // ホーム（ランキング）
-          ['.ranking-item > a.work', 1],            // ランキング
-          ['.worksListOthersImg > ul > li > a', 1], // プロファイル（ブックマーク、イメージレスポンス）
-          ['.worksImageresponseImg > a', 2],        // イラストページ（イメージレスポンス）
-          ['li > a.response-in-work', 1],           // イラストページ（イメージレスポンス）
-          ['.search_a2_result > ul > li > a', 1],   // イメージレスポンス
-          ['.stacc_ref_illust_img > a', 3]          // フィード
-        ].forEach(function ([selector, nTrackback]) {
-          AnkUtils.A(target.node.querySelectorAll(selector)) .
-            map(function (link) link.href && let (m = IsIllust.exec(link.href)) m && [link, m]) .
-            filter(function (m) m) .
-            map(function ([link, m]) [link, parseInt(m[1], 10)]) .
-            forEach(function ([link, id]) {
-              if (!(target.illust_id && target.illust_id != id))
-                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, mod);
-            });
-        });
-      }
-
-      // closure {{{
-      let mod = this;
-      // }}}
-
-      return marking();
+      return AnkBase.markDownloaded(IsIllust, Targets, false, this, node, force, ignorePref);
     }, // }}}
 
     /*

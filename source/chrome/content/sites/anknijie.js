@@ -378,36 +378,16 @@ try {
      *    force:    追加済みであっても、強制的にマークする
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
-      function marking () {
-        const IsIllust = /view\.php\?id=(\d+)/;
+      const IsIllust = /view\.php\?id=(\d+)/;
+      const Targets = [
+                        ['div.nijie > div.picture > p.nijiedao > a', 3],  // 通常の一覧
+                        ['div.nijie > p.nijiedao > a', 2],                // "同人"の一覧
+                        ['div.nijie-bookmark > p > a', 2],                // "ブックマーク"の一覧
+                        ['#okazu_list > a', -1],                          // おかず
+                        ['#carouselInner-view > ul > li > a', 1],         // "こんな絵でも"
+                      ];
 
-        let target = AnkBase.getMarkTarget(mod, node, force, ignorePref);
-        if (!target)
-          return;
-
-        [
-          ['div.nijie > div.picture > p.nijiedao > a', 3],  // 通常の一覧
-          ['div.nijie > p.nijiedao > a', 2],                // "同人"の一覧
-          ['div.nijie-bookmark > p > a', 2],                // "ブックマーク"の一覧
-          ['#okazu_list > a', -1],                          // おかず
-          ['#carouselInner-view > ul > li > a', 1],         // "こんな絵でも"
-        ].forEach(function ([selector, nTrackback]) {
-          AnkUtils.A(target.node.querySelectorAll(selector)) .
-            map(function (link) link.href && let (m = IsIllust.exec(link.href)) m && [link, m]) .
-            filter(function (m) m) .
-            map(function ([link, m]) [link, parseInt(m[1], 10)]) .
-            forEach(function ([link, id]) {
-              if (!(target.illust_id && target.illust_id != id))
-                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, mod);
-            });
-        });
-      }
-
-      // closure {{{
-      let mod = this;
-      // }}}
-
-      return marking();
+      return AnkBase.markDownloaded(IsIllust, Targets, false, this, node, force, ignorePref);
     }, // }}}
 
     /*

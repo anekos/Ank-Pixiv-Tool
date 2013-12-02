@@ -389,31 +389,14 @@ try {
      *    force:    追加済みであっても、強制的にマークする
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
-      function marking () {
-        let target = AnkBase.getMarkTarget(mod, node, force, ignorePref);
-        if (!target)
-          return;
+      const IsIllust = /\/([^/]+?)(?:\?|$)/;
+      const Targets = [
+                        ['td > p.capt + a', 1],                              // 一覧
+                        ['td > .title > .collection_form_checkbox + a', 2],  // コレクション
+                        ['.thumbs > li > ul > li > a', 1],                   // 最近の投稿作品
+                      ];
 
-        [
-          ['td > p.capt + a', 1],                              // 一覧
-          ['td > .title > .collection_form_checkbox + a', 2],  // コレクション
-          ['.thumbs > li > ul > li > a', 1],                   // 最近の投稿作品
-        ].forEach(function ([selector, nTrackback]) {
-          AnkUtils.A(target.node.querySelectorAll(selector)) .
-            map(function (link) link.href && let (m = link.href.split(/\//)) m.length >= 2 && [link, m.pop()]) .
-            filter(function (m) m) .
-            forEach(function ([link, id]) {
-              if (!(target.illust_id && target.illust_id != id))
-                AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, mod, false);
-            });
-        });
-      }
-
-      // closure {{{
-      let mod = this;
-      // }}}
-
-      return marking();
+      return AnkBase.markDownloaded(IsIllust, Targets, false, this, node, force, ignorePref);
     }, // }}}
 
     /*

@@ -1679,6 +1679,32 @@ try {
     * マーキング
     ********************************************************************************/
 
+    markDownloaded: function(IsIllust, Targets, overlay, mod, node, force, ignorePref) { // {{{
+      let target = AnkBase.getMarkTarget(mod, node, force, ignorePref);
+      if (!target)
+        return;
+
+      Targets.forEach(function ([selector, nTrackback]) {
+        AnkUtils.A(target.node.querySelectorAll(selector)) .
+          map(function (link) {
+            if (!link)
+              return false;
+            let href = (link.tagName.toLowerCase() === 'a')   ? link.href :
+                       (link.tagName.toLowerCase() === 'img') ? link.src :
+                                                                false;
+            if (!href)
+              return false;
+            let m = IsIllust.exec(href);
+            return m && [link, m[1]];
+          }).
+          filter(function (m) m) .
+          forEach(function ([link, id]) {
+            if (!(target.illust_id && target.illust_id != id))
+              AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, mod, overlay);
+          });
+      });
+    }, // }}}
+
     getMarkTarget: function (module, node, force, ignorePref) { // {{{
       if (!module.in.site)
         return null;
