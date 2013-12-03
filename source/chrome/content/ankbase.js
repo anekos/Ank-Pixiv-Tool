@@ -1684,18 +1684,20 @@ try {
       if (!target)
         return;
 
+      let checked = [];
       Targets.forEach(function ([selector, nTrackback]) {
         AnkUtils.A(target.node.querySelectorAll(selector)) .
           map(function (link) {
-            if (!link)
+            // 一度チェックしたエレメントは二度チェックしない（異なるTarget指定で同じエレメントが重複してマッチする場合があるので、先にマッチしたものを優先）
+            if (checked.indexOf(link) >= 0)
               return false;
+
+            checked.push(link);
+
             let href = (link.tagName.toLowerCase() === 'a')   ? link.href :
                        (link.tagName.toLowerCase() === 'img') ? link.src :
                                                                 false;
-            if (!href)
-              return false;
-            let m = IsIllust.exec(href);
-            return m && [link, m[1]];
+            return href && IsIllust.exec(href) && [link, RegExp.$1];
           }).
           filter(function (m) m) .
           forEach(function ([link, id]) {

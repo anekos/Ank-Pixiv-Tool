@@ -474,10 +474,12 @@ try {
       const IsIllust = /\/([^/]+?)(?:\?|$)/;
       const Targets = [
                         ['li.list_item > a', 1],                       // ○○さんのイラスト
+                        ['div.illust_thumb > div > a', 2],             // マイページ
                         ['.episode_item > .episode > .thumb > a', 3],  // マンガ一覧
                         ['div.illust_list_img > div > a', 2],          // 検索結果
                         ['.list_item_cutout > a', 1],                  // イラストページ（他のイラスト・関連イラストなど）
-                        ['.center_img > a', 1],                        // マイページ、春画ページ（他のイラスト・関連イラストなど）、イラストランキング
+                        ['.ranking_image > div > a', 2],               // イラストランキング
+                        ['.center_img > a', 1],                        // 春画ページ（他のイラスト・関連イラストなど）、イラストランキング
                       ];
 
       return AnkBase.markDownloaded(IsIllust, Targets, true, this, node, force, ignorePref);
