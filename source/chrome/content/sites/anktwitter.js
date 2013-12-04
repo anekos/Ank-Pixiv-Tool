@@ -279,85 +279,57 @@ try {
      */
     installMediumPageFunctions: function () { // {{{
 
-      let installer = function () { // {{{
-        function proc () { // {{{
-          try {
-            if (counter-- <= 0) {
-              AnkUtils.dump('installation failed: '+mod.SITE_NAME);
-              return true;
-            }
+      let proc = function (mod) { // {{{
+        // インストールに必用な各種要素
+        var doc = mod.elements.doc;
+        var body = mod.elements.illust.body;
+        var medImg = mod.elements.illust.mediumImage;
+        var gallery = mod.elements.illust.gallery;
+        var tweet = mod.elements.illust.tweet;
+        var largeLink = mod.elements.illust.largeLink;
+        var photoFrame = mod.in.tweet ? mod.elements.illust.photoFrame : null;
 
-            // インストールに必用な各種要素
-            try { // {{{
-              var doc = mod.elements.doc;
-              var body = mod.elements.illust.body;
-              var medImg = mod.elements.illust.mediumImage;
-              var gallery = mod.elements.illust.gallery;
-              var tweet = mod.elements.illust.tweet;
-              var largeLink = mod.elements.illust.largeLink;
-              var photoFrame = mod.in.tweet ? mod.elements.illust.photoFrame : null;
-            } catch (e) {
-              AnkUtils.dumpError(e);
-              return true;
-            } // }}}
-
-            // 完全に読み込まれていないっぽいときは、遅延する
-            let cond = mod.in.illustGrid ? true :
-                       photoFrame        ? mod.elements.illust.photoImage :
-                                           largeLink;
-            if (!(body && medImg && cond)) {
-              AnkUtils.dump('delay installation: '+mod.SITE_NAME+' remains '+counter);
-              return false;   // リトライしてほしい
-            }
-
-            // デフォルトのviewerを有効にする
-            if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true) && mod.in.tweet) {
-              let media = mod.elements.illust.media;
-              if (media && !media.classList.contains('media-thumbnail'))
-                media.classList.add('media-thumbnail')
-            }
-
-            // 中画像クリック時に保存する
-            if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
-              medImg.addEventListener(
-                'click',
-                function (e) {
-                  AnkBase.downloadCurrentImageAuto(mod);
-                },
-                true
-              );
-            } // }}}
-
-            // 保存済み表示
-            if (!mod.in.illustGrid) {
-              AnkBase.insertDownloadedDisplayById(
-                mod.elements.illust.downloadedDisplayParent,
-                mod.info.illust.id,
-                mod.SERVICE_ID,
-                mod.info.illust.R18
-              );
-            }
-
-            AnkUtils.dump('installed: '+mod.SITE_NAME);
-          }
-          catch (e) {
-            AnkUtils.dumpError(e);
-          }
-          return true;
+        // 完全に読み込まれていないっぽいときは、遅延する
+        let cond = mod.in.illustGrid ? true :
+                   photoFrame        ? mod.elements.illust.photoImage :
+                                       largeLink;
+        if (!(body && medImg && cond)) {
+          return false;   // リトライしてほしい
         }
 
-        //
-        if (!proc())
-          setTimeout(installer, interval);
+        // デフォルトのviewerを有効にする
+        if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true) && mod.in.tweet) {
+          let media = mod.elements.illust.media;
+          if (media && !media.classList.contains('media-thumbnail'))
+            media.classList.add('media-thumbnail')
+        }
+
+        // 中画像クリック時に保存する
+        if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
+          medImg.addEventListener(
+            'click',
+            function (e) {
+              AnkBase.downloadCurrentImageAuto(mod);
+            },
+            true
+          );
+        } // }}}
+
+        // 保存済み表示
+        if (!mod.in.illustGrid) {
+          AnkBase.insertDownloadedDisplayById(
+            mod.elements.illust.downloadedDisplayParent,
+            mod.info.illust.id,
+            mod.SERVICE_ID,
+            mod.info.illust.R18
+          );
+        }
+
+        return true;
       };
 
-      // closure {{{
-      let mod = this;
-      let interval = 500;
-      let counter = 20;
-      // }}}
-
-      return installer();
+      // install now
+      return AnkBase.delayFunctionInstaller(this, proc, 500, 20, '');
     }, // }}}
 
     /*
@@ -365,7 +337,14 @@ try {
      */
     installListPageFunctions: function () { /// {
 
-      function installer() {
+      let proc = function (mod) {
+        var doc = mod.elements.doc;
+        var body = mod.elements.illust.body;
+
+        if (!(body && doc.readyState === 'complete')) {
+          return false;   // リトライしてほしい
+        }
+
         // ギャラリーの移動時に保存済み表示を行う
         let tw = mod.elements.doc.querySelector('.tweet-inverted');
         if (tw && MutationObserver) {
@@ -381,14 +360,11 @@ try {
           }).observe(tw, {childList: true});
         }
 
-        AnkUtils.dump('installed: '+mod.SITE_NAME+' list');
-      }
+        return true;
+      };
 
-      // closure {{{
-      let mod = this;
-      // }}}
-
-      return installer();
+      // install now
+      return AnkBase.delayFunctionInstaller(this, proc, 500, 20, 'ls');
     }, // }}}
 
     /*

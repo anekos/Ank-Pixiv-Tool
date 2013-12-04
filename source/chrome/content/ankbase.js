@@ -1205,6 +1205,26 @@ try {
       }
     }, // }}}
 
+    delayFunctionInstaller: function (mod, proc, interval, counter, funcid) {
+      try {
+        if (!proc(mod)) {
+          if (counter > 0) {
+            AnkUtils.dump('delay installation '+funcid+': '+mod.SITE_NAME+' remains '+counter);
+            setTimeout(function() AnkBase.delayFunctionInstaller(mod, proc, interval, counter-1, funcid), interval);
+          }
+          else {
+            AnkUtils.dump('installation failed '+funcid+': '+mod.SITE_NAME);
+          }
+        }
+        else {
+          AnkUtils.dump('installed '+funcid+': '+mod.SITE_NAME);
+          return true;
+        }
+      } catch (e) {
+        AnkUtils.dumpError(e);
+      } // }}}
+    },
+
     /*
      * ダウンロード済みの表示をページに挿入する
      *    appendTo:     追加先の要素

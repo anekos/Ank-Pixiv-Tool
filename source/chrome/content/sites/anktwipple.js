@@ -224,84 +224,57 @@ try {
      */
     installMediumPageFunctions: function () { // {{{
 
-      let installer = function () { // {{{
-        function proc () {
-          try {
-            if (counter-- <= 0) {
-              AnkUtils.dump('installation failed: '+mod.SITE_NAME);
-              return true;
-            }
+      let proc = function (mod) { // {{{
+        // インストールに必用な各種要素
+        // ※ついっぷるはイラストページを開いた後同じページにURLパラメータ付きでリダイレクトしている
+        var doc = mod.elements.doc;
+        var body = mod.elements.illust.body;
+        var wrapper = mod.elements.illust.wrapper;
+        var medImg = mod.elements.illust.mediumImage;
 
-            // インストールに必用な各種要素
-            // ※ついっぷるはイラストページを開いた後同じページにURLパラメータ付きでリダイレクトしている
-            try { // {{{
-              var doc = mod.elements.doc;
-              var body = mod.elements.illust.body;
-              var wrapper = mod.elements.illust.wrapper;
-              var medImg = mod.elements.illust.mediumImage;
-            } catch (e) {
-              AnkUtils.dumpError(e);
-              return true;
-            } // }}}
-
-            // 完全に読み込まれていないっぽいときは、遅延する
-            if (!(body && wrapper && medImg)) { // {{{
-              AnkUtils.dump('delay installation: '+mod.SITE_NAME+' remains '+counter);
-              return false;   // リトライしてほしい
-            } // }}}
-
-            // TODO javascript有効時は、タブのload完了時にサイト側からbindされるので、ここでunbindしても効果がない。保留
-            if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
-              new AnkViewer(
-                mod,
-                function () mod.info.path.image
-              );
-            }
-
-            // 中画像クリック時に保存する
-            if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
-              ['#img_overlay_container', '#post_image'].forEach(function (v) {
-                let e = mod.elements.doc.querySelector(v);
-                if (e) {
-                  e.addEventListener(
-                    'click',
-                    function (e) {
-                      AnkBase.downloadCurrentImageAuto(mod);
-                    },
-                    true
-                  );
-                }
-              });
-            } // }}}
-
-            // 保存済み表示
-            AnkBase.insertDownloadedDisplayById(
-              mod.elements.illust.downloadedDisplayParent,
-              mod.info.illust.id,
-              mod.SERVICE_ID,
-              mod.info.illust.R18
-            );
-
-            AnkUtils.dump('installed: '+mod.SITE_NAME);
-          }
-          catch (e) {
-            AnkUtils.dumpError(e);
-          }
-          return true;
+        // 完全に読み込まれていないっぽいときは、遅延する
+        if (!(body && wrapper && medImg)) { // {{{
+          return false;   // リトライしてほしい
         } // }}}
 
-        //
-        if (!proc())
-          setTimeout(installer, interval);
+        // FIXME javascript有効時は、タブのload完了時にサイト側からbindされるので、ここでunbindしても効果がない。保留
+        if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
+          new AnkViewer(
+            mod,
+            function () mod.info.path.image
+          );
+        }
+
+        // 中画像クリック時に保存する
+        if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
+          ['#img_overlay_container', '#post_image'].forEach(function (v) {
+            let e = mod.elements.doc.querySelector(v);
+            if (e) {
+              e.addEventListener(
+                'click',
+                function (e) {
+                  AnkBase.downloadCurrentImageAuto(mod);
+                },
+                true
+              );
+            }
+          });
+        } // }}}
+
+        // 保存済み表示
+        AnkBase.insertDownloadedDisplayById(
+          mod.elements.illust.downloadedDisplayParent,
+          mod.info.illust.id,
+          mod.SERVICE_ID,
+          mod.info.illust.R18
+        );
+
+        return true;
       };
 
-      // closure {{{
-      let mod = this;
-      let interval = 500;
-      let counter = 20;
-      // }}}
 
-      return installer();
+      // install now
+      return AnkBase.delayFunctionInstaller(this, proc, 500, 20, '');
     }, // }}}
 
     /*
@@ -309,50 +282,22 @@ try {
      */
     installListPageFunctions: function () { /// {
 
-      function installer () {
-        function proc () {
-          try {
-            if (counter-- <= 0) {
-              AnkUtils.dump('installation failed: '+mod.SITE_NAME+' list');
-              return true;
-            }
+      let proc = function (mod) {
+        var doc = mod.elements.doc;
+        var body = mod.elements.illust.body;
 
-            try {
-              var doc = mod.elements.doc;
-              var body = mod.elements.illust.body;
-            } catch (e) {
-              AnkUtils.dumpError(e);
-              return true;
-            }
-
-            if (!(body && doc.readyState === 'complete')) {
-              AnkUtils.dump('delay installation: '+mod.SITE_NAME+' list remains '+counter);
-              return false;   // リトライしてほしい
-            }
-
-            // リスト表示が遅くてダウンロードマーク表示が漏れることがあるので、再度処理を実行
-            mod.markDownloaded(doc,true);
-
-            AnkUtils.dump('installed: '+mod.SITE_NAME+' list');
-          }
-          catch (e) {
-            AnkUtils.dumpError(e);
-          }
-          return true;
+        if (!(body && doc.readyState === 'complete')) {
+          return false;   // リトライしてほしい
         }
 
-        //
-        if (!proc())
-          setTimeout(installer, interval);
-      }
+        // リスト表示が遅くてダウンロードマーク表示が漏れることがあるので、再度処理を実行
+        mod.markDownloaded(doc,true);
 
-      // closure {{{
-      let mod = this;
-      let counter = 20;
-      let interval = 500;
-      // }}}
+        return true;
+      };
 
-      return installer();
+      // install now
+      return AnkBase.delayFunctionInstaller(this, proc, 1000, 20, 'ls');  // おそい:interval=1000
     }, // }}}
 
     /*
