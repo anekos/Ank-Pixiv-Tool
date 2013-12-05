@@ -234,7 +234,6 @@ try {
     installMediumPageFunctions: function () { // {{{
 
       let proc = function (mod) {
-        var doc = mod.elements.doc;
         var body = mod.elements.illust.body;
         var wrapper = mod.elements.illust.wrapper;
         var medImg = mod.elements.illust.mediumImage;
@@ -255,9 +254,7 @@ try {
         if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
           medImg.addEventListener(
             'click',
-            function () {
-              AnkBase.downloadCurrentImageAuto(mod);
-            },
+            function () AnkBase.downloadCurrentImageAuto(mod),
             true
           );
         } // }}}

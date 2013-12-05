@@ -77,7 +77,7 @@ try {
         // require for AnkBase
 
         get downloadedDisplayParent ()
-          query('div#content'),
+          query('#infobar-right'),
 
         // require for AnkViewer
 
@@ -224,7 +224,6 @@ try {
 
       let proc = function (mod) { // {{{
         // インストールに必用な各種要素
-        var doc = mod.elements.doc;
         var body = mod.elements.illust.body;
         var medImg = mod.elements.illust.mediumImage;
         var largeLink = mod.elements.illust.largeLink;
@@ -246,9 +245,7 @@ try {
         if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
           largeLink.addEventListener(
             'click',
-            function (e) {
-              AnkBase.downloadCurrentImageAuto(mod);
-            },
+            function () AnkBase.downloadCurrentImageAuto(mod),
             true
           );
         } // }}}

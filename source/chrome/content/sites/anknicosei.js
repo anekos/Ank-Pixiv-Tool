@@ -21,7 +21,7 @@ try {
 
     self.in = { // {{{
       get site () // {{{
-        self.info.illust.pageUrl.match(/^https?:\/\/seiga\.nicovideo\.jp\/(?:seiga|shunga|watch|comic|search|my|user\/illust|illust\/(?:ranking|list))(?:\/|\?|$)/), // }}}
+        self.info.illust.pageUrl.match(/^https?:\/\/seiga\.nicovideo\.jp\/(?:seiga|shunga|watch|comic|search|tag|my|user\/illust|illust\/(?:ranking|list))(?:\/|\?|$)/), // }}}
 
       get manga () // {{{
         self.info.illust.pageUrl.match(/seiga\.nicovideo\.jp\/watch\/mg/), // }}}
@@ -289,7 +289,13 @@ try {
       };
     })(); // }}}
 
-    self.downloadable = true;
+    Object.defineProperty(this, 'downloadable', { // {{{
+      get: function () {
+        if (self.in.medium && self.elements.illust.flvPlayer)
+          return false;    // ニコニコ形式マンガはDL対象外
+        return true;
+      },
+    }); // }}}
 
   };
 
@@ -306,7 +312,6 @@ try {
     installMediumPageFunctions: function () { // {{{
 
       let proc = function (mod) { // {{{
-        // インストールに必用な各種要素
         var doc = mod.elements.doc;
         var body = mod.elements.illust.body;
         var wrapper = mod.elements.illust.wrapper;
@@ -335,9 +340,7 @@ try {
         if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
           medImg.addEventListener(
             'click',
-            function (e) {
-              AnkBase.downloadCurrentImageAuto(mod);
-            },
+            function () AnkBase.downloadCurrentImageAuto(mod),
             true
           );
         } // }}}
@@ -347,17 +350,19 @@ try {
           if (!AnkBase.Prefs.get('downloadWhenRate', false))
             return;
 
-          ['#clip_add_button','.mylist_area > a','.mylist_area > a+a','.favorites_navigator > .favorite'].forEach(function (v) {
-            let e = doc.querySelector(v)
-            if (e) {
+          [
+            '#clip_add_button',
+            '.mylist_area > a',
+            '.mylist_area > a+a',
+            '.favorites_navigator > .favorite'
+          ].forEach(function (v) {
+            let e = doc.querySelector(v);
+            if (e)
               e.addEventListener(
                 'click',
-                function () {
-                  AnkBase.downloadCurrentImageAuto(mod);
-                },
+                function () AnkBase.downloadCurrentImageAuto(mod),
                 true
               );
-            }
           });
         })(); // }}}
 
@@ -418,7 +423,7 @@ try {
                         ['div.illust_list_img > div > a', 2],          // 検索結果
                         ['.list_item_cutout > a', 1],                  // イラストページ（他のイラスト・関連イラストなど）
                         ['.ranking_image > div > a', 2],               // イラストランキング
-                        ['.center_img > a', 1],                        // 春画ページ（他のイラスト・関連イラストなど）、イラストランキング
+                        ['.center_img > a', 1],                        // 春画ページ（他のイラスト・関連イラストなど）
                       ];
 
       return AnkBase.markDownloaded(IsIllust, Targets, true, this, node, force, ignorePref);

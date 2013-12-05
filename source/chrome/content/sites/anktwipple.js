@@ -43,7 +43,7 @@ try {
 
     self.elements = (function () { // {{{
       function query (q)
-        self.elements.doc.querySelector(q);
+        self.elements.doc.querySelector(q)
 
       function queryAll (q)
         self.elements.doc.querySelectorAll(q)
@@ -227,7 +227,6 @@ try {
       let proc = function (mod) { // {{{
         // インストールに必用な各種要素
         // ※ついっぷるはイラストページを開いた後同じページにURLパラメータ付きでリダイレクトしている
-        var doc = mod.elements.doc;
         var body = mod.elements.illust.body;
         var wrapper = mod.elements.illust.wrapper;
         var medImg = mod.elements.illust.mediumImage;
@@ -252,9 +251,7 @@ try {
             if (e) {
               e.addEventListener(
                 'click',
-                function (e) {
-                  AnkBase.downloadCurrentImageAuto(mod);
-                },
+                function () AnkBase.downloadCurrentImageAuto(mod),
                 true
               );
             }

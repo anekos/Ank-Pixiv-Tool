@@ -262,7 +262,6 @@ try {
     installMediumPageFunctions: function () { // {{{
 
       let proc = function (mod) { // {{{
-        // インストールに必用な各種要素
         var doc = mod.elements.doc;
         var body = mod.elements.illust.body;
         var wrapper = mod.elements.illust.wrapper;
@@ -287,9 +286,7 @@ try {
         if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
           medImg.addEventListener(
             'click',
-            function (e) {
-              AnkBase.downloadCurrentImageAuto(mod);
-            },
+            function () AnkBase.downloadCurrentImageAuto(mod),
             true
           );
         } // }}}
@@ -299,17 +296,17 @@ try {
           if (!AnkBase.Prefs.get('downloadWhenRate', false))
             return;
 
-          ['a#nuita','a#good'].forEach(function (v) {
-            let e = doc.querySelector(v)
-            if (e) {
+          [
+            'a#nuita',
+            'a#good'
+          ].forEach(function (v) {
+            let e = doc.querySelector(v);
+            if (e)
               e.addEventListener(
                 'click',
-                function () {
-                  AnkBase.downloadCurrentImageAuto(mod);
-                },
+                function () AnkBase.downloadCurrentImageAuto(mod),
                 true
               );
-            }
           });
         })(); // }}}
 

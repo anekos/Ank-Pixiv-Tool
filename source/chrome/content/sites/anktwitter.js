@@ -281,11 +281,8 @@ try {
 
       let proc = function (mod) { // {{{
         // インストールに必用な各種要素
-        var doc = mod.elements.doc;
         var body = mod.elements.illust.body;
         var medImg = mod.elements.illust.mediumImage;
-        var gallery = mod.elements.illust.gallery;
-        var tweet = mod.elements.illust.tweet;
         var largeLink = mod.elements.illust.largeLink;
         var photoFrame = mod.in.tweet ? mod.elements.illust.photoFrame : null;
 
@@ -301,16 +298,14 @@ try {
         if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true) && mod.in.tweet) {
           let media = mod.elements.illust.media;
           if (media && !media.classList.contains('media-thumbnail'))
-            media.classList.add('media-thumbnail')
+            media.classList.add('media-thumbnail');
         }
 
         // 中画像クリック時に保存する
         if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
           medImg.addEventListener(
             'click',
-            function (e) {
-              AnkBase.downloadCurrentImageAuto(mod);
-            },
+            function () AnkBase.downloadCurrentImageAuto(mod),
             true
           );
         } // }}}
@@ -348,7 +343,7 @@ try {
         // ギャラリーの移動時に保存済み表示を行う
         let tw = mod.elements.doc.querySelector('.tweet-inverted');
         if (tw && MutationObserver) {
-          new MutationObserver(function (o) {
+          new MutationObserver(function () {
             if (!mod.info.illust.id)
               return;
             AnkBase.insertDownloadedDisplayById(

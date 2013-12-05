@@ -277,9 +277,7 @@ try {
         if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
           medImg.addEventListener(
             'click',
-            function () {
-              AnkBase.downloadCurrentImageAuto(mod);
-            },
+            function () AnkBase.downloadCurrentImageAuto(mod),
             true
           );
         } // }}}

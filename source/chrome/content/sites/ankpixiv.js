@@ -333,7 +333,6 @@ try {
         var openComment = mod.elements.illust.openComment;
         var openCaption = mod.elements.illust.openCaption;
         var avatar = mod.elements.illust.avatar;
-        var fitMode = AnkBase.Prefs.get('largeImageSize', AnkBase.FIT.NONE);
 
         // 完全に読み込まれていないっぽいときは、遅延する
         if (!(body && medImg && wrapper && openComment && avatar)) { // {{{
@@ -344,9 +343,7 @@ try {
         if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
           medImg.addEventListener(
             'click',
-            function (e) {
-              AnkBase.downloadCurrentImageAuto(mod);
-            },
+            function () AnkBase.downloadCurrentImageAuto(mod),
             true
           );
         } // }}}
@@ -515,7 +512,7 @@ try {
      * 評価する
      */
     rate: function (pt) { // {{{
-      function setRating (pt) {
+      function setRating (mod,pt) {
         if (!(mod.in.pixiv && mod.in.medium))
           throw 'not in pixiv';
         if (pt < 1 || 10 < pt)
@@ -534,11 +531,7 @@ try {
         }
       }
 
-      // closure {{{
-      let mod = this;
-      // }}}
-
-      return setRating(pt);
+      return setRating(this,pt);
     }, // }}}
 
 
