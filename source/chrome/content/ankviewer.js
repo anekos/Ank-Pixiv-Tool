@@ -104,7 +104,7 @@ function AnkViewer (module, getImage) {
   let fadeOutTimer;
 
   // 画像のサイズを変更する
-  let autoResize = function () {
+  let autoResize = function (loaded) {
     function resize (p) {
       let ivw = parseInt(iw*p), ivh = parseInt(ih*p);
       let fvw = parseInt(fw*p), fvh = parseInt(fh*p);
@@ -138,9 +138,11 @@ function AnkViewer (module, getImage) {
     if (!bigImg.complete || !fpImg.complete)
       return;
 
-    // 画像の表示開始位置をリセット
-    pos.Y = 0;
-    window.content.scrollTo(openpos.X, pos.Y);
+    // 画像読み込み完了時だけ表示開始位置をリセット（リサイズではリセットしない）
+    if (loaded) {
+      pos.Y = 0;
+      window.content.scrollTo(openpos.X, pos.Y);
+    }
 
     let cw = win.innerWidth - scrollbarSize.width,    // 横はスクロールバーを含まない幅が最大値
         ch = win.innerHeight;
@@ -474,7 +476,7 @@ function AnkViewer (module, getImage) {
   medImg.addEventListener('click', function (e) noMoreEvent(changeImageSize)(e), false);
 
   // 画像を読み込んだら表示サイズの調整を行う
-  imgCtrl(function (e) e.addEventListener('load', autoResize, true));
+  imgCtrl(function (e) e.addEventListener('load', function() autoResize(true), true));
 
   // 画像の読み込みに失敗した
   imgCtrl(function (e) e.addEventListener('error', loadError, true));
