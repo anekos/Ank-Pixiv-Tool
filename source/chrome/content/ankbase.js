@@ -668,6 +668,7 @@ try {
               AnkUtils.dump('Fix file ext: ' + lastFile.path);
           } catch (e) {
             AnkUtils.dump('Failed to fix file ext. => ' + e);
+            return onError.apply(null, arguments);  // 何が起こるかわからないので_onError()ではなくonError()
           }
         }
 
@@ -714,6 +715,7 @@ try {
             AnkUtils.dump('Fix file ext: ' + localdir.path);
         } catch (e) {
           AnkUtils.dump('Failed to fix file ext. => ' + e);
+          return onError.apply(null, arguments);
         }
 
         return onComplete.apply(null, arguments);
@@ -1032,7 +1034,7 @@ try {
           });
           function repl (s) {
             ps.forEach(function ([re, val]) (s = s.replace(re, val).trim()));
-            return s;
+            return s.substring(0,100);
           }
           filenames.push(repl(defaultFilename));
           filenames.push(repl(alternateFilename));
