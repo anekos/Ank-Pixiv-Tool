@@ -341,7 +341,7 @@ try {
         }
 
         // ギャラリーの移動時に保存済み表示を行う
-        let tw = mod.elements.doc.querySelector('.tweet-inverted');
+        let tw = mod.elements.doc.querySelector('.gallery-media');
         if (tw && MutationObserver) {
           new MutationObserver(function () {
             if (!mod.info.illust.id)
