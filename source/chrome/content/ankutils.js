@@ -201,6 +201,22 @@ try {
     }, // }}}
 
     decodeDateTimeText: function (dtext) { // {{{
+      // 時分 - 年月日
+      function calc0 () {
+        let m = dtext.match(/^(\d{1,2})\s*[\u6642:\-]\s*(\d{1,2})(?:\s*\D{1,2}\s*)(\d{4})\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})/);
+        if (!m)
+          return;
+
+        d = new Date();
+        d.setFullYear(parseInt(m[3]));
+        d.setMonth(parseInt(m[4])-1);
+        d.setDate(parseInt(m[5]));
+        d.setHours(parseInt(m[1]));
+        d.setMinutes(parseInt(m[2]));
+
+        return d;
+      }
+
       // 年/月/日 時:分
       function calc1 () {
         let m = dtext.match(/(\d{4})\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})(?:\s*\D{1,2}\s*(\d{1,2})\s*[\u6642:\-]\s*(\d{1,2}))?/);
@@ -264,7 +280,7 @@ try {
       // まずは明らかなゴミを排除 && 連続の空白をまとめる
       dtext = dtext.replace(/[^-0-9a-zA-Z:\/\u5E74\u6708\u6642\s]/g, '').replace(/\s+/g, ' ').trim();
       let fault = false;
-      let dd = calc1() || calc2() || calc3() || calcx();
+      let dd = calc0() || calc1() || calc2() || calc3() || calcx();   // 0は1と一部被るので0を前に
       if (!dd) {
         // TODO 日時解析失敗時に、自動で現在日時で代替するのか、それとも他の処理を行うのかは、要検討課題
         let msg = 'unsupported datetime format = \''+dtext+'\'';

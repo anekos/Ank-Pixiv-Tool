@@ -32,8 +32,7 @@ try {
 
       get illustPage () // {{{
         self.in.tweet ||         // ツイート
-        self.in.gallery ||       // ポップアップ中
-        self.in.illustGrid,      // '画像/動画'ページ
+        self.in.gallery,         // ポップアップ中
       // }}}
 
       get myPage ()
@@ -56,9 +55,6 @@ try {
       // elementを見ているが、これに関しては問題ないはず
       get gallery () // {{{
         self.elements.illust.galleryEnabled, // }}}
-
-      get illustGrid () // {{{
-        self.info.illust.pageUrl.match(/^https?:\/\/twitter\.com\/[^/]+\/media\/grid/),
     }; // }}}
 
     self.elements = (function () { // {{{
@@ -108,7 +104,7 @@ try {
           query('.permalink-tweet'),
 
         get gallery ()
-          query('.gallery-container'),
+          query('.Gallery-content'),        // 画像ポップアップ
 
         get galleryEnabled ()
           query('.gallery-enabled'),
@@ -153,14 +149,16 @@ try {
           self.elements.doc ? self.elements.doc.location.href : '',
 
         get id () {
+          // twitter自身で保存しているものは画像ファイル名をillust_idにする
+          let (v = self.info.path.image.images[0]) {
+            if (v && v.match(/^https?:\/\/pbs\.twimg\.com\/media\/([^/]+?)\./))   // 外部連携は扱わない
+              return RegExp.$1;
+          };
+
+          // twitpic等の外部連携を利用している場合はtweetの短縮URLをillust_idにする
           let e = self.elements.illust.largeLink;
           if (!e)
             return null;
-
-          let (v = e.getAttribute('data-url')) {  // pic.twitter
-            if (v && v.match(/^https?:\/\/pbs\.twimg\.com\/media\/([^/]+?)\./))
-              return RegExp.$1;
-          };
 
           let (v = e.href) {  // ツイート
             if (v && v.match(/\/([^/]+)(?:\?|$)/))
@@ -168,7 +166,7 @@ try {
           };
 
           return null;
-        },  // いずれも 'http://t.co/'+id で作品のページに飛べる
+        },
 
         get dateTime ()
           let (v = self.elements.illust.datetime.title)
@@ -287,8 +285,7 @@ try {
         var photoFrame = mod.in.tweet ? mod.elements.illust.photoFrame : null;
 
         // 完全に読み込まれていないっぽいときは、遅延する
-        let cond = mod.in.illustGrid ? true :
-                   photoFrame        ? mod.elements.illust.photoImage :
+        let cond = photoFrame        ? mod.elements.illust.photoImage :
                                        largeLink;
         if (!(body && medImg && cond)) {
           return false;   // リトライしてほしい
@@ -311,14 +308,12 @@ try {
         } // }}}
 
         // 保存済み表示
-        if (!mod.in.illustGrid) {
-          AnkBase.insertDownloadedDisplayById(
-            mod.elements.illust.downloadedDisplayParent,
-            mod.info.illust.id,
-            mod.SERVICE_ID,
-            mod.info.illust.R18
-          );
-        }
+        AnkBase.insertDownloadedDisplayById(
+          mod.elements.illust.downloadedDisplayParent,
+          mod.info.illust.id,
+          mod.SERVICE_ID,
+          mod.info.illust.R18
+        );
 
         return true;
       };
@@ -341,7 +336,7 @@ try {
         }
 
         // ギャラリーの移動時に保存済み表示を行う
-        let tw = mod.elements.doc.querySelector('.gallery-media');
+        let tw = mod.elements.doc.querySelector('.Gallery-media');
         if (tw && MutationObserver) {
           new MutationObserver(function () {
             if (!mod.info.illust.id)
@@ -358,8 +353,42 @@ try {
         return true;
       };
 
+      let followExpansion = function (mod) {
+        let grid = mod.elements.doc.querySelector('.stream-media-grid-items');
+
+        let elm = grid;
+        if (!elm) {
+          return false;     // リトライしてほしい
+        }
+
+        // 伸びるおすすめリストに追随する
+        if (MutationObserver) {
+          new MutationObserver(function (o) {
+            o.forEach(function (e) mod.markDownloaded(e.target, true));
+          }).observe(elm, {childList: true});
+        }
+
+        return true;
+      };
+
+      let delayMarking = function (mod) {
+        var doc = mod.elements.doc;
+
+        if (typeof doc === 'undefined' || !doc || doc.readyState !== "complete") {
+          return false;     // リトライしてほしい
+        }
+
+        mod.markDownloaded(doc,true);
+
+        return true;
+      };
+
       // install now
-      return AnkBase.delayFunctionInstaller(this, proc, 500, 20, 'ls');
+      if (AnkBase.Prefs.get('markDownloaded', false)) {
+        AnkBase.delayFunctionInstaller(this, proc, 500, 20, 'ls');
+        AnkBase.delayFunctionInstaller(this, followExpansion, 500, 20, 'fe');
+        AnkBase.delayFunctionInstaller(this, delayMarking, 500, 20, 'dm');
+      }
     }, // }}}
 
     /*
@@ -368,7 +397,12 @@ try {
      *    force:    追加済みであっても、強制的にマークする
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
-      // マーキングは実装しない（外部の画像サービスを使っていると、DOMの情報とillust_idを関連付けしづらいため）
+      const IsIllust = /^https?:\/\/pbs\.twimg\.com\/media\/([^/]+?)\./;
+      const Targets = [
+                        ['span.media-thumbnail > img', 1],
+                      ];
+
+      return AnkBase.markDownloaded(IsIllust, Targets, 2, this, node, force, ignorePref);
     }, // }}}
 
     /*

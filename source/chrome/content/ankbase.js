@@ -1747,11 +1747,16 @@ try {
       return { node: (node ? node : module.elements.doc), illust_id: undefined};
     }, // }}}
 
+    /*
+     *    overlay:    false 従来型のダウンロードマーキング
+     *                true  ダウンロード済みアイコンのオーバーレイ表示（縦座標自動設定）
+     *                n     ダウンロード済みアイコンのオーバーレイ表示（縦座標=top: npx !important）
+     */
     markBoxNode: function (box, illust_id, mod, overlay) { // {{{
       if (!box)
         return;
 
-      if (!overlay) {
+      if (overlay === false) {
         // 従来形式
         let cnDownloaded  = AnkBase.CLASS_NAME.DOWNLOADED;
         let cnDownloading = AnkBase.CLASS_NAME.DOWNLOADING;
@@ -1790,8 +1795,13 @@ try {
           else {
             // 親がボックス要素以外
             div.style.setProperty('position', 'relative', 'important');
-            let (m = st.height.match(/(\d+(?:\.\d+)?)px/))
-              m && div.style.setProperty('top', (2-parseFloat(m[1]))+'px', 'important');
+            if (typeof overlay == "number") {
+              div.style.setProperty('top', overlay+'px', 'important');
+            }
+            else {
+              let (m = st.height.match(/(\d+(?:\.\d+)?)px/))
+                m && div.style.setProperty('top', (2-parseFloat(m[1]))+'px', 'important');
+            }
           }
           box.appendChild(div);
         }
