@@ -355,8 +355,9 @@ try {
 
       let followExpansion = function (mod) {
         let grid = mod.elements.doc.querySelector('.stream-media-grid-items');
+        let items = mod.elements.doc.querySelector('.stream-items');
 
-        let elm = grid;
+        let elm = grid || items;
         if (!elm) {
           return false;     // リトライしてほしい
         }
@@ -400,6 +401,7 @@ try {
       const IsIllust = /^https?:\/\/pbs\.twimg\.com\/media\/([^/]+?)\./;
       const Targets = [
                         ['span.media-thumbnail > img', 1],
+                        ['div > a.is-preview > div > img', 3],
                       ];
 
       return AnkBase.markDownloaded(IsIllust, Targets, 2, this, node, force, ignorePref);
