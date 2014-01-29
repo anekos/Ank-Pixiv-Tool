@@ -1707,7 +1707,7 @@ try {
         return;
 
       let checked = [];
-      Targets.forEach(function ([selector, nTrackback]) {
+      Targets.forEach(function ([selector, nTrackback, targetClass]) {
         AnkUtils.A(target.node.querySelectorAll(selector)) .
           map(function (link) {
             // 一度チェックしたエレメントは二度チェックしない（異なるTarget指定で同じエレメントが重複してマッチする場合があるので、先にマッチしたものを優先）
@@ -1724,7 +1724,7 @@ try {
           filter(function (m) m) .
           forEach(function ([link, id]) {
             if (!(target.illust_id && target.illust_id != id))
-              AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback), id, mod, overlay);
+              AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback, targetClass), id, mod, overlay);
           });
       });
     }, // }}}
@@ -1748,9 +1748,9 @@ try {
     }, // }}}
 
     /*
-     *    overlay:    false 従来型のダウンロードマーキング
-     *                true  ダウンロード済みアイコンのオーバーレイ表示（縦座標自動設定）
-     *                n     ダウンロード済みアイコンのオーバーレイ表示（縦座標=top: npx !important）
+     *    overlay:    false  従来型のダウンロードマーキング
+     *                true   ダウンロード済みアイコンのオーバーレイ表示（縦座標自動設定）
+     *                number ダウンロード済みアイコンのオーバーレイ表示（縦座標=top: *number*px !important）
      */
     markBoxNode: function (box, illust_id, mod, overlay) { // {{{
       if (!box)
@@ -1795,7 +1795,7 @@ try {
           else {
             // 親がボックス要素以外
             div.style.setProperty('position', 'relative', 'important');
-            if (typeof overlay == "number") {
+            if (typeof overlay == 'number') {
               div.style.setProperty('top', overlay+'px', 'important');
             }
             else {

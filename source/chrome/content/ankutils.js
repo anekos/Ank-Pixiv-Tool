@@ -607,12 +607,22 @@ try {
       return temp.textContent;
     }, // }}}
 
-    trackbackParentNode: function (node, n) { // {{{
+    /*
+     * 指定の階層分上にあるノードを返す
+     *    node:        元ノード
+     *    n:           何階層上まであがるか
+     *    targetClass: n未満でもtargetClassを持つノードがみつかったらそこで終了
+     *    return:   element;
+     */
+    trackbackParentNode: function (node, n, targetClass) { // {{{
       if (n < 0)
         return node.firstChild;
 
-      for (let i = 0; node && i < n; i++)
+      for (let i = 0; node && i < n; i++) {
         node = node.parentNode;
+        if (targetClass && node.classList.contains(targetClass))
+          break;
+      }
       return node;
     }, // }}}
   };

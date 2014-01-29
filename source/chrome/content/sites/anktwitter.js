@@ -398,10 +398,11 @@ try {
      *    force:    追加済みであっても、強制的にマークする
      */
     markDownloaded: function (node, force, ignorePref) { // {{{
-      const IsIllust = /^https?:\/\/pbs\.twimg\.com\/media\/([^/]+?)\./;
+      const IsIllust = /^https?:\/\/(?:pbs\.twimg\.com\/media|t\.co)\/([^/]+?)(?:$|\.)/;
       const Targets = [
                         ['span.media-thumbnail > img', 1],
                         ['div > a.is-preview > div > img', 3],
+                        ['span.media-thumbnail .js-tweet-text a.twitter-timeline-link', 10, 'media-thumbnail'],
                       ];
 
       return AnkBase.markDownloaded(IsIllust, Targets, 2, this, node, force, ignorePref);
