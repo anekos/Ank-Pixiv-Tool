@@ -1002,7 +1002,7 @@ try {
           let im = i.member;
           let ps = [
             [/\?site-name\?/g, site_name, true],
-            [/\?title\?/g, title],
+            [/\?title\?/g, title.substring(0,50)],
             [/\?member-id\?/g, member_id],
             [/\?member-name\?/g, member_name],
             [/\?memoized-name\?/g, memoized_name],
@@ -1034,7 +1034,7 @@ try {
           });
           function repl (s) {
             ps.forEach(function ([re, val]) (s = s.replace(re, val).trim()));
-            return s.substring(0,100);
+            return s;
           }
           filenames.push(repl(defaultFilename));
           filenames.push(repl(alternateFilename));
