@@ -43,6 +43,9 @@ function AnkContext (module) {
       pageUrl:
         module.info.illust.pageUrl,
 
+      externalUrl:
+        module.info.illust.externalUrl,
+
       id:
         module.info.illust.id,
 

@@ -168,6 +168,10 @@ try {
           return null;
         },
 
+        get externalUrl ()
+          let (e = self.elements.illust.largeLink)
+            e && e.getAttribute('data-expanded-url'),
+        
         get dateTime ()
           let (v = self.elements.illust.datetime.title)
             AnkUtils.decodeDateTimeText(v ? v : self.elements.illust.datetime.textContent),
@@ -231,18 +235,27 @@ try {
           AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext () 
-         (path.image.images[0].match(/(\.\w+)(?::large|\?)/)[1] || '.jpg'),
+          (path.image.images[0].match(/(\.\w+)(?::large|\?)?/)[1] || '.jpg'),
 
         get mangaIndexPage ()
           null,
 
         get image () {
-          let m = [
+          let m =
             self.in.gallery                 ? self.elements.illust.mediumImage.src :
             self.elements.illust.photoFrame ? self.elements.illust.photoImage.src :
                                               self.elements.illust.media.getAttribute('data-url')
-          ];
-          return { images: m, facing: null, };
+          ;
+          if (AnkBase.Prefs.get('downloadOriginalSize', false)) {
+            if (m && m.match(/\/proxy\.jpg\?.*?t=(.+?)(?:$|&)/)) {
+              let em = window.atob(RegExp.$1).match(/^.*?(.)(https?:\/\/.+$)/);
+              if (m) {
+                let len = em[1].charCodeAt(0);
+        	    m = em[2].substr(0,len);
+              }
+            }
+          }
+          return { images: [m], facing: null, };
         },
       };
 
