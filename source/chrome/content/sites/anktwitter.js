@@ -248,10 +248,10 @@ try {
           ;
           if (AnkBase.Prefs.get('downloadOriginalSize', false)) {
             if (m && m.match(/\/proxy\.jpg\?.*?t=(.+?)(?:$|&)/)) {
-              let em = window.atob(RegExp.$1).match(/^.*?(.)(https?:\/\/.+$)/);
-              if (m) {
+              let em = window.atob(RegExp.$1).match(/^.*?(.)(https?:\/\/[\s\S]+)$/);
+              if (em) {
                 let len = em[1].charCodeAt(0);
-        	    m = em[2].substr(0,len);
+                m = em[2].substr(0,len);
               }
             }
           }
