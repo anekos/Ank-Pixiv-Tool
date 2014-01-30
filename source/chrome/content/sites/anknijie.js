@@ -52,7 +52,7 @@ try {
           query('div#created > p'),
 
         get title ()
-          query('div#view-header > div#view-left > p') ||
+          query('#view-header > #view-left > .illust_title') ||
           query('p.title'),
 
         get comment ()
