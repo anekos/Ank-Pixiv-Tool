@@ -175,10 +175,11 @@ try {
           // ヘッダ
           let header1 = AnkUtils.A(queryAll('#global-header'));
           let header2 = AnkUtils.A(queryAll('.header'));
+          let header3 = AnkUtils.A(queryAll('._header'));
 
           let toolbarItems = AnkUtils.A(queryAll('#toolbar-items'));
 
-          return ([]).concat(obj, iframe, search, findbox, ldrize, header1, header2, toolbarItems);
+          return ([]).concat(obj, iframe, search, findbox, ldrize, header1, header2, header3, toolbarItems);
         },
 
       };
