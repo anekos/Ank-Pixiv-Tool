@@ -175,10 +175,11 @@ try {
           // ヘッダ
           let header1 = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('#global-header'));
           let header2 = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('.header'));
+          let header3 = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('._header'));
 
           let toolbarItems = AnkUtils.A(AnkPixiv.elements.doc.querySelectorAll('#toolbar-items'));
 
-          return ([]).concat(obj, iframe, search, findbox, ldrize, header1, header2, toolbarItems);
+          return ([]).concat(obj, iframe, search, findbox, ldrize, header1, header2, header3, toolbarItems);
         }
       };
 
