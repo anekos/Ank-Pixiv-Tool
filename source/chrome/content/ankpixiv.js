@@ -1350,6 +1350,7 @@ try {
 
                 body.style.backgroundImage = bgImage;
                 viewer.style.display = 'none';
+                bigImg.setAttribute('src', '');
                 wrapper.setAttribute('style', 'opacity: 1;');
                 if (wrapperTopMargin)
                   wrapper.style.marginTop = wrapperTopMargin;
