@@ -386,7 +386,7 @@ try {
         );
 
         // コメント欄を開く
-        if (AnkBase.Prefs.get('openComment', false)) // {{{
+        if (AnkBase.Prefs.get('openComment', false) && && openComment && openComment.style.display === 'block') // {{{
           setTimeout(function () openComment.click(), 1000);
         // }}}
 
