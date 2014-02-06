@@ -254,6 +254,7 @@ function AnkViewer (module, getImage) {
 
       body.style.backgroundImage = bgImage;
       viewer.style.display = 'none';
+      bigImg.src = fpImg.src = '';
       if (wrapper) {
         wrapper.setAttribute('style', 'opacity: 1;');
         if (wrapperTopMargin)
