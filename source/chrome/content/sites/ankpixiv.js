@@ -158,9 +158,6 @@ try {
           );
         },
 
-        get openComment ()
-          query('.comment-show-button'),
-
         get openCaption ()
           query('.ui-expander-container > .ui-expander-target > .expand'),
 
@@ -331,12 +328,11 @@ try {
         var body = mod.elements.illust.body;
         var wrapper = mod.elements.illust.wrapper;
         var medImg = mod.elements.illust.mediumImage;
-        var openComment = mod.elements.illust.openComment;
         var openCaption = mod.elements.illust.openCaption;
         var avatar = mod.elements.illust.avatar;
 
         // 完全に読み込まれていないっぽいときは、遅延する
-        if (!(body && medImg && wrapper && openComment && avatar)) { // {{{
+        if (!(body && medImg && wrapper && avatar)) { // {{{
           return false;   // リトライしてほしい
         } // }}}
 
@@ -384,11 +380,6 @@ try {
           mod.SERVICE_ID,
           mod.info.illust.R18
         );
-
-        // コメント欄を開く
-        if (AnkBase.Prefs.get('openComment', false) && openComment && openComment.style.display === 'block') // {{{
-          setTimeout(function () openComment.click(), 1000);
-        // }}}
 
         // キャプションを開く
         if (AnkBase.Prefs.get('openCaption', false) && openCaption && openCaption.style.display === 'block') // {{{
