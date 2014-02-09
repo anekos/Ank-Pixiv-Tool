@@ -1577,6 +1577,12 @@ try {
 
       let xhr = new XMLHttpRequest();
       xhr.open('GET', AnkPixiv.info.path.mangaIndexPage, true);
+      try {
+        xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = true;
+      }
+      catch (ex) {
+        /* unsupported by this version of FF */
+      }
       xhr.onreadystatechange = function (e) {
         if (xhr.readyState == 4 && xhr.status == 200) {
           let arr = get(xhr.responseText);

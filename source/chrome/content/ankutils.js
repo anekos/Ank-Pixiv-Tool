@@ -288,6 +288,12 @@ try {
    remoteFileExists: function (url, callback) { // {{{
       let xhr = new XMLHttpRequest();
       xhr.open('HEAD', url, !!callback);
+      try {
+        xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = true;
+      }
+      catch (ex) {
+        /* unsupported by this version of FF */
+      }
       xhr.onreadystatechange = function (e) {
         if (xhr.readyState == 4) {
           callback(xhr.status == 200);
@@ -308,6 +314,12 @@ try {
      function rfe (callback) {
         let xhr = new XMLHttpRequest();
         xhr.open('HEAD', url, true);
+        try {
+          xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = true;
+        }
+        catch (ex) {
+          /* unsupported by this version of FF */
+        }
         xhr.onreadystatechange = function (e) {
           if (xhr.readyState == 4)
             callback(xhr.status);
