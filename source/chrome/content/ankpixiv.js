@@ -1144,7 +1144,6 @@ try {
             var wrapper = doc.getElementById('wrapper');
             var medImg = AnkPixiv.elements.illust.mediumImage;
             var bigImgPath = AnkPixiv.info.path.largeImage;
-            var openComment = doc.querySelector('.comment-show-button');
             var worksData = AnkPixiv.elements.illust.worksData;
             var bgImage = doc.defaultView.getComputedStyle(doc.body, '').backgroundImage;
             var fitMode = AnkPixiv.Prefs.get('largeImageSize', AnkPixiv.FIT.NONE);
@@ -1153,7 +1152,7 @@ try {
           } // }}}
 
           // 完全に読み込まれて以内っぽいときは、遅延する
-          if (!(body && medImg && bigImgPath && wrapper && openComment && worksData)) // {{{
+          if (!(body && medImg && bigImgPath && wrapper && worksData)) // {{{
             return delay("delay installation by null");
           // }}}
 
@@ -1515,11 +1514,6 @@ try {
                 AnkPixiv.info.illust.R18
             );
           } // }}}
-
-          // コメント欄を開く
-          if (AnkPixiv.Prefs.get('openComment', false)) // {{{
-            setTimeout(function () openComment.click(), 1000);
-          // }}}
 
           // 最大イラストIDの変更
           let (illust_id = AnkPixiv.info.illust.id) { // {{{
