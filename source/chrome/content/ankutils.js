@@ -426,6 +426,11 @@ try {
      function rfe (callback) {
         let xhr = new XMLHttpRequest();
         xhr.open('HEAD', url, true);
+        try {
+          xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = true;
+        } catch(ex) {
+          /* unsupported by this version of FF */
+        }
         xhr.onreadystatechange = function (e) {
           if (xhr.readyState == 4)
             callback(xhr.status);
@@ -458,6 +463,11 @@ try {
      let text = null;
      let xhr = new XMLHttpRequest();
      xhr.open((post ? 'POST' : 'GET'), url, false);
+     try {
+       xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = true;
+     } catch(ex) {
+       /* unsupported by this version of FF */
+     }
      xhr.onreadystatechange = function () {
        if (xhr.readyState == 4 && xhr.status == 200) {
          text = xhr.responseText;
