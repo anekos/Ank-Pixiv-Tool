@@ -96,6 +96,7 @@
         <preference id="large-image-size" name="extensions.ankpixiv.largeImageSize" type="int" />
         <preference id="dont-resize-if-small" name="extensions.ankpixiv.dontResizeIfSmall" type="bool" />
         <preference id="dont-hide-panel" name="extensions.ankpixiv.dontHidePanel" type="bool" />
+        <preference id="max-panel-opacity" name="extensions.ankpixiv.maxPanelOpacity" type="int" />
         <preference id="panel-size" name="extensions.ankpixiv.panelSize" type="int" />
         <preference id="use-facing-view" name="extensions.ankpixiv.useFacingView" type="bool" />
         <preference id="use-load-progress" name="extensions.ankpixiv.useLoadProgress" type="bool" />
@@ -106,6 +107,7 @@
         <tabs>
           <tab label="&tab.download;" />
           <tab label="&tab.filename;" />
+          <tab label="&tab.viewer;" />
           <tab label="&tab.miscellaneous;" />
         </tabs>
         <tabpanels>
@@ -201,29 +203,54 @@
                 </menulist>
                 <checkbox preference="dont-resize-if-small" label="&dontResizeIfSmall;" />
               </groupbox>
-              <checkbox preference="open-comment" label="&openComment;" />
-              <checkbox preference="open-caption" label="&openCaption;" />
-              <checkbox preference="dont-hide-panel" label="&dontHidePanel;" />
-              <hbox align="center">
-                <menulist preference="panel-size">
-                  <menupopup>
-                    <menuitem label="x1" value="1"/>
-                    <menuitem label="x1.25" value="2"/>
-                    <menuitem label="x1.50" value="3"/>
-                    <menuitem label="x1.75" value="4"/>
-                    <menuitem label="x2" value="5"/>
-                    <menuitem label="x2.25" value="6"/>
-                    <menuitem label="x2.50" value="7"/>
-                    <menuitem label="x2.75" value="8"/>
-                    <menuitem label="x3" value="9"/>
-                  </menupopup>
-                </menulist>
-                <label value="&panelSize;"/>
-              </hbox>
+              <groupbox>
+                <hbox align="center">
+                  <menulist preference="max-panel-opacity">
+                    <menupopup>
+                      <menuitem label="100%" value="100"/>
+                      <menuitem label="90%" value="90"/>
+                      <menuitem label="80%" value="80"/>
+                      <menuitem label="70%" value="70"/>
+                      <menuitem label="60%" value="60"/>
+                      <menuitem label="50%" value="50"/>
+                      <menuitem label="40%" value="40"/>
+                      <menuitem label="30%" value="30"/>
+                      <menuitem label="20%" value="20"/>
+                      <menuitem label="10%" value="10"/>
+                    </menupopup>
+                  </menulist>
+                  <label value="&maxPanelOpacity;"/>
+                </hbox>
+                <checkbox preference="dont-hide-panel" label="&dontHidePanel;" />
+                <hbox align="center">
+                  <menulist preference="panel-size">
+                    <menupopup>
+                      <menuitem label="x0.50" value="-1"/>
+                      <menuitem label="x0.75" value="0"/>
+                      <menuitem label="x1" value="1"/>
+                      <menuitem label="x1.25" value="2"/>
+                      <menuitem label="x1.50" value="3"/>
+                      <menuitem label="x1.75" value="4"/>
+                      <menuitem label="x2" value="5"/>
+                      <menuitem label="x2.25" value="6"/>
+                      <menuitem label="x2.50" value="7"/>
+                      <menuitem label="x2.75" value="8"/>
+                      <menuitem label="x3" value="9"/>
+                    </menupopup>
+                  </menulist>
+                  <label value="&panelSize;"/>
+                </hbox>
+              </groupbox>
               <checkbox preference="use-facing-view" label="&useFacingView;" />
               <checkbox preference="use-load-progress" label="&useLoadProgress;" />
               <checkbox preference="view-original-size" label="&viewOriginalSize;" />
             </vbox>
+          </tabpanel>
+            <vbox>
+              <checkbox preference="open-comment" label="&openComment;" />
+              <checkbox preference="open-caption" label="&openCaption;" />
+            </vbox>
+          <tabpanel>
           </tabpanel>
         </tabpanels>
       </tabbox>

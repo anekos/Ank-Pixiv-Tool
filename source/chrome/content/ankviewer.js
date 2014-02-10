@@ -67,7 +67,7 @@ function AnkViewer (module, getImage) {
       clearInterval(fadeOutTimer);
       fadeOutTimer = void 0;
     }
-    buttonPanel.style.opacity = 1;
+    buttonPanel.style.opacity = AnkBase.Prefs.get('maxPanelOpacity', 100) / 100.0;
   };
 
   // ボタンパネルを隠す
@@ -97,7 +97,7 @@ function AnkViewer (module, getImage) {
     if (AnkBase.Prefs.get('dontHidePanel', false))
       return;
 
-    let buttonOpacity = 100;
+    let buttonOpacity = AnkBase.Prefs.get('maxPanelOpacity', 100);
     fadeOutTimer = setInterval(fadeOutTimerHandler, 100);
   };
 
