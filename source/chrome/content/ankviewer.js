@@ -425,7 +425,7 @@ function AnkViewer (module, getImage) {
   imgContainer.setAttribute('style', 'margin: auto');
   imgPanel.setAttribute('style', 'margin: 0px');
 
-  let buttunSizeMultiplier = 1 + 0.25 * (AnkBase.Prefs.get('panelSize', 1)-1);
+  let buttunSizeMultiplier = 1 + 0.25 * AnkBase.Prefs.get('panelSize', 0);
   let buttonWidth = 100 * buttunSizeMultiplier;
   let buttonFontSize = 12 * buttunSizeMultiplier;
   
