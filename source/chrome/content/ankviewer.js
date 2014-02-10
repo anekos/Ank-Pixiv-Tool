@@ -425,10 +425,16 @@ function AnkViewer (module, getImage) {
   imgContainer.setAttribute('style', 'margin: auto');
   imgPanel.setAttribute('style', 'margin: 0px');
 
+  let buttunSizeMultiplier = 1 + 0.25 * (AnkBase.Prefs.get('panelSize', 1)-1);
+  let buttonWidth = 100 * buttunSizeMultiplier;
+  let buttonFontSize = 12 * buttunSizeMultiplier;
+  
   [prevButton, nextButton, resizeButton, closeButton].forEach(function (button) {
     button.setAttribute('class', 'submit_btn');
-    button.setAttribute('style', 'width: 100px !important; text-align: center; font-size: 12px');
+    button.setAttribute('style', 'width: '+buttonWidth+'px !important; text-align: center; font-size: '+buttonFontSize+'px');
   });
+  
+  pageSelector.setAttribute('style', 'font-size: '+buttonFontSize+'px;');
 
   /*
    * viewer

@@ -96,6 +96,7 @@
         <preference id="large-image-size" name="extensions.ankpixiv.largeImageSize" type="int" />
         <preference id="dont-resize-if-small" name="extensions.ankpixiv.dontResizeIfSmall" type="bool" />
         <preference id="dont-hide-panel" name="extensions.ankpixiv.dontHidePanel" type="bool" />
+        <preference id="panel-size" name="extensions.ankpixiv.panelSize" type="int" />
         <preference id="use-facing-view" name="extensions.ankpixiv.useFacingView" type="bool" />
         <preference id="use-load-progress" name="extensions.ankpixiv.useLoadProgress" type="bool" />
         <preference id="view-original-size" name="extensions.ankpixiv.viewOriginalSize" type="bool" />
@@ -203,6 +204,22 @@
               <checkbox preference="open-comment" label="&openComment;" />
               <checkbox preference="open-caption" label="&openCaption;" />
               <checkbox preference="dont-hide-panel" label="&dontHidePanel;" />
+              <hbox align="center">
+                <menulist preference="panel-size">
+                  <menupopup>
+                    <menuitem label="x1" value="1"/>
+                    <menuitem label="x1.25" value="2"/>
+                    <menuitem label="x1.50" value="3"/>
+                    <menuitem label="x1.75" value="4"/>
+                    <menuitem label="x2" value="5"/>
+                    <menuitem label="x2.25" value="6"/>
+                    <menuitem label="x2.50" value="7"/>
+                    <menuitem label="x2.75" value="8"/>
+                    <menuitem label="x3" value="9"/>
+                  </menupopup>
+                </menulist>
+                <label value="&panelSize;"/>
+              </hbox>
               <checkbox preference="use-facing-view" label="&useFacingView;" />
               <checkbox preference="use-load-progress" label="&useLoadProgress;" />
               <checkbox preference="view-original-size" label="&viewOriginalSize;" />

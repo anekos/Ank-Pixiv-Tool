@@ -26,6 +26,7 @@
 <!ENTITY fitLargeImageInWindowSize "大サイズ画像をウィンドウサイズにあわせる">
 <!ENTITY dontResizeIfSmall "ウィンドウより小さいときはリサイズしない">
 <!ENTITY dontHidePanel "ボタンパネルを隠さない">
+<!ENTITY panelSize "ボタンパネルのサイズ">
 <!ENTITY useFacingView "見開きページを一つの画像として表示する">
 <!ENTITY useLoadProgress "画像の読込中エフェクトを使用する">
 <!ENTITY viewOriginalSize "オリジナルサイズの漫画を表示する">
