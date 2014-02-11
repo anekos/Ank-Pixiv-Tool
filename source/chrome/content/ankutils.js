@@ -427,8 +427,7 @@ try {
         let xhr = new XMLHttpRequest();
         xhr.open('HEAD', url, true);
         try {
-          if (AnkBase.Prefs.get('allowThirdPartyCookie', true))
-            xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = true;
+          xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = AnkBase.Prefs.get('allowThirdPartyCookie', true);
         } catch(ex) {
           /* unsupported by this version of FF */
         }
@@ -465,7 +464,7 @@ try {
      let xhr = new XMLHttpRequest();
      xhr.open((post ? 'POST' : 'GET'), url, false);
      try {
-       xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = true;
+       xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = AnkBase.Prefs.get('allowThirdPartyCookie', true);
      } catch(ex) {
        /* unsupported by this version of FF */
      }
