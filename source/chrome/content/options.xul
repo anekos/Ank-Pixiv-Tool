@@ -79,8 +79,6 @@
         <preference id="download-rate" name="extensions.ankpixiv.downloadRate" type="int"/>
         <preference id="save-history" name="extensions.ankpixiv.saveHistory" type="bool" />
         <preference id="large-on-middle" name="extensions.ankpixiv.largeOnMiddle" type="bool" />
-        <preference id="open-comment" name="extensions.ankpixiv.openComment" type="bool" />
-        <preference id="open-caption" name="extensions.ankpixiv.openCaption" type="bool" />
         <preference id="confirm-existing" name="extensions.ankpixiv.confirmExistingDownload" type="bool" />
         <preference id="confirm-existing-when-auto" name="extensions.ankpixiv.confirmExistingDownloadWhenAuto" type="bool" />
         <preference id="download-when-middle" name="extensions.ankpixiv.downloadWhenClickMiddle" type="bool" />
@@ -95,12 +93,15 @@
         <preference id="fit-large-image-in-window-size" name="extensions.ankpixiv.fitLargeImageInWindowSize" type="bool" />
         <preference id="large-image-size" name="extensions.ankpixiv.largeImageSize" type="int" />
         <preference id="dont-resize-if-small" name="extensions.ankpixiv.dontResizeIfSmall" type="bool" />
-        <preference id="dont-hide-panel" name="extensions.ankpixiv.dontHidePanel" type="bool" />
         <preference id="max-panel-opacity" name="extensions.ankpixiv.maxPanelOpacity" type="int" />
+        <preference id="min-panel-opacity" name="extensions.ankpixiv.minPanelOpacity" type="int" />
         <preference id="panel-size" name="extensions.ankpixiv.panelSize" type="int" />
         <preference id="use-facing-view" name="extensions.ankpixiv.useFacingView" type="bool" />
         <preference id="use-load-progress" name="extensions.ankpixiv.useLoadProgress" type="bool" />
         <preference id="view-original-size" name="extensions.ankpixiv.viewOriginalSize" type="bool" />
+        <preference id="open-comment" name="extensions.ankpixiv.openComment" type="bool" />
+        <preference id="open-caption" name="extensions.ankpixiv.openCaption" type="bool" />
+        <preference id="allow-thirdparty-cookie" name="extensions.ankpixiv.allowThirdPartyCookie" type="bool" />
       </preferences>
 
       <tabbox>
@@ -221,7 +222,24 @@
                   </menulist>
                   <label value="&maxPanelOpacity;"/>
                 </hbox>
-                <checkbox preference="dont-hide-panel" label="&dontHidePanel;" />
+                <hbox align="center">
+                  <menulist preference="min-panel-opacity">
+                    <menupopup>
+                      <menuitem label="100%" value="100"/>
+                      <menuitem label="90%" value="90"/>
+                      <menuitem label="80%" value="80"/>
+                      <menuitem label="70%" value="70"/>
+                      <menuitem label="60%" value="60"/>
+                      <menuitem label="50%" value="50"/>
+                      <menuitem label="40%" value="40"/>
+                      <menuitem label="30%" value="30"/>
+                      <menuitem label="20%" value="20"/>
+                      <menuitem label="10%" value="10"/>
+                      <menuitem label="0%" value="0"/>
+                    </menupopup>
+                  </menulist>
+                  <label value="&minPanelOpacity;"/>
+                </hbox>
                 <hbox align="center">
                   <menulist preference="panel-size">
                     <menupopup>
@@ -250,6 +268,7 @@
             <vbox>
               <checkbox preference="open-comment" label="&openComment;" />
               <checkbox preference="open-caption" label="&openCaption;" />
+              <checkbox preference="allow-thirdparty-cookie" label="&allowThirdPartyCookie;" />
             </vbox>
           </tabpanel>
         </tabpanels>

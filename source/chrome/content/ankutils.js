@@ -427,7 +427,8 @@ try {
         let xhr = new XMLHttpRequest();
         xhr.open('HEAD', url, true);
         try {
-          xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = true;
+          if (AnkBase.Prefs.get('allowThirdPartyCookie', true))
+            xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = true;
         } catch(ex) {
           /* unsupported by this version of FF */
         }

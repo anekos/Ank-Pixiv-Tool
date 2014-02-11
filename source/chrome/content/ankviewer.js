@@ -61,20 +61,30 @@ function AnkViewer (module, getImage) {
     setImgSrc(imgs);
   };
 
+  function getMinPanelOpacity () {
+    return AnkBase.Prefs.get('minPanelOpacity', 0);
+  }
+
+  function getMaxPanelOpacity () {
+    let max = AnkBase.Prefs.get('maxPanelOpacity', 100);
+    let min = getMinPanelOpacity();
+    return max > min ? max : min;
+  }
+
   // ボタンパネルを表示する
   let showButtons = function () {
     if (fadeOutTimer) {
       clearInterval(fadeOutTimer);
       fadeOutTimer = void 0;
     }
-    buttonPanel.style.opacity = AnkBase.Prefs.get('maxPanelOpacity', 100) / 100.0;
+    buttonPanel.style.opacity = getMaxPanelOpacity() / 100.0;
   };
 
   // ボタンパネルを隠す
   let hideButtons = function () {
     function proc () {
       try {
-        if (buttonOpacity > 0) {
+        if (buttonOpacity > getMinPanelOpacity()) {
           buttonOpacity -= 10;
           buttonPanel.style.opacity = buttonOpacity / 100.0;
           return false;   // please retry
@@ -94,10 +104,7 @@ function AnkViewer (module, getImage) {
       buttonOpacity = 0;
     }
 
-    if (AnkBase.Prefs.get('dontHidePanel', false))
-      return;
-
-    let buttonOpacity = AnkBase.Prefs.get('maxPanelOpacity', 100);
+    let buttonOpacity = getMaxPanelOpacity();
     fadeOutTimer = setInterval(fadeOutTimerHandler, 100);
   };
 
@@ -273,10 +280,9 @@ function AnkViewer (module, getImage) {
     }
 
     function show () {
-      if (AnkBase.Prefs.get('dontHidePanel', false))
-        showButtons();
-      else
-        hideButtons();
+
+      showButtons();
+      hideButtons();
 
       // オープン時の位置を保存
       openpos.X = window.content.scrollX;
