@@ -281,6 +281,7 @@ function AnkViewer (module, getImage) {
 
     function show () {
 
+      resizeButtons();
       showButtons();
       hideButtons();
 
@@ -380,6 +381,19 @@ function AnkViewer (module, getImage) {
     (pageSelector.value = currentMangaPage);
   };
 
+  function resizeButtons () {
+    let buttunSizeMultiplier = 1 + 0.25 * AnkBase.Prefs.get('panelSize', 0);
+    let buttonWidth = 100 * buttunSizeMultiplier;
+    let buttonFontSize = 12 * buttunSizeMultiplier;
+
+    [prevButton, nextButton, resizeButton, closeButton].forEach(function (button) {
+      button.style.setProperty('width', buttonWidth+'px', 'important');
+      button.style.setProperty('font-size', buttonFontSize+'px', 'important');
+    });
+
+    pageSelector.style.setProperty('font-size', buttonFontSize+'px', 'important');
+  }
+
   /********************************************************************************
   * クロージャー
   ********************************************************************************/
@@ -431,16 +445,12 @@ function AnkViewer (module, getImage) {
   imgContainer.setAttribute('style', 'margin: auto');
   imgPanel.setAttribute('style', 'margin: 0px');
 
-  let buttunSizeMultiplier = 1 + 0.25 * AnkBase.Prefs.get('panelSize', 0);
-  let buttonWidth = 100 * buttunSizeMultiplier;
-  let buttonFontSize = 12 * buttunSizeMultiplier;
-  
   [prevButton, nextButton, resizeButton, closeButton].forEach(function (button) {
     button.setAttribute('class', 'submit_btn');
-    button.setAttribute('style', 'width: '+buttonWidth+'px !important; text-align: center; font-size: '+buttonFontSize+'px');
+    button.setAttribute('style', 'text-align: center;');
   });
-  
-  pageSelector.setAttribute('style', 'font-size: '+buttonFontSize+'px;');
+
+  resizeButtons();
 
   /*
    * viewer
