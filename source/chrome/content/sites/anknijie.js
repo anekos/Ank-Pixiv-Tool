@@ -74,7 +74,8 @@ try {
           query('ul#tag'),
 
         get gallery ()
-          query('#gallery'),         // 両ページ共通
+          query('#gallery') ||
+          query('#gallery_new'),
 
         get doujinHeader ()
           query('#dojin_header'),
@@ -105,7 +106,7 @@ try {
 
         get mediumImage ()
           query('img#view_img') ||      // "投稿イラスト"ページ
-          query('p.image > img'),       // "同人"ページ
+          query('.image > .dojin_gallery > img'),       // "同人"ページ
 
         get openComment ()
           query('.open'),
@@ -226,13 +227,20 @@ try {
         get image () {
           let m = [];
 
-          if (self.elements.illust.doujinHeader)
+          if (self.elements.illust.doujinHeader) {
             m.push(self.elements.illust.mediumImage.src); // "同人"の場合は表紙をリストに追加
 
-          AnkUtils.A(self.elements.illust.gallery.querySelectorAll('a')).
-            forEach(function (v) {
-              m.push(v.href);
-            });
+            AnkUtils.A(self.elements.illust.gallery.querySelectorAll('a')).
+              forEach(function (v) {
+                m.push(v.href);
+              });
+          }
+          else {
+            AnkUtils.A(self.elements.illust.gallery.querySelectorAll('a > img')).
+              forEach(function (v) {
+                m.push(v.src.replace((m.length == 0 ? /\/main\// : /\/small_light.+?\//),'/'));
+              });
+          }
 
           return { images: m, facing: null, };
         }

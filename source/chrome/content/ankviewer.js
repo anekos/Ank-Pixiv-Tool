@@ -34,14 +34,14 @@ function AnkViewer (module, getImage) {
   let loadBigImage = function (pageno) {
     function setImgSrc (is) {
       if (is.length > 0) {
-        bigImg.setAttribute('src', is[0]);
         AnkUtils.dump('VIEW => ' + is[0]);
+        bigImg.setAttribute('src', is[0]);
       }
 
       if (is.length > 1) {
+        AnkUtils.dump('VIEW FP => ' + is[1]);
         fpImg.setAttribute('facing', 'true');
         fpImg.setAttribute('src', is[1]);
-        AnkUtils.dump('VIEW FP => ' + is[1]);
       }
     }
 
