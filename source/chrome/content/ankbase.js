@@ -662,14 +662,9 @@ try {
             return _onComplete.apply(null, arguments);
           }
 
-          // ファイル名の修正
-          try {
-            if (AnkBase.fixFileExt(lastFile))
-              AnkUtils.dump('Fix file ext: ' + lastFile.path);
-          } catch (e) {
-            AnkUtils.dump('Failed to fix file ext. => ' + e);
+          // ファイルの拡張子の修正
+          if (AnkBase.fixFileExt(lastFile) === null)
             return onError.apply(null, arguments);  // 何が起こるかわからないので_onError()ではなくonError()
-          }
         }
 
         // 最後のファイル
@@ -709,14 +704,9 @@ try {
      */
     downloadIllust: function (url, referer, prefInitDir, localdir, download, onComplete, onError) { // {{{
       function _onComplete () {
-        // ファイル名の修正
-        try {
-          if (AnkBase.fixFileExt(localdir))
-            AnkUtils.dump('Fix file ext: ' + localdir.path);
-        } catch (e) {
-          AnkUtils.dump('Failed to fix file ext. => ' + e);
+        // ファイルの拡張子の修正
+        if (AnkBase.fixFileExt(localdir) === null)
           return onError.apply(null, arguments);
-        }
 
         return onComplete.apply(null, arguments);
       }
@@ -1326,27 +1316,34 @@ try {
     /*
      * fixFileExt
      *    file:     nsILocalFile
-     *    return:   修正した時は真
+     *    return:   修正した時は真、変更不要な場合は偽、形式不明・例外発生の場合はnull
      * 正しい拡張子に修正する。
      */
-    fixFileExt:  function (file) { // {{{
-      const reExt = /\.[^\.]+$/;
-      let ext = AnkBase.getValidFileExt(file);
-      let originalExt =
-        let (m = file.path.match(reExt))
-          (m && m.toString().toLowerCase());
-
-      if (!ext) {
-        AnkUtils.dump('fixFileExt: failed for unknown file type.');
-        return false;
+    fixFileExt: function (file) { // {{{
+      try {
+        const reExt = /\.[^\.]+$/;
+        let ext = AnkBase.getValidFileExt(file);
+        let originalExt =
+          let (m = file.path.match(reExt))
+            (m && m.toString().toLowerCase());
+  
+        if (!ext) {
+          AnkUtils.dump('fixFileExt: failed for unknown file type.');
+          return null;
+        }
+  
+        if (ext == originalExt)
+          return false;
+  
+        let newFile = AnkUtils.makeLocalFile(file.path.replace(reExt, ext));
+        file.moveTo(newFile.parent, newFile.leafName);
+  
+        AnkUtils.dump('Fix file ext: ' + file.path);
+        return true;
+      } catch (e) {
+        AnkUtils.dump('Failed to fix file ext. => ' + e);
+        return null;
       }
-
-      if (ext == originalExt)
-        return false;
-
-      let newFile = AnkUtils.makeLocalFile(file.path.replace(reExt, ext));
-      file.moveTo(newFile.parent, newFile.leafName);
-      return true;
     }, // }}}
 
 
