@@ -37,6 +37,11 @@ try {
 
       get myIllust ()
         false,  // under construction
+
+      // 外から使ってはいけない
+
+      get doujinPage ()
+        !!self.elements.illust.doujinHeader,  // under construction
     }; // }}}
 
     self.elements = (function () { // {{{
@@ -80,9 +85,6 @@ try {
         get doujinHeader ()
           query('#dojin_header'),
 
-        get noComment ()
-          query('.co2') || query('#dojin_comment'),
-
         get nextLink()
           query('a#nextIllust'),
 
@@ -107,9 +109,6 @@ try {
         get mediumImage ()
           query('img#view_img') ||      // "投稿イラスト"ページ
           query('.image > .dojin_gallery > img'),       // "同人"ページ
-
-        get openComment ()
-          query('.open'),
 
         get ads () {
           let header1 = query('#header-Container');
@@ -181,7 +180,7 @@ try {
           self.info.path.image.images[0].match(/^https?:\/\/([^\/\.]+)\./i)[1],
 
         get referer ()
-          self.info.illust.pageUrl,
+          self.in.doujinPage ? self.info.illust.pageUrl : self.elements.illust.mediumImage.parentNode.href,
 
         get title ()
           AnkUtils.trim(self.elements.illust.title.textContent),
@@ -274,11 +273,9 @@ try {
         var body = mod.elements.illust.body;
         var wrapper = mod.elements.illust.wrapper;
         var medImg = mod.elements.illust.mediumImage;
-        var openComment = mod.elements.illust.openComment;
-        var noComment = mod.elements.illust.noComment;
 
         // 完全に読み込まれていないっぽいときは、遅延する
-        if (!(body && wrapper && medImg && (openComment || noComment))) { // {{{
+        if (!(body && wrapper && medImg)) { // {{{
           return false;   // リトライしてほしい
         } // }}}
 
@@ -325,11 +322,6 @@ try {
           mod.SERVICE_ID,
           mod.info.illust.R18
         );
-
-        // コメント欄を開く
-        if (openComment && AnkBase.Prefs.get('openComment', false)) // {{{
-          setTimeout(function () openComment.click(), 1000);
-        // }}}
 
         // こんな絵でも…にマーキング
         mod.markDownloaded(doc,true);
