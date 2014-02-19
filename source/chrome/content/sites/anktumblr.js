@@ -75,7 +75,8 @@ try {
       let illust =  {
         get date ()
           query('.date') ||
-          query('.postmeta > a'),
+          query('.postmeta > a') ||
+          query('.post-date a'),
 
         get title ()
           query('.caption > p') ||

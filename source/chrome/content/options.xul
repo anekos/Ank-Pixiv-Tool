@@ -162,7 +162,7 @@
               </vbox>
               <groupbox>
                 <hbox>
-                  <listbox id="token-listbox1" rows="8" class="token-listbox" onclick="pushToken(this)">
+                  <listbox id="token-listbox1" rows="10" class="token-listbox" onclick="pushToken(this)">
                     <listitem label="?title?"></listitem>
                     <listitem label="?member-id?"></listitem>
                     <listitem label="?member-name?"></listitem>
@@ -174,7 +174,7 @@
                     <listitem label="?site-name?"></listitem>
                     <listitem label="#page-number#"></listitem>
                   </listbox>
-                  <listbox id="token-listbox2" rows="8" class="token-listbox" onclick="pushToken(this)">
+                  <listbox id="token-listbox2" rows="10" class="token-listbox" onclick="pushToken(this)">
                     <listitem label="?illust-id?"></listitem>
                     <listitem label="?illust-year?"></listitem>
                     <listitem label="?illust-year2?"></listitem>
@@ -183,7 +183,7 @@
                     <listitem label="?illust-hour?"></listitem>
                     <listitem label="?illust-minute?"></listitem>
                   </listbox>
-                  <listbox id="token-listbox3" rows="8" class="token-listbox" onclick="pushToken(this)">
+                  <listbox id="token-listbox3" rows="10" class="token-listbox" onclick="pushToken(this)">
                     <listitem label="?saved-year?"></listitem>
                     <listitem label="?saved-year2?"></listitem>
                     <listitem label="?saved-month?"></listitem>

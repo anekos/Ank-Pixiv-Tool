@@ -273,12 +273,12 @@ try {
 
       // 洋式
       function calcx () {
-        let d = new Date(dtext);
+        let d = new Date(dtext.replace(/(\s\d+)(?:st|nd|rd|th),/, "$1,"));
         return isNaN(d.getFullYear()) ? null : d;
       }
 
       // まずは明らかなゴミを排除 && 連続の空白をまとめる
-      dtext = dtext.replace(/[^-0-9a-zA-Z:\/\u5E74\u6708\u6642\s]/g, '').replace(/\s+/g, ' ').trim();
+      dtext = dtext.replace(/[^-,0-9a-zA-Z:\/\u5E74\u6708\u6642\s]/g, '').replace(/\s+/g, ' ').trim();
       let fault = false;
       let dd = calc0() || calc1() || calc2() || calc3() || calcx();   // 0は1と一部被るので0を前に
       if (!dd) {
