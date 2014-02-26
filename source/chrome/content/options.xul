@@ -96,6 +96,7 @@
         <preference id="max-panel-opacity" name="extensions.ankpixiv.maxPanelOpacity" type="int" />
         <preference id="min-panel-opacity" name="extensions.ankpixiv.minPanelOpacity" type="int" />
         <preference id="panel-size" name="extensions.ankpixiv.panelSize" type="int" />
+        <preference id="swap-arrow-button" name="extensions.ankpixiv.swapArrowButton" type="bool" />
         <preference id="use-facing-view" name="extensions.ankpixiv.useFacingView" type="bool" />
         <preference id="use-load-progress" name="extensions.ankpixiv.useLoadProgress" type="bool" />
         <preference id="view-original-size" name="extensions.ankpixiv.viewOriginalSize" type="bool" />
@@ -258,6 +259,7 @@
                   </menulist>
                   <label value="&panelSize;"/>
                 </hbox>
+                <checkbox preference="swap-arrow-button" label="&swapArrowButton;" />
               </groupbox>
               <checkbox preference="use-facing-view" label="&useFacingView;" />
               <checkbox preference="use-load-progress" label="&useLoadProgress;" />

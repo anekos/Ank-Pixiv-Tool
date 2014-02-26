@@ -512,8 +512,9 @@ function AnkViewer (module, getImage) {
   buttonPanel.addEventListener('mouseout', hideButtons, false);
 
   // ページの進む戻る
-  prevButton.addEventListener('click', noMoreEvent(function () goNextPage(-1, true)), false);
-  nextButton.addEventListener('click', noMoreEvent(function () goNextPage(1, true)), false);
+  let turnNextPage = AnkBase.Prefs.get('swapArrowButton', false) ? -1 : 1;
+  prevButton.addEventListener('click', noMoreEvent(function () goNextPage(-turnNextPage, true)), false);
+  nextButton.addEventListener('click', noMoreEvent(function () goNextPage(turnNextPage, true)), false);
 
   // リサイズ方法を変更する
   resizeButton.addEventListener('click', noMoreEvent(rotateFitMode), false);

@@ -28,6 +28,7 @@
 <!ENTITY maxPanelOpacity "ボタンパネルの不透明度の上限">
 <!ENTITY minPanelOpacity "ボタンパネルの不透明度の下限">
 <!ENTITY panelSize "ボタンパネルのサイズ">
+<!ENTITY swapArrowButton "矢印ボタンの戻ると進むを入れ替える">
 <!ENTITY useFacingView "見開きページを一つの画像として表示する">
 <!ENTITY useLoadProgress "画像の読込中エフェクトを使用する">
 <!ENTITY viewOriginalSize "オリジナルサイズの漫画を表示する">

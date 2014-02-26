@@ -19,6 +19,7 @@ pref("extensions.ankpixiv.largeImageSize", 0);
 pref("extensions.ankpixiv.maxPanelOpacity", 100);
 pref("extensions.ankpixiv.minPanelOpacity", 0);
 pref("extensions.ankpixiv.panelSize", 0);
+pref("extensions.ankpixiv.swapArrowButton", false);
 pref("extensions.ankpixiv.useFacingView", true);
 pref("extensions.ankpixiv.useLoadProgress", true);
 pref("extensions.ankpixiv.viewOriginalSize", false);

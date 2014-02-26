@@ -28,6 +28,7 @@
 <!ENTITY maxPanelOpacity "Maximum button panel opacity.">
 <!ENTITY minPanelOpacity "Minimum button panel opacity.">
 <!ENTITY panelSize "Button panel size.">
+<!ENTITY swapArrowButton "Swap the arrow button functions.">
 <!ENTITY useFacingView "Display facing pages as single image.">
 <!ENTITY useLoadProgress "Show progress, while loading image.">
 <!ENTITY viewOriginalSize "Display original size manga.">
