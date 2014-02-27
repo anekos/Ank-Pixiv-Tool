@@ -511,13 +511,12 @@ try {
           throw 'out of range';
         let rating = mod.elements.doc.defaultView.wrappedJSObject.pixiv.rating;
         if (typeof rating.rate === 'number') {
-          rating.rate = pt;
-          rating.apply.call(rating, {});
+          rating.apply.call(rating, pt);
           if (!AnkBase.Prefs.get('downloadWhenRate', false))
             return true;
           let point = AnkBase.Prefs.get('downloadRate', 10);
           if (point <= pt)
-            AnkBase.downloadCurrentImage(undefined, AnkBase.Prefs.get('confirmExistingDownloadWhenAuto'));
+            AnkBase.downloadCurrentImage(mod, AnkBase.Prefs.get('confirmExistingDownloadWhenAuto'));
         } else {
           return false;
         }

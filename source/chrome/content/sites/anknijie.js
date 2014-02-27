@@ -85,6 +85,12 @@ try {
         get doujinHeader ()
           query('#dojin_header'),
 
+        get nuita ()
+          query('a#nuita'),
+
+        get good ()
+          query('a#good'),
+
         get nextLink()
           query('a#nextIllust'),
 
@@ -302,10 +308,9 @@ try {
             return;
 
           [
-            'a#nuita',
-            'a#good'
-          ].forEach(function (v) {
-            let e = doc.querySelector(v);
+            mod.elements.illust.nuita,
+            mod.elements.illust.good
+          ].forEach(function (e) {
             if (e)
               e.addEventListener(
                 'click',
@@ -376,10 +381,25 @@ try {
     }, // }}}
 
     /*
-     * 評価する
+     * 評価する（10ptなら抜いた、未満ならいいね）
      */
-    rate: function () { // {{{
-      return true;
+    rate: function (pt) { // {{{
+      function setRating (mod,pt) {
+        if (!mod.in.medium)
+          throw 'not in nijie illust page';
+        if (pt < 1 || 10 < pt)
+          throw 'out of range';
+        let rating = pt >= 10 ? mod.elements.illust.nuita :
+                           mod.elements.illust.good;
+        if (rating) {
+          rating.click();
+          if (AnkBase.Prefs.get('downloadWhenRate', false)) {
+            AnkBase.downloadCurrentImage(mod, AnkBase.Prefs.get('confirmExistingDownloadWhenAuto'));
+          }
+        }
+      }
+
+      return setRating(this,pt);
     },
 
   };

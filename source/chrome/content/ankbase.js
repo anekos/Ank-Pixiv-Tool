@@ -752,7 +752,7 @@ try {
 
         // ダウンロード中だったらやめようぜ！
         if (AnkBase.isDownloading(context.info.illust.id, context.SERVICE_ID)) {
-          window.alert(AnkBase.Locale('alreadyDownloading'));
+          //window.alert(AnkBase.Locale('alreadyDownloading'));
           return false;
         }
 
