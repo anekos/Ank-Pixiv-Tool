@@ -2214,8 +2214,7 @@ try {
         throw 'out of range';
       let rating = window.content.window.wrappedJSObject.pixiv.rating;
       if (typeof rating.rate === 'number') {
-        rating.rate = pt;
-        rating.apply.call(rating, {});
+        rating.apply.call(rating, pt);
         if (!AnkPixiv.Prefs.get('downloadWhenRate', false))
           return true;
         let point = AnkPixiv.Prefs.get('downloadRate', 10);
