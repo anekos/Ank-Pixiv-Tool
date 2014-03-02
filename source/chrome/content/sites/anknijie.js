@@ -391,12 +391,8 @@ try {
           throw 'out of range';
         let rating = pt >= 10 ? mod.elements.illust.nuita :
                            mod.elements.illust.good;
-        if (rating) {
+        if (rating)
           rating.click();
-          if (AnkBase.Prefs.get('downloadWhenRate', false)) {
-            AnkBase.downloadCurrentImage(mod, AnkBase.Prefs.get('confirmExistingDownloadWhenAuto'));
-          }
-        }
       }
 
       return setRating(this,pt);
