@@ -202,7 +202,7 @@ try {
         },
 
         get referer ()
-          self.info.illust.pageUrl,
+          self.info.path.referer || self.info.illust.pageUrl,
 
         get title () {
           if (self.in.manga) {
@@ -261,25 +261,34 @@ try {
           null,
 
         get image () {
-          let images;
-          if (self.in.manga) {
-            // マンガの大サイズ画像はないらしい
-            images = AnkUtils.A(self.elements.illust.images).map(function (e) e.getAttribute('data-original'));
-          } else {
-            let s = AnkUtils.remoteFileExists(self.elements.illust.mediumImage.href);
-            let href = s[1];
-            if (!s[2].match(/^image\//)) {
-              // 2013/11の改編で、新構成ページでは大サイズ画像リンクのリダイレクト先が image/... でなくなってしまった
-              let html = AnkUtils.httpGET(href);
-              let doc = AnkUtils.createHTMLDocument(html);
-              let src = doc.querySelector('.illust_view_big > img').src;
-              href = href.replace(/^(https?:\/\/.+?)(?:\/.*)$/,"$1")+src;
+          try {
+            let images;
+            if (self.in.manga) {
+              // マンガの大サイズ画像はないらしい
+              images = AnkUtils.A(self.elements.illust.images).map(function (e) e.getAttribute('data-original'));
+            } else {
+              let s = AnkUtils.remoteFileExists(self.elements.illust.mediumImage.href);
+              let href = s[1];
+              if (!s[2].match(/^image\//)) {
+                referer = href;
+                let html = AnkUtils.httpGET(href);
+                let doc = AnkUtils.createHTMLDocument(html);
+                let src = doc.querySelector('.illust_view_big > img').src;
+                href = href.replace(/^(https?:\/\/.+?)(?:\/.*)$/,"$1")+src;
+              }
+              images = [href];
             }
-            images = [href];
-          }
 
-          return { images: images, facing: null, };
-        }
+            return { images: images, facing: null, };
+          }
+          catch (e) {
+            AnkUtils.dumpError(e);
+            window.alert(AnkBase.Locale('serverError'));
+            return AnkBase.NULL_RET;
+          }
+        },
+
+        referer: null
       };
 
       return {

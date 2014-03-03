@@ -389,6 +389,8 @@ try {
     * ネットワーク
     ********************************************************************************/
 
+    // FIXME forceAllowThirdPartyCookie does not work in remoteFileExists()
+
     /*
      * remoteFileExists
      *    url:          チェックする

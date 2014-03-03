@@ -555,19 +555,17 @@ try {
 
       const MAX = 1000;
 
-      const NULL_RET = { images: [], facing: null, };
-
       let manIdx = AnkUtils.httpGET(this.info.path.mangaIndexPage);
       let doc = AnkUtils.createHTMLDocument(manIdx);
       if (doc.querySelector('.errorArea') || doc.querySelector('.errortxt')) {
         window.alert(AnkBase.Locale('serverError'));
-        return NULL_RET;
+        return AnkBase.NULL_RET;
       }
 
       let mangaArea = doc.querySelector('.manga');
       if (!mangaArea) {
         window.alert(AnkBase.Locale('serverError'));
-        return NULL_RET;
+        return AnkBase.NULL_RET;
       }
       let im = [];
       let fp = [];
@@ -584,7 +582,7 @@ try {
 
       if (im.length == 0) {
         window.alert(AnkBase.Locale('serverError'));
-        return NULL_RET;
+        return AnkBase.NULL_RET;
       }
 
       if (fp.length > 0 && fp[fp.length - 1] < fp.length) {
