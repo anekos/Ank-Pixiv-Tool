@@ -79,14 +79,16 @@ try {
         get userName ()
           self.in.manga && query('.author_name')
           ||
-          query('.user_link > a')                     // seiga
+          query('.user_name > strong')                // seiga
           ||
-          query('.illust_user_name > a'),             // shunga
+          query('.illust_user_name > a > strong'),    // shunga
 
         get memberLink ()
           self.in.manga && query('.author > .name > a')
           ||
-          illust.userName,
+          query('.user_link > a')                     // seiga
+          ||
+          query('.illust_user_name > a'),             // shunga
 
         get tags ()
           query('.illust_tag.cfix.static')            // seiga
@@ -231,10 +233,16 @@ try {
       };
 
       let member = {
-        get id ()
-          self.in.manga && self.elements.illust.memberLink.href.match(/\/manga\/list\?user_id=(.+?)(?:$|\?)/)[1]
-          ||
-          self.elements.illust.memberLink.href.match(/\/user\/illust\/(.+?)(?:$|\?)/)[1],
+        get id () {
+          if (self.in.manga) {
+            if (self.elements.illust.memberLink)
+              return self.elements.illust.memberLink.href.match(/\/manga\/list\?user_id=(.+?)(?:$|\?)/)[1];
+            return member.name;
+          }
+          else {
+            return self.elements.illust.memberLink.href.match(/\/user\/illust\/(.+?)(?:$|\?)/)[1]; 
+          }
+        },
 
         get pixivId ()
           member.id,
