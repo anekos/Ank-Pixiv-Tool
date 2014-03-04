@@ -247,11 +247,31 @@ try {
                                               self.elements.illust.media.getAttribute('data-url')
           ;
           if (AnkBase.Prefs.get('downloadOriginalSize', false)) {
-            if (m && m.match(/\/proxy\.jpg\?.*?t=(.+?)(?:$|&)/)) {
-              let em = window.atob(RegExp.$1).match(/^.*?(.)(https?:\/\/[\s\S]+)$/);
-              if (em) {
-                let len = em[1].charCodeAt(0);
-                m = em[2].substr(0,len);
+            if (m && m.match(/\/proxy\.jpg\?.*?t=((.+?)aHR0.+?)(?:$|&)/)) {
+              try {
+                let b64 = RegExp.$1;
+                let hdr = RegExp.$2;
+
+                let lenb = window.atob(hdr);
+                let len = lenb.charCodeAt(lenb.length-1) * 8;
+                len = parseInt(len/6) + (len % 6 ? 1 : 0);
+
+                let dat = b64.substr(hdr.length,len);
+                let (pad = 4 - len % 4) {
+                  if (pad < 4) {
+                    for (let i=0; i<pad; i++)
+                      dat += '=';
+                  }
+                }
+
+                AnkUtils.dump('BASE64: \n'+b64+'\n    '+dat);
+                m = window.atob(dat);
+                AnkUtils.dump('DECODED: '+m);
+              }
+              catch (e) {
+                AnkUtils.dumpError(e);
+                window.alert(AnkBase.Locale('serverError'));
+                return AnkBase.NULL_RET;
               }
             }
           }
