@@ -162,21 +162,21 @@ try {
           query('.ui-expander-container > .ui-expander-target > .expand'),
 
         get ads () {
-          let obj = AnkUtils.A(queryAll('object'));
-          let iframe = AnkUtils.A(queryAll('iframe'));
-          let search = AnkUtils.A(queryAll('.ui-search'));
-          // 検索欄も広告扱いしちゃうぞ
-          let findbox = AnkUtils.A(queryAll('form.search2'));
-          // ldrize
-          let ldrize = AnkUtils.A(queryAll('#gm_ldrize'));
-          // ヘッダ
-          let header1 = AnkUtils.A(queryAll('#global-header'));
-          let header2 = AnkUtils.A(queryAll('.header'));
-          let header3 = AnkUtils.A(queryAll('._header'));
+          const Ads = [
+                       'object',
+                       'iframe',
+                       '.ui-search',
+                       'form.search2',          // 検索欄も広告扱いしちゃうぞ
+                       '#global-header',        // ヘッダ
+                       '.header',
+                       '._header',
+                       '#toolbar-items',        // toolbar
+                       '#gm_ldrize',            // ldrize
+                       ];
 
-          let toolbarItems = AnkUtils.A(queryAll('#toolbar-items'));
-
-          return ([]).concat(obj, iframe, search, findbox, ldrize, header1, header2, header3, toolbarItems);
+          let a = [];
+          Ads.forEach(function (q) AnkUtils.A(queryAll(q)).forEach(function (e) a.push(e)));
+          return a;
         },
 
       };
