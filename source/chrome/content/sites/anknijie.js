@@ -224,7 +224,8 @@ try {
           AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext ()
-          (path.image.images[0].match(/(\.\w+)(?:$|\?)/)[1] || '.jpg'),
+          let (m = path.image.images[0].match(/(\.\w+)(?:$|\?)/))
+            m && m[1] || '.jpg',
 
         get mangaIndexPage ()
           null,

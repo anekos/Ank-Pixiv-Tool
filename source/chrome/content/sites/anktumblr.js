@@ -74,11 +74,13 @@ try {
 
       let illust =  {
         get date ()
+          query('.date > a') ||
           query('.date') ||
           query('.postmeta > a') ||
           query('.post-date a'),
 
         get title ()
+          query('.copy > p') ||
           query('.caption > p') ||
           query('.post > p+p') ||
           query('.photo > p+p'),
@@ -141,8 +143,10 @@ try {
         get id ()
           self.info.illust.pageUrl.match(/\.tumblr\.com\/post\/([^/]+?)(?:\?|\/|$)/)[1],
 
-        get dateTime ()
-          AnkUtils.decodeDateTimeText(self.elements.illust.date.textContent),
+        get dateTime () {
+          let v = self.elements.illust.date.title;
+          return AnkUtils.decodeDateTimeText(v ? v : self.elements.illust.date.textContent);
+        },
 
         get size ()
           null,
