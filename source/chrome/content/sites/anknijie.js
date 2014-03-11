@@ -332,6 +332,15 @@ try {
         // こんな絵でも…にマーキング
         mod.markDownloaded(doc,true);
 
+        // おすすめのイラストにマーキング
+        let (elm = doc.querySelector('#carouselInner-view')) {
+          if (elm && MutationObserver) {
+            new MutationObserver(function (o) {
+              o.forEach(function (e) mod.markDownloaded(e.target, true));
+            }).observe(elm, {childList: true});
+          }
+        };
+
         return true;
       }; // }}}
 
