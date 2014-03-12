@@ -122,7 +122,9 @@ try {
           AnkUtils.A(queryAll('.image-items')).pop(),
 
         get feedList()
-          query('#stacc_timeline'),
+          query('#stacc_timeline')
+          ||
+          query('#stacc_center_timeline'),
 
         get rankingList()
           query('.ranking-items'),
@@ -492,7 +494,8 @@ try {
                         ['.worksImageresponseImg > a', 2],        // イラストページ（イメージレスポンス）
                         ['li > a.response-in-work', 1],           // イラストページ（イメージレスポンス）
                         ['.search_a2_result > ul > li > a', 1],   // イメージレスポンス
-                        ['.stacc_ref_illust_img > a', 3],         // フィード
+                        ['.stacc_ref_illust_img > a', 3],         // フィード（お気に入りに追加したイラスト）
+                        ['.stacc_ref_user_illust_img > a', 1],    // フィード（お気に入りに追加したユーザ内のイラスト）
                         ['.hotimage > a', 1],                     // タグページ（週間ベスト）
                         ['.image > a', 1],                        // タグページ（全期間＆新着）
                       ];
