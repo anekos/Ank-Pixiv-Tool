@@ -387,10 +387,11 @@ try {
       };
 
       let followExpansion = function (mod) {
+        let newGrid = mod.elements.doc.querySelector('.AppContent-main .GridTimeline-items');
         let grid = mod.elements.doc.querySelector('.stream-media-grid-items');
         let items = mod.elements.doc.querySelector('.stream-items');
 
-        let elm = grid || items;
+        let elm = grid || items || newGrid;
         if (!elm) {
           return false;     // リトライしてほしい
         }
@@ -436,6 +437,7 @@ try {
                         ['span.media-thumbnail > img', 1],
                         ['div > a.is-preview > div > img', 3],
                         ['span.media-thumbnail .js-tweet-text a.twitter-timeline-link', 10, 'media-thumbnail'],
+                        ['.TwitterPhoto a.TwitterPhoto-link > img', 2],
                       ];
 
       return AnkBase.markDownloaded(IsIllust, Targets, 2, this, node, force, ignorePref);
