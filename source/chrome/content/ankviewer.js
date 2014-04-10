@@ -440,8 +440,8 @@ function AnkViewer (module, getImage) {
   resizeButton.innerHTML = 'RESIZE';
   closeButton.innerHTML = '\xD7';
   buttonPanel.setAttribute('style', 'position: fixed !important; width: 100%; opacity: 0; z-index: 666; text-align: center');
-  bigImg.setAttribute('style', 'margin: 0px; background: #FFFFFF');
-  fpImg.setAttribute('style', 'margin: 0px; background: #FFFFFF');
+  bigImg.setAttribute('style', 'margin: 0px; background: #FFFFFF; max-height: none !important');
+  fpImg.setAttribute('style', 'margin: 0px; background: #FFFFFF; max-height: none !important');
   imgContainer.setAttribute('style', 'margin: auto');
   imgPanel.setAttribute('style', 'margin: 0px');
 
