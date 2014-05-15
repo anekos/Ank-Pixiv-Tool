@@ -32,9 +32,6 @@
 <!ENTITY useFacingView "見開きページを一つの画像として表示する">
 <!ENTITY useLoadProgress "画像の読込中エフェクトを使用する">
 <!ENTITY viewOriginalSize "オリジナルサイズの漫画を表示する">
-<!ENTITY useExperimentalModules "試験実装モジュールも利用する">
-<!ENTITY warnWrongDatetimeFormat "日時情報の解析失敗を警告する">
 <!ENTITY openComment "コメント欄を自動で開く">
 <!ENTITY openCaption "キャプションの続きを自動で開く">
 <!ENTITY allowThirdPartyCookie "サードパーティーCookieを保存する">
-
