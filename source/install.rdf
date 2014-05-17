@@ -31,6 +31,8 @@
         <em:translator>le_</em:translator>
         <em:translator>erkanyv</em:translator>
         <em:translator>Mikael Hiort af Ornäs</em:translator>
+        <em:translator>FidesNL</em:translator>
+        <em:translator>markh</em:translator>
       </Description>
       <Description>
         <em:name>Ank Pixiv Tool</em:name>
@@ -54,6 +56,8 @@
         <em:translator>le_</em:translator>
         <em:translator>erkanyv</em:translator>
         <em:translator>Mikael Hiort af Ornäs</em:translator>
+        <em:translator>FidesNL</em:translator>
+        <em:translator>markh</em:translator>
       </Description>
       <Description>
         <em:name>Ank Pixiv Tool</em:name>
@@ -77,6 +81,8 @@
         <em:translator>le_</em:translator>
         <em:translator>erkanyv</em:translator>
         <em:translator>Mikael Hiort af Ornäs</em:translator>
+        <em:translator>FidesNL</em:translator>
+        <em:translator>markh</em:translator>
       </Description>
       <Description>
         <em:name>Ank Pixiv Tool</em:name>
@@ -100,6 +106,8 @@
         <em:translator>le_</em:translator>
         <em:translator>erkanyv</em:translator>
         <em:translator>Mikael Hiort af Ornäs</em:translator>
+        <em:translator>FidesNL</em:translator>
+        <em:translator>markh</em:translator>
       </Description>
     </em:localized>
     <em:iconURL>chrome://ankpixiv/content/icon.png</em:iconURL>
