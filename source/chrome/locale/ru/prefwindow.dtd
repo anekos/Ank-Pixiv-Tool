@@ -1,0 +1,37 @@
+<!ENTITY prefwindow.title "Предпочтения">
+<!ENTITY mainpane.title "Предпочтения Ank Pixiv">
+<!ENTITY initialDirectory.label "Каталог для загрузок:">
+<!ENTITY showSaveDialog.label "Использовать диалог сохранения при загрузке иллюстрации">
+<!ENTITY saveHistory.label "Хранить историю загрузок">
+<!ENTITY downloadRate.label "Загрузить иллюстрацию когда вы оцениваете ее этим баллом или выше">
+<!ENTITY browse "Обзор...">
+<!ENTITY defaultFilename "Имя файла по-умолчанию:">
+<!ENTITY largeOnMiddle "Открывать большие изображения в той же вкладке">
+<!ENTITY alternateFilename "Альтернативное имя файла:">
+<!ENTITY confirmExistingDownload "Подтверждение перезаписи">
+<!ENTITY confirmExistingDownloadWhenAuto "Подтверждение перезаписи при автоматической загрузке">
+<!ENTITY downloadWhenClickMiddle "Автоматически загружать, когда вы нажимаете на среднее изображение">
+<!ENTITY showCompletePopup "Оповещать о завершении загрузки">
+<!ENTITY displayDownloaded "Показывать &quot;Уже загруженное&quot;">
+<!ENTITY defaultMangaFilename "Название файла по-умолчанию">
+<!ENTITY alternateMangaFilename "Альтернативное название файла">
+<!ENTITY saveMeta "Сохранить свойства">
+<!ENTITY markDownloaded "Отметить загруженные иллюстрации.">
+<!ENTITY downloadOriginalSize "Загрузить в исходном размере.">
+<!ENTITY tab.download "Загрузка">
+<!ENTITY tab.filename "Имя файла">
+<!ENTITY tab.viewer "Просмотрщик">
+<!ENTITY tab.miscellaneous "Разное">
+<!ENTITY fitLargeImageInWindowSize "Вписать большие изображения в размеры окна.">
+<!ENTITY dontResizeIfSmall "Не изменять размер, если размеры иллюстрации меньше размеров окна.">
+<!ENTITY dontHidePanel "Не скрывать панель.">
+<!ENTITY maxPanelOpacity "Максимальная прозрачность панели.">
+<!ENTITY minPanelOpacity "Минимальная прозрачность панели.">
+<!ENTITY panelSize "Размер панели.">
+<!ENTITY swapArrowButton "Обратить функции кнопок со стрелками.">
+<!ENTITY useFacingView "Показывать связанные страницы, как одно изображение.">
+<!ENTITY useLoadProgress "Показывать прогресс загрузки.">
+<!ENTITY viewOriginalSize "Показывать в оригинальном размере.">
+<!ENTITY openComment "Автоматически открывать поле комментария.">
+<!ENTITY openCaption "Автоматически открывать длинные подписи.">
+<!ENTITY allowThirdPartyCookie "Разрешить сторонние cookie.">

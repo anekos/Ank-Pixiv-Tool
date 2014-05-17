@@ -7,7 +7,6 @@
 <!ENTITY browse "Обзор...">
 <!ENTITY defaultFilename "Имя файла по-умолчанию:">
 <!ENTITY largeOnMiddle "Открывать большие изображения в той же вкладке">
-<!ENTITY openComment "Автоматически открывать поле комментария">
 <!ENTITY alternateFilename "Альтернативное имя файла:">
 <!ENTITY confirmExistingDownload "Подтверждение перезаписи">
 <!ENTITY confirmExistingDownloadWhenAuto "Подтверждение перезаписи при автоматической загрузке">
@@ -21,6 +20,18 @@
 <!ENTITY downloadOriginalSize "Download original size manga.">
 <!ENTITY tab.download "Download">
 <!ENTITY tab.filename "Filename">
+<!ENTITY tab.viewer "Viewer">
 <!ENTITY tab.miscellaneous "Miscellaneous">
 <!ENTITY fitLargeImageInWindowSize "Fit large image in window size.">
 <!ENTITY dontResizeIfSmall "Dont't resize if illustration is smaller than window.">
+<!ENTITY dontHidePanel "Don't hide button panel.">
+<!ENTITY maxPanelOpacity "Maximum button panel opacity.">
+<!ENTITY minPanelOpacity "Minimum button panel opacity.">
+<!ENTITY panelSize "Button panel size.">
+<!ENTITY swapArrowButton "Swap the arrow button functions.">
+<!ENTITY useFacingView "Display facing pages as single image.">
+<!ENTITY useLoadProgress "Show progress, while loading image.">
+<!ENTITY viewOriginalSize "Display original size manga.">
+<!ENTITY openComment "Автоматически открывать поле комментария">
+<!ENTITY openCaption "Automatically open the long caption.">
+<!ENTITY allowThirdPartyCookie "Allow ThirdParty Cookie.">

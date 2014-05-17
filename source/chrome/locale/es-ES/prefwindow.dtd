@@ -20,18 +20,18 @@
 <!ENTITY downloadOriginalSize "Descargar tamaño original.">
 <!ENTITY tab.download "Descargar">
 <!ENTITY tab.filename "Nombre de archivo">
-<!ENTITY tab.viewer "Viewer">
+<!ENTITY tab.viewer "Visor">
 <!ENTITY tab.miscellaneous "Varios">
 <!ENTITY fitLargeImageInWindowSize "Ajustar imagen grande a tamaño de ventana.">
 <!ENTITY dontResizeIfSmall "No cambiar el tamaño si la ilustración es más pequeña que la ventana.">
-<!ENTITY dontHidePanel "Don't hide button panel.">
-<!ENTITY maxPanelOpacity "Maximum button panel opacity.">
-<!ENTITY minPanelOpacity "Minimum button panel opacity.">
-<!ENTITY panelSize "Button panel size.">
-<!ENTITY swapArrowButton "Swap the arrow button functions.">
-<!ENTITY useFacingView "Display facing pages as single image.">
-<!ENTITY useLoadProgress "Show progress, while loading image.">
-<!ENTITY viewOriginalSize "Display original size manga.">
+<!ENTITY dontHidePanel "No ocultar panel de botones.">
+<!ENTITY maxPanelOpacity "Máxima opacidad del panel de botones.">
+<!ENTITY minPanelOpacity "Mínima opacidad del panel de botones.">
+<!ENTITY panelSize "Tamaño del panel de botones.">
+<!ENTITY swapArrowButton "Intercambiar funciones de los botones de dirección.">
+<!ENTITY useFacingView "Visualizar páginas enfrentadas como única imagen.">
+<!ENTITY useLoadProgress "Mostrar progreso mientras descarga imagen.">
+<!ENTITY viewOriginalSize "Mostrar tamaño original del manga.">
 <!ENTITY openComment "Abrir automáticamente la caja de comentario.">
-<!ENTITY openCaption "Automatically open the long caption.">
-<!ENTITY allowThirdPartyCookie "Allow ThirdParty Cookie.">
+<!ENTITY openCaption "Abrir automáticamente las leyendas largas.">
+<!ENTITY allowThirdPartyCookie "Permitir Cookies de terceros.">

@@ -1,37 +1,37 @@
-<!ENTITY prefwindow.title "Ank Pixiv Tool voorkeuren">
-<!ENTITY mainpane.title "Ank Pixiv Tool voorkeuren">
-<!ENTITY initialDirectory.label "Bewaar de illustratie in:">
-<!ENTITY showSaveDialog.label "Gebruik een dialoogvenster wanneer de illustratie wordt gedownload">
-<!ENTITY saveHistory.label "Bewaar de download geschiedenis">
-<!ENTITY downloadRate.label "Download de illustratie wanneer u het deze score of hoger geeft.">
-<!ENTITY browse "Zoeken...">
-<!ENTITY defaultFilename "Standaard bestandsnaam">
-<!ENTITY largeOnMiddle "Laat een grotere afbeelding zien in hetzelfde tabblad als u op de middelste afbeelding klikt.">
-<!ENTITY alternateFilename "Verander bestandsnaam">
-<!ENTITY confirmExistingDownload "Bevestiging van her-download.">
-<!ENTITY confirmExistingDownloadWhenAuto "Bevestiging van her-download automatische download.">
-<!ENTITY downloadWhenClickMiddle "Automatisch downloaden, wanneer u op de middelste afbeelding klikt.">
-<!ENTITY showCompletePopup "Laat een pop-up zien, wanneer de download klaar is.">
-<!ENTITY displayDownloaded "Laat gedownloade afbeeldingen zien.">
-<!ENTITY defaultMangaFilename "Standaard Manga (Comic) bestandsnaam">
-<!ENTITY alternateMangaFilename "Verander Manga (Comic) bestandsnaam">
-<!ENTITY saveMeta "Bewaar meta-informatie tekst">
-<!ENTITY markDownloaded "Markeer gedownloade illustraties.">
-<!ENTITY downloadOriginalSize "Download oorspronkelijke grootte manga.">
-<!ENTITY tab.download "Download">
+<!ENTITY prefwindow.title "Ank Pixiv Tool-voorkeuren">
+<!ENTITY mainpane.title "Ank Pixiv Tool-voorkeuren">
+<!ENTITY initialDirectory.label "Illustratie opslaan in:">
+<!ENTITY showSaveDialog.label "Dialoogvenster Opslaan gebruiken bij downloaden illustratie">
+<!ENTITY saveHistory.label "Downloadgeschiedenis opslaan">
+<!ENTITY downloadRate.label "De illustratie downloaden wanneer u het deze score of hoger geeft.">
+<!ENTITY browse "Bladeren…">
+<!ENTITY defaultFilename "Standaardbestandsnaam">
+<!ENTITY largeOnMiddle "Grotere afbeelding weergeven in hetzelfde tabblad als u op de middelste afbeelding klikt.">
+<!ENTITY alternateFilename "Alternatieve bestandsnaam">
+<!ENTITY confirmExistingDownload "Bevestiging opnieuw downloaden.">
+<!ENTITY confirmExistingDownloadWhenAuto "Bevestiging van opnieuw downloaden bij automatische download.">
+<!ENTITY downloadWhenClickMiddle "Automatisch downloaden wanneer u op de middelste afbeelding klikt.">
+<!ENTITY showCompletePopup "Pop-up weergeven bij afronden download.">
+<!ENTITY displayDownloaded "“Reeds gedownload” weergeven">
+<!ENTITY defaultMangaFilename "Standaard Manga (Comic)-bestandsnaam">
+<!ENTITY alternateMangaFilename "Alternatieve Manga (Comic)-bestandsnaam">
+<!ENTITY saveMeta "Meta-informatietekst opslaan">
+<!ENTITY markDownloaded "Gedownloade illustraties markeren.">
+<!ENTITY downloadOriginalSize "Oorspronkelijke grootte manga downloaden.">
+<!ENTITY tab.download "Downloaden">
 <!ENTITY tab.filename "Bestandsnaam">
-<!ENTITY tab.viewer "Viewer">
-<!ENTITY tab.miscellaneous "Mengeling">
-<!ENTITY fitLargeImageInWindowSize "Pas de grote aan, zodat de afbeelding in de venstergrootte past.">
-<!ENTITY dontResizeIfSmall "Grootte van de illustratie niet aanpassen als deze kleiner is dan het venster.">
-<!ENTITY dontHidePanel "Don't hide button panel.">
-<!ENTITY maxPanelOpacity "Maximum button panel opacity.">
-<!ENTITY minPanelOpacity "Minimum button panel opacity.">
-<!ENTITY panelSize "Button panel size.">
-<!ENTITY swapArrowButton "Swap the arrow button functions.">
-<!ENTITY useFacingView "Display facing pages as single image.">
-<!ENTITY useLoadProgress "Show progress, while loading image.">
-<!ENTITY viewOriginalSize "Display original size manga.">
-<!ENTITY openComment "Automatisch de reacties openen">
-<!ENTITY openCaption "Automatically open the long caption.">
-<!ENTITY allowThirdPartyCookie "Allow ThirdParty Cookie.">
+<!ENTITY tab.viewer "Weergave">
+<!ENTITY tab.miscellaneous "Diversen">
+<!ENTITY fitLargeImageInWindowSize "Grote afbeeldingen aan venster aanpassen.">
+<!ENTITY dontResizeIfSmall "Grootte niet aanpassen als afbeelding kleiner dan venster is.">
+<!ENTITY dontHidePanel "Knoppenpaneel niet verbergen.">
+<!ENTITY maxPanelOpacity "Maximale opaciteit knoppenpaneel.">
+<!ENTITY minPanelOpacity "Minimale opaciteit knoppenpaneel.">
+<!ENTITY panelSize "Grootte knoppenpaneel.">
+<!ENTITY swapArrowButton "Pijlknopfuncties wisselen.">
+<!ENTITY useFacingView "Opponerende pagina’s als één afbeelding weergeven.">
+<!ENTITY useLoadProgress "Voortgang weergeven bij laden afbeelding.">
+<!ENTITY viewOriginalSize "Oorspronkelijke grootte manga weergeven.">
+<!ENTITY openComment "Automatisch de reacties openen.">
+<!ENTITY openCaption "Automatisch lange titel openen.">
+<!ENTITY allowThirdPartyCookie "Cookies van derden toestaan.">

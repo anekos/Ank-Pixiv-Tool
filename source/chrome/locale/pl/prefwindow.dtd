@@ -20,18 +20,18 @@
 <!ENTITY downloadOriginalSize "Pobieraj oryginalny rozmiar manga">
 <!ENTITY tab.download "Pobierz">
 <!ENTITY tab.filename "Nazwa pliku">
-<!ENTITY tab.viewer "Viewer">
+<!ENTITY tab.viewer "Przeglądarka">
 <!ENTITY tab.miscellaneous "Różne">
-<!ENTITY fitLargeImageInWindowSize "Dopasuj duże obrazki do wymiaru okna.">
-<!ENTITY dontResizeIfSmall "Nie zmieniaj rozmiaru, jeśli obrazek jest  mniejszy niż okno.">
-<!ENTITY dontHidePanel "Don't hide button panel.">
-<!ENTITY maxPanelOpacity "Maximum button panel opacity.">
-<!ENTITY minPanelOpacity "Minimum button panel opacity.">
-<!ENTITY panelSize "Button panel size.">
-<!ENTITY swapArrowButton "Swap the arrow button functions.">
-<!ENTITY useFacingView "Display facing pages as single image.">
-<!ENTITY useLoadProgress "Show progress, while loading image.">
-<!ENTITY viewOriginalSize "Display original size manga.">
+<!ENTITY fitLargeImageInWindowSize "Dopasuj duże obrazki do wymiaru okna">
+<!ENTITY dontResizeIfSmall "Nie zmieniaj rozmiaru, jeśli obrazek jest  mniejszy niż okno">
+<!ENTITY dontHidePanel "Nie ukrywaj przycisku panelu">
+<!ENTITY maxPanelOpacity "Maksymalne krycie przycisku panelu">
+<!ENTITY minPanelOpacity "Minimalne krycie przycisku panelu">
+<!ENTITY panelSize "Rozmiar przycisku panelu">
+<!ENTITY swapArrowButton "Zamień funkcje strzałki przycisku">
+<!ENTITY useFacingView "Wyświetlaj rozkładówki jako pojedynczy obrazek">
+<!ENTITY useLoadProgress "Wyświetlaj postęp wczytywania obrazka">
+<!ENTITY viewOriginalSize "Wyświetlaj oryginalny rozmiar manga">
 <!ENTITY openComment "Otwieraj automatycznie pole komentarza">
-<!ENTITY openCaption "Automatically open the long caption.">
-<!ENTITY allowThirdPartyCookie "Allow ThirdParty Cookie.">
+<!ENTITY openCaption "Otwieraj automatycznie opis zdarzeń">
+<!ENTITY allowThirdPartyCookie "Akceptuj ciasteczka z innych witryn">
