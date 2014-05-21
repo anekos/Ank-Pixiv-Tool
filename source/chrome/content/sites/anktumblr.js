@@ -144,8 +144,12 @@ try {
           self.info.illust.pageUrl.match(/\.tumblr\.com\/post\/([^/]+?)(?:\?|\/|$)/)[1],
 
         get dateTime () {
-          let v = self.elements.illust.date.title;
-          return AnkUtils.decodeDateTimeText(v ? v : self.elements.illust.date.textContent);
+          let dt = [];
+          let (v = self.elements.illust.date.title)
+            v && dt.push(v);
+          let (v = self.elements.illust.date.textContent)
+            v && dt.push(v);
+          return AnkUtils.decodeDateTimeText(dt);
         },
 
         get size ()

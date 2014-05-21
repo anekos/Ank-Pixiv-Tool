@@ -200,7 +200,39 @@ try {
       return msg;
     }, // }}}
 
-    decodeDateTimeText: function (dtext) { // {{{
+    decodeDateTimeText: function (datetime) { // {{{
+      let d;
+      let dtext;
+      if ( Array.isArray(datetime) ) {
+        datetime.some(function (v) {
+          dtext = v;
+          d = AnkUtils._decodeDateTimeText(dtext);
+        });
+      }
+      else {
+        dtext = datetime;
+        d = AnkUtils._decodeDateTimeText(dtext);
+      }
+
+      if ( ! d ) {
+        // TODO 日時解析失敗時に、自動で現在日時で代替するのか、それとも他の処理を行うのかは、要検討課題
+        let msg = 'unsupported datetime format = \''+dtext+'\'';
+        AnkUtils.dump(msg);
+
+        if (!AnkBase.Prefs.get('warnWrongDatetimeFormat', false)) {
+          // (暫定)呼び出し元でnull pointer exceptionを起こさせて処理を中断させる
+          return null;
+        }
+
+        dd = new Date();
+        window.alert(msg);
+        fault = true;
+      }
+
+      return d;
+    }, // }}}
+
+    _decodeDateTimeText: function (dtext) { // {{{
       // 時分 - 年月日
       function calc0 () {
         let m = dtext.match(/^(\d{1,2})\s*[\u6642:\-]\s*(\d{1,2})(?:\s*\D{1,2}\s*)(\d{4})\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})/);
@@ -235,7 +267,7 @@ try {
 
       // 月日,年
       function calc2 () {
-        let m = dtext.match(/(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})\s*,\s*(\d{4})/)
+        let m = dtext.match(/(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})(?:st|nd|rd|th)?\s*,\s*(\d{4})/)
         if (!m)
           return;
 
@@ -282,18 +314,7 @@ try {
       let fault = false;
       let dd = calc0() || calc1() || calc2() || calc3() || calcx();   // 0は1と一部被るので0を前に
       if (!dd) {
-        // TODO 日時解析失敗時に、自動で現在日時で代替するのか、それとも他の処理を行うのかは、要検討課題
-        let msg = 'unsupported datetime format = \''+dtext+'\'';
-        AnkUtils.dump(msg);
-
-        if (!AnkBase.Prefs.get('warnWrongDatetimeFormat', false)) {
-          // (暫定)呼び出し元でnull pointer exceptionを起こさせて処理を中断させる
-          return null;
-        }
-
-        dd = new Date();
-        window.alert(msg);
-        fault = true;
+        return;
       }
 
       return {
