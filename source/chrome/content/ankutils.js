@@ -214,22 +214,21 @@ try {
         d = AnkUtils._decodeDateTimeText(dtext);
       }
 
-      if ( ! d ) {
-        // TODO 日時解析失敗時に、自動で現在日時で代替するのか、それとも他の処理を行うのかは、要検討課題
-        let msg = 'unsupported datetime format = \''+dtext+'\'';
-        AnkUtils.dump(msg);
-
-        if (!AnkBase.Prefs.get('warnWrongDatetimeFormat', false)) {
-          // (暫定)呼び出し元でnull pointer exceptionを起こさせて処理を中断させる
-          return null;
-        }
-
-        dd = new Date();
-        window.alert(msg);
-        fault = true;
+      if (d) {
+        return d;
       }
 
-      return d;
+      // TODO 日時解析失敗時に、自動で現在日時で代替するのか、それとも他の処理を行うのかは、要検討課題
+      let msg = 'unsupported datetime format = \''+dtext+'\'';
+      AnkUtils.dump(msg);
+
+      if (!AnkBase.Prefs.get('warnWrongDatetimeFormat', false)) {
+        // (暫定)呼び出し元でnull pointer exceptionを起こさせて処理を中断させる
+        return;
+      }
+
+      window.alert(msg);
+      return AnkUtils.getDecodedDateTime(new Date(), true);
     }, // }}}
 
     _decodeDateTimeText: function (dtext) { // {{{
@@ -317,6 +316,10 @@ try {
         return;
       }
 
+      return AnkUtils.getDecodedDateTime(dd, false);
+    }, // }}}
+
+    getDecodedDateTime: function (dd, fault) { // {{{
       return {
         year: AnkUtils.zeroPad(dd.getFullYear(), 4),
         month: AnkUtils.zeroPad(dd.getMonth()+1, 2),
@@ -326,7 +329,6 @@ try {
         fault: fault,
       };
     }, // }}}
-
 
     /********************************************************************************
     * 配列
