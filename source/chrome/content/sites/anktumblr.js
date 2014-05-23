@@ -26,14 +26,14 @@ try {
         self.info.illust.pageUrl.match(/^https?:\/\/[^/]*tumblr\.com\//), // }}}
 
       get manga () // {{{
-        false, // }}}
+        (self.info.illust.mangaPages > 1), // }}}
 
       get medium () // {{{
         self.in.illustPage, // }}}
 
       get illustPage () // {{{
         self.info.illust.pageUrl.match(/^https?:\/\/[^/]+?\.tumblr\.com\/post\//) &&
-        !!self.elements.illust.mediumImage, // }}}
+        (!!self.elements.illust.mediumImage || !!self.elements.illust.photoFrame), // }}}
 
       get myPage ()
         false,  // under construction
@@ -93,6 +93,16 @@ try {
           let (e = query('#header > * > .profile-image'))
             (e && e.parentNode),
 
+        get photoFrame ()
+          let (e = query('iframe.photoset'))
+            e,
+
+        get photoImage ()
+          illust.photoFrame && illust.photoFrame.contentDocument.querySelector('.photoset_row img'),
+
+        get photoSet ()
+          illust.photoFrame && illust.photoFrame.contentDocument.querySelectorAll('.photoset_row img'),
+
         // require for AnkBase
 
         get downloadedDisplayParent ()
@@ -107,16 +117,24 @@ try {
         get wrapper ()
           query('.container.section') ||
           query('#newDay') ||
+          query('section#page') ||
           query('body'),
 
         get mediumImage ()
-          getLargestImage(query('.post'), query('.photo')),
+          illust.photoFrame ? illust.photoImage : getLargestImage(query('.post'), query('.photo')),
 
         get ads () {
-          let header = query('#header');
-          let header2 = query('#fb-root');
+          const Ads = [
+                       '#header',
+                       '#fb-root',
+                       '.nav-menu-wrapper',
+                       '.nav-menu-bg',
+                       '.header-wrapper',
+                       ];
 
-          return ([]).concat(header, header2);
+          let a = [];
+          Ads.forEach(function (q) AnkUtils.A(queryAll(q)).forEach(function (e) a.push(e)));
+          return a;
         },
       };
 
@@ -180,7 +198,7 @@ try {
 
         get title ()
           let (e = self.elements.illust.title)
-           e && AnkUtils.trim(e.textContent),
+           e && AnkUtils.trim(e.textContent) || '',
 
         get comment ()
           illust.title,
@@ -188,6 +206,8 @@ try {
         get R18 ()
           !!self.info.illust.pageUrl.match(/\.tumblr\.com\/post\/[^/]+?\/[^/]*r-?18/),
 
+        get mangaPages ()
+          self.info.path.image.images.length,
       };
 
       let member = {
@@ -215,6 +235,12 @@ try {
           null,
 
         get image () {
+          let m = [];
+          
+          if (self.elements.illust.photoFrame) {
+            AnkUtils.A(self.elements.illust.photoSet).forEach(function (e) m.push(e.src));
+            return { images: m, facing: null, };
+          }
           return { images: [self.elements.illust.mediumImage.src], facing: null, };
         },
       };
@@ -247,7 +273,8 @@ try {
         var wrapper = mod.elements.illust.wrapper;
         var medImg = mod.elements.illust.mediumImage;
 
-        if (!(body && wrapper && medImg)) {
+        // FIXME imgがiframe中にある場合、iframe中の最初のimgの完了待ちしかしていないので、失敗するタイミングがあるかも
+        if (!(body && medImg && wrapper)) {
           return false;   // リトライしてほしい
         }
 
