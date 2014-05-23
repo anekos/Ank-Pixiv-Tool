@@ -106,7 +106,8 @@ try {
         // require for AnkBase
 
         get downloadedDisplayParent ()
-          query('.caption > p'),
+          query('.caption > p') ||
+          query('.panel .post-date a'),
 
         // require for AnkViewer
 
@@ -328,6 +329,7 @@ try {
       const IsIllust = /\.tumblr\.com\/post\/([^/]+?)(?:\?|\/|$)/;
       const Targets = [
                         ['#portfolio  div.item > a', 1],   // 一覧
+                        ['.post_micro.is_photo a', 2],  // archive
                       ];
 
       return AnkBase.markDownloaded(IsIllust, Targets, true, this, node, force, ignorePref);
