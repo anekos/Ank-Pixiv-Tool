@@ -207,6 +207,7 @@ try {
         datetime.some(function (v) {
           dtext = v;
           d = AnkUtils._decodeDateTimeText(dtext);
+          return d;
         });
       }
       else {
