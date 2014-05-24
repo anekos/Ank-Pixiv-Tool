@@ -26,7 +26,7 @@ try {
         self.info.illust.pageUrl.match(/^https?:\/\/[^/]*tumblr\.com\//), // }}}
 
       get manga () // {{{
-        (self.info.illust.mangaPages > 1), // }}}
+        (!!self.elements.illust.slideshowFrame || !!self.elements.illust.photoFrame), // }}}
 
       get medium () // {{{
         self.in.illustPage, // }}}
@@ -94,8 +94,7 @@ try {
             (e && e.parentNode),
 
         get photoFrame ()
-          let (e = query('iframe.photoset'))
-            e,
+          query('iframe.photoset'),
 
         get photoImage ()
           illust.photoFrame && illust.photoFrame.contentDocument.querySelector('.photoset_row img'),
@@ -103,11 +102,23 @@ try {
         get photoSet ()
           illust.photoFrame && illust.photoFrame.contentDocument.querySelectorAll('.photoset_row img'),
 
+        get slideshowFrame ()
+          query('.type-photoset'),
+
+        get slideshowImage ()
+          let (e = illust.slideshowFrame)
+            e && e.querySelector('.photo-data img'),
+
+        get slideshowSet ()
+          let (e = illust.slideshowFrame)
+            e && e.querySelectorAll('.photo-data img'),
+
         // require for AnkBase
 
         get downloadedDisplayParent ()
           query('.caption > p') ||
-          query('.panel .post-date a'),
+          query('.panel .post-date a') ||
+          query('.post-panel .date a'),
 
         // require for AnkViewer
 
@@ -118,11 +129,13 @@ try {
         get wrapper ()
           query('.container.section') ||
           query('#newDay') ||
-          query('section#page') ||
+          query('#page') ||
           query('body'),
 
         get mediumImage ()
-          illust.photoFrame ? illust.photoImage : getLargestImage(query('.post'), query('.photo')),
+          illust.slideshowFrame ? illust.slideshowImage : 
+              illust.photoFrame ? illust.photoImage :
+                                  getLargestImage(query('.post'), query('.photo')),
 
         get ads () {
           const Ads = [
@@ -238,7 +251,11 @@ try {
         get image () {
           let m = [];
           
-          if (self.elements.illust.photoFrame) {
+          if (self.elements.illust.slideshowFrame) {
+            AnkUtils.A(self.elements.illust.slideshowSet).forEach(function (e) m.push(e.src));
+            return { images: m, facing: null, };
+          }
+          else if (self.elements.illust.photoFrame) {
             AnkUtils.A(self.elements.illust.photoSet).forEach(function (e) m.push(e.src));
             return { images: m, facing: null, };
           }
