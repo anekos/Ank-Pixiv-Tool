@@ -235,7 +235,7 @@ try {
           AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext () 
-          (path.image.images[0].match(/(\.\w+)(?::large|\?)?/)[1] || '.jpg'),
+          (path.image.images[0].match(/(\.\w+)(?::large|:orig|\?)?/)[1] || '.jpg'),
 
         get mangaIndexPage ()
           null,
@@ -273,6 +273,9 @@ try {
                 window.alert(AnkBase.Locale('serverError'));
                 return AnkBase.NULL_RET;
               }
+            }
+            else {
+              m = m.replace(/:large/, ':orig');
             }
           }
           return { images: [m], facing: null, };
