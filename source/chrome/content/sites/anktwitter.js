@@ -24,8 +24,9 @@ try {
         self.info.illust.pageUrl.match(/^https?:\/\/twitter\.com\//) &&
         !self.info.illust.pageUrl.match(/^https?:\/\/pic\.twitter\.com\//), // }}}
 
+      // elementを見ているが、これに関しては問題ないはず
       get manga () // {{{
-        false, // }}} // under construction
+        !self.in.gallery && self.elements.illust.mediaSet && self.info.illust.mangaPages > 1, // }}},
 
       get medium () // {{{
         self.in.illustPage, // }}}
@@ -70,11 +71,23 @@ try {
 
       let illust =  {
         get photoFrame ()
-          let (e = self.elements.illust.tweet.querySelector('.card2 > div > iframe'))
+          let (e = illust.tweet && illust.tweet.querySelector('.card2 > div > iframe'))
             (e && AnkUtils.trackbackParentNode(e, 2).getAttribute('data-card2-name') === 'photo') ? e : null, 
 
         get photoImage ()
-          illust.photoFrame && illust.photoFrame.contentDocument.querySelector('.u-block'),
+          let (e = illust.photoFrame)
+            e && e.contentDocument.querySelector('.u-block'),
+
+        get mediaContainer ()
+          illust.tweet.querySelector('.cards-media-container'),
+
+        get mediaImage ()
+          let (e = illust.mediaContainer)
+            e && (e.querySelector('.multi-photo > img') || e.querySelector('.media img')),
+
+        get mediaSet ()
+          let (e = illust.mediaContainer)
+            e && e.querySelectorAll('div.multi-photo, a.media'),
 
         get largeLink ()
           queryEither('.twitter-timeline-link', '.twitter-timeline-link'),
@@ -109,9 +122,6 @@ try {
         get galleryEnabled ()
           query('.gallery-enabled'),
 
-        get media ()
-          query('.media'),
-
         // require for AnkBase
 
         get downloadedDisplayParent ()
@@ -125,7 +135,7 @@ try {
 
         get mediumImage ()
           self.in.gallery ? illust.gallery.querySelector('img.media-image') :
-            (illust.tweet && (illust.tweet.querySelector('.media img') || illust.photoImage)),
+                            illust.tweet && (illust.mediaImage || illust.photoImage),
       };
 
       let mypage = {
@@ -210,7 +220,7 @@ try {
           false,
 
         get mangaPages ()
-          1,
+          self.info.path.image.images.length,
 
         get worksData ()
           null,
@@ -241,44 +251,59 @@ try {
           null,
 
         get image () {
-          let m =
-            self.in.gallery                 ? self.elements.illust.mediumImage.src :
-            self.elements.illust.photoFrame ? self.elements.illust.photoImage.src :
-                                              self.elements.illust.media.getAttribute('data-url')
+          let e = 
+            self.in.gallery                 ? self.elements.illust.mediumImage :
+            self.elements.illust.photoFrame ? self.elements.illust.photoImage :
+                                              self.elements.illust.mediaSet;
           ;
-          if (AnkBase.Prefs.get('downloadOriginalSize', false)) {
-            if (m && m.match(/\/proxy\.jpg\?.*?t=((.+?)aHR0.+?)(?:$|&)/)) {
-              try {
-                let b64 = RegExp.$1;
-                let hdr = RegExp.$2;
 
-                let lenb = window.atob(hdr);
-                let len = lenb.charCodeAt(lenb.length-1) * 8;
-                len = parseInt(len/6) + (len % 6 ? 1 : 0);
-
-                let dat = b64.substr(hdr.length,len);
-                let (pad = 4 - len % 4) {
-                  if (pad < 4) {
-                    for (let i=0; i<pad; i++)
-                      dat += '=';
-                  }
-                }
-
-                AnkUtils.dump('BASE64: \n'+b64+'\n    '+dat);
-                m = window.atob(dat);
-                AnkUtils.dump('DECODED: '+m);
-              }
-              catch (e) {
-                AnkUtils.dumpError(e);
-                window.alert(AnkBase.Locale('serverError'));
-                return AnkBase.NULL_RET;
-              }
-            }
-            else {
-              m = m.replace(/:large/, ':orig');
-            }
+          let o = [];
+          if (e instanceof NodeList) {
+            AnkUtils.A(e).forEach(function (s) {
+              o.push(s.getAttribute('data-url'));
+            });
           }
-          return { images: [m], facing: null, };
+          else {
+            o.push(e.src);
+          }
+
+          let m = [];
+          if (AnkBase.Prefs.get('downloadOriginalSize', false)) {
+            o.forEach(function (s) {
+              if (s.match(/\/proxy\.jpg\?.*?t=((.+?)aHR0.+?)(?:$|&)/)) {
+                try {
+                  let b64 = RegExp.$1;
+                  let hdr = RegExp.$2;
+
+                  let lenb = window.atob(hdr);
+                  let len = lenb.charCodeAt(lenb.length-1) * 8;
+                  len = parseInt(len/6) + (len % 6 ? 1 : 0);
+
+                  let dat = b64.substr(hdr.length,len);
+                  let (pad = 4 - len % 4) {
+                    if (pad < 4) {
+                      for (let i=0; i<pad; i++)
+                        dat += '=';
+                    }
+                  }
+
+                  AnkUtils.dump('BASE64: \n'+b64+'\n    '+dat);
+                  s = window.atob(dat);
+                  AnkUtils.dump('DECODED: '+s);
+                }
+                catch (e) {
+                  AnkUtils.dumpError(e);
+                  window.alert(AnkBase.Locale('serverError'));
+                  return AnkBase.NULL_RET;
+                }
+              }
+              else {
+                s = s.replace(/:large/, ':orig');
+              }
+              m.push(s);
+            });
+          }
+          return { images: m, facing: null, };
         },
       };
 
@@ -325,13 +350,6 @@ try {
                                        largeLink;
         if (!(body && medImg && cond)) {
           return false;   // リトライしてほしい
-        }
-
-        // デフォルトのviewerを有効にする
-        if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true) && mod.in.tweet) {
-          let media = mod.elements.illust.media;
-          if (media && !media.classList.contains('media-thumbnail'))
-            media.classList.add('media-thumbnail');
         }
 
         // 中画像クリック時に保存する
