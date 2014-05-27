@@ -661,6 +661,16 @@ try {
       }
       return node;
     }, // }}}
+
+    /*
+     * urlをパースしたいのでAnchorElementを生成する
+     */
+    getAnchor: function (url) { // {{{
+      let doc = content.document;
+      let anchor = doc.createElement('a');
+      anchor.href = url;
+      return anchor;
+    }, // }}}
   };
 
 

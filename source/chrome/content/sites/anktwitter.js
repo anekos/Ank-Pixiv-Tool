@@ -26,7 +26,8 @@ try {
 
       // elementを見ているが、これに関しては問題ないはず
       get manga () // {{{
-        !self.in.gallery && self.elements.illust.mediaSet && self.info.illust.mangaPages > 1, // }}},
+        !self.in.gallery && // ポップアップは除外
+        self.elements.illust.mediaSet && self.info.illust.mangaPages > 1, // }}},
 
       get medium () // {{{
         self.in.illustPage, // }}}
@@ -70,6 +71,7 @@ try {
                           (illust.tweet && illust.tweet.querySelector(tQuery))
 
       let illust =  {
+        // 外部画像連携
         get photoFrame ()
           let (e = illust.tweet && illust.tweet.querySelector('.card2 > div > iframe'))
             (e && AnkUtils.trackbackParentNode(e, 2).getAttribute('data-card2-name') === 'photo') ? e : null, 
@@ -78,12 +80,13 @@ try {
           let (e = illust.photoFrame)
             e && e.contentDocument.querySelector('.u-block'),
 
+        // 自前画像(twimg)
         get mediaContainer ()
           illust.tweet.querySelector('.cards-media-container'),
 
         get mediaImage ()
           let (e = illust.mediaContainer)
-            e && (e.querySelector('.multi-photo > img') || e.querySelector('.media img')),
+            e && e.querySelector('div.multi-photo img, a.media img'),
 
         get mediaSet ()
           let (e = illust.mediaContainer)
@@ -244,8 +247,11 @@ try {
         get initDir ()
           AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
-        get ext () 
-          (path.image.images[0].match(/(\.\w+)(?::large|:orig|\?)?/)[1] || '.jpg'),
+        get ext () {
+          let anchor = AnkUtils.getAnchor(path.image.images[0]);
+          let m = anchor.pathname.match(/(\.\w+)(?::large|:orig)?$/);
+          return (m && m[1] || '.jpg');
+        },
 
         get mangaIndexPage ()
           null,
@@ -268,8 +274,8 @@ try {
           }
 
           let m = [];
-          if (AnkBase.Prefs.get('downloadOriginalSize', false)) {
-            o.forEach(function (s) {
+          o.forEach(function (s) {
+            if (AnkBase.Prefs.get('downloadOriginalSize', false)) {
               if (s.match(/\/proxy\.jpg\?.*?t=((.+?)aHR0.+?)(?:$|&)/)) {
                 try {
                   let b64 = RegExp.$1;
@@ -300,9 +306,9 @@ try {
               else {
                 s = s.replace(/:large/, ':orig');
               }
-              m.push(s);
-            });
-          }
+            }
+            m.push(s);
+          });
           return { images: m, facing: null, };
         },
       };
