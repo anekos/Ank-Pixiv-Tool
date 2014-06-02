@@ -1623,9 +1623,7 @@ try {
     * スタイル
     ********************************************************************************/
 
-    registerSheet: let (registered) function (style) { // {{{
-      const IOS = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Ci.nsIIOService);
-      const StyleSheetService = Cc['@mozilla.org/content/style-sheet-service;1'].getService(Ci.nsIStyleSheetService);
+    registerSheet: let (registered = {}) function (style) { // {{{
       const DefaultStyle = [
         '.ank-pixiv-tool-downloaded {',
         '  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAABGdBTUEAALGPC/xhBQAAABVJREFUGFdj/M+ABIAcOEKwQEqQZQAoTgz1O3uPKAAAAABJRU5ErkJggg==) !important;',
@@ -1677,22 +1675,9 @@ try {
         '}'
       ].join("\n");
 
-      let domainlist = AnkBase.siteModules.map(function (v) 'domain("'+v.DOMAIN+'")').join(',');
+      const domains = AnkBase.siteModules.map(function (v) v.DOMAIN);
 
-      let CSS = [
-        '@namespace url(http://www.w3.org/1999/xhtml);',
-        '@-moz-document '+domainlist+' {',
-        style || DefaultStyle,
-        '}'
-      ].join("\n");
-
-      let uri = IOS.newURI('data:text/css,' + window.encodeURIComponent(CSS), null, null);
-
-      if (registered)
-        StyleSheetService.unregisterSheet(registered, StyleSheetService.USER_SHEET);
-
-      registered = uri;
-      StyleSheetService.loadAndRegisterSheet(uri, StyleSheetService.USER_SHEET);
+      AnkUtils.registerSheet(style || DefaultStyle, domains);
     }, // }}}
 
 

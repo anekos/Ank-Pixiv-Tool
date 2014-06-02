@@ -386,6 +386,28 @@ try {
       }
     }, // }}}
 
+    registerSheet: let (registered = {}) function (style, domains) { // {{{
+      const IOS = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Ci.nsIIOService);
+      const StyleSheetService = AnkUtils.ccgs('@mozilla.org/content/style-sheet-service;1', Ci.nsIStyleSheetService);
+
+      let domainlist = domains.map(function (v) 'domain("'+v+'")').join(',');
+
+      let CSS = [
+        '@namespace url(http://www.w3.org/1999/xhtml);',
+        '@-moz-document '+domainlist+' {',
+        style,
+        '}'
+      ].join("\n");
+
+      let uri = IOS.newURI('data:text/css,' + window.encodeURIComponent(CSS), null, null);
+
+      if (registered[domainlist])
+        StyleSheetService.unregisterSheet(registered[domainlist], StyleSheetService.USER_SHEET);
+
+      registered[domainlist] = uri;
+      StyleSheetService.loadAndRegisterSheet(uri, StyleSheetService.USER_SHEET);
+    }, // }}}
+
     // teramako Thanks! http://twitter.com/teramako/status/6926877707
     getRelativePath:  function (target, base) { // {{{
       return AnkUtils.fromUTF8Octets(AnkUtils.makeLocalFile(target).getRelativeDescriptor(AnkUtils.makeLocalFile(base)));
