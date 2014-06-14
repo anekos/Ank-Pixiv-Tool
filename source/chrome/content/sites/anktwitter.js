@@ -407,7 +407,7 @@ try {
               mod.SERVICE_ID,
               mod.info.illust.R18
             );
-          }).observe(tw, {childList: true});
+          }).observe(tw, {attributes: true});
         }
 
         return true;
