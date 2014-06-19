@@ -52,7 +52,7 @@ try {
 
       // elementを見ているが、これに関しては問題ないはず
       get illustTweet() // {{{
-        (self.elements.illust.mediumImage || self.elements.illust.photoFrame), // }}}
+        (self.elements.illust.mediumImage || self.elements.illust.animatedGifThumbnail || self.elements.illust.photoFrame), // }}}
 
       // elementを見ているが、これに関しては問題ないはず
       get gallery () // {{{
@@ -91,6 +91,12 @@ try {
         get mediaSet ()
           let (e = illust.mediaContainer)
             e && e.querySelectorAll('div.multi-photo, a.media'),
+
+        get animatedGif ()
+          illust.tweet.querySelector('.js-media-container > video.animated-gif'),
+
+        get animatedGifThumbnail ()
+          illust.tweet.querySelector('.js-media-container > img.animated-gif-thumbnail'),
 
         get largeLink ()
           queryEither('.twitter-timeline-link', '.twitter-timeline-link'),
@@ -138,7 +144,7 @@ try {
 
         get mediumImage ()
           self.in.gallery ? illust.gallery.querySelector('img.media-image') :
-                            illust.tweet && (illust.mediaImage || illust.photoImage),
+                            illust.tweet && (illust.mediaImage || illust.animatedGifThumbnail || illust.photoImage),
       };
 
       let mypage = {
@@ -260,7 +266,7 @@ try {
           let e = 
             self.in.gallery                 ? self.elements.illust.mediumImage :
             self.elements.illust.photoFrame ? self.elements.illust.photoImage :
-                                              self.elements.illust.mediaSet;
+                                              (self.elements.illust.mediaSet || self.elements.illust.animatedGif);
           ;
 
           let o = [];

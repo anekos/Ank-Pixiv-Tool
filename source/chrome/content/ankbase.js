@@ -1295,12 +1295,11 @@ try {
     getValidFileExt: function (file) { // {{{
       let fstream = AnkUtils.ccci("@mozilla.org/network/file-input-stream;1",
                                   Components.interfaces.nsIFileInputStream);
-      let sstream = AnkUtils.ccci("@mozilla.org/scriptableinputstream;1",
-                                  Components.interfaces.nsIScriptableInputStream);
+      let bstream = AnkUtils.ccci("@mozilla.org/binaryinputstream;1",
+                                  Components.interfaces.nsIBinaryInputStream);
       fstream.init(file, -1, 0, 0);
-      sstream.init(fstream);
-      let header = sstream.read(10);
-      sstream.close();
+      bstream.setInputStream(fstream);
+      let header = bstream.readBytes(10);
       fstream.close();
 
       if (header.match(/^\x89PNG/))
@@ -1308,6 +1307,9 @@ try {
 
       if (header.match(/^GIF8/))
         return '.gif';
+
+      if (header.match(/^\x00\x00\x00\x1Cftyp/))
+        return '.mp4';
 
       if (header.match(/JFIF|^\xFF\xD8/))
         return '.jpg';
