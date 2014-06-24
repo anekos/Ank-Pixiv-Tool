@@ -504,12 +504,15 @@ try {
         dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
 
       // 各種オブジェクトの生成
-      let sourceURI = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService).
-                        newURI(url, null, null);
-      let wbpersist = AnkUtils.ccci('@mozilla.org/embedding/browser/nsWebBrowserPersist;1',
-                                Components.interfaces.nsIWebBrowserPersist);
+      let sourceURI = AnkUtils.ccci('@mozilla.org/network/standard-url;1', Components.interfaces.nsIURI);
+      sourceURI.spec = url;
       let refererURI = AnkUtils.ccci('@mozilla.org/network/standard-url;1', Components.interfaces.nsIURI);
       refererURI.spec = referer;
+
+      let channel = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService).
+                      newChannelFromURI(sourceURI).QueryInterface(Ci.nsIHttpChannel);
+      let wbpersist = AnkUtils.ccci('@mozilla.org/embedding/browser/nsWebBrowserPersist;1',
+                                Components.interfaces.nsIWebBrowserPersist);
 
       // キャッシュ
       let cache = null;
@@ -535,7 +538,15 @@ try {
               return onError(void 0);
             }
 
-            if (responseStatus != 200)
+            // FIXME 分割(206)で返ってきても１回で全部揃ってるならよし、揃ってなければエラー
+            if (responseStatus == 206) {
+              let m = channel.getResponseHeader('Content-Range').match(/bytes\s+(\d+)-(\d+)\/(\d+)/);
+              let content_size = parseInt(m[3],10);
+              let downloaded = parseInt(m[2],10) - parseInt(m[1],10) + 1;
+              if (downloaded < content_size)
+                return onError(responseStatus);
+            }
+            else if (responseStatus != 200)
               return onError(responseStatus);
 
             if (onComplete) {
@@ -556,8 +567,11 @@ try {
       wbpersist.progressListener = progressListener;
       wbpersist.persistFlags = Components.interfaces.nsIWebBrowserPersist.
                                  PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
-      wbpersist.saveURI(sourceURI, cache, refererURI, null, null, file, null);
-    }, // }}}
+
+      channel.referrer = refererURI;
+      channel.setRequestHeader("Range", null, false);
+      wbpersist.saveChannel(channel, file);
+}, // }}}
 
 
     /*
