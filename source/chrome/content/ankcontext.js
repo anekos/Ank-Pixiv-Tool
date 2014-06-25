@@ -84,6 +84,9 @@ function AnkContext (module) {
 
       R18:
         module.info.illust.R18,
+
+      animationFrames:
+        module.info.illust.animationFrames,
     },
 
     member: {

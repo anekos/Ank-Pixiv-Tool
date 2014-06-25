@@ -271,6 +271,14 @@ try {
         get R18 ()
           !!self.elements.illust.R18,
 
+        get animationFrames() {
+          let ugoku = self.elements.doc.defaultView.wrappedJSObject.pixiv.context.ugokuIllustData;
+          if (ugoku) {
+            let frames = ugoku.frames;
+            if (frames)
+              return frames.map(function (o) o.file+','+o.delay);
+          }
+        },
       };
 
       let member = {
