@@ -1325,6 +1325,9 @@ try {
       if (header.match(/^\x00\x00\x00\x1Cftyp/))
         return '.mp4';
 
+      if (header.match(/^PK\x03\x04/))
+        return '.zip';
+
       if (header.match(/JFIF|^\xFF\xD8/))
         return '.jpg';
 

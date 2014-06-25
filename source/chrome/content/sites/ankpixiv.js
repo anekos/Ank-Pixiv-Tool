@@ -82,9 +82,16 @@ try {
         self.elements.doc.querySelectorAll(q)
 
       let illust =  {
-        get largeLink ()
-          let (e = illust.mediumImage)
-            e && e.parentNode,
+        get largeLink () {
+          let (e = illust.ugoiraContainer) {
+            if (e)
+              return e.querySelector('a');
+          };
+          let (e = illust.mediumImage) {
+            if (e)
+              return e.parentNode;
+          };
+        },
 
         get datetime ()
           query('.meta > li'),
@@ -120,6 +127,9 @@ try {
 
         get recommendList()
           AnkUtils.A(queryAll('.image-items')).pop(),
+
+        get ugoiraContainer ()
+          query('.works_display ._ugoku-illust-player-container'),
 
         get feedList()
           query('#stacc_timeline')
@@ -157,6 +167,8 @@ try {
             query('.works_display > a > img')
             ||
             query('.works_display > * > a > img')
+            ||
+            query('.works_display canvas')
           );
         },
 
@@ -293,9 +305,26 @@ try {
 
         // XXX 再投稿された、イラストのパスの末尾には、"?28737478..." のように数値がつく模様
         // 数値を除去してしまうと、再投稿前の画像が保存されてしまう。
-        get largeStandardImage ()
-          let (e = self.elements.illust.mediumImage)
-            e && e.src.replace(/_m\./, '.'),
+        get largeStandardImage () {
+          let (src = self.info.path.ugokuIllustSrc) {
+            if (src)
+              return src;
+          };
+
+          let (e = self.elements.illust.mediumImage) {
+            if (e)
+              return e.src.replace(/_m\./, '.');
+          };
+        },
+
+        // TODO 画像の切替タイミング情報も存在しているが、どのように保存するか？
+        get ugokuIllustSrc ()
+          let (ugoku = self.elements.doc.defaultView.wrappedJSObject.pixiv.context.ugokuIllustData)
+            ugoku && ugoku.src,
+
+        get ugokuIllustFullscreenSrc ()
+          let (ugoku = self.elements.doc.defaultView.wrappedJSObject.pixiv.context.ugokuIllustFullscreenData)
+            ugoku && ugoku.src,
 
         get image ()
           self.getImageInfo(AnkBase.Prefs.get('downloadOriginalSize', false)),
@@ -348,11 +377,13 @@ try {
         } // }}}
 
         // 大画像関係
-        if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
-          new AnkViewer(
-            mod,
-            function () mod.getImageInfo(AnkBase.Prefs.get('viewOriginalSize', false))
-          );
+        if (!mod.elements.illust.ugoiraContainer) {
+          if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
+            new AnkViewer(
+              mod,
+              function () mod.getImageInfo(AnkBase.Prefs.get('viewOriginalSize', false))
+            );
+          }
         }
 
         // レイティングによるダウンロード
@@ -538,7 +569,14 @@ try {
      */
     getImageInfo: function (originalSizeCheck) {
       if (!this.in.manga)
-        return { images: [this.info.path.largeStandardImage], facing: null, };
+        return {
+          images: [
+                     (originalSizeCheck && this.info.path.ugokuIllustFullscreenSrc || this.info.path.ugokuIllustSrc)
+                     ||
+                     this.info.path.largeStandardImage
+                  ],
+          facing: null,
+        };
 
       return this.getMangaPages(originalSizeCheck);
     },
