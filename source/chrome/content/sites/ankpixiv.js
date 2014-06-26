@@ -125,6 +125,9 @@ try {
           ||
           query('.r-18g'),
 
+        get feedLink ()
+          query('.tab-feed'),
+
         get recommendList()
           AnkUtils.A(queryAll('.image-items')).pop(),
 
@@ -289,6 +292,8 @@ try {
         // XXX 遅延が酷いとavatar.srcで例外発生？
         get pixivId ()
           let (m = (self.elements.illust.avatar.src.match(/\/profile\/([^\/]+)\//)
+                    ||
+                    self.elements.illust.feedLink.href.match(/\/stacc\/([^\/]+)/)
                     ||
                     self.info.path.largeStandardImage.match(/^https?:\/\/[^\.]+\.pixiv\.net\/(?:img\d+\/)?img\/([^\/]+)\//)))
             m.length > 0 && m[1],
