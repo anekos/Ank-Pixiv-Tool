@@ -219,8 +219,7 @@ try {
           self.elements.doc ? self.elements.doc.location.href : '',
 
         get id ()
-          let (e = self.elements.illust.largeLink)
-            e && e.href.match(/illust_id=(\d+)/) && parseInt(RegExp.$1, 10),
+          illust.pageUrl.match(/illust_id=(\d+)/) && parseInt(RegExp.$1, 10),
 
         get dateTime ()
           let (e = self.elements.illust.datetime)
