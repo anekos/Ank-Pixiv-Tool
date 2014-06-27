@@ -1269,7 +1269,11 @@ try {
       textNode.textContent = AnkBase.Locale((mode === AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED && R18) ? AnkBase.DOWNLOAD_DISPLAY.USED : mode);
       div.setAttribute('style', AnkBase.Prefs.get('downloadedDisplayStyle', ''));
       div.setAttribute('id', ElementID);
-      div.setAttribute('class', R18 ? 'R18' : '');
+      if (R18) {
+        let v = AnkBase.Prefs.get('downloadedAnimationStyle', 1);
+        if (v > 0)
+          div.setAttribute('class', v == 1 ? 'R18' : 'R18-shake');
+      }
       div.appendChild(textNode);
       if (appendTo)
         appendTo.appendChild(div);
@@ -1679,10 +1683,18 @@ try {
         '  height: 16px;',
         '}',
         '#ankpixiv-downloaded-display.R18 {',
+        '  animation-timing-function: ease;',
         '  animation-duration: 10s;',
         '  animation-name: slidein;',
         '  animation-iteration-count: infinite !important;',
         '  animation-direction: alternate;',
+        '}',
+        '#ankpixiv-downloaded-display.R18-shake {',
+        '  animation-timing-function: line;',
+        '  animation-duration: 5s;',
+        '  animation-name: shake;',
+        '  animation-iteration-count: infinite !important;',
+        '  animation-direction: normal;',
         '}',
         '@keyframes slidein {',
         '  from {',
@@ -1690,6 +1702,17 @@ try {
         '  }',
         '  to {',
         '    transform: rotateY(360deg);',
+        '  }',
+        '}',
+        '@keyframes shake {',
+        '  0%, 10.0%, 14.5%, 100% {',
+        '    transform: translateX(0);',
+        '  }',
+        '  10.5%, 11.5%, 12.5%, 13.5% {',
+        '    transform: translateX(-10px);',
+        '  }',
+        '  11.0%, 12.0%, 13.0%, 14.0% {',
+        '    transform: translateX(10px);',
         '  }',
         '}'
       ].join("\n");
