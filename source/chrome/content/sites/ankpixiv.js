@@ -134,6 +134,9 @@ try {
         get ugoiraContainer ()
           query('.works_display ._ugoku-illust-player-container'),
 
+        get ugoiraFullscreenLink ()
+          query('.works_display ._ugoku-illust-player-container .full-screen'),
+
         get feedList()
           query('#stacc_timeline')
           ||
@@ -334,9 +337,13 @@ try {
           let (ugoku = self.elements.doc.defaultView.wrappedJSObject.pixiv.context.ugokuIllustData)
             ugoku && ugoku.src,
 
-        get ugokuIllustFullscreenSrc ()
-          let (ugoku = self.elements.doc.defaultView.wrappedJSObject.pixiv.context.ugokuIllustFullscreenData)
-            ugoku && ugoku.src,
+        get ugokuIllustFullscreenSrc () {
+          if (self.elements.illust.ugoiraFullscreenLink) {
+            let ugoku = self.elements.doc.defaultView.wrappedJSObject.pixiv.context.ugokuIllustFullscreenData;
+            if (ugoku)
+              return ugoku.src;
+          }
+        },
 
         get image ()
           self.getImageInfo(AnkBase.Prefs.get('downloadOriginalSize', false)),
