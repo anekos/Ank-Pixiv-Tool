@@ -753,6 +753,10 @@ try {
         if (!context.downloadable)
           return false;
 
+        // illust_idが見つからない
+        if (!context.info.illust.id)
+          return false;
+
         // 画像の情報がない
         if (context.info.path.image.images.length == 0)
           return false;
