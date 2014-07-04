@@ -810,6 +810,7 @@ try {
         ev.initEvent('ankDownload', true, false);
         ev.__download = {
           context: context,
+          metaText: AnkBase.infoText(context),
           useDialog: useDialog,
           debug: debug,
           downloaded: 0,                  // ダウンロードの完了した画像数
@@ -947,13 +948,14 @@ try {
           return context.SITE_NAME;     // デフォルトサイト名を利用
         }
 
+        // FIXME ここにinfoText(context)があったがdead object例外が出るのでdownload.metaTextに移した。しかし本来はnew AnkContext()時に値が確定していなければいけない
         let context = download.context;
+        let metaText = download.metaText;
         let useDialog = download.useDialog;
         let debug = download.debug;
         let start = download.start;
 
         let destFiles;
-        let metaText      = AnkBase.infoText(context);
         let illust_id     = context.info.illust.id;
         let ext           = context.info.path.ext;
         let ref           = context.info.illust.referer;
