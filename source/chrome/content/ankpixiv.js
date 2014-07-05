@@ -125,6 +125,8 @@ try {
       let illust =  {
         get mediumImage () {
           return (
+            AnkPixiv.elements.doc.querySelector('.works_display canvas')
+            ||
             AnkPixiv.elements.doc.querySelector('.works_display > a > img')
             ||
             AnkPixiv.elements.doc.querySelector('.works_display > * > a > img')
@@ -133,6 +135,8 @@ try {
 
         get largeLink () {
           return (
+            AnkPixiv.elements.doc.querySelector('.works_display ._ugoku-illust-player-container a')
+            ||
             AnkPixiv.elements.doc.querySelector('.works_display > a')
             ||
             AnkPixiv.elements.doc.querySelector('.works_display > * > a')
@@ -160,6 +164,15 @@ try {
 
         get tags ()
           AnkPixiv.elements.doc.querySelector('.tags'),
+
+        get feedLink ()
+          AnkPixiv.elements.doc.querySelector('.tab-feed'),
+
+        get ugoiraContainer ()
+          AnkPixiv.elements.doc.querySelector('.works_display ._ugoku-illust-player-container'),
+
+        get ugoiraFullscreenLink ()
+          AnkPixiv.elements.doc.querySelector('.works_display ._ugoku-illust-player-container .full-screen'),
 
         get downloadedDisplayParent ()
           illust.worksData.querySelector('.meta'),
@@ -201,8 +214,7 @@ try {
     info: (function () { // {{{
       let illust = {
         get id ()
-          let (e = AnkPixiv.elements.illust.largeLink)
-            e && e.href.match(/illust_id=(\d+)/) && parseInt(RegExp.$1, 10),
+          AnkPixiv.elements.doc.location.href.match(/illust_id=(\d+)/) && parseInt(RegExp.$1, 10),
 
         get dateTime ()
           AnkPixiv.info.illust.worksData.dateTime,
@@ -245,6 +257,15 @@ try {
 
         get R18 ()
           AnkPixiv.info.illust.tags.some(function (v) 'R-18' == v),
+
+        get animationFrames() {
+          let ugoku = AnkPixiv.elements.doc.defaultView.wrappedJSObject.pixiv.context.ugokuIllustData;
+          if (ugoku) {
+            let frames = ugoku.frames;
+            if (frames)
+              return frames.map(function (o) o.file+','+o.delay);
+          }
+        },
 
         get mangaPages ()
           AnkPixiv.info.illust.worksData.mangaPages,
@@ -299,6 +320,8 @@ try {
         get pixivId ()
           (AnkPixiv.elements.illust.avatar.src.match(/\/profile\/([^\/]+)\//)
            ||
+           AnkPixiv.elements.illust.feedLink.href.match(/\/stacc\/([^\/]+)/)
+           ||
            AnkPixiv.info.path.largeImage.match(/^https?:\/\/[^\.]+\.pixiv\.net\/(?:img\d+\/)?img\/([^\/]+)\//))[1],
 
         get name ()
@@ -331,8 +354,29 @@ try {
           let (i = AnkPixiv.info.path)
             AnkPixiv.in.manga ? i.getLargeMangaImage() : i.largeStandardImage,
 
-        get largeStandardImage ()
-          AnkPixiv.info.path.mediumImage.replace(/_m\./, '.'),
+        get largeStandardImage () {
+          let (src = AnkPixiv.Prefs.get('downloadOriginalSize', false) && AnkPixiv.info.path.ugokuIllustFullscreenSrc || AnkPixiv.info.path.ugokuIllustSrc) {
+            if (src)
+              return src;
+          };
+
+          let (e = AnkPixiv.elements.illust.mediumImage) {
+            if (e)
+              return e.src.replace(/_m\./, '.');
+          };
+        },
+
+        get ugokuIllustSrc ()
+          let (ugoku = AnkPixiv.elements.doc.defaultView.wrappedJSObject.pixiv.context.ugokuIllustData)
+            ugoku && ugoku.src,
+
+        get ugokuIllustFullscreenSrc () {
+          if (AnkPixiv.elements.illust.ugoiraFullscreenLink) {
+            let ugoku = AnkPixiv.elements.doc.defaultView.wrappedJSObject.pixiv.context.ugokuIllustFullscreenData;
+            if (ugoku)
+              return ugoku.src;
+          }
+        },
 
         getLargeMangaImage: function (n, base, ext, originalSize) {
           let url =
@@ -346,7 +390,9 @@ try {
         get mediumImage () {
           // XXX 再投稿された、イラストのパスの末尾には、"?28737478..." のように数値がつく模様
           // 数値を除去してしまうと、再投稿前の画像が保存されてしまう。
-          let result = AnkPixiv.elements.illust.mediumImage.src;//.replace(/\?.*$/, '');
+          let result = AnkPixiv.info.path.ugokuIllustSrc
+                       ||
+                       AnkPixiv.elements.illust.mediumImage.src;//.replace(/\?.*$/, '');
           // for pixiv_expand_thumbnail
           //  http://userscripts.org/scripts/show/82175
           result = result.replace(/_big_p0/, '');
@@ -1168,7 +1214,7 @@ try {
           } // }}}
 
           // 大画像関係
-          if (AnkPixiv.Prefs.get('largeOnMiddle', true)) { // {{{
+          if (!AnkPixiv.elements.illust.ugoiraContainer && AnkPixiv.Prefs.get('largeOnMiddle', true)) { // {{{
             let IDPrefix =
               function (id)
                 ('ank-pixiv-large-viewer-' + id);
@@ -1657,12 +1703,11 @@ try {
     getValidFileExt: function (file) { // {{{
       let fstream = AnkUtils.ccci("@mozilla.org/network/file-input-stream;1",
                                   Components.interfaces.nsIFileInputStream);
-      let sstream = AnkUtils.ccci("@mozilla.org/scriptableinputstream;1",
-                                  Components.interfaces.nsIScriptableInputStream);
+      let bstream = AnkUtils.ccci("@mozilla.org/binaryinputstream;1",
+                                  Components.interfaces.nsIBinaryInputStream);
       fstream.init(file, -1, 0, 0);
-      sstream.init(fstream);
-      let header = sstream.read(10);
-      sstream.close();
+      bstream.setInputStream(fstream);
+      let header = bstream.readBytes(10);
       fstream.close();
 
       if (header.match(/^\x89PNG/))
@@ -1670,6 +1715,9 @@ try {
 
       if (header.match(/^GIF8/))
         return '.gif';
+
+      if (header.match(/^PK\x03\x04/))
+        return '.zip';
 
       if (header.match(/JFIF|^\xFF\xD8/))
         return '.jpg';
