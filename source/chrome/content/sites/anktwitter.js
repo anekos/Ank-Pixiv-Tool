@@ -93,7 +93,7 @@ try {
             e && e.querySelectorAll('div.multi-photo, a.media'),
 
         get animatedGif ()
-          illust.tweet.querySelector('.js-media-container > video.animated-gif'),
+          illust.tweet.querySelector('.js-media-container > video.animated-gif > source'),
 
         get animatedGifThumbnail ()
           illust.tweet.querySelector('.js-media-container > img.animated-gif-thumbnail'),
@@ -264,19 +264,22 @@ try {
 
         get image () {
           let e = 
-            self.in.gallery                 ? self.elements.illust.mediumImage :
-            self.elements.illust.photoFrame ? self.elements.illust.photoImage :
-                                              (self.elements.illust.mediaSet || self.elements.illust.animatedGif);
+            self.in.gallery                           ? self.elements.illust.mediumImage :
+            self.elements.illust.photoFrame           ? self.elements.illust.photoImage :
+            self.elements.illust.animatedGifThumbnail ? self.elements.illust.animatedGif :
+                                                        self.elements.illust.mediaSet;
           ;
 
           let o = [];
           if (e instanceof NodeList) {
+            // multi photo
             AnkUtils.A(e).forEach(function (s) {
               o.push(s.getAttribute('data-url'));
             });
           }
           else {
-            o.push(e.src);
+            // photo or animatedGif
+            o.push(self.elements.illust.animatedGifThumbnail ? e.getAttribute('video-src') : e.src);
           }
 
           let m = [];
