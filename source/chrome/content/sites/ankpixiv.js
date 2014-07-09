@@ -128,8 +128,10 @@ try {
         get feedLink ()
           query('.tab-feed'),
 
+        // この作品をブックマークした人はこんな作品もブックマークしています
+        // あなたのブックマークタグ「○○」へのおすすめ作品
         get recommendList()
-          AnkUtils.A(queryAll('.image-items')).pop(),
+          AnkUtils.A(queryAll('._image-items')).pop(),
 
         get ugoiraContainer ()
           query('.works_display ._ugoku-illust-player-container'),
@@ -489,16 +491,17 @@ try {
           function (e) {
             let a;
             [
-               '.image-items > li',               // フォロー新着作品
-               '.display_works > ul > li',        // おすすめ
+               '._image-items > li',              // フォロー新着作品
+               '.display_works > ul > li',        // ○○さんの作品一覧
                '.ranking-items > .ranking-item',  // ランキング
             ] .
               some(function (q)
                 let (n = e.target.querySelectorAll(q))
                   n && n.length > 0 && !!(a = n)
               );
-            AnkUtils.A(a) .
-              forEach(function (node) mod.markDownloaded(node, true));
+            if (a)
+              AnkUtils.A(a) .
+                forEach(function (node) mod.markDownloaded(node, true));
           },
           false
         );
