@@ -93,10 +93,12 @@ try {
             e && e.querySelectorAll('div.multi-photo, a.media'),
 
         get animatedGif ()
-          illust.tweet.querySelector('.js-media-container > video.animated-gif > source'),
+          let (e = illust.tweet)
+            e && e.querySelector('.js-media-container > video.animated-gif > source'),
 
         get animatedGifThumbnail ()
-          illust.tweet.querySelector('.js-media-container > img.animated-gif-thumbnail'),
+          let (e = illust.tweet)
+            e && e.querySelector('.js-media-container > img.animated-gif-thumbnail'),
 
         get largeLink ()
           queryEither('.twitter-timeline-link', '.twitter-timeline-link'),
