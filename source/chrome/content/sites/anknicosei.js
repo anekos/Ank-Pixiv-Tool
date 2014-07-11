@@ -103,6 +103,11 @@ try {
 
         // require for AnkBase
 
+        get autoPagerizeTarget()
+          query('.illust_list')           // ○○さんのｲﾗｽﾄ
+          ||
+          query('.my_contents .list'),    // イラスト定点観測
+
         get downloadedDisplayParent ()
           self.in.manga && query('.title_area')
           ||
@@ -407,7 +412,44 @@ try {
      */
     installListPageFunctions: function () { /// {
 
-      let proc = function (mod) {
+      let autoPagerize = function (mod) {
+        var doc = mod.elements.doc;
+        var aptarget = mod.elements.illust.autoPagerizeTarget;
+
+        if (!(doc && aptarget)) {
+          return false;     // リトライしてほしい
+        }
+
+        // AutoPagerizeによる継ぎ足し動作
+        // TODO サイト別.jsに個別に書くのはよくない気がする
+        doc.addEventListener(
+          'AutoPagerize_DOMNodeInserted',
+          function (e) {
+            let a;
+            [
+             'div.illust_thumb',        // イラスト定点観測
+             'li.list_item',            // ○○さんのイラスト
+            ] .
+              some(function (q)
+                let (n = e.target.querySelectorAll(q))
+                  n && n.length > 0 && !!(a = n)
+              );
+            if (a)
+              setTimeout(
+                function() {
+                  AnkUtils.A(a) .
+                    forEach(function (node) mod.markDownloaded(node, true));
+                },
+                500     // ボックスの高さが確定するまでマーキングを遅延させる。値は適当
+              );
+          },
+          false
+        );
+
+        return true;
+      };
+
+      let delayMarking = function (mod) {
         var doc = mod.elements.doc;
         var body = mod.elements.illust.body;
 
@@ -423,7 +465,8 @@ try {
 
 
       // install now
-      return AnkBase.delayFunctionInstaller(this, proc, 500, 20, 'ls');
+      AnkBase.delayFunctionInstaller(this, autoPagerize, 500, 20, 'ap');
+      return AnkBase.delayFunctionInstaller(this, delayMarking, 500, 20, 'dm');
     }, // }}}
 
     /*
