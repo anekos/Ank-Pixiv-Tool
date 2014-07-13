@@ -332,44 +332,6 @@ try {
     }, // }}}
 
     /*
-     * invalidPageNumberToken
-     *    filenames:          ファイル名テンプレートのリスト
-     *    return:             不正なファイル名のテンプレート
-     * ファイル名テンプレートに、パスの最後以外に #page-number# の指定のあるものが存在していたら、そのテンプレートの値を返す
-     */
-    invalidPageNumberToken: function(filenames) {
-      let invalid = null;
-      filenames.some(function (f)
-        let (a = f.split(/[/\\]/))
-          a.some(function (v,i) (i < a.length-1) && v.match(/#page-number#/)) && (invalid = f)
-      );
-      return invalid;
-    },
-
-    /*
-     * fixPageNumberToken
-     *    filenames:          ファイル名のテンプレートのリスト
-     * 保存する対象にあわせてファイル名テンプレートを整形する
-     */
-    fixPageNumberToken: function (filenames, isFile) {
-      return filenames.map(
-        function (filename) {
-          if (isFile) {
-            let expr = /[/\\]\s*#page-number#\s*$/;
-            if (filename.match(expr))
-              filename = filename.replace(expr, '');                    // フォルダごとカット
-            else
-              filename = filename.replace(/\s*#page-number#\s*/, '');   // ページ番号だけカット
-          }
-          else if (!filename.match(/#page-number#/)) {
-            filename += "/#page-number#";                               // ページ番号指定がない場合（前verまでの設定とか）
-          }
-          return filename;
-        }
-      );
-    },
-
-    /*
      * getSaveMangaPath
      *    path:               ファイル名のテンプレート
      *    ext:                拡張子
@@ -975,6 +937,8 @@ try {
         let pageUrl       = context.info.illust.pageUrl;
         let prefInitDir   = context.info.path.initDir || AnkBase.Prefs.get('initialDirectory') || AnkUtils.findHomeDir();
 
+        let savedDateTime = new Date();
+
         if (AnkBase.Prefs.get('saveHistory', true)) {
           try {
             if (AnkBase.Storage.exists('members', 'id = \'' + member_id + '\' and service_id = \'' + service_id + '\'')) {
@@ -1005,9 +969,37 @@ try {
           }
         }
 
-        let savedDateTime = new Date();
-        let defaultFilename = AnkBase.Prefs.get('defaultFilename', '?member-name? - ?title?/#page-number#');
-        let alternateFilename = AnkBase.Prefs.get('alternateFilename', '?member-name? - ?title? - (?illust-id?)/#page-number#');
+        function fixPageNumberToken (f) {
+          f = f.replace(/\\+/g, '/');               // パスの区切り文字をいったん'/'に統一
+          f = f.replace(/\/+/g, '/');               // 区切り文字の重複を解消
+          f = f.replace(/\/\s*$/, '');              // 終端はファイル名
+
+          if (f.match(/#page-number#.*?\//))
+            return;                                 // ファイル名以外でのページ番号指定は不可
+
+          if (f.indexOf('#page-number#') == -1)
+            f += '/#page-number#';                  // ページ番号指定がないものには強制
+
+          if (!context.in.manga) {
+            f = f.replace(/\s*#page-number#/, '');  // イラスト形式ならページ番号は不要
+            f = f.replace(/\/\s*$/, '');            // 終端はファイル名
+          }
+
+          if (AnkUtils.platform === 'Win32')
+            f = f.replace(/\/+/g, '\\');            // Windowsの場合は区切り文字を'\'にする
+
+          return f;
+        }
+
+        let defaultFilename = fixPageNumberToken(AnkBase.Prefs.get('defaultFilename', '?member-name? - ?title?').trim());
+        let alternateFilename = fixPageNumberToken(AnkBase.Prefs.get('alternateFilename', '?member-name? - ?title? - (?illust-id?)').trim());
+
+        if (!defaultFilename || !alternateFilename) {
+          window.alert(AnkBase.Locale('invalidPageNumberToken'));
+          AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.FAILED);
+          return;
+        }
+
         (function () {
           let i = context.info;
           let ii = i.illust;
@@ -1162,15 +1154,6 @@ try {
 
           AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.FAILED);
         };
-
-        let (invalid = AnkBase.invalidPageNumberToken(filenames)) {
-          if (invalid) {
-            window.alert(AnkBase.Locale('invalidPageNumberToken')+" : \n "+invalid);
-            AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.FAILED);
-            return;
-          }
-        }
-        filenames = AnkBase.fixPageNumberToken(filenames, !context.in.manga);
 
         // XXX 前方で宣言済み
         destFiles = AnkBase.getSaveFilePath(prefInitDir, filenames, ext, useDialog, !context.in.manga, images.length, facing ? facing[facing.length-1] : undefined);
