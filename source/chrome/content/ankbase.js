@@ -314,9 +314,7 @@ try {
      */
     newLocalFile: function (path) { // {{{
       let temp = AnkUtils.ccci('@mozilla.org/file/local;1', Components.interfaces.nsILocalFile);
-      if (AnkUtils.platform === 'Win32')
-        path = path.replace(/\//g, '\\');
-      temp.initWithPath(path);
+      temp.initWithPath(AnkUtils.replaceFileSeparatorToSYS(path));
       return temp;
     }, // }}}
 
@@ -969,9 +967,9 @@ try {
           }
         }
 
-        function fixPageNumberToken (f) {
-          f = f.replace(/\\+/g, '/');               // パスの区切り文字をいったん'/'に統一
-          f = f.replace(/\/+/g, '/');               // 区切り文字の重複を解消
+        function fixPageNumberToken (path) {
+          let f = AnkUtils.replaceFileSeparatorToDEFAULT(path);  // パスの区切り文字をいったん'/'に統一
+
           f = f.replace(/\/\s*$/, '');              // 終端はファイル名
 
           if (f.match(/#page-number#.*?\//))
@@ -985,8 +983,7 @@ try {
             f = f.replace(/\/\s*$/, '');            // 終端はファイル名
           }
 
-          if (AnkUtils.platform === 'Win32')
-            f = f.replace(/\/+/g, '\\');            // Windowsの場合は区切り文字を'\'にする
+          f = AnkUtils.replaceFileSeparatorToSYS(f);      // Windowsの場合は区切り文字を'\'にする
 
           return f;
         }

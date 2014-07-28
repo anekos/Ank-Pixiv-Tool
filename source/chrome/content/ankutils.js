@@ -70,6 +70,22 @@ try {
     }, // }}}
 
     /*
+     * replaceFileSeparatorToSYS
+     * ファイル区切り文字をシステムに合わせる
+     */
+    replaceFileSeparatorToSYS: function (f) {
+      return f.replace(new RegExp("[/\\\\]+", "g"), AnkUtils.SYS_SLASH);
+    },
+
+    /*
+     * replaceFileSeparatorToDEFAULT
+     * ファイル区切り文字を'/'にする
+     */
+    replaceFileSeparatorToDEFAULT: function (f) {
+      return f.replace(new RegExp("[/\\\\]+", "g"), '/');
+    },
+
+    /*
      * trim
      * 文字列の前後の空白系を取り除く
      */
