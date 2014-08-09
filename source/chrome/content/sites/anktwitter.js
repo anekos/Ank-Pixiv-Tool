@@ -287,25 +287,16 @@ try {
           let m = [];
           o.forEach(function (s) {
             if (AnkBase.Prefs.get('downloadOriginalSize', false)) {
-              if (s.match(/\/proxy\.jpg\?.*?t=((.+?)aHR0.+?)(?:$|&)/)) {
+              if (s.match(/\/proxy\.jpg\?.*?t=(.+?)(?:$|&)/)) {
                 try {
                   let b64 = RegExp.$1;
-                  let hdr = RegExp.$2;
+                  let b64dec = window.atob(b64);
+                  let index = b64dec.indexOf('http');
+                  let lenb = b64dec.substr(0, index);
+                  let len = lenb.charCodeAt(2);
+                  s = b64dec.substr(index, len);
 
-                  let lenb = window.atob(hdr);
-                  let len = lenb.charCodeAt(lenb.length-1) * 8;
-                  len = parseInt(len/6) + (len % 6 ? 1 : 0);
-
-                  let dat = b64.substr(hdr.length,len);
-                  let (pad = 4 - len % 4) {
-                    if (pad < 4) {
-                      for (let i=0; i<pad; i++)
-                        dat += '=';
-                    }
-                  }
-
-                  AnkUtils.dump('BASE64: \n'+b64+'\n    '+dat);
-                  s = window.atob(dat);
+                  AnkUtils.dump('BASE64: '+b64);
                   AnkUtils.dump('DECODED: '+s);
                 }
                 catch (e) {

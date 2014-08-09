@@ -74,7 +74,7 @@ try {
      * ファイル区切り文字をシステムに合わせる
      */
     replaceFileSeparatorToSYS: function (f) {
-      return f.replace(new RegExp("[/\\\\]+", "g"), AnkUtils.SYS_SLASH);
+      return f.replace(/[\\\/]+/g, AnkUtils.SYS_SLASH);
     },
 
     /*
@@ -82,7 +82,7 @@ try {
      * ファイル区切り文字を'/'にする
      */
     replaceFileSeparatorToDEFAULT: function (f) {
-      return f.replace(new RegExp("[/\\\\]+", "g"), '/');
+      return f.replace(/[\\\/]+/g, '/');
     },
 
     /*
