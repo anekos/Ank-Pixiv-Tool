@@ -1159,6 +1159,13 @@ try {
           return;
         }
 
+        if (context.in.manga && !destFiles.image.path.match(/#page-number#/)) {
+          // マンガ形式のダウンロード時に #page-number# の指定がない場合はエラーに
+          window.alert(AnkBase.Locale('invalidPageNumberToken'));
+          AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.FAILED);
+          return;
+        }
+
         AnkBase.clearMarkedFlags();
 
         if (context.in.manga) {
