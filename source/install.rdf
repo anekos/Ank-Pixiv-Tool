@@ -7,7 +7,7 @@
 
     <em:id>ankpixiv@snca.net</em:id>
     <em:name>Ank Pixiv Tool</em:name>
-    <em:version>1.19.3</em:version>
+    <em:version>2.0.0pre</em:version>
     <em:localized>
       <Description>
         <em:name>Ank Pixiv Tool</em:name>
@@ -31,6 +31,8 @@
         <em:translator>le_</em:translator>
         <em:translator>erkanyv</em:translator>
         <em:translator>Mikael Hiort af Ornäs</em:translator>
+        <em:translator>FidesNL</em:translator>
+        <em:translator>markh</em:translator>
       </Description>
       <Description>
         <em:name>Ank Pixiv Tool</em:name>
@@ -54,6 +56,8 @@
         <em:translator>le_</em:translator>
         <em:translator>erkanyv</em:translator>
         <em:translator>Mikael Hiort af Ornäs</em:translator>
+        <em:translator>FidesNL</em:translator>
+        <em:translator>markh</em:translator>
       </Description>
       <Description>
         <em:name>Ank Pixiv Tool</em:name>
@@ -77,6 +81,8 @@
         <em:translator>le_</em:translator>
         <em:translator>erkanyv</em:translator>
         <em:translator>Mikael Hiort af Ornäs</em:translator>
+        <em:translator>FidesNL</em:translator>
+        <em:translator>markh</em:translator>
       </Description>
       <Description>
         <em:name>Ank Pixiv Tool</em:name>
@@ -100,6 +106,8 @@
         <em:translator>le_</em:translator>
         <em:translator>erkanyv</em:translator>
         <em:translator>Mikael Hiort af Ornäs</em:translator>
+        <em:translator>FidesNL</em:translator>
+        <em:translator>markh</em:translator>
       </Description>
     </em:localized>
     <em:iconURL>chrome://ankpixiv/content/icon.png</em:iconURL>
@@ -110,7 +118,7 @@
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
         <em:minVersion>4.0</em:minVersion>
-        <em:maxVersion>28.0</em:maxVersion>
+        <em:maxVersion>32.0</em:maxVersion>
       </Description>
     </em:targetApplication>
 

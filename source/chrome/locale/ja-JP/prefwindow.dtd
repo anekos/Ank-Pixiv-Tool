@@ -7,7 +7,6 @@
 <!ENTITY browse "参照">
 <!ENTITY defaultFilename "保存時ファイル名">
 <!ENTITY largeOnMiddle "中サイズ画像をクリックで、同一タブに大サイズ画像を表示する">
-<!ENTITY openComment "コメント欄を自動で開く">
 <!ENTITY alternateFilename "代替ファイル名">
 <!ENTITY confirmExistingDownload "再ダウンロードの確認">
 <!ENTITY confirmExistingDownloadWhenAuto "再ダウンロードの確認(自動ダウンロード時)">
@@ -21,6 +20,18 @@
 <!ENTITY downloadOriginalSize "オリジナルサイズの漫画をダウンロードする">
 <!ENTITY tab.download "ダウンロード">
 <!ENTITY tab.filename "ファイル名">
+<!ENTITY tab.viewer "ビュアー">
 <!ENTITY tab.miscellaneous "その他">
 <!ENTITY fitLargeImageInWindowSize "大サイズ画像をウィンドウサイズにあわせる">
 <!ENTITY dontResizeIfSmall "ウィンドウより小さいときはリサイズしない">
+<!ENTITY dontHidePanel "ボタンパネルを隠さない">
+<!ENTITY maxPanelOpacity "ボタンパネルの不透明度の上限">
+<!ENTITY minPanelOpacity "ボタンパネルの不透明度の下限">
+<!ENTITY panelSize "ボタンパネルのサイズ">
+<!ENTITY swapArrowButton "矢印ボタンの戻ると進むを入れ替える">
+<!ENTITY useFacingView "見開きページを一つの画像として表示する">
+<!ENTITY useLoadProgress "画像の読込中エフェクトを使用する">
+<!ENTITY viewOriginalSize "オリジナルサイズの漫画を表示する">
+<!ENTITY openComment "コメント欄を自動で開く">
+<!ENTITY openCaption "キャプションの続きを自動で開く">
+<!ENTITY allowThirdPartyCookie "サードパーティーCookieを保存する">

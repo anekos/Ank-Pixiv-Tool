@@ -7,7 +7,6 @@
 <!ENTITY browse "瀏覽...">
 <!ENTITY defaultFilename "儲存時的檔案名稱">
 <!ENTITY largeOnMiddle "點擊中尺寸預覽圖時，在同分頁顯示大尺寸原始圖。">
-<!ENTITY openComment "自動展開回應欄">
 <!ENTITY alternateFilename "候選檔名（若有同名檔案存在時）">
 <!ENTITY confirmExistingDownload "手動下載時若有重複就跳出確認視窗。">
 <!ENTITY confirmExistingDownloadWhenAuto "自動下載時若有重複就跳出確認視窗。">
@@ -21,6 +20,18 @@
 <!ENTITY downloadOriginalSize "下載原始尺寸的漫畫圖片。">
 <!ENTITY tab.download "下載">
 <!ENTITY tab.filename "檔名">
+<!ENTITY tab.viewer "Viewer">
 <!ENTITY tab.miscellaneous "雜項">
 <!ENTITY fitLargeImageInWindowSize "縮放圖片至視窗大小。">
 <!ENTITY dontResizeIfSmall "若圖片比視窗小，就不要重設尺寸。">
+<!ENTITY dontHidePanel "Don't hide button panel.">
+<!ENTITY maxPanelOpacity "Maximum button panel opacity.">
+<!ENTITY minPanelOpacity "Minimum button panel opacity.">
+<!ENTITY panelSize "Button panel size.">
+<!ENTITY swapArrowButton "Swap the arrow button functions.">
+<!ENTITY useFacingView "Display facing pages as single image.">
+<!ENTITY useLoadProgress "Show progress, while loading image.">
+<!ENTITY viewOriginalSize "Display original size manga.">
+<!ENTITY openComment "自動展開回應欄">
+<!ENTITY openCaption "Automatically open the long caption.">
+<!ENTITY allowThirdPartyCookie "Allow ThirdParty Cookie.">

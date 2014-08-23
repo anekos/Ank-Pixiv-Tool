@@ -8,9 +8,24 @@
 
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankutils.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankstorage.js" />
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankpixiv.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankviewer.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankcontext.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankinterface.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankbase.js" />
+<!-- サイト別.jsの登録はここから -->
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/ankimgly.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anknicosei.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anknijie.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/ankpixiv.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktinami.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktumblr.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktwipple.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktwitpic.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktwitter.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/ankyfrog.js" />
+<!-- サイト別.jsの登録はここまで -->
   <script type="application/x-javascript"><![CDATA[
-    AnkPixiv.onInit();
+    AnkBase.onInit();
   ]]></script>
 
   <stringbundleset id="ankpixiv-bundle-set">
@@ -18,13 +33,13 @@
   </stringbundleset>
 
   <menupopup id="menu_ToolsPopup">
-    <menuitem insertafter="devToolsSeparator" label="&downloadCurrentImage;" id="ankpixiv-menu-download"
-              oncommand="AnkPixiv.onDownloadButtonClick(event)" />
+    <menuitem insertafter="devToolsSeparator" label="&downloadCurrentImage;" class="menuitem-iconic" id="ankpixiv-menu-download"
+              oncommand="AnkBase.onDownloadButtonClick(event)" />
   </menupopup>
 
   <toolbarpalette id="BrowserToolbarPalette">
     <toolbarbutton id="ankpixiv-toolbar-button" label="&iconLabel;"
-                   tooltiptext="&iconLabel;" onclick="AnkPixiv.onDownloadButtonClick(event)"
+                   tooltiptext="&iconLabel;" onclick="AnkBase.onDownloadButtonClick(event)"
                    class="toolbarbutton-1">
      <hbox>
        <image id="ankpixiv-toolbar-button-image" />
@@ -35,7 +50,7 @@
 
   <popup id="contentAreaContextMenu">
     <menuitem id="ankpixiv-context-menu" label="&downloadThisImage;" hidden="true"
-              oncommand="AnkPixiv.onContextMenu(event);" />
+              oncommand="AnkBase.onContextMenu(event);" />
   </popup>
 
 

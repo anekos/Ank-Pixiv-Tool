@@ -7,7 +7,6 @@
 <!ENTITY browse "浏览...">
 <!ENTITY defaultFilename "默认文件名">
 <!ENTITY largeOnMiddle "当您点击中间的图片时在同一个标签显示大图片。">
-<!ENTITY openComment "自动打开评论框。">
 <!ENTITY alternateFilename "备用文件名">
 <!ENTITY confirmExistingDownload "在重新下载时询问。">
 <!ENTITY confirmExistingDownloadWhenAuto "当自动下载时确认重新下载。">
@@ -21,6 +20,18 @@
 <!ENTITY downloadOriginalSize "下载原始大小的漫画。">
 <!ENTITY tab.download "下载">
 <!ENTITY tab.filename "文件名">
+<!ENTITY tab.viewer "查看器">
 <!ENTITY tab.miscellaneous "其他">
 <!ENTITY fitLargeImageInWindowSize "在窗口大小适应大图。">
 <!ENTITY dontResizeIfSmall "插图小于窗口时不调整尺寸。">
+<!ENTITY dontHidePanel "不要隐藏按钮面板。">
+<!ENTITY maxPanelOpacity "最大化按钮面板的不透明度。">
+<!ENTITY minPanelOpacity "最小化按钮面板的不透明度。">
+<!ENTITY panelSize "按钮面板大小。">
+<!ENTITY swapArrowButton "交换箭头按钮的功能。">
+<!ENTITY useFacingView "显示对开页为单幅图像。">
+<!ENTITY useLoadProgress "加载图像时显示进度。">
+<!ENTITY viewOriginalSize "显示原始尺寸的漫画。">
+<!ENTITY openComment "自动打开评论框。">
+<!ENTITY openCaption "自动打开长标题。">
+<!ENTITY allowThirdPartyCookie "运行第三方 Cookie。">

@@ -7,7 +7,6 @@
 <!ENTITY browse "Procurar...">
 <!ENTITY defaultFilename "Nome de arquivo padrão">
 <!ENTITY largeOnMiddle "Exibir a imagem grande na mesma aba quando você clicar na imagem do meio.">
-<!ENTITY openComment "Abrir automaticamente a caixa de comentários.">
 <!ENTITY alternateFilename "Nome de arquivo alternativo">
 <!ENTITY confirmExistingDownload "Confirmação de baixar novamente.">
 <!ENTITY confirmExistingDownloadWhenAuto "Confirmar se deve baixar novamente quando baixar automaticamente.">
@@ -21,6 +20,18 @@
 <!ENTITY downloadOriginalSize "Baixar mangá no tamanho original.">
 <!ENTITY tab.download "Download">
 <!ENTITY tab.filename "Nome do arquivo">
+<!ENTITY tab.viewer "Visualizador">
 <!ENTITY tab.miscellaneous "Diversos">
 <!ENTITY fitLargeImageInWindowSize "Ajustar imagem grande ao tamanho da janela.">
 <!ENTITY dontResizeIfSmall "Não redimensionar se a ilustração for menor que a janela.">
+<!ENTITY dontHidePanel "Não ocultar o painel de botões.">
+<!ENTITY maxPanelOpacity "Opacidade máxima do painel de botões.">
+<!ENTITY minPanelOpacity "Opacidade mínima do painel de botões.">
+<!ENTITY panelSize "Tamanho do painel de botões.">
+<!ENTITY swapArrowButton "Inverter as funções do botão de seta.">
+<!ENTITY useFacingView "Mostrar páginas opostas como uma única imagem.">
+<!ENTITY useLoadProgress "Mostrar progresso enquanto carrega imagens.">
+<!ENTITY viewOriginalSize "Mostrar tamanho original.">
+<!ENTITY openComment "Abrir automaticamente a caixa de comentários.">
+<!ENTITY openCaption "Abrir automaticamente a legenda longa.">
+<!ENTITY allowThirdPartyCookie "Permitir cookies de terceiros.">

@@ -7,7 +7,6 @@
 <!ENTITY browse "Прегледај...">
 <!ENTITY defaultFilename "Подразумевани назив датотеке">
 <!ENTITY largeOnMiddle "Прикажи велику слику у истом језичку када кликнем на средњу">
-<!ENTITY openComment "Аутоматски отвори оквир за коментаре">
 <!ENTITY alternateFilename "Алтернативни назив датотеке">
 <!ENTITY confirmExistingDownload "Потврда поновног преузимања">
 <!ENTITY confirmExistingDownloadWhenAuto "Потврђивање поновног преузимања кад је аутоматско.">
@@ -21,6 +20,18 @@
 <!ENTITY downloadOriginalSize "Преузми мангу у оригиналној величини.">
 <!ENTITY tab.download "Преузми">
 <!ENTITY tab.filename "Назив датотеке">
+<!ENTITY tab.viewer "Viewer">
 <!ENTITY tab.miscellaneous "Разно">
 <!ENTITY fitLargeImageInWindowSize "Уклопи велике слике тако да стану у прозор.">
 <!ENTITY dontResizeIfSmall "Не мењај величину илустрације ако је мања од прозора.">
+<!ENTITY dontHidePanel "Don't hide button panel.">
+<!ENTITY maxPanelOpacity "Maximum button panel opacity.">
+<!ENTITY minPanelOpacity "Minimum button panel opacity.">
+<!ENTITY panelSize "Button panel size.">
+<!ENTITY swapArrowButton "Swap the arrow button functions.">
+<!ENTITY useFacingView "Display facing pages as single image.">
+<!ENTITY useLoadProgress "Show progress, while loading image.">
+<!ENTITY viewOriginalSize "Display original size manga.">
+<!ENTITY openComment "Аутоматски отвори оквир за коментаре">
+<!ENTITY openCaption "Automatically open the long caption.">
+<!ENTITY allowThirdPartyCookie "Allow ThirdParty Cookie.">

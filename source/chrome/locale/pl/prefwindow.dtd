@@ -7,7 +7,6 @@
 <!ENTITY browse "Przeglądaj…">
 <!ENTITY defaultFilename "Domyślna nazwa pliku">
 <!ENTITY largeOnMiddle "Po kliknięciu średniego powiększenia, wyświetlaj duże powiększenie w tej samej karcie">
-<!ENTITY openComment "Otwieraj automatycznie pole komentarza">
 <!ENTITY alternateFilename "Alternatywna nazwa pliku">
 <!ENTITY confirmExistingDownload "Potwierdzaj ponowne pobieranie">
 <!ENTITY confirmExistingDownloadWhenAuto "Potwierdzaj ponowne pobieranie w trybie automatycznego pobierania">
@@ -21,6 +20,18 @@
 <!ENTITY downloadOriginalSize "Pobieraj oryginalny rozmiar manga">
 <!ENTITY tab.download "Pobierz">
 <!ENTITY tab.filename "Nazwa pliku">
+<!ENTITY tab.viewer "Przeglądarka">
 <!ENTITY tab.miscellaneous "Różne">
-<!ENTITY fitLargeImageInWindowSize "Dopasuj duże obrazki do wymiaru okna.">
-<!ENTITY dontResizeIfSmall "Nie zmieniaj rozmiaru, jeśli obrazek jest  mniejszy niż okno.">
+<!ENTITY fitLargeImageInWindowSize "Dopasuj duże obrazki do wymiaru okna">
+<!ENTITY dontResizeIfSmall "Nie zmieniaj rozmiaru, jeśli obrazek jest  mniejszy niż okno">
+<!ENTITY dontHidePanel "Nie ukrywaj przycisku panelu">
+<!ENTITY maxPanelOpacity "Maksymalne krycie przycisku panelu">
+<!ENTITY minPanelOpacity "Minimalne krycie przycisku panelu">
+<!ENTITY panelSize "Rozmiar przycisku panelu">
+<!ENTITY swapArrowButton "Zamień funkcje strzałki przycisku">
+<!ENTITY useFacingView "Wyświetlaj rozkładówki jako pojedynczy obrazek">
+<!ENTITY useLoadProgress "Wyświetlaj postęp wczytywania obrazka">
+<!ENTITY viewOriginalSize "Wyświetlaj oryginalny rozmiar manga">
+<!ENTITY openComment "Otwieraj automatycznie pole komentarza">
+<!ENTITY openCaption "Otwieraj automatycznie opis zdarzeń">
+<!ENTITY allowThirdPartyCookie "Akceptuj ciasteczka z innych witryn">

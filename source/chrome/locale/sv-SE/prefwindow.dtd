@@ -7,7 +7,6 @@
 <!ENTITY browse "Bläddra...">
 <!ENTITY defaultFilename "Standardfilnamn">
 <!ENTITY largeOnMiddle "Visa den stora versionen i samma flik när du mittenklickar bilden.">
-<!ENTITY openComment "Öppna kommenteringsrutan automatiskt.">
 <!ENTITY alternateFilename "Alternativt filnamn">
 <!ENTITY confirmExistingDownload "Bekräftelse av omnerladdning.">
 <!ENTITY confirmExistingDownloadWhenAuto "Begär bekräftelse av omnerladdning vid automatisk nerladdning.">
@@ -21,6 +20,18 @@
 <!ENTITY downloadOriginalSize "Ladda ner manga i originalstorlek.">
 <!ENTITY tab.download "Nerladdning">
 <!ENTITY tab.filename "Filnamn">
+<!ENTITY tab.viewer "Viewer">
 <!ENTITY tab.miscellaneous "Övrigt">
 <!ENTITY fitLargeImageInWindowSize "Anpassa stora bilder till fönsterstorleken.">
 <!ENTITY dontResizeIfSmall "Ändra inte storlek om bilden är mindre än fönstret.">
+<!ENTITY dontHidePanel "Don't hide button panel.">
+<!ENTITY maxPanelOpacity "Maximum button panel opacity.">
+<!ENTITY minPanelOpacity "Minimum button panel opacity.">
+<!ENTITY panelSize "Button panel size.">
+<!ENTITY swapArrowButton "Swap the arrow button functions.">
+<!ENTITY useFacingView "Display facing pages as single image.">
+<!ENTITY useLoadProgress "Show progress, while loading image.">
+<!ENTITY viewOriginalSize "Display original size manga.">
+<!ENTITY openComment "Öppna kommenteringsrutan automatiskt.">
+<!ENTITY openCaption "Automatically open the long caption.">
+<!ENTITY allowThirdPartyCookie "Allow ThirdParty Cookie.">
