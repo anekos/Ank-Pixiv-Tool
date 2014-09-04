@@ -293,7 +293,7 @@ try {
                   let b64dec = window.atob(b64);
                   let index = b64dec.indexOf('http');
                   let lenb = b64dec.substr(0, index);
-                  let len = lenb.charCodeAt(2);
+                  let len = lenb.charCodeAt(lenb.length-1);
                   s = b64dec.substr(index, len);
 
                   AnkUtils.dump('BASE64: '+b64);
