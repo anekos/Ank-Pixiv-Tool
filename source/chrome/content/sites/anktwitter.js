@@ -290,7 +290,7 @@ try {
               if (s.match(/\/proxy\.jpg\?.*?t=(.+?)(?:$|&)/)) {
                 try {
                   let b64 = RegExp.$1;
-                  let b64dec = window.atob(b64);
+                  let b64dec = window.atob(b64.replace(/-/g,'+').replace(/_/g,'/'));
                   let index = b64dec.indexOf('http');
                   let lenb = b64dec.substr(0, index);
                   let len = lenb.charCodeAt(lenb.length-1);
