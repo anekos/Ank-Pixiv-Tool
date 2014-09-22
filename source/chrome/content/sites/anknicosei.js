@@ -50,24 +50,24 @@ try {
 
       let illust =  {
         get images ()
-          self.in.manga && queryAll('.image_container img.base_img'),
+          self.in.manga && queryAll('#page_contents > .page img'),
 
         get datetime ()
-          self.in.manga && query('.watch_header > .date')
+          self.in.manga && query('.created')
           ||
           query('.inner.cfix > .other_info > .date')  // seiga
           ||
           query('.bold'),                             // shunga
 
         get title ()
-          self.in.manga && queryAll('.title > h2 > *')
+          self.in.manga && queryAll('.title > h1 > *')
           ||
           query('.inner.cfix > .title')               // seiga
           ||
           query('.title_text'),                       // shunga
 
         get comment ()
-          self.in.manga && query('.description_table > * > * > td+td')
+          self.in.manga && query('.description > .full')
           ||
           query('.inner.cfix > .discription')         // seiga
           ||
@@ -84,7 +84,7 @@ try {
           query('.illust_user_name > a > strong'),    // shunga
 
         get memberLink ()
-          self.in.manga && query('.author > .name > a')
+          self.in.manga && null
           ||
           query('.user_link > a')                     // seiga
           ||
@@ -109,7 +109,7 @@ try {
           query('.my_contents .list'),    // イラスト定点観測
 
         get downloadedDisplayParent ()
-          self.in.manga && query('.title_area')
+          self.in.manga && query('.title')
           ||
           query('.other_info')                        // seiga
           ||
@@ -278,7 +278,7 @@ try {
             let images;
             if (self.in.manga) {
               // マンガの大サイズ画像はないらしい
-              images = AnkUtils.A(self.elements.illust.images).map(function (e) e.getAttribute('data-original'));
+              images = AnkUtils.A(self.elements.illust.images).filter(function (e) !!e.getAttribute('data-original')).map(function (e) e.getAttribute('data-original'));
             } else {
               let s = AnkUtils.remoteFileExists(self.elements.illust.mediumImage.href);
               let href = s[1];

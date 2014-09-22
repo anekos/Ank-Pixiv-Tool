@@ -551,6 +551,8 @@ try {
                         ['.stacc_ref_user_illust_img > a', 1],    // フィード（お気に入りに追加したユーザ内のイラスト）
                         ['.hotimage > a', 1],                     // タグページ（週間ベスト）
                         ['.image > a', 1],                        // タグページ（全期間＆新着）
+                        ['.sibling-items > .after > a', 1],       // 前の作品
+                        ['.sibling-items > .before > a', 1],      // 次の作品
                       ];
 
       return AnkBase.markDownloaded(IsIllust, Targets, false, this, node, force, ignorePref);
