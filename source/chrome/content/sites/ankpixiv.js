@@ -329,8 +329,13 @@ try {
           };
 
           let (e = self.elements.illust.mediumImage) {
-            if (e)
+            if (/\/img-master\//.test(e.src)) {
+              return e.src.replace(/^(https?:\/\/.+?)\/.*\/img-master\/(.*?)(_master\d*)?(\..+$)/, '$1/img-original/$2$4');
+            }
+            else if (/_m\./.test(e.src)) {
               return e.src.replace(/_m\./, '.');
+            }
+            return null;
           };
         },
 
