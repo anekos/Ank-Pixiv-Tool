@@ -633,29 +633,21 @@ try {
 
       const MAX = 1000;
 
-      let manIdx = AnkUtils.httpGET(this.info.path.mangaIndexPage);
+      let manIdx = AnkUtils.httpGET(this.elements.illust.largeLink.href, this.info.illust.pageUrl);
       let doc = AnkUtils.createHTMLDocument(manIdx);
       if (doc.querySelector('.errorArea') || doc.querySelector('.errortxt')) {
         window.alert(AnkBase.Locale('serverError'));
         return AnkBase.NULL_RET;
       }
 
-      let mangaArea = doc.querySelector('.manga');
-      if (!mangaArea) {
-        window.alert(AnkBase.Locale('serverError'));
-        return AnkBase.NULL_RET;
-      }
+      // TODO pixivの構成変更で見開き表示が正しく表示されなくなったので、pixivが直してくれるまで見開き対応は無効化
       let im = [];
       let fp = [];
-      AnkUtils.A(mangaArea.querySelectorAll('script')) .
+      AnkUtils.A(doc.querySelectorAll('.manga > .item-container > img')) .
         some(function (v) {
-          if (v.textContent.match(/pixiv\.context\.images\[\d+\]\s*=\s*'(.+?)'/)) {
-            if (im.length > MAX)
-              return true;
-            im.push(RegExp.$1);
-          } else if (v.textContent.match(/pixiv\.context\.pages\[(\d+)\]/)) {
-            fp.push(1 + parseInt(RegExp.$1));
-          }
+          if (im.length > MAX)
+            return true;
+          im.push(v.getAttribute('data-src'));
         });
 
       if (im.length == 0) {
