@@ -323,20 +323,28 @@ try {
         // XXX 再投稿された、イラストのパスの末尾には、"?28737478..." のように数値がつく模様
         // 数値を除去してしまうと、再投稿前の画像が保存されてしまう。
         get largeStandardImage () {
-          let (src = self.info.path.ugokuIllustSrc) {
-            if (src)
-              return src;
-          };
+          if (!self.in.manga) {
+            let (src = self.info.path.ugokuIllustSrc) {
+              if (src)
+                return src;
+            };
 
-          let (e = self.elements.illust.mediumImage) {
-            if (/\/img-master\//.test(e.src)) {
-              return e.src.replace(/^(https?:\/\/.+?)\/.*\/img-master\/(.*?)(_master\d*)?(\..+$)/, '$1/img-original/$2$4');
-            }
-            else if (/_m\./.test(e.src)) {
-              return e.src.replace(/_m\./, '.');
-            }
-            return null;
-          };
+            let (e = self.elements.illust.largeLink) {
+              if (e) {
+                referer = e.href;
+                let html = AnkUtils.httpGET(referer, self.info.illust.pageUrl);
+                let doc = AnkUtils.createHTMLDocument(html);
+                return doc.querySelector('img').src;
+              }
+            };
+          }
+          else {
+            let (e = self.elements.illust.mediumImage) {
+              if (e)
+                return e.src.replace(/_m\./, '.');
+            };
+          }
+
         },
 
         // TODO 画像の切替タイミング情報も存在しているが、どのように保存するか？
@@ -556,6 +564,8 @@ try {
                         ['.stacc_ref_user_illust_img > a', 1],    // フィード（お気に入りに追加したユーザ内のイラスト）
                         ['.hotimage > a', 1],                     // タグページ（週間ベスト）
                         ['.image > a', 1],                        // タグページ（全期間＆新着）
+                        ['.sibling-items > .after > a', 1],       // 前の作品
+                        ['.sibling-items > .before > a', 1],      // 次の作品
                       ];
 
       return AnkBase.markDownloaded(IsIllust, Targets, false, this, node, force, ignorePref);
