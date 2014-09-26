@@ -21,17 +21,16 @@ try {
     ********************************************************************************/
 
     self.in = { // {{{
-      get site () { // {{{
-        try {
-          return self.info.illust.pageUrl.match(/^https?:\/\/www\.pixiv\.net\//);
-        } catch (e) {
-          return false;
-        }
-      }, // }}}
+      get site () // {{{
+        self.info.illust.pageUrl.match(/^https?:\/\/www\.pixiv\.net\//), // }}}
 
       get manga () // {{{
-        let (node = self.elements.illust.largeLink)
-          node && node.href.match(/(?:&|\?)mode=manga(?:&|$)/), // }}}
+        let (v = self.info.path.mangaIndexPage)
+          v && v.match(/(?:&|\?)mode=manga(?:&|$)/), // }}}
+
+      get ugoira () // {{{
+        let (e = self.elements.illust.mediumImage)
+          e && e.tagName.toLowerCase() === 'canvas', // }}}
 
       get medium () { // {{{
         let loc = self.info.illust.pageUrl;
@@ -44,7 +43,7 @@ try {
       }, // }}}
 
       get illustPage () // {{{
-        self.info.illust.pageUrl.match(/\.pixiv\.net\/member_illust.php\?.*illust_id=/), // }}}
+        self.in.medium, // }}}
 
       get myPage () // {{{
         (self.info.illust.pageUrl == 'http://www.pixiv.net/mypage.php'), // }}}
@@ -315,54 +314,105 @@ try {
           AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext ()
-          (self.info.path.largeStandardImage.match(/(\.\w+)(?:$|\?)/)[1] || '.jpg'),
+          let (m = path.image.images[0].match(/(\.\w+)(?:$|\?)/))
+            m && m[1] || '.jpg',
 
         get mangaIndexPage ()
-          self.info.illust.pageUrl.replace(/(\?|&)mode=medium(&|$)/, "$1mode=manga$2"),
+          let (e = self.elements.illust.largeLink)
+            e && e.href,
 
-        // XXX 再投稿された、イラストのパスの末尾には、"?28737478..." のように数値がつく模様
-        // 数値を除去してしまうと、再投稿前の画像が保存されてしまう。
-        get largeStandardImage () {
-          if (!self.in.manga) {
-            let (src = self.info.path.ugokuIllustSrc) {
-              if (src)
-                return src;
-            };
-
-            let (e = self.elements.illust.largeLink) {
-              if (e) {
-                referer = e.href;
-                let html = AnkUtils.httpGET(referer, self.info.illust.pageUrl);
-                let doc = AnkUtils.createHTMLDocument(html);
-                return doc.querySelector('img').src;
-              }
-            };
-          }
-          else {
-            let (e = self.elements.illust.mediumImage) {
-              if (e)
-                return e.src.replace(/_m\./, '.');
-            };
-          }
-
-        },
-
-        // TODO 画像の切替タイミング情報も存在しているが、どのように保存するか？
         get ugokuIllustSrc ()
           let (ugoku = self.elements.doc.defaultView.wrappedJSObject.pixiv.context.ugokuIllustData)
             ugoku && ugoku.src,
 
-        get ugokuIllustFullscreenSrc () {
-          if (self.elements.illust.ugoiraFullscreenLink) {
-            let ugoku = self.elements.doc.defaultView.wrappedJSObject.pixiv.context.ugokuIllustFullscreenData;
-            if (ugoku)
-              return ugoku.src;
+        get ugokuIllustFullscreenSrc ()
+          let (ugoku = self.elements.doc.defaultView.wrappedJSObject.pixiv.context.ugokuIllustFullscreenData)
+            ugoku && ugoku.src,
+
+        get image () // {{{
+          self.info.path._getImage(AnkBase.Prefs.get('downloadOriginalSize', false)), // }}}
+
+        _getImage: function (mangaOriginalSizeCheck) {
+          if (self.in.ugoira) {
+            // うごイラ
+            return {
+              images: [ self.info.path.ugokuIllustFullscreenSrc || self.info.path.ugokuIllustSrc ],
+              facing: null,
+            };
           }
-        },
+          else {
+            try {
+              let indexPage = path.mangaIndexPage;
+              let doc = AnkUtils.createHTMLDocument(AnkUtils.httpGET(indexPage, self.info.illust.pageUrl));
+              referer = indexPage;
+              if (!self.in.manga) {
+                // イラスト
+                return {
+                  images: [ doc.querySelector('img').src ],
+                  facing: null,
+                }
+              }
+              else {
+                // マンガ
+                const MAX = 1000;
 
-        get image ()
-          self.getImageInfo(AnkBase.Prefs.get('downloadOriginalSize', false)),
+                // TODO pixivの構成変更で見開き表示が正しく表示されなくなったので、pixivが直してくれるまで見開き対応は無効化
+                let im = [];
+                let fp = [];
+                AnkUtils.A(doc.querySelectorAll('.manga > .item-container > img')) .
+                  some(function (v) {
+                    if (im.length > MAX)
+                      return true;
+                    im.push(v.getAttribute('data-src'));
+                  });
 
+                if (im.length > 0) {
+                  if (fp.length > 0 && fp[fp.length - 1] < fp.length) {
+                    // 見開きがある場合
+                    AnkUtils.dump("Facing Page Check: " + fp.length + " pics in " + fp[fp.length - 1] + " pages");
+                  }
+                  else {
+                    // 見開きがない場合
+                    fp = null;
+                  }
+  
+                  if (mangaOriginalSizeCheck) {
+                    function replaceMangaImageUrl (v) {
+                      return (v.match(/_big_p\d+\./) ? v : v.replace(/_p(\d+)\./, '_big_p$1.'));
+                    }
+
+                    let bigurl = replaceMangaImageUrl(im[0]);
+                    if (bigurl) {
+                      const cookieManager = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
+                      cookieManager.add(
+                        '.pixiv.net',
+                        '/',
+                        'pixiv_embed',
+                        'pix',
+                        false,
+                        false,
+                        false,
+                        new Date().getTime() + (1000 * 60 * 60 * 24 * 365)
+                      );
+  
+                      if (AnkUtils.remoteFileExists(bigurl))
+                        im = im.map(function (v) replaceMangaImageUrl(v));
+                    }
+                  }
+  
+                  return { images: im, facing: fp, };
+                }
+              }
+            }
+            catch (e) {
+              AnkUtils.dumpError(e);
+            }
+          }
+
+          // error
+          window.alert(AnkBase.Locale('serverError'));
+          return AnkBase.NULL_RET;
+        }, // }}}
       };
 
       return {
@@ -415,7 +465,7 @@ try {
           if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
             new AnkViewer(
               mod,
-              function () mod.getImageInfo(AnkBase.Prefs.get('viewOriginalSize', false))
+              function () mod.info.path._getImage(AnkBase.Prefs.get('viewOriginalSize', false))
             );
           }
         }
@@ -594,97 +644,6 @@ try {
       }
 
       return setRating(this,pt);
-    }, // }}}
-
-
-    /********************************************************************************
-    * Pixiv固有
-    ********************************************************************************/
-
-    /*
-     * マンガのページ一覧を取得する（前段）
-     */
-    getImageInfo: function (originalSizeCheck) {
-      if (!this.in.manga)
-        return {
-          images: [
-                     (originalSizeCheck && this.info.path.ugokuIllustFullscreenSrc || this.info.path.ugokuIllustSrc)
-                     ||
-                     this.info.path.largeStandardImage
-                  ],
-          facing: null,
-        };
-
-      return this.getMangaPages(originalSizeCheck);
-    },
-
-    /*
-     * マンガのページ一覧を取得する（後段）
-     *  originalSizeCheck: オリジナルサイズで（ダウンロード｜表示）を行うかどうか
-     *  return
-     *    images:          画像のurlリスト
-     *    facing:          見開きがある場合はurlに対応するページ番号のリスト、それ以外の場合はnull
-     */
-    getMangaPages: function (originalSizeCheck) { // {{{
-
-      function replaceMangaImageUrl (v) {
-        return (v.match(/_big_p\d+\./) ? v : v.replace(/_p(\d+)\./, '_big_p$1.'));
-      }
-
-      const MAX = 1000;
-
-      let manIdx = AnkUtils.httpGET(this.elements.illust.largeLink.href, this.info.illust.pageUrl);
-      let doc = AnkUtils.createHTMLDocument(manIdx);
-      if (doc.querySelector('.errorArea') || doc.querySelector('.errortxt')) {
-        window.alert(AnkBase.Locale('serverError'));
-        return AnkBase.NULL_RET;
-      }
-
-      // TODO pixivの構成変更で見開き表示が正しく表示されなくなったので、pixivが直してくれるまで見開き対応は無効化
-      let im = [];
-      let fp = [];
-      AnkUtils.A(doc.querySelectorAll('.manga > .item-container > img')) .
-        some(function (v) {
-          if (im.length > MAX)
-            return true;
-          im.push(v.getAttribute('data-src'));
-        });
-
-      if (im.length == 0) {
-        window.alert(AnkBase.Locale('serverError'));
-        return AnkBase.NULL_RET;
-      }
-
-      if (fp.length > 0 && fp[fp.length - 1] < fp.length) {
-        // 見開きがある場合
-        AnkUtils.dump("Facing Page Check: " + fp.length + " pics in " + fp[fp.length - 1] + " pages");
-      }
-      else {
-        // 見開きがない場合
-        fp = null;
-      }
-
-      if (originalSizeCheck) {
-        let bigurl = replaceMangaImageUrl(im[0]);
-        if (bigurl) {
-          const cookieManager = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
-          cookieManager.add(
-            '.pixiv.net',
-            '/',
-            'pixiv_embed',
-            'pix',
-            false,
-            false,
-            false,
-            new Date().getTime() + (1000 * 60 * 60 * 24 * 365)
-          );
-
-          if (AnkUtils.remoteFileExists(bigurl))
-            im = im.map(function (v) replaceMangaImageUrl(v));
-        }
-      }
-
-      return { images: im, facing: fp, };
     }, // }}}
 
   };
