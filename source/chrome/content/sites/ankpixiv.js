@@ -14,7 +14,10 @@ try {
     self.SERVICE_ID = 'PXV';
     self.SITE_NAME  = 'Pixiv';
 
-    self.ID_FANTASY_DISPLAY = 'ankpixiv-fantasy-display',
+    self.ID_FANTASY_DISPLAY = 'ankpixiv-fantasy-display';
+
+    var _images = null;
+    var _imagesOriginal = null;
 
     /********************************************************************************
     * プロパティ
@@ -88,7 +91,7 @@ try {
           };
           let (e = illust.mediumImage) {
             if (e)
-              return e.parentNode;
+              return e.parentNode.parentNode;
           };
         },
 
@@ -171,9 +174,9 @@ try {
 
         get mediumImage () {
           return (
-            query('.works_display > a > img')
+            query('.works_display > a > div > img')
             ||
-            query('.works_display > * > a > img')
+            query('.works_display > * > a > div > img')
             ||
             query('.works_display canvas')
           );
@@ -333,6 +336,19 @@ try {
           self.info.path._getImage(AnkBase.Prefs.get('downloadOriginalSize', false)), // }}}
 
         _getImage: function (mangaOriginalSizeCheck) {
+          if (!mangaOriginalSizeCheck) {
+            if (!_images)
+              _images = self.info.path._getImageMain(mangaOriginalSizeCheck);
+            return _images;
+          }
+          else {
+            if (!_imagesOriginal)
+              _imagesOriginal = self.info.path._getImageMain(mangaOriginalSizeCheck);
+            return _imagesOriginal;
+          }
+        },
+
+        _getImageMain: function (mangaOriginalSizeCheck) {
           if (self.in.ugoira) {
             // うごイラ
             return {
@@ -359,12 +375,26 @@ try {
                 // TODO pixivの構成変更で見開き表示が正しく表示されなくなったので、pixivが直してくれるまで見開き対応は無効化
                 let im = [];
                 let fp = [];
-                AnkUtils.A(doc.querySelectorAll('.manga > .item-container > img')) .
-                  some(function (v) {
+                if (!mangaOriginalSizeCheck) {
+                  AnkUtils.A(doc.querySelectorAll('.manga > .item-container > img')) .
+                    some(function (v) {
+                      if (im.length > MAX)
+                        return true;
+                      im.push(v.getAttribute('data-src'));
+                    });
+                }
+                else {
+                  AnkUtils.A(doc.querySelectorAll('.manga > .item-container > a')) .
+                  some(function (a) {
                     if (im.length > MAX)
                       return true;
-                    im.push(v.getAttribute('data-src'));
+                    let href = indexPage;
+                    href = href.replace(/^(https?:\/\/.+?)(?:\/.*)$/,"$1")+a.href;
+                    AnkUtils.dump(href);
+                    let doc = AnkUtils.createHTMLDocument(AnkUtils.httpGET(href, indexPage));
+                    im.push(doc.querySelector('img').src);
                   });
+                }
 
                 if (im.length > 0) {
                   if (fp.length > 0 && fp[fp.length - 1] < fp.length) {
@@ -374,30 +404,6 @@ try {
                   else {
                     // 見開きがない場合
                     fp = null;
-                  }
-  
-                  if (mangaOriginalSizeCheck) {
-                    function replaceMangaImageUrl (v) {
-                      return (v.match(/_big_p\d+\./) ? v : v.replace(/_p(\d+)\./, '_big_p$1.'));
-                    }
-
-                    let bigurl = replaceMangaImageUrl(im[0]);
-                    if (bigurl) {
-                      const cookieManager = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
-                      cookieManager.add(
-                        '.pixiv.net',
-                        '/',
-                        'pixiv_embed',
-                        'pix',
-                        false,
-                        false,
-                        false,
-                        new Date().getTime() + (1000 * 60 * 60 * 24 * 365)
-                      );
-  
-                      if (AnkUtils.remoteFileExists(bigurl))
-                        im = im.map(function (v) replaceMangaImageUrl(v));
-                    }
                   }
   
                   return { images: im, facing: fp, };
@@ -461,7 +467,7 @@ try {
         } // }}}
 
         // 大画像関係
-        if (!mod.elements.illust.ugoiraContainer) {
+        if (!mod.in.ugoira) {
           if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
             new AnkViewer(
               mod,
