@@ -7,7 +7,7 @@ try {
     * 定数
     ********************************************************************************/
 
-    DB_VERSION: 6,
+    DB_VERSION: 7,
 
     PREF_PREFIX: 'extensions.ankpixiv.',
 
@@ -1511,13 +1511,7 @@ try {
 
       // version 6
       try {
-        let m = AnkBase.siteModules.filter(function (v) (typeof v.in.pixiv !== 'undefined') && v);
-        if (m.length == 0) {
-          AnkUtils.dump('unable to update db. pixiv module not installed.');
-          return;
-        }
-
-        let srvid = m[0].SERVICE_ID;
+        let srvid = 'PXV';
 
         AnkBase.Storage.dropIndexes('histories',['illust_id']);
         AnkBase.Storage.dropIndexes('members',['id']);
@@ -1529,7 +1523,7 @@ try {
 
         AnkBase.Storage.setUserVersion(ver);
       } catch (e) {
-        AnkUtils.dump(e);
+        AnkUtils.dumpError(e);
       }
     }, // }}}
 
