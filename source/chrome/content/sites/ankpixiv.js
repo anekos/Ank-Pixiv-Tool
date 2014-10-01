@@ -256,6 +256,7 @@ try {
         get height ()
           let (sz = illust.size) (sz && sz.height),
 
+        // FIXME largeStandardImageはもうないよ
         get server ()
           let (v = self.info.path.largeStandardImage)
             v && v.match(/^http:\/\/([^\/\.]+)\./i) && RegExp.$1,
@@ -359,7 +360,8 @@ try {
           else {
             try {
               let indexPage = path.mangaIndexPage;
-              let doc = AnkUtils.createHTMLDocument(AnkUtils.httpGET(indexPage, self.info.illust.pageUrl));
+              let html = AnkUtils.httpGET(indexPage, self.info.illust.pageUrl);
+              let doc = AnkUtils.createHTMLDocument(html);
               referer = indexPage;
               if (!self.in.manga) {
                 // イラスト
@@ -369,7 +371,7 @@ try {
                 }
               }
               else {
-                // マンガ
+                // マンガ or ブック
                 const MAX = 1000;
 
                 // TODO pixivの構成変更で見開き表示が正しく表示されなくなったので、pixivが直してくれるまで見開き対応は無効化
@@ -385,15 +387,47 @@ try {
                 }
                 else {
                   AnkUtils.A(doc.querySelectorAll('.manga > .item-container > a')) .
-                  some(function (a) {
-                    if (im.length > MAX)
-                      return true;
-                    let href = indexPage;
-                    href = href.replace(/^(https?:\/\/.+?)(?:\/.*)$/,"$1")+a.href;
-                    AnkUtils.dump(href);
-                    let doc = AnkUtils.createHTMLDocument(AnkUtils.httpGET(href, indexPage));
-                    im.push(doc.querySelector('img').src);
-                  });
+                    some(function (a) {
+                      if (im.length > MAX)
+                        return true;
+                      let href = indexPage;
+                      href = href.replace(/^(https?:\/\/.+?)(?:\/.*)$/,"$1")+a.href;
+                      AnkUtils.dump(href);
+                      let doc = AnkUtils.createHTMLDocument(AnkUtils.httpGET(href, indexPage));
+                      im.push(doc.querySelector('img').src);
+                    });
+                }
+
+                // FIXME AnkUtils.createHTMLDocument()でHTML Elementのclass情報が欠けてしまうのでhtmlテキストに対してマッチングしているのを直す
+                if (im.length == 0) {
+                  // ブック
+                  if (html.match(/<html[^>]+?class=\"(.+?)\"/) && RegExp.$1.indexOf('_book-viewer') != -1) {
+                    let rlt = RegExp.$1.indexOf('rtl');
+                    let re = mangaOriginalSizeCheck ? /pixiv\.context\.originalImages\[\d+\]\s*=\s*\"(.+?)\"/ : /pixiv\.context\.images\[\d+\]\s*=\s*\"(.+?)\"/;
+                    AnkUtils.A(doc.querySelectorAll('script')) .
+                      forEach(function (e) {
+                        if (e.text.match(re)) {
+                          let img = RegExp.$1; 
+                          im.push(img.replace(/\\(.)/g, '$1'));
+                        }
+                      });
+  
+                    for (var i=1; i<=im.length; i++) {
+                      if (i == 1) {
+                        fp.push(i);
+                      }
+                      else {
+                        fp.push((i - i%2) / 2 + 1)
+
+                        // 見開きの向きに合わせて画像の順番を入れ替える
+                        if (rlt && i % 2 == 0 && i < im.length-1) {
+                          let tmp = im[i-1];
+                          im[i-1] = im[i];
+                          im[i] = tmp;
+                        }
+                      }
+                    }
+                  }
                 }
 
                 if (im.length > 0) {
