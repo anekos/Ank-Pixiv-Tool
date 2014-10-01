@@ -36,6 +36,7 @@ try {
     DOWNLOAD_DISPLAY: {
       DOWNLOADED:   'downloaded',
       USED:         'used',
+      INITIALIZE:   'initialize',
       DOWNLOADING:  'downloading',
       FAILED:       'downloadFailed',
       TIMEOUT:      'downloadTimeout',
@@ -700,8 +701,10 @@ try {
      */
     downloadCurrentImage: function (module, useDialog, confirmDownloaded, debug) { // {{{
       try {
-        // ダウンロード用のコンテキストの収集
+        // ダウンロード用のコンテキストの収集(contextの取得に時間がかかる場合があるのでダウンロードマークを表示しておく)
+        AnkBase.insertDownloadedDisplay(module.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.INITIALIZE);
         let context = new AnkContext(module);
+        AnkBase.insertDownloadedDisplay(module.elements.illust.downloadedDisplayParent, false, null);
         if (!context)
           return false;
 
