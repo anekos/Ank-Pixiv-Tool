@@ -236,7 +236,6 @@ try {
           return false;   // リトライしてほしい
         } // }}}
 
-        // FIXME javascript有効時は、タブのload完了時にサイト側からbindされるので、ここでunbindしても効果がない。保留
         if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
           new AnkViewer(
             mod,

@@ -449,6 +449,7 @@ try {
         var body = mod.elements.illust.body;
         var wrapper = mod.elements.illust.wrapper;
         var medImg = mod.elements.illust.mediumImage;
+        var largeLink = mod.elements.illust.largeLink;
         var openCaption = mod.elements.illust.openCaption;
         var avatar = mod.elements.illust.avatar;
 
@@ -459,7 +460,7 @@ try {
 
         // 中画像クリック時に保存する
         if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
-          medImg.addEventListener(
+          largeLink.addEventListener(
             'click',
             function () AnkBase.downloadCurrentImageAuto(mod),
             true
