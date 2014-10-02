@@ -158,10 +158,16 @@ try {
         get prevLink()
           query('.after > a'),
 
+        get uiLayoutWest ()
+          query('.ui-layout-west'),
+
         // require for AnkBase
 
         get downloadedDisplayParent ()
           query('.work-info .meta'),
+
+        get downloadedFilenameArea ()
+          query('.ank-pixiv-downloaded-filename-text'),
 
         // require for AnkViewer
 
@@ -491,6 +497,30 @@ try {
         if (!(body && medImg && wrapper && avatar)) { // {{{
           return false;   // リトライしてほしい
         } // }}}
+
+        // デバッグ用
+        if (AnkBase.Prefs.get('showDownloadedFilename', false)) {
+          let e = mod.elements.illust.uiLayoutWest;
+          if (e) {
+            {
+              let div = doc.createElement('div');
+              div.classList.add('area_new');
+              div.classList.add('ank-pixiv-downloaded-filename');
+              let (d = doc.createElement('div')) {
+                d.classList.add('area_title');
+                d.classList.add('ank-pixiv-downloaded-filename-title');
+                div.appendChild(d);
+              }
+              let (d = doc.createElement('div')) {
+                d.classList.add('area_inside');
+                d.classList.add('ank-pixiv-downloaded-filename-text');
+                div.appendChild(d);
+              }
+  
+              e.insertBefore(div, e.querySelector('.profile-unit+*'));
+            }
+          }
+        }
 
         // 中画像クリック時に保存する
         if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{

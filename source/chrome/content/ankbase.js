@@ -866,6 +866,13 @@ try {
             let r = d.result;
             let r18 = (r === AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED) ? c.info.illust.R18 : false;
             AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, r18, r);
+
+            // 動作確認用
+            if (AnkBase.Prefs.get('showDownloadedFilename', false)) {
+              let e = c.elements.illust.downloadedFilenameArea;
+              if (e)
+                e.innerHTML = '['+c.info.path.image.images.length+'] ' + c.info.path.image.images[0];
+            }
           }
         }
 
