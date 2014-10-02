@@ -593,19 +593,22 @@ try {
         doc.addEventListener(
           'AutoPagerize_DOMNodeInserted',
           function (e) {
-            let a;
-            [
-               '._image-items > li',              // フォロー新着作品
-               '.display_works > ul > li',        // ○○さんの作品一覧
-               '.ranking-items > .ranking-item',  // ランキング
-            ] .
-              some(function (q)
-                let (n = e.target.querySelectorAll(q))
-                  n && n.length > 0 && !!(a = n)
-              );
-            if (a)
-              AnkUtils.A(a) .
-                forEach(function (node) mod.markDownloaded(node, true));
+            let a = [];
+            if (e.target.classList.contains('image-item')) {
+              a.push(e.target);
+            }
+            else {
+              [
+                '._image-items > li',              // フォロー新着作品＆○○さんの作品一覧
+                '.ranking-items > .ranking-item',  // ランキング
+              ] .
+                some(function (q)
+                  let (n = e.target.querySelectorAll(q))
+                    n && n.length > 0 && !!(a = AnkUtils.A(n))
+                );
+            }
+            if (a && a.length > 0)
+              a.forEach(function (node) mod.markDownloaded(node, true));
           },
           false
         );
