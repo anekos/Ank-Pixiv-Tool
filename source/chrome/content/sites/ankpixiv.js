@@ -368,7 +368,15 @@ try {
               let indexPage = path.mangaIndexPage;
               let html = AnkUtils.httpGET(indexPage, self.info.illust.pageUrl);
               let doc = AnkUtils.createHTMLDocument(html);
+
+              // サーバエラーのトラップ
+              if (doc.querySelector('.errorArea') || doc.querySelector('.errortxt')) {
+                window.alert(AnkBase.Locale('serverError'));
+                return AnkBase.NULL_RET;
+              }
+
               referer = indexPage;
+
               if (!self.in.manga) {
                 // イラスト
                 return {
@@ -400,6 +408,13 @@ try {
                       href = href.replace(/^(https?:\/\/.+?)(?:\/.*)$/,"$1")+a.href;
                       AnkUtils.dump(href);
                       let doc = AnkUtils.createHTMLDocument(AnkUtils.httpGET(href, indexPage));
+
+                      // サーバエラーのトラップ
+                      if (doc.querySelector('.errorArea') || doc.querySelector('.errortxt')) {
+                        window.alert(AnkBase.Locale('serverError'));
+                        return AnkBase.NULL_RET;
+                      }
+
                       im.push(doc.querySelector('img').src);
                     });
                 }
