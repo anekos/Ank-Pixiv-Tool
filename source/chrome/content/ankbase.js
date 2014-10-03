@@ -985,12 +985,13 @@ try {
           if (f.match(/#page-number#.*?\//))
             return;                                 // ファイル名以外でのページ番号指定は不可
 
-          if (f.indexOf('#page-number#') == -1)
-            f += '/#page-number#';                  // ページ番号指定がないものには強制
-
           if (!context.in.manga) {
             f = f.replace(/\s*#page-number#/, '');  // イラスト形式ならページ番号は不要
             f = f.replace(/\/\s*$/, '');            // 終端はファイル名
+          }
+          else {
+            if (f.indexOf('#page-number#') == -1)
+              f += '/#page-number#';                // ページ番号指定がないものには強制
           }
 
           f = AnkUtils.replaceFileSeparatorToSYS(f);      // Windowsの場合は区切り文字を'\'にする
@@ -998,8 +999,8 @@ try {
           return f;
         }
 
-        let defaultFilename = fixPageNumberToken(AnkBase.Prefs.get('defaultFilename', '?member-name? - ?title?').trim());
-        let alternateFilename = fixPageNumberToken(AnkBase.Prefs.get('alternateFilename', '?member-name? - ?title? - (?illust-id?)').trim());
+        let defaultFilename = fixPageNumberToken(AnkBase.Prefs.get('defaultFilename', '').trim() || '?member-name? - ?title?/#page-number#');
+        let alternateFilename = fixPageNumberToken(AnkBase.Prefs.get('alternateFilename', '').trim() || '?member-name? - ?title? - (?illust-id?)/#page-number#');
 
         if (!defaultFilename || !alternateFilename) {
           window.alert(AnkBase.Locale('invalidPageNumberToken'));
