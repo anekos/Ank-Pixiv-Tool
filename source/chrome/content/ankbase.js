@@ -80,6 +80,10 @@ try {
 
     NULL_RET: { images: [], facing: null, },
 
+    FILENAME_KEY: {
+      PAGE_NUMBER: "#page-number#",
+    },
+
 
     /********************************************************************************
     * プロパティ
@@ -226,13 +230,23 @@ try {
      * ファイル保存ダイアログを開く
      */
     showFilePickerWithMeta: function (prefInitDir, basename, ext, isFile) { // {{{
-      let image = AnkBase.showFilePicker(prefInitDir, basename + ext);
+      let image;
+      let defaultFilename;
+      let index = basename.indexOf(AnkUtils.SYS_SLASH+AnkBase.FILENAME_KEY.PAGE_NUMBER);
+      if (!isFile && index != -1) {
+        defaultFilename = basename.substr(0, index);
+      }
+      else {
+        defaultFilename = basename + ext;
+        ext = null;
+      }
+      let image = AnkBase.showFilePicker(prefInitDir, defaultFilename);
       if (!image)
         return;
 
       if (isFile) {
         return  {
-          image: image,
+          image: !ext ? image : AnkBase.newLocalFile(image.path+AnkUtils.SYS_SLASH+AnkBase.FILENAME_KEY.PAGE_NUMBER+ext),
           meta: AnkBase.newLocalFile(image.path.replace(/\.\w+$/,'.txt'))
         };
       }
