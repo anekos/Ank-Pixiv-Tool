@@ -423,7 +423,7 @@ try {
                 if (im.length == 0) {
                   // ブック
                   if (html.match(/<html[^>]+?class=\"(.+?)\"/) && RegExp.$1.indexOf('_book-viewer') != -1) {
-                    let rlt = RegExp.$1.indexOf('rtl');
+                    let ltr = RegExp.$1.indexOf('ltr') != -1;
                     let re = mangaOriginalSizeCheck ? /pixiv\.context\.originalImages\[\d+\]\s*=\s*\"(.+?)\"/ : /pixiv\.context\.images\[\d+\]\s*=\s*\"(.+?)\"/;
                     AnkUtils.A(doc.querySelectorAll('script')) .
                       forEach(function (e) {
@@ -441,7 +441,7 @@ try {
                         fp.push((i - i%2) / 2 + 1)
 
                         // 見開きの向きに合わせて画像の順番を入れ替える
-                        if (rlt && i % 2 == 0 && i < im.length-1) {
+                        if (ltr && i % 2 == 0 && i < im.length-1) {
                           let tmp = im[i-1];
                           im[i-1] = im[i];
                           im[i] = tmp;
