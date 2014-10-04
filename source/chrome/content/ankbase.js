@@ -230,10 +230,11 @@ try {
      * ファイル保存ダイアログを開く
      */
     showFilePickerWithMeta: function (prefInitDir, basename, ext, isFile) { // {{{
+      const PGNM_KEY = AnkUtils.SYS_SLASH+AnkBase.FILENAME_KEY.PAGE_NUMBER;
       let image;
       let defaultFilename;
-      let index = basename.indexOf(AnkUtils.SYS_SLASH+AnkBase.FILENAME_KEY.PAGE_NUMBER);
-      if (!isFile && index != -1) {
+      let index = basename.indexOf(PGNM_KEY);
+      if (!isFile && basename.length == index + PGNM_KEY.length) {
         defaultFilename = basename.substr(0, index);
       }
       else {
@@ -246,17 +247,19 @@ try {
 
       if (isFile) {
         return  {
-          image: !ext ? image : AnkBase.newLocalFile(image.path+AnkUtils.SYS_SLASH+AnkBase.FILENAME_KEY.PAGE_NUMBER+ext),
+          image: image,
           meta: AnkBase.newLocalFile(image.path.replace(/\.\w+$/,'.txt'))
         };
       }
 
+      let mangaPath = ext ? image.path+PGNM_KEY+ext : image.path;
+      let mangaLeafName = ext ? AnkBase.FILENAME_KEY.PAGE_NUMBER+ext : image.leafName; 
       return {
-        image: AnkBase.newLocalFile(image.path.replace(/\.\w+$/,'')),
+        image: AnkBase.newLocalFile(mangaPath.replace(/\.\w+$/,'')),
         meta: AnkBase.newLocalFile(
-                image.leafName.match(/^#page-number#\.\w+$/) ?
-                  image.path.replace(/#page-number#\.\w+$/,'meta.txt') :
-                  image.path.replace(/\s*#page-number#/,'').replace(/\.\w+$/,'.txt')
+                mangaLeafName.match(/^#page-number#\.\w+$/) ?
+                  mangaPath.replace(/#page-number#\.\w+$/,'meta.txt') :
+                  mangaPath.replace(/\s*#page-number#/,'').replace(/\.\w+$/,'.txt')
               )
       };
     }, // }}}
