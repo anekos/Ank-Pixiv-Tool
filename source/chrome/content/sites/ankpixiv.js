@@ -427,23 +427,24 @@ try {
 
                       if (!AnkBase.Prefs.get('forceCheckMangaImagesAll', false)) {
                         if (im.length == 0) {
-                          if (src == imMed[0]) {
+                          if (imMed[0] ==  src) {
                             AnkUtils.dump('MANGA IMAGE: plane mode');
                             im = imMed;
                             return true;
                           }
-                          else if (src == imMed[0].replace(reMaster, replaceMaster)) {
-                            AnkUtils.dump('MANGA IMAGE: master mode');
-                            im = imMed.map(function (v) v.replace(reMaster, replaceMaster));
+                          else if (imMed[0].replace(reMaster, replaceMaster).replace(/\.\w+$/, '') == src.replace(/(\.\w+)$/, '')) {
+                            let replaceExt = RegExp.$1;
+                            AnkUtils.dump('MANGA IMAGE: master mode ... '+imMed[0]+' -> '+imMed[0].replace(reMaster, replaceMaster).replace(/\.\w+$/, replaceExt));
+                            im = imMed.map(function (v) v.replace(reMaster, replaceMaster).replace(/\.\w+$/, replaceExt));
                             return true;
                           }
-                          else if (src == imMed[0].replace(reBig, replaceBig)) {
-                            AnkUtils.dump('MANGA IMAGE: big mode');
+                          else if (imMed[0].replace(reBig, replaceBig) ==  src) {
+                            AnkUtils.dump('MANGA IMAGE: big mode ... '+imMed[0]+' -> '+imMed[0].replace(reBig, replaceBig));
                             im = imMed.map(function (v) v.replace(reBig, replaceBig));
                             return true;
                           }
                           else {
-                            AnkUtils.dump('MANGA IMAGE: UNKNOWN MODE');
+                            AnkUtils.dump('MANGA IMAGE: UNKNOWN MODE ... '+imMed[0]+' -> '+src);
                           }
                         }
                       }

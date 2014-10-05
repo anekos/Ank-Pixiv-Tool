@@ -886,9 +886,12 @@ try {
 
             // 動作確認用
             if (AnkBase.Prefs.get('showDownloadedFilename', false)) {
-              let e = c.elements.illust.downloadedFilenameArea;
-              if (e)
-                e.innerHTML = '['+c.info.path.image.images.length+'] ' + c.info.path.image.images[0];
+              try {
+                let e = c.elements.illust.downloadedFilenameArea;
+                if (e)
+                  e.innerHTML = '['+c.info.path.image.images.length+'] ' + c.info.path.image.images[0];
+              }
+              catch (e) {}
             }
           }
         }
