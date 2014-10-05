@@ -389,17 +389,25 @@ try {
                 const MAX = 1000;
 
                 // TODO pixivの構成変更で見開き表示が正しく表示されなくなったので、pixivが直してくれるまで見開き対応は無効化
+                let imMed = [];
+                AnkUtils.A(doc.querySelectorAll('.manga > .item-container > img')) .
+                some(function (v) {
+                  if (imMed.length > MAX)
+                    return true;
+                  imMed.push(v.getAttribute('data-src'));
+                });
+
                 let im = [];
                 let fp = [];
                 if (!mangaOriginalSizeCheck) {
-                  AnkUtils.A(doc.querySelectorAll('.manga > .item-container > img')) .
-                    some(function (v) {
-                      if (im.length > MAX)
-                        return true;
-                      im.push(v.getAttribute('data-src'));
-                    });
+                  im = imMed;
                 }
                 else {
+                  let reBig = /(_p\d+)\./;
+                  let replaceBig = '_big$1.';
+                  let reMaster = /^(https?:\/\/[^/]+).*?\/img-master\/(.+?)_master\d+(\.\w+)$/;
+                  let replaceMaster = '$1/img-original/$2$3';
+
                   AnkUtils.A(doc.querySelectorAll('.manga > .item-container > a')) .
                     some(function (a) {
                       if (im.length > MAX)
@@ -415,7 +423,32 @@ try {
                         return AnkBase.NULL_RET;
                       }
 
-                      im.push(doc.querySelector('img').src);
+                      let src = doc.querySelector('img').src;
+
+                      if (!AnkBase.Prefs.get('forceCheckMangaImagesAll', false)) {
+                        if (im.length == 0) {
+                          if (src == imMed[0]) {
+                            AnkUtils.dump('MANGA IMAGE: plane mode');
+                            im = imMed;
+                            return true;
+                          }
+                          else if (src == imMed[0].replace(reMaster, replaceMaster)) {
+                            AnkUtils.dump('MANGA IMAGE: master mode');
+                            im = imMed.map(function (v) v.replace(reMaster, replaceMaster));
+                            return true;
+                          }
+                          else if (src == imMed[0].replace(reBig, replaceBig)) {
+                            AnkUtils.dump('MANGA IMAGE: big mode');
+                            im = imMed.map(function (v) v.replace(reBig, replaceBig));
+                            return true;
+                          }
+                          else {
+                            AnkUtils.dump('MANGA IMAGE: UNKNOWN MODE');
+                          }
+                        }
+                      }
+
+                      im.push(src);
                     });
                 }
 
