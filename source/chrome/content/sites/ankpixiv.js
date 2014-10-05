@@ -262,10 +262,9 @@ try {
         get height ()
           let (sz = illust.size) (sz && sz.height),
 
-        // FIXME largeStandardImageはもうないよ
         get server ()
-          let (v = self.info.path.largeStandardImage)
-            v && v.match(/^http:\/\/([^\/\.]+)\./i) && RegExp.$1,
+          let (a = self.info.path.image.images)
+            a.length > 0 && a[0].match(/^https?:\/\/([^\/\.]+)\./i) && RegExp.$1,
 
         get referer () {
           let mode =
@@ -303,13 +302,16 @@ try {
             e && e.href.match(/\/member\.php\?id=(\d+)/) && RegExp.$1,
 
         // XXX 遅延が酷いとavatar.srcで例外発生？
-        get pixivId ()
-          let (m = (self.elements.illust.avatar.src.match(/\/profile\/([^\/]+)\//)
-                    ||
-                    self.elements.illust.feedLink.href.match(/\/stacc\/([^\/]+)/)
-                    ||
-                    self.info.path.largeStandardImage.match(/^https?:\/\/[^\.]+\.pixiv\.net\/(?:img\d+\/)?img\/([^\/]+)\//)))
-            m.length > 0 && m[1],
+        get pixivId () {
+          let e = self.elements.illust.feedLink;
+          let m = e && e.href.match(/\/stacc\/([^\?\/]+)/);
+          if (!m) {
+            e = self.elements.illust.avatar;
+            m = e && e.src.match(/\/profile\/([^\/]+)\//);
+          }
+          if (m)
+            return m[1];
+        },
 
         get name ()
           let (e = self.elements.illust.userName)
@@ -540,10 +542,9 @@ try {
         var medImg = mod.elements.illust.mediumImage;
         var largeLink = mod.elements.illust.largeLink;
         var openCaption = mod.elements.illust.openCaption;
-        var avatar = mod.elements.illust.avatar;
 
         // 完全に読み込まれていないっぽいときは、遅延する
-        if (!(body && medImg && wrapper && avatar)) { // {{{
+        if (!(body && medImg && wrapper)) { // {{{
           return false;   // リトライしてほしい
         } // }}}
 
