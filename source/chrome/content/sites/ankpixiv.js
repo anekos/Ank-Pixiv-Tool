@@ -728,16 +728,16 @@ try {
       const IsIllust = /&illust_id=(\d+)/;
       const Targets = [
                         ['li > a.work', 1],                       // 作品一覧、ブックマーク
-                        ['li.rank-detail > a', 1],                // ホーム（ランキング）
-                        ['.ranking-item > a.work', 1],            // ランキング
+                        ['.rank-detail a._work', 2],              // ホーム（ランキング）
+                        ['.ranking-item a._work', 2],             // ランキング
                         ['.worksListOthersImg > ul > li > a', 1], // プロファイル（ブックマーク、イメージレスポンス）
                         ['.worksImageresponseImg > a', 2],        // イラストページ（イメージレスポンス）
                         ['li > a.response-in-work', 1],           // イラストページ（イメージレスポンス）
                         ['.search_a2_result > ul > li > a', 1],   // イメージレスポンス
                         ['.stacc_ref_illust_img > a', 3],         // フィード（お気に入りに追加したイラスト）
                         ['.stacc_ref_user_illust_img > a', 1],    // フィード（お気に入りに追加したユーザ内のイラスト）
-                        ['.hotimage > a', 1],                     // タグページ（週間ベスト）
-                        ['.image > a', 1],                        // タグページ（全期間＆新着）
+                        ['.hotimage > a.work', 1],                // タグページ（週間ベスト）
+                        ['.image-item > a:nth-child(1)', 1],      // タグページ（全期間＆新着）
                         ['.sibling-items > .after > a', 1],       // 前の作品
                         ['.sibling-items > .before > a', 1],      // 次の作品
                       ];
