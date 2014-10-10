@@ -14,7 +14,10 @@ try {
     self.SERVICE_ID = 'PXV';
     self.SITE_NAME  = 'Pixiv';
 
-    self.ID_FANTASY_DISPLAY = 'ankpixiv-fantasy-display',
+    self.ID_FANTASY_DISPLAY = 'ankpixiv-fantasy-display';
+
+    var _images = null;
+    var _imagesOriginal = null;
 
     /********************************************************************************
     * プロパティ
@@ -88,7 +91,7 @@ try {
           };
           let (e = illust.mediumImage) {
             if (e)
-              return e.parentNode;
+              return e.parentNode.parentNode;
           };
         },
 
@@ -155,10 +158,16 @@ try {
         get prevLink()
           query('.after > a'),
 
+        get uiLayoutWest ()
+          query('.ui-layout-west'),
+
         // require for AnkBase
 
         get downloadedDisplayParent ()
           query('.work-info .meta'),
+
+        get downloadedFilenameArea ()
+          query('.ank-pixiv-downloaded-filename-text'),
 
         // require for AnkViewer
 
@@ -171,9 +180,9 @@ try {
 
         get mediumImage () {
           return (
-            query('.works_display > a > img')
+            query('.works_display > a > div > img')
             ||
-            query('.works_display > * > a > img')
+            query('.works_display > * > a > div > img')
             ||
             query('.works_display canvas')
           );
@@ -254,8 +263,8 @@ try {
           let (sz = illust.size) (sz && sz.height),
 
         get server ()
-          let (v = self.info.path.largeStandardImage)
-            v && v.match(/^http:\/\/([^\/\.]+)\./i) && RegExp.$1,
+          let (a = self.info.path.image.images)
+            a.length > 0 && a[0].match(/^https?:\/\/([^\/\.]+)\./i) && RegExp.$1,
 
         get referer () {
           let mode =
@@ -293,13 +302,16 @@ try {
             e && e.href.match(/\/member\.php\?id=(\d+)/) && RegExp.$1,
 
         // XXX 遅延が酷いとavatar.srcで例外発生？
-        get pixivId ()
-          let (m = (self.elements.illust.avatar.src.match(/\/profile\/([^\/]+)\//)
-                    ||
-                    self.elements.illust.feedLink.href.match(/\/stacc\/([^\/]+)/)
-                    ||
-                    self.info.path.largeStandardImage.match(/^https?:\/\/[^\.]+\.pixiv\.net\/(?:img\d+\/)?img\/([^\/]+)\//)))
-            m.length > 0 && m[1],
+        get pixivId () {
+          let e = self.elements.illust.feedLink;
+          let m = e && e.href.match(/\/stacc\/([^\?\/]+)/);
+          if (!m) {
+            e = self.elements.illust.avatar;
+            m = e && e.src.match(/\/profile\/([^\/]+)\//);
+          }
+          if (m)
+            return m[1];
+        },
 
         get name ()
           let (e = self.elements.illust.userName)
@@ -333,6 +345,19 @@ try {
           self.info.path._getImage(AnkBase.Prefs.get('downloadOriginalSize', false)), // }}}
 
         _getImage: function (mangaOriginalSizeCheck) {
+          if (!mangaOriginalSizeCheck) {
+            if (!_images)
+              _images = self.info.path._getImageMain(mangaOriginalSizeCheck);
+            return _images;
+          }
+          else {
+            if (!_imagesOriginal)
+              _imagesOriginal = self.info.path._getImageMain(mangaOriginalSizeCheck);
+            return _imagesOriginal;
+          }
+        },
+
+        _getImageMain: function (mangaOriginalSizeCheck) {
           if (self.in.ugoira) {
             // うごイラ
             return {
@@ -343,8 +368,17 @@ try {
           else {
             try {
               let indexPage = path.mangaIndexPage;
-              let doc = AnkUtils.createHTMLDocument(AnkUtils.httpGET(indexPage, self.info.illust.pageUrl));
+              let html = AnkUtils.httpGET(indexPage, self.info.illust.pageUrl);
+              let doc = AnkUtils.createHTMLDocument(html);
+
+              // サーバエラーのトラップ
+              if (doc.querySelector('.errorArea') || doc.querySelector('.errortxt')) {
+                window.alert(AnkBase.Locale('serverError'));
+                return AnkBase.NULL_RET;
+              }
+
               referer = indexPage;
+
               if (!self.in.manga) {
                 // イラスト
                 return {
@@ -353,18 +387,105 @@ try {
                 }
               }
               else {
-                // マンガ
+                // マンガ or ブック
                 const MAX = 1000;
 
                 // TODO pixivの構成変更で見開き表示が正しく表示されなくなったので、pixivが直してくれるまで見開き対応は無効化
+                let imMed = [];
+                AnkUtils.A(doc.querySelectorAll('.manga > .item-container > img')) .
+                some(function (v) {
+                  if (imMed.length > MAX)
+                    return true;
+                  imMed.push(v.getAttribute('data-src'));
+                });
+
                 let im = [];
                 let fp = [];
-                AnkUtils.A(doc.querySelectorAll('.manga > .item-container > img')) .
-                  some(function (v) {
-                    if (im.length > MAX)
-                      return true;
-                    im.push(v.getAttribute('data-src'));
-                  });
+                if (!mangaOriginalSizeCheck) {
+                  im = imMed;
+                }
+                else {
+                  let reBig = /(_p\d+)\./;
+                  let replaceBig = '_big$1.';
+                  let reMaster = /^(https?:\/\/[^/]+).*?\/img-master\/(.+?)_master\d+(\.\w+)$/;
+                  let replaceMaster = '$1/img-original/$2$3';
+
+                  AnkUtils.A(doc.querySelectorAll('.manga > .item-container > a')) .
+                    some(function (a) {
+                      if (im.length > MAX)
+                        return true;
+                      let href = indexPage;
+                      href = href.replace(/^(https?:\/\/.+?)(?:\/.*)$/,"$1")+a.href;
+                      AnkUtils.dump(href);
+                      let doc = AnkUtils.createHTMLDocument(AnkUtils.httpGET(href, indexPage));
+
+                      // サーバエラーのトラップ
+                      if (doc.querySelector('.errorArea') || doc.querySelector('.errortxt')) {
+                        window.alert(AnkBase.Locale('serverError'));
+                        return AnkBase.NULL_RET;
+                      }
+
+                      let src = doc.querySelector('img').src;
+
+                      if (!AnkBase.Prefs.get('forceCheckMangaImagesAll', false)) {
+                        if (im.length == 0) {
+                          if (imMed[0] ==  src) {
+                            AnkUtils.dump('MANGA IMAGE: plane mode');
+                            im = imMed;
+                            return true;
+                          }
+                          else if (imMed[0].replace(reMaster, replaceMaster).replace(/\.\w+$/, '') == src.replace(/(\.\w+)$/, '')) {
+                            let replaceExt = RegExp.$1;
+                            AnkUtils.dump('MANGA IMAGE: master mode ... '+imMed[0]+' -> '+imMed[0].replace(reMaster, replaceMaster).replace(/\.\w+$/, replaceExt));
+                            im = imMed.map(function (v) v.replace(reMaster, replaceMaster).replace(/\.\w+$/, replaceExt));
+                            return true;
+                          }
+                          else if (imMed[0].replace(reBig, replaceBig) ==  src) {
+                            AnkUtils.dump('MANGA IMAGE: big mode ... '+imMed[0]+' -> '+imMed[0].replace(reBig, replaceBig));
+                            im = imMed.map(function (v) v.replace(reBig, replaceBig));
+                            return true;
+                          }
+                          else {
+                            AnkUtils.dump('MANGA IMAGE: UNKNOWN MODE ... '+imMed[0]+' -> '+src);
+                          }
+                        }
+                      }
+
+                      im.push(src);
+                    });
+                }
+
+                // FIXME AnkUtils.createHTMLDocument()でHTML Elementのclass情報が欠けてしまうのでhtmlテキストに対してマッチングしているのを直す
+                if (im.length == 0) {
+                  // ブック
+                  if (html.match(/<html[^>]+?class=\"(.+?)\"/) && RegExp.$1.indexOf('_book-viewer') != -1) {
+                    let ltr = RegExp.$1.indexOf('ltr') != -1;
+                    let re = mangaOriginalSizeCheck ? /pixiv\.context\.originalImages\[\d+\]\s*=\s*\"(.+?)\"/ : /pixiv\.context\.images\[\d+\]\s*=\s*\"(.+?)\"/;
+                    AnkUtils.A(doc.querySelectorAll('script')) .
+                      forEach(function (e) {
+                        if (e.text.match(re)) {
+                          let img = RegExp.$1; 
+                          im.push(img.replace(/\\(.)/g, '$1'));
+                        }
+                      });
+  
+                    for (var i=1; i<=im.length; i++) {
+                      if (i == 1) {
+                        fp.push(i);
+                      }
+                      else {
+                        fp.push((i - i%2) / 2 + 1)
+
+                        // 見開きの向きに合わせて画像の順番を入れ替える
+                        if (ltr && i % 2 == 0 && i < im.length-1) {
+                          let tmp = im[i-1];
+                          im[i-1] = im[i];
+                          im[i] = tmp;
+                        }
+                      }
+                    }
+                  }
+                }
 
                 if (im.length > 0) {
                   if (fp.length > 0 && fp[fp.length - 1] < fp.length) {
@@ -374,30 +495,6 @@ try {
                   else {
                     // 見開きがない場合
                     fp = null;
-                  }
-  
-                  if (mangaOriginalSizeCheck) {
-                    function replaceMangaImageUrl (v) {
-                      return (v.match(/_big_p\d+\./) ? v : v.replace(/_p(\d+)\./, '_big_p$1.'));
-                    }
-
-                    let bigurl = replaceMangaImageUrl(im[0]);
-                    if (bigurl) {
-                      const cookieManager = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
-                      cookieManager.add(
-                        '.pixiv.net',
-                        '/',
-                        'pixiv_embed',
-                        'pix',
-                        false,
-                        false,
-                        false,
-                        new Date().getTime() + (1000 * 60 * 60 * 24 * 365)
-                      );
-  
-                      if (AnkUtils.remoteFileExists(bigurl))
-                        im = im.map(function (v) replaceMangaImageUrl(v));
-                    }
                   }
   
                   return { images: im, facing: fp, };
@@ -443,17 +540,41 @@ try {
         var body = mod.elements.illust.body;
         var wrapper = mod.elements.illust.wrapper;
         var medImg = mod.elements.illust.mediumImage;
+        var largeLink = mod.elements.illust.largeLink;
         var openCaption = mod.elements.illust.openCaption;
-        var avatar = mod.elements.illust.avatar;
 
         // 完全に読み込まれていないっぽいときは、遅延する
-        if (!(body && medImg && wrapper && avatar)) { // {{{
+        if (!(body && medImg && wrapper)) { // {{{
           return false;   // リトライしてほしい
         } // }}}
 
+        // デバッグ用
+        if (AnkBase.Prefs.get('showDownloadedFilename', false)) {
+          let e = mod.elements.illust.uiLayoutWest;
+          if (e) {
+            {
+              let div = doc.createElement('div');
+              div.classList.add('area_new');
+              div.classList.add('ank-pixiv-downloaded-filename');
+              let (d = doc.createElement('div')) {
+                d.classList.add('area_title');
+                d.classList.add('ank-pixiv-downloaded-filename-title');
+                div.appendChild(d);
+              }
+              let (d = doc.createElement('div')) {
+                d.classList.add('area_inside');
+                d.classList.add('ank-pixiv-downloaded-filename-text');
+                div.appendChild(d);
+              }
+  
+              e.insertBefore(div, e.querySelector('.profile-unit+*'));
+            }
+          }
+        }
+
         // 中画像クリック時に保存する
         if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
-          medImg.addEventListener(
+          largeLink.addEventListener(
             'click',
             function () AnkBase.downloadCurrentImageAuto(mod),
             true
@@ -461,7 +582,7 @@ try {
         } // }}}
 
         // 大画像関係
-        if (!mod.elements.illust.ugoiraContainer) {
+        if (!mod.in.ugoira) {
           if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
             new AnkViewer(
               mod,
@@ -552,19 +673,22 @@ try {
         doc.addEventListener(
           'AutoPagerize_DOMNodeInserted',
           function (e) {
-            let a;
-            [
-               '._image-items > li',              // フォロー新着作品
-               '.display_works > ul > li',        // ○○さんの作品一覧
-               '.ranking-items > .ranking-item',  // ランキング
-            ] .
-              some(function (q)
-                let (n = e.target.querySelectorAll(q))
-                  n && n.length > 0 && !!(a = n)
-              );
-            if (a)
-              AnkUtils.A(a) .
-                forEach(function (node) mod.markDownloaded(node, true));
+            let a = [];
+            if (e.target.classList.contains('image-item')) {
+              a.push(e.target);
+            }
+            else {
+              [
+                '._image-items > li',              // フォロー新着作品＆○○さんの作品一覧
+                '.ranking-items > .ranking-item',  // ランキング
+              ] .
+                some(function (q)
+                  let (n = e.target.querySelectorAll(q))
+                    n && n.length > 0 && !!(a = AnkUtils.A(n))
+                );
+            }
+            if (a && a.length > 0)
+              a.forEach(function (node) mod.markDownloaded(node, true));
           },
           false
         );
@@ -604,16 +728,16 @@ try {
       const IsIllust = /&illust_id=(\d+)/;
       const Targets = [
                         ['li > a.work', 1],                       // 作品一覧、ブックマーク
-                        ['li.rank-detail > a', 1],                // ホーム（ランキング）
-                        ['.ranking-item > a.work', 1],            // ランキング
+                        ['.rank-detail a._work', 2],              // ホーム（ランキング）
+                        ['.ranking-item a._work', 2],             // ランキング
                         ['.worksListOthersImg > ul > li > a', 1], // プロファイル（ブックマーク、イメージレスポンス）
                         ['.worksImageresponseImg > a', 2],        // イラストページ（イメージレスポンス）
                         ['li > a.response-in-work', 1],           // イラストページ（イメージレスポンス）
                         ['.search_a2_result > ul > li > a', 1],   // イメージレスポンス
                         ['.stacc_ref_illust_img > a', 3],         // フィード（お気に入りに追加したイラスト）
                         ['.stacc_ref_user_illust_img > a', 1],    // フィード（お気に入りに追加したユーザ内のイラスト）
-                        ['.hotimage > a', 1],                     // タグページ（週間ベスト）
-                        ['.image > a', 1],                        // タグページ（全期間＆新着）
+                        ['.hotimage > a.work', 1],                // タグページ（週間ベスト）
+                        ['.image-item > a:nth-child(1)', 1],      // タグページ（全期間＆新着）
                         ['.sibling-items > .after > a', 1],       // 前の作品
                         ['.sibling-items > .before > a', 1],      // 次の作品
                       ];

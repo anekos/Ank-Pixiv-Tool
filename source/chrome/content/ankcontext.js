@@ -9,8 +9,6 @@ function AnkContext (module) {
   self.SERVICE_ID = module.SERVICE_ID;
   self.SITE_NAME  = module.SITE_NAME;
 
-  self.downloadable = module.downloadable;
-
   self.in = {
     site:
       module.in.site,
@@ -35,6 +33,9 @@ function AnkContext (module) {
     illust: {
       downloadedDisplayParent:
         module.elements.illust.downloadedDisplayParent,
+
+      downloadedFilenameArea:
+        module.elements.illust.downloadedFilenameArea,
     },
   };
 
@@ -114,6 +115,8 @@ function AnkContext (module) {
         module.info.path.image,
     },
   }; // }}}
+
+  self.downloadable = module.downloadable;
 
   return self;
 }

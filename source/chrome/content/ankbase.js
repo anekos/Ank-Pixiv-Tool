@@ -36,6 +36,7 @@ try {
     DOWNLOAD_DISPLAY: {
       DOWNLOADED:   'downloaded',
       USED:         'used',
+      INITIALIZE:   'initialize',
       DOWNLOADING:  'downloading',
       FAILED:       'downloadFailed',
       TIMEOUT:      'downloadTimeout',
@@ -78,6 +79,10 @@ try {
     },
 
     NULL_RET: { images: [], facing: null, },
+
+    FILENAME_KEY: {
+      PAGE_NUMBER: "#page-number#",
+    },
 
 
     /********************************************************************************
@@ -225,7 +230,18 @@ try {
      * ファイル保存ダイアログを開く
      */
     showFilePickerWithMeta: function (prefInitDir, basename, ext, isFile) { // {{{
-      let image = AnkBase.showFilePicker(prefInitDir, basename + ext);
+      const PGNM_KEY = AnkUtils.SYS_SLASH+AnkBase.FILENAME_KEY.PAGE_NUMBER;
+      let image;
+      let defaultFilename;
+      let index = basename.indexOf(PGNM_KEY);
+      if (!isFile && basename.length == index + PGNM_KEY.length) {
+        defaultFilename = basename.substr(0, index);
+      }
+      else {
+        defaultFilename = basename + ext;
+        ext = null;
+      }
+      let image = AnkBase.showFilePicker(prefInitDir, defaultFilename);
       if (!image)
         return;
 
@@ -236,12 +252,14 @@ try {
         };
       }
 
+      let mangaPath = ext ? image.path+PGNM_KEY+ext : image.path;
+      let mangaLeafName = ext ? AnkBase.FILENAME_KEY.PAGE_NUMBER+ext : image.leafName; 
       return {
-        image: AnkBase.newLocalFile(image.path.replace(/\.\w+$/,'')),
+        image: AnkBase.newLocalFile(mangaPath.replace(/\.\w+$/,'')),
         meta: AnkBase.newLocalFile(
-                image.leafName.match(/^#page-number#\.\w+$/) ?
-                  image.path.replace(/#page-number#\.\w+$/,'meta.txt') :
-                  image.path.replace(/\s*#page-number#/,'').replace(/\.\w+$/,'.txt')
+                mangaLeafName.match(/^#page-number#\.\w+$/) ?
+                  mangaPath.replace(/#page-number#\.\w+$/,'meta.txt') :
+                  mangaPath.replace(/\s*#page-number#/,'').replace(/\.\w+$/,'.txt')
               )
       };
     }, // }}}
@@ -700,8 +718,10 @@ try {
      */
     downloadCurrentImage: function (module, useDialog, confirmDownloaded, debug) { // {{{
       try {
-        // ダウンロード用のコンテキストの収集
+        // ダウンロード用のコンテキストの収集(contextの取得に時間がかかる場合があるのでダウンロードマークを表示しておく)
+        AnkBase.insertDownloadedDisplay(module.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.INITIALIZE);
         let context = new AnkContext(module);
+        AnkBase.insertDownloadedDisplay(module.elements.illust.downloadedDisplayParent, false, null);
         if (!context)
           return false;
 
@@ -863,6 +883,16 @@ try {
             let r = d.result;
             let r18 = (r === AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED) ? c.info.illust.R18 : false;
             AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, r18, r);
+
+            // 動作確認用
+            if (AnkBase.Prefs.get('showDownloadedFilename', false)) {
+              try {
+                let e = c.elements.illust.downloadedFilenameArea;
+                if (e)
+                  e.innerHTML = '['+c.info.path.image.images.length+'] ' + c.info.path.image.images[0];
+              }
+              catch (e) {}
+            }
           }
         }
 
@@ -975,12 +1005,13 @@ try {
           if (f.match(/#page-number#.*?\//))
             return;                                 // ファイル名以外でのページ番号指定は不可
 
-          if (f.indexOf('#page-number#') == -1)
-            f += '/#page-number#';                  // ページ番号指定がないものには強制
-
           if (!context.in.manga) {
             f = f.replace(/\s*#page-number#/, '');  // イラスト形式ならページ番号は不要
             f = f.replace(/\/\s*$/, '');            // 終端はファイル名
+          }
+          else {
+            if (f.indexOf('#page-number#') == -1)
+              f += '/#page-number#';                // ページ番号指定がないものには強制
           }
 
           f = AnkUtils.replaceFileSeparatorToSYS(f);      // Windowsの場合は区切り文字を'\'にする
@@ -988,8 +1019,8 @@ try {
           return f;
         }
 
-        let defaultFilename = fixPageNumberToken(AnkBase.Prefs.get('defaultFilename', '?member-name? - ?title?').trim());
-        let alternateFilename = fixPageNumberToken(AnkBase.Prefs.get('alternateFilename', '?member-name? - ?title? - (?illust-id?)').trim());
+        let defaultFilename = fixPageNumberToken(AnkBase.Prefs.get('defaultFilename', '').trim() || '?member-name? - ?title?/#page-number#');
+        let alternateFilename = fixPageNumberToken(AnkBase.Prefs.get('alternateFilename', '').trim() || '?member-name? - ?title? - (?illust-id?)/#page-number#');
 
         if (!defaultFilename || !alternateFilename) {
           window.alert(AnkBase.Locale('invalidPageNumberToken'));

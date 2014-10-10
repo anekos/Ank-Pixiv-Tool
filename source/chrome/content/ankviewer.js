@@ -404,6 +404,7 @@ function AnkViewer (module, getImage) {
   let body = module.elements.illust.body;
   let wrapper = module.elements.illust.wrapper;
   let medImg = module.elements.illust.mediumImage;
+  let largeLink = module.elements.illust.largeLink;
   let openComment = module.elements.illust.openComment; 
   let openCaption = module.elements.illust.openCaption; 
   let bgImage = win.getComputedStyle(doc.body, '').backgroundImage;
@@ -496,7 +497,17 @@ function AnkViewer (module, getImage) {
     AnkUtils.A(imgPanel.querySelectorAll('#ank-pixiv-large-viewer-image')).forEach(function (e) func(e))
 
   // 中画像をクリックしたら開く
-  medImg.addEventListener('click', function (e) noMoreEvent(changeImageSize)(e), false);
+  let (target = medImg) {
+    if (largeLink) {
+      AnkUtils.A(largeLink.querySelectorAll('img')).some(function (e) {
+        if (e === medImg) {
+          target = largeLink;
+          return true;
+        }
+      });
+    }
+    target.addEventListener('click', function (e) noMoreEvent(changeImageSize)(e), false);
+  }
 
   // 画像を読み込んだら表示サイズの調整を行う
   imgCtrl(function (e) e.addEventListener('load', autoResize, true));
