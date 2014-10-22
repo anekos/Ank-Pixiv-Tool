@@ -23,10 +23,12 @@ try {
     * プロパティ
     ********************************************************************************/
 
-    self.in = { // {{{
+    self.on = {
       get site () // {{{
         self.info.illust.pageUrl.match(/^https?:\/\/www\.pixiv\.net\//), // }}}
+    },
 
+    self.in = { // {{{
       get manga () // {{{
         let (v = self.info.path.mangaIndexPage)
           v && v.match(/(?:&|\?)mode=manga(?:&|$)/), // }}}
@@ -38,7 +40,7 @@ try {
       get medium () { // {{{
         let loc = self.info.illust.pageUrl;
         return (
-          self.in.site &&
+          self.on.site &&
           loc.match(/member_illust\.php\?/) &&
           loc.match(/(?:&|\?)mode=medium(?:&|$)/) &&
           loc.match(/(?:&|\?)illust_id=\d+(?:&|$)/)
@@ -60,7 +62,7 @@ try {
 
       //
       get pixiv () // {{{
-        self.in.site, // }}}
+        self.on.site, // }}}
 
       // elementsを使っているが確定後にしか使わないのでOK
       get feed () // {{{

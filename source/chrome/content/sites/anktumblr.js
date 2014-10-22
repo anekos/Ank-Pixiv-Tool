@@ -21,10 +21,12 @@ try {
     * プロパティ
     ********************************************************************************/
 
-    self.in = { // {{{
+    self.on = {
       get site () // {{{
         self.info.illust.pageUrl.match(/^https?:\/\/[^/]*tumblr\.com\//), // }}}
+    },
 
+    self.in = { // {{{
       get manga () // {{{
         (!!self.elements.illust.slideshowFrame || !!self.elements.illust.photoFrame), // }}}
 

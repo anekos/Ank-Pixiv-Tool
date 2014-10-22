@@ -19,11 +19,13 @@ try {
     * プロパティ
     ********************************************************************************/
 
-    self.in = { // {{{
+    self.on = {
       get site () // {{{
         self.info.illust.pageUrl.match(/^https?:\/\/twitter\.com\//) &&
         !self.info.illust.pageUrl.match(/^https?:\/\/pic\.twitter\.com\//), // }}}
+    },
 
+    self.in = { // {{{
       // elementを見ているが、これに関しては問題ないはず
       get manga () // {{{
         !self.in.gallery && // ポップアップは除外

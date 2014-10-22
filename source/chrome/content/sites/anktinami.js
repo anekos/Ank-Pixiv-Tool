@@ -19,10 +19,12 @@ try {
     * プロパティ
     ********************************************************************************/
 
-    self.in = { // {{{
+    self.on = {
       get site () // {{{
         self.info.illust.pageUrl.match(/^https?:\/\/[^/]*tinami\.com\//), // }}}
+    },
 
+    self.in = { // {{{
       get manga () // {{{
         AnkUtils.A(self.elements.illust.typeImages).some(function (v) v.src.match(/\/ma\.gif$/)), // }}}
 

@@ -19,10 +19,12 @@ try {
     * プロパティ
     ********************************************************************************/
 
-    self.in = { // {{{
+    self.on = {
       get site () // {{{
         self.info.illust.pageUrl.match(/^https?:\/\/twitter\.yfrog\.com\//), // }}}
+    },
 
+      self.in = { // {{{
       get manga () // {{{
         false, // }}}
 
