@@ -467,6 +467,7 @@ try {
       const Targets = [
                         ['span.media-thumbnail > img', 1],
                         ['div > a.is-preview > div > img', 3],
+                        ['.tweet > .permalink-footer > .cards-media-container > .cards-multimedia > .multi-photos > .photo-1 > img', 3],  // multi-photo
                         ['span.media-thumbnail .js-tweet-text a.twitter-timeline-link', 10, 'media-thumbnail'],
                         ['.TwitterPhoto a.TwitterPhoto-link > img', 2],
                       ];
