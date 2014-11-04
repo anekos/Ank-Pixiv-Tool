@@ -465,11 +465,12 @@ try {
     markDownloaded: function (node, force, ignorePref) { // {{{
       const IsIllust = /^https?:\/\/(?:pbs\.twimg\.com\/media|t\.co)\/([^/]+?)(?:$|\.)/;
       const Targets = [
-                        ['span.media-thumbnail > img', 1],
-                        ['div > a.is-preview > div > img', 3],
-                        ['.tweet > .permalink-footer > .cards-media-container > .cards-multimedia > .multi-photos > .photo-1 > img', 3],  // multi-photo
-                        ['span.media-thumbnail .js-tweet-text a.twitter-timeline-link', 10, 'media-thumbnail'],
-                        ['.TwitterPhoto a.TwitterPhoto-link > img', 2],
+                        ['span.media-thumbnail > img', 1],  // thumbnail
+                        ['div.cards-multimedia > a.media-thumbnail > div > img', 3],  // photo (list/tweet)
+                        ['.original-tweet div.cards-multimedia > div.multi-photos > div.photo-1 > img', 3],  // multi-photo (list)
+                        ['.js-original-tweet div.cards-multimedia > div.multi-photos > div.photo-1 > img', 3],  // multi-photo (tweet)
+                        ['.TwitterPhoto a.TwitterPhoto-link > img', 2], // photo (media)
+                        ['.TwitterMultiPhoto div.TwitterMultiPhoto-image--1 > img', 2], // multi-photo (media)
                       ];
 
       return AnkBase.markDownloaded(IsIllust, Targets, 2, this, node, force, ignorePref);
