@@ -140,6 +140,9 @@ try {
         get downloadedDisplayParent ()
           queryEither('.stream-item-header', '.tweet-actions'),
 
+        get downloadedFilenameArea ()
+          query('.ank-pixiv-downloaded-filename-text'),
+
         // require for AnkViewer
 
         get body ()
@@ -355,6 +358,7 @@ try {
 
       let proc = function (mod) { // {{{
         // インストールに必用な各種要素
+        var doc = mod.elements.doc;
         var body = mod.elements.illust.body;
         var medImg = mod.elements.illust.mediumImage;
         var largeLink = mod.elements.illust.largeLink;
@@ -365,6 +369,24 @@ try {
                                        largeLink;
         if (!(body && medImg && cond)) {
           return false;   // リトライしてほしい
+        }
+
+        // デバッグ用
+        if (AnkBase.Prefs.get('showDownloadedFilename', false)) {
+          let e = doc.querySelector('.client-and-actions');
+          if (e) {
+            AnkUtils.dump('XXXXXXXXXXXXXXXXXXXXXXXXXXXX');
+            {
+              let div = doc.createElement('div');
+              div.classList.add('ank-pixiv-downloaded-filename');
+              let (d = doc.createElement('div')) {
+                d.classList.add('ank-pixiv-downloaded-filename-text');
+                div.appendChild(d);
+            }
+  
+            e.appendChild(div);
+            }
+          }
         }
 
         // 中画像クリック時に保存する
