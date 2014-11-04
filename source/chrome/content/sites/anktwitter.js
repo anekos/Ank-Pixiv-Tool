@@ -19,11 +19,13 @@ try {
     * プロパティ
     ********************************************************************************/
 
-    self.in = { // {{{
+    self.on = {
       get site () // {{{
         self.info.illust.pageUrl.match(/^https?:\/\/twitter\.com\//) &&
         !self.info.illust.pageUrl.match(/^https?:\/\/pic\.twitter\.com\//), // }}}
+    },
 
+    self.in = { // {{{
       // elementを見ているが、これに関しては問題ないはず
       get manga () // {{{
         !self.in.gallery && // ポップアップは除外
@@ -137,6 +139,9 @@ try {
 
         get downloadedDisplayParent ()
           queryEither('.stream-item-header', '.tweet-actions'),
+
+        get downloadedFilenameArea ()
+          query('.ank-pixiv-downloaded-filename-text'),
 
         // require for AnkViewer
 
@@ -306,7 +311,12 @@ try {
                 }
               }
               else {
-                s = s.replace(/:large/, ':orig');
+                s = s.replace(/:large/, '');
+                if (/^https?:\/\/pbs\.twimg\.com\/media\//.test(s)) {
+                  if (!/\.\w+(:\w+)$/.test(s)) {
+                    s += ':orig';
+                  }
+                }
               }
             }
             m.push(s);
@@ -348,6 +358,7 @@ try {
 
       let proc = function (mod) { // {{{
         // インストールに必用な各種要素
+        var doc = mod.elements.doc;
         var body = mod.elements.illust.body;
         var medImg = mod.elements.illust.mediumImage;
         var largeLink = mod.elements.illust.largeLink;
@@ -358,6 +369,24 @@ try {
                                        largeLink;
         if (!(body && medImg && cond)) {
           return false;   // リトライしてほしい
+        }
+
+        // デバッグ用
+        if (AnkBase.Prefs.get('showDownloadedFilename', false)) {
+          let e = doc.querySelector('.client-and-actions');
+          if (e) {
+            AnkUtils.dump('XXXXXXXXXXXXXXXXXXXXXXXXXXXX');
+            {
+              let div = doc.createElement('div');
+              div.classList.add('ank-pixiv-downloaded-filename');
+              let (d = doc.createElement('div')) {
+                d.classList.add('ank-pixiv-downloaded-filename-text');
+                div.appendChild(d);
+            }
+  
+            e.appendChild(div);
+            }
+          }
         }
 
         // 中画像クリック時に保存する
@@ -463,10 +492,12 @@ try {
     markDownloaded: function (node, force, ignorePref) { // {{{
       const IsIllust = /^https?:\/\/(?:pbs\.twimg\.com\/media|t\.co)\/([^/]+?)(?:$|\.)/;
       const Targets = [
-                        ['span.media-thumbnail > img', 1],
-                        ['div > a.is-preview > div > img', 3],
-                        ['span.media-thumbnail .js-tweet-text a.twitter-timeline-link', 10, 'media-thumbnail'],
-                        ['.TwitterPhoto a.TwitterPhoto-link > img', 2],
+                        ['span.media-thumbnail > img', 1],  // thumbnail
+                        ['div.cards-multimedia > a.media-thumbnail > div > img', 3],  // photo (list/tweet)
+                        ['.original-tweet div.cards-multimedia > div.multi-photos > div.photo-1 > img', 3],  // multi-photo (list)
+                        ['.js-original-tweet div.cards-multimedia > div.multi-photos > div.photo-1 > img', 3],  // multi-photo (tweet)
+                        ['.TwitterPhoto a.TwitterPhoto-link > img', 2], // photo (media)
+                        ['.TwitterMultiPhoto div.TwitterMultiPhoto-image--1 > img', 2], // multi-photo (media)
                       ];
 
       return AnkBase.markDownloaded(IsIllust, Targets, 2, this, node, force, ignorePref);

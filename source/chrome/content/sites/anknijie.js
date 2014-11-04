@@ -19,10 +19,12 @@ try {
     * プロパティ
     ********************************************************************************/
 
-    self.in = { // {{{
+    self.on = {
       get site () // {{{
         self.info.illust.pageUrl.match(/^https?:\/\/nijie\.info\//), // }}}
+    },
 
+    self.in = { // {{{
       get manga () // {{{
         (self.info.illust.mangaPages > 1), // }}}
 

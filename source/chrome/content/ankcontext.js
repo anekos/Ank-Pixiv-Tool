@@ -9,10 +9,12 @@ function AnkContext (module) {
   self.SERVICE_ID = module.SERVICE_ID;
   self.SITE_NAME  = module.SITE_NAME;
 
-  self.in = {
+  self.on = {
     site:
-      module.in.site,
+      module.on.site,
+  };
 
+  self.in = {
     manga:
       module.in.manga,
 

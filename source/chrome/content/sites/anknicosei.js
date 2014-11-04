@@ -19,10 +19,12 @@ try {
     * プロパティ
     ********************************************************************************/
 
-    self.in = { // {{{
+    self.on = {
       get site () // {{{
         self.info.illust.pageUrl.match(/^https?:\/\/seiga\.nicovideo\.jp\/(?:seiga|shunga|watch|comic|search|tag|my|user\/illust|illust\/(?:ranking|list))(?:\/|\?|$)/), // }}}
+    },
 
+    self.in = { // {{{
       get manga () // {{{
         self.info.illust.pageUrl.match(/seiga\.nicovideo\.jp\/watch\/mg/), // }}}
 

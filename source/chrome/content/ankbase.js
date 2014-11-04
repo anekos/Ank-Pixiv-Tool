@@ -90,8 +90,9 @@ try {
     ********************************************************************************/
 
     get SupportedModule () { // {{{
+      let dismods = AnkBase.Prefs.get('disabledSiteModules', '').split(',').map(function (v) AnkUtils.trim(v.toLowerCase()));
       let curmod;
-      AnkBase.siteModules.some(function (v) (curmod = (v.in.site ? v.dup() : null)));
+      AnkBase.siteModules.some(function (v) (curmod = !dismods.some(function (m) m == v.SITE_NAME.toLowerCase()) && v.on.site ? v.dup() : null));
       if (curmod)
         AnkUtils.dump('SUPPORTED: '+curmod.info.illust.pageUrl+",\n"+Error().stack);
       else
@@ -1774,7 +1775,7 @@ try {
     }, // }}}
 
     getMarkTarget: function (module, node, force, ignorePref) { // {{{
-      if (!module.in.site)
+      if (!module.on.site)
         return null;
 
       if (!AnkBase.Prefs.get('markDownloaded', false) && !ignorePref)
