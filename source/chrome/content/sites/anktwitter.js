@@ -308,7 +308,12 @@ try {
                 }
               }
               else {
-                s = s.replace(/:large/, ':orig');
+                s = s.replace(/:large/, '');
+                if (/^https?:\/\/pbs\.twimg\.com\/media\//.test(s)) {
+                  if (!/\.\w+(:\w+)$/.test(s)) {
+                    s += ':orig';
+                  }
+                }
               }
             }
             m.push(s);
