@@ -232,7 +232,6 @@ try {
      */
     showFilePickerWithMeta: function (prefInitDir, basename, ext, isFile) { // {{{
       const PGNM_KEY = AnkUtils.SYS_SLASH+AnkBase.FILENAME_KEY.PAGE_NUMBER;
-      let image;
       let defaultFilename;
       let index = basename.indexOf(PGNM_KEY);
       if (!isFile && basename.length == index + PGNM_KEY.length) {
