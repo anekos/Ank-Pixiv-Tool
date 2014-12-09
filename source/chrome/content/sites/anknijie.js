@@ -115,7 +115,7 @@ try {
           query('#main'),
 
         get mediumImage ()
-          query('#gallery  > #gallery_open > a > img') ||      // "投稿イラスト"ページ
+          query('#gallery  > #gallery_open > #img_filter > a > img') ||      // "投稿イラスト"ページ
           query('.image > .dojin_gallery > img'),       // "同人"ページ
 
         get ads () {
