@@ -185,6 +185,8 @@ try {
 
         get mediumImage () {
           return (
+            query('.works_display img.medium')
+            ||
             query('.works_display > a > div > img')
             ||
             query('.works_display > * > a > div > img')
@@ -192,6 +194,9 @@ try {
             query('.works_display canvas')
           );
         },
+
+        get bigImage ()
+          query('.works_display img.big'),
 
         get openCaption ()
           query('.ui-expander-container > .ui-expander-target > .expand'),
@@ -371,6 +376,14 @@ try {
             };
           }
           else {
+            if (!self.in.manga && self.elements.illust.bigImage && self.elements.illust.bigImage.getAttribute('data-src')) {
+              // イラスト
+              return {
+                images: [ self.elements.illust.bigImage.getAttribute('data-src') ],
+                facing: null,
+              }
+            }
+
             try {
               let indexPage = path.mangaIndexPage;
               let html = AnkUtils.httpGET(indexPage, self.info.illust.pageUrl);
