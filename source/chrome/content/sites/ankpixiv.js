@@ -169,7 +169,7 @@ try {
         // require for AnkBase
 
         get downloadedDisplayParent ()
-          query('.work-info .meta'),
+          query('.score'),
 
         get downloadedFilenameArea ()
           query('.ank-pixiv-downloaded-filename-text'),
@@ -197,6 +197,9 @@ try {
 
         get bigImage ()
           query('.works_display img.big'),
+
+        get imageOverlay ()
+          query('.works_display ._illust_modal'), 
 
         get openCaption ()
           query('.ui-expander-container > .ui-expander-target > .expand'),
@@ -561,6 +564,8 @@ try {
         var largeLink = mod.elements.illust.largeLink;
         var openCaption = mod.elements.illust.openCaption;
         var userTags = mod.elements.illust.userTags;
+        var imgOvr = mod.elements.illust.imageOverlay;
+        var jq = doc.defaultView.wrappedJSObject.jQuery
 
         // 完全に読み込まれていないっぽいときは、遅延する
         if (!(body && medImg && wrapper && userTags)) { // {{{
@@ -591,9 +596,11 @@ try {
           }
         }
 
+        // FIXME AnkViewer無効時に、中クリックして、Pixivのデフォルト動作で大画像を見ると、ダウンロードマークが消える
         // 中画像クリック時に保存する
         if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
-          largeLink.addEventListener(
+          let e = imgOvr || largeLink;
+          e.addEventListener(
             'click',
             function () AnkBase.downloadCurrentImageAuto(mod),
             true
@@ -603,6 +610,10 @@ try {
         // 大画像関係
         if (!mod.in.ugoira) {
           if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
+            if (imgOvr && jq) {
+              jq(imgOvr).unbind('click');
+            }
+
             new AnkViewer(
               mod,
               function () mod.info.path._getImage(AnkBase.Prefs.get('viewOriginalSize', false))
