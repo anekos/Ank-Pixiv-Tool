@@ -215,6 +215,7 @@ try {
                        '._header',
                        '#toolbar-items',        // toolbar
                        '#gm_ldrize',            // ldrize
+                       '#header-banner',
                        ];
 
           let a = [];
