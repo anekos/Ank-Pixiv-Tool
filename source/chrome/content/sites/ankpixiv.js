@@ -199,7 +199,7 @@ try {
           query('.original-image'),
 
         get imageOverlay ()
-          query('.works_display ._illust_modal'), 
+          query('.works_display ._layout-thumbnail'), 
 
         get openCaption ()
           query('.ui-expander-container > .ui-expander-target > .expand'),
@@ -612,7 +612,9 @@ try {
         if (!mod.in.ugoira) {
           if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
             if (imgOvr && jq) {
+              // FIXME 多分このunbindがbindの後になる場合がある。setTimeoutでもう一回実行しているのは場当たり的な対応
               jq(imgOvr).unbind('click');
+              setTimeout(function () jq(imgOvr).unbind('click'), 1000);
             }
 
             new AnkViewer(
