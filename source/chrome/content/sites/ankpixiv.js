@@ -185,7 +185,7 @@ try {
 
         get mediumImage () {
           return (
-            query('.works_display img.medium')
+            query('.works_display > ._layout-thumbnail > img')
             ||
             query('.works_display > a > div > img')
             ||
@@ -196,7 +196,7 @@ try {
         },
 
         get bigImage ()
-          query('.works_display img.big'),
+          query('.original-image'),
 
         get imageOverlay ()
           query('.works_display ._illust_modal'), 
