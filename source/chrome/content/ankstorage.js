@@ -176,21 +176,9 @@ try {
       }
     }, // }}}
 
-    updateAsync: function (commands, callback) { // {{{
-      let db = this.database;
-      let st = [];
-      commands.forEach(function (v) {
-        let set;
-        if (typeof v.values == 'string') {
-          set = v.values;
-        } else {
-          let keys = [it for (it in v.values)];
-          // TODO
-        }
-        let q = 'update ' + v.tableName + ' set ' + set + (v.conditions ? ' where ' + v.conditions : '');
-        st.push(db.createAsyncStatement(q));
-      });
-
+    updateAsync: function (sqlList, callback) { // {{{
+      let self = this;
+      let st = sqlList.map(function (v) self.database.createAsyncStatement(v));
       let handler = {
         handleResult: function (aResultSet) {
         },
@@ -199,11 +187,11 @@ try {
         },
         handleCompletion: function (aReason) {
           if (callback)
-            callback(aReason == Components.interfaces.mozIStorageStatementCallback.REASON_FINISHED, aReason);
+            callback(aReason == Components.interfaces.mozIStorageStatementCallback.REASON_FINISHED);
         }
       };
 
-      db.executeAsync(st, st.length, handler);
+      self.database.executeAsync(st, st.length, handler);
     }, // }}}
 
     createTable: function (table) { // {{{
@@ -259,6 +247,16 @@ try {
         AnkUtils.dumpError(e);
       }
     }, // }}}
+
+    createIndexSQL: function(tableName, columns) {
+      let columnName = columns.join(',');
+      return 'create index if not exists ' + this.indexName(tableName, columnName) + ' on ' + tableName + '(' + columnName + ');'
+    },
+
+    dropIndexSQL: function(tableName, columns) {
+      let columnName = columns.join(',');
+      return 'drop index if exists ' + this.indexName(tableName, columnName) + ';'
+    },
 
     createIndexes: function(tableName, columns) {
       let self = this;

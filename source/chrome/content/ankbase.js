@@ -1540,29 +1540,22 @@ try {
         AnkUtils.dump('update database. version '+uver+' -> '+ver);
       }
 
-      // version 6
+      // version 6->7
       try {
-        let srvid = 'PXV';
-
-        AnkBase.Storage.dropIndexes('histories',['illust_id']);
-        AnkBase.Storage.dropIndexes('members',['id']);
-
-        let set = 'service_id = \'' + srvid + '\', version = '+ver;
-        let cond = 'service_id is null';
         let start = new Date().getTime();
         setTimeout(function () {
+          function updateServiceIdSQL(tableName) {
+            return 'update '+tableName+' set service_id = \'PXV\', version = '+ver+' where service_id is null;';
+          }
           AnkBase.Storage.updateAsync(
             [
-              {
-                tableName: 'histories',
-                values: set,
-                conditions: cond,
-              },
-              {
-                tableName: 'members',
-                values: set,
-                conditions: cond,
-              },
+              AnkBase.Storage.createIndexSQL('histories', ['illust_id', 'service_id']),
+              AnkBase.Storage.createIndexSQL('histories', ['filename']),
+              AnkBase.Storage.createIndexSQL('members', ['id', 'service_id']),
+              AnkBase.Storage.dropIndexSQL('histories',['illust_id']),
+              AnkBase.Storage.dropIndexSQL('members',['id']),
+              updateServiceIdSQL('histories'),
+              updateServiceIdSQL('members'),
             ],
             function (r) {
               AnkUtils.dump('update database: '+(r?'done.':'fail.')+' ('+(new Date().getTime() - start)+' msec)');
@@ -1934,17 +1927,12 @@ try {
               service_id: "string",
             }
           },
-          {
-            index: {
-              histories: ['illust_id,service_id','filename'],
-              members: ['id,service_id']
-            }
-          }
+          null
         );
       } // }}}
 
       initStorage();
-      AnkBase.updateDatabase();
+        AnkBase.updateDatabase();
       AnkBase.registerSheet();
       window.addEventListener('ankDownload', AnkBase.downloadHandler, true);
       window.addEventListener('pageshow', AnkBase.onPageshow, true);
