@@ -1549,10 +1549,28 @@ try {
 
         let set = 'service_id = \'' + srvid + '\', version = '+ver;
         let cond = 'service_id is null';
-        AnkBase.Storage.update('histories', set, cond);
-        AnkBase.Storage.update('members', set, cond);
-
-        AnkBase.Storage.setUserVersion(ver);
+        let start = new Date().getTime();
+        setTimeout(function () {
+          AnkBase.Storage.updateAsync(
+            [
+              {
+                tableName: 'histories',
+                values: set,
+                conditions: cond,
+              },
+              {
+                tableName: 'members',
+                values: set,
+                conditions: cond,
+              },
+            ],
+            function (r) {
+              AnkUtils.dump('update database: '+(r?'done.':'fail.')+' ('+(new Date().getTime() - start)+' msec)');
+              if (r) {
+                AnkBase.Storage.setUserVersion(ver);
+              }
+            });
+          }, 0);
       } catch (e) {
         AnkUtils.dumpError(e);
       }

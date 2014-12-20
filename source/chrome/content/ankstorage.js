@@ -176,6 +176,36 @@ try {
       }
     }, // }}}
 
+    updateAsync: function (commands, callback) { // {{{
+      let db = this.database;
+      let st = [];
+      commands.forEach(function (v) {
+        let set;
+        if (typeof v.values == 'string') {
+          set = v.values;
+        } else {
+          let keys = [it for (it in v.values)];
+          // TODO
+        }
+        let q = 'update ' + v.tableName + ' set ' + set + (v.conditions ? ' where ' + v.conditions : '');
+        st.push(db.createAsyncStatement(q));
+      });
+
+      let handler = {
+        handleResult: function (aResultSet) {
+        },
+        handleError: function (aError) {
+          AnkUtils.dump('updateAsync(error): '+aError.message);
+        },
+        handleCompletion: function (aReason) {
+          if (callback)
+            callback(aReason == Components.interfaces.mozIStorageStatementCallback.REASON_FINISHED, aReason);
+        }
+      };
+
+      db.executeAsync(st, st.length, handler);
+    }, // }}}
+
     createTable: function (table) { // {{{
       if (this.database.tableExists(table.name))
         return this.updateTable(table);
