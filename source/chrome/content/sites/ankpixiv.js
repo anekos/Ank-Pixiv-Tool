@@ -214,6 +214,7 @@ try {
                        '.header',
                        '._header',
                        '#toolbar-items',        // toolbar
+                       '._toolmenu',            // 閲覧履歴ボタン
                        '#gm_ldrize',            // ldrize
                        '#header-banner',
                        ];
