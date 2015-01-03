@@ -998,9 +998,8 @@ try {
         }
 
         function fixPageNumberToken (path) {
-          let f = AnkUtils.replaceFileSeparatorToDEFAULT(path);  // パスの区切り文字をいったん'/'に統一
 
-          f = f.replace(/\/\s*$/, '');              // 終端はファイル名
+          let f = path.replace(/\/\s*$/, '');              // 終端はファイル名
 
           if (f.match(/#page-number#.*?\//))
             return;                                 // ファイル名以外でのページ番号指定は不可
@@ -1014,13 +1013,15 @@ try {
               f += '/#page-number#';                // ページ番号指定がないものには強制
           }
 
-          f = AnkUtils.replaceFileSeparatorToSYS(f);      // Windowsの場合は区切り文字を'\'にする
-
           return f;
         }
 
-        let defaultFilename = fixPageNumberToken(AnkBase.Prefs.get('defaultFilename', '').trim() || '?member-name? - ?title?/#page-number#');
-        let alternateFilename = fixPageNumberToken(AnkBase.Prefs.get('alternateFilename', '').trim() || '?member-name? - ?title? - (?illust-id?)/#page-number#');
+        let defaultFilename = AnkBase.Prefs.get('defaultFilename', '').trim() || '?member-name? - ?title?/#page-number#';
+        let alternateFilename = AnkBase.Prefs.get('alternateFilename', '').trim() || '?member-name? - ?title? - (?illust-id?)/#page-number#';
+
+        // パスの区切り文字をいったん'/'に統一
+        defaultFilename = fixPageNumberToken(AnkUtils.replaceFileSeparatorToDEFAULT(defaultFilename));
+        alternateFilename = fixPageNumberToken(AnkUtils.replaceFileSeparatorToDEFAULT(alternateFilename));
 
         if (!defaultFilename || !alternateFilename) {
           window.alert(AnkBase.Locale('invalidPageNumberToken'));
@@ -1064,12 +1065,15 @@ try {
               throw e;
             }
           });
+
           function repl (s) {
             ps.forEach(function ([re, val]) (s = s.replace(re, val).trim()));
-            return s;
+            return s.replace(/\s+(\/[^/]+)$/, '$1');
           }
-          filenames.push(repl(defaultFilename));
-          filenames.push(repl(alternateFilename));
+
+          // Windowsの場合は区切り文字を'\'にする
+          filenames.push(AnkUtils.replaceFileSeparatorToSYS(repl(defaultFilename)));
+          filenames.push(AnkUtils.replaceFileSeparatorToSYS(repl(alternateFilename)));
 
           if (debug) {
             let tokens = [

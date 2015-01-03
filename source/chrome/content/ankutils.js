@@ -47,8 +47,7 @@ try {
         filename = filename.replace(/[\\\/]/g, '_');
       if (!opts.token)
         filename = filename.replace(/[\?]/g, '_');
-      filename = filename.replace(/\.+$/, '');
-      return filename.replace(/[:;\*\"\<\>\|\#]/g, '_').replace(/[\n\r\t\xa0]/g, ' ').trim();
+      return filename.replace(/[:;\.\*\"\<\>\|\#]/g, '_').replace(/[\n\r\t\xa0]/g, ' ').trim();
     }, // }}}
 
     /*
