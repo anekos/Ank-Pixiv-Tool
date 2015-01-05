@@ -85,6 +85,13 @@ try {
     },
 
     /*
+     * URLから画像の拡張子を取得する
+     */
+    getFileExtension: function (s) {
+      return s && s.match(/(\.\w+)(?:$|\?)/) && RegExp.$1.toLowerCase() || '.jpg';
+    },
+
+    /*
      * trim
      * 文字列の前後の空白系を取り除く
      */

@@ -261,9 +261,11 @@ try {
           AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext () {
-          let anchor = AnkUtils.getAnchor(path.image.images[0]);
-          let m = anchor.pathname.match(/(\.\w+)(?::large|:orig)?$/);
-          return (m && m[1] || '.jpg');
+          if (path.image.images.length > 0) {
+            let anchor = AnkUtils.getAnchor(path.image.images[0]);
+            if (anchor)
+              return AnkUtils.getFileExtension(anchor.pathname.match(/(\.\w+)(?::large|:orig)?$/) && RegExp.$1);
+          }
         },
 
         get mangaIndexPage ()

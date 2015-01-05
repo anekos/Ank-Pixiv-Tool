@@ -52,11 +52,12 @@ try {
       let illust =  {
 
         get largeLink ()
-          query('div#media-overlay > div > span > a'),
+          null,
 
-        get datetime ()
-          let (e = queryAll('div.media-stat > p'))
-            e && e.length >= 2 && e[1],
+        get datetime () {
+          let e = queryAll('div.media-stat > p');
+          return e && e.length >= 2 && e[1];
+        },
 
         get title ()
           self.elements.illust.mediumImage,
@@ -83,9 +84,10 @@ try {
 
         // require for AnkViewer
 
-        get body ()
-          let (e = queryAll('body'))
-            e && e.length > 0 && e[0],
+        get body () {
+          let e = queryAll('body');
+          return e && e.length > 0 && e[0];
+        },
 
         get wrapper ()
           query('#content'),
@@ -123,9 +125,10 @@ try {
         get id ()
           self.info.illust.pageUrl.match(/^https?:\/\/twitpic\.com\/([^/]+)(?:\?|$)/)[1],
 
-        get dateTime ()
-          let (e = self.elements.illust.datetime)
-            e && AnkUtils.decodeDateTimeText(e.textContent),
+        get dateTime () {
+          let e = self.elements.illust.datetime;
+           return e && AnkUtils.decodeDateTimeText(e.textContent);
+        },
 
         get size ()
           null,
@@ -186,7 +189,7 @@ try {
           AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext ()
-          (path.image.images[0].match(/(\.\w+)(?:$|\?)/)[1] || '.jpg'),
+          AnkUtils.getFileExtension(path.image.images.length > 0 && path.image.images[0]),
 
         get mangaIndexPage ()
           null,
@@ -228,10 +231,9 @@ try {
         // インストールに必用な各種要素
         var body = mod.elements.illust.body;
         var medImg = mod.elements.illust.mediumImage;
-        var largeLink = mod.elements.illust.largeLink;
 
         // 完全に読み込まれていないっぽいときは、遅延する
-        if (!(body && medImg && largeLink)) { // {{{
+        if (!(body && medImg)) { // {{{
           return false;   // リトライしてほしい
         } // }}}
 
@@ -245,7 +247,7 @@ try {
 
         // 中画像クリック時に保存する
         if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
-          largeLink.addEventListener(
+          medImg.addEventListener(
             'click',
             function () AnkBase.downloadCurrentImageAuto(mod),
             true
