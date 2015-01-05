@@ -738,8 +738,10 @@ try {
           return false;
 
         // 画像の情報がない
-        if (context.info.path.image.images.length == 0)
+        if (context.info.path.image.images.length == 0) {
+          window.alert(AnkBase.Locale('cannotFindImages'));
           return false;
+        }
 
         if (typeof useDialog === 'undefined')
           useDialog = AnkBase.Prefs.get('showSaveDialog', true);
