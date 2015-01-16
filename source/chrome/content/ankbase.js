@@ -2023,18 +2023,23 @@ try {
     onDownloadButtonClick: function (event) { // {{{
       event.stopPropagation();
       event.preventDefault();
+
+      let button = (typeof event.button == 'undefined') ? 0 : event.button;
+      if (button == 2) {
+        AnkBase.openPrefWindow();
+        return;
+      }
+
       let curmod = AnkBase.SupportedModule;
       if (!curmod)
         return;
       if (!curmod.downloadable)
         return;
       let useDialog = AnkBase.Prefs.get('showSaveDialog', true);
-      let button = (typeof event.button == 'undefined') ? 0 : event.button;
       if (curmod.in.illustPage) {
         switch(button) {
           case 0: AnkBase.downloadCurrentImage(curmod, useDialog); break;
           case 1: AnkBase.downloadCurrentImage(curmod, !useDialog); break;
-          case 2: AnkBase.openPrefWindow(); break;
         }
       } else {
         let open = function (left) {
@@ -2047,7 +2052,6 @@ try {
         switch(button) {
           case 0: open(true); break;
           case 1: open(false); break;
-          case 2: AnkBase.openPrefWindow(); break;
         }
       }
     }, // }}}
