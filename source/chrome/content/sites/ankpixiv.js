@@ -491,15 +491,17 @@ try {
                         }
                       });
   
-                    for (var i=1; i<=im.length; i++) {
-                      if (i == 1) {
-                        fp.push(i);
+                    for (var i=0; i<im.length; i++) {
+                      let p = i+1;
+                      if (p == 1) {
+                        fp.push(p);
                       }
                       else {
-                        fp.push((i - i%2) / 2 + 1)
+                        let oddp = p%2;
+                        fp.push((p - oddp) / 2 + 1)
 
                         // 見開きの向きに合わせて画像の順番を入れ替える
-                        if (ltr && i % 2 == 0 && i < im.length-1) {
+                        if (ltr && oddp) {
                           let tmp = im[i-1];
                           im[i-1] = im[i];
                           im[i] = tmp;
