@@ -1,4 +1,6 @@
 
+Components.utils.import("resource://gre/modules/Promise.jsm");
+
 try {
 
   AnkUtils = {
@@ -47,8 +49,7 @@ try {
         filename = filename.replace(/[\\\/]/g, '_');
       if (!opts.token)
         filename = filename.replace(/[\?]/g, '_');
-      filename = filename.replace(/\.+$/, '');
-      return filename.replace(/[:;\*\"\<\>\|\#]/g, '_').replace(/[\n\r\t\xa0]/g, ' ').trim();
+      return filename.replace(/[:;\.\*\"\<\>\|\#]/g, '_').replace(/[\n\r\t\xa0]/g, ' ').trim();
     }, // }}}
 
     /*
@@ -409,6 +410,7 @@ try {
       }
     }, // }}}
 
+    // FIXME let expression
     registerSheet: let (registered = {}) function (style, domains) { // {{{
       const IOS = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Ci.nsIIOService);
       const StyleSheetService = AnkUtils.ccgs('@mozilla.org/content/style-sheet-service;1', Ci.nsIStyleSheetService);
@@ -553,6 +555,35 @@ try {
      return text;
    }, // }}}
 
+   httpGETAsync: function (url,referer,params) { // {{{
+     return new Promise(function (resolve, reject) {
+       let post = !!params;
+       let text = null;
+       let xhr = new XMLHttpRequest();
+       xhr.open((post ? 'POST' : 'GET'), url, true);
+       try {
+         xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = AnkBase.Prefs.get('allowThirdPartyCookie', true);
+       } catch(ex) {
+         /* unsupported by this version of FF */
+       }
+       xhr.onload = function () {
+         if (xhr.status == 200) {
+           resolve(xhr.responseText);
+         } else {
+           reject(new Error(xhr.statusText));
+         }
+       };
+       xhr.error = function () {
+         reject(new Error(xhr.statusText));
+       };
+       if (post)
+         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+       if (referer)
+         xhr.setRequestHeader('Referer', referer);
+       xhr.send(post ? params : null);
+     });
+   }, // }}}
+
     /********************************************************************************
     * 手抜き用関数
     ********************************************************************************/
@@ -623,9 +654,10 @@ try {
      *    xpath:
      *    return: node
      */
-    findNodeByXPath: function (xpath, _doc) // {{{
-      let (doc = _doc || this.currentDocument)
-        doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue, // }}}
+    findNodeByXPath: function (xpath, _doc) { // {{{
+      let doc = _doc || this.currentDocument;
+      return doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    }, // }}}
 
     /*
      * findNodesByXPath
@@ -633,9 +665,8 @@ try {
      *    return: nodes
      */
     findNodesByXPath: function (xpath, array, _doc) { // {{{
-      let nodes =
-        let (doc = _doc || this.currentDocument)
-          doc.evaluate(xpath, doc, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+      let doc = _doc || this.currentDocument;
+      let nodes = doc.evaluate(xpath, doc, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
       if (!array)
         return nodes;
       let elem, result = [];

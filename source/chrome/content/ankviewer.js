@@ -154,7 +154,9 @@ function AnkViewer (module, getImage) {
     let cw = win.innerWidth - scrollbarSize.width,    // 横はスクロールバーを含まない幅が最大値
         ch = win.innerHeight;
 
-    let (cvh = imgContainer.style.height && imgContainer.style.height.match(/(\d+)\s*px/) && RegExp.$1) {
+    let mcvh = imgContainer.style.height && imgContainer.style.height.match(/(\d+)\s*px/);
+    if (mcvh) {
+      let cvh = mcvh[1];
       pos.Y = window.content.scrollY;
       let h =  (ch > cvh) ? ch : cvh;
       if (pos.Y > h) {
@@ -328,28 +330,33 @@ function AnkViewer (module, getImage) {
 
     if (bigMode) {
       hide();
+      bigMode = !bigMode;
     } else {
       // 画像のリストが取得できなければviewerを開かない
       if (!images || images.length === 0) {
-        let image = getImage();
-        if (image.images.length === 0)
-          return false; // server error.
+        module.getImageUrl(AnkBase.Prefs.get('viewOriginalSize',false), function (image) {
+          if (image.images.length === 0)
+            return false; // server error.
 
-        images = image.images;
-        if (AnkBase.Prefs.get('useFacingView', true)) {
-          facing = image.facing;
-          totalMangaPages = facing ? facing[facing.length-1] : images.length;
-        }
-        else {
-          facing = null;
-          totalMangaPages = images.length;
-        }
+          images = image.images;
+          if (AnkBase.Prefs.get('useFacingView', true)) {
+            facing = image.facing;
+            totalMangaPages = facing ? facing[facing.length-1] : images.length;
+          }
+          else {
+            facing = null;
+            totalMangaPages = images.length;
+          }
+          show();
+          bigMode = !bigMode;
+        });
       }
-
-      show();
+      else {
+        show();
+        bigMode = !bigMode;
+      }
     }
 
-    bigMode = !bigMode;
   };
 
   // 指定のページへ
@@ -497,17 +504,16 @@ function AnkViewer (module, getImage) {
     AnkUtils.A(imgPanel.querySelectorAll('#ank-pixiv-large-viewer-image')).forEach(function (e) func(e))
 
   // 中画像をクリックしたら開く
-  let (target = medImg) {
-    if (largeLink) {
-      AnkUtils.A(largeLink.querySelectorAll('img')).some(function (e) {
-        if (e === medImg) {
-          target = largeLink;
-          return true;
-        }
-      });
-    }
-    target.addEventListener('click', function (e) noMoreEvent(changeImageSize)(e), false);
+  let target = medImg;
+  if (largeLink) {
+    AnkUtils.A(largeLink.querySelectorAll('img')).some(function (e) {
+      if (e === medImg) {
+        target = largeLink;
+        return true;
+      }
+    });
   }
+  target.addEventListener('click', function (e) noMoreEvent(changeImageSize)(e), false);
 
   // 画像を読み込んだら表示サイズの調整を行う
   imgCtrl(function (e) e.addEventListener('load', autoResize, true));
