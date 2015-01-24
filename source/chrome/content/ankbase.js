@@ -37,6 +37,7 @@ try {
     },
 
     DOWNLOAD_DISPLAY: {
+      ID:           'ankpixiv-downloaded-display',
       DOWNLOADED:   'downloaded',
       USED:         'used',
       INITIALIZE:   'initialize',
@@ -50,6 +51,16 @@ try {
       DOWNLOADED_OVERLAY: 'ank-pixiv-tool-downloaded-overlay',
       DOWNLOADING: 'ank-pixiv-tool-downloading',
       DOWNLOADING_OVERLAY: 'ank-pixiv-tool-downloading-overlay',
+    },
+
+    BUTTON: {
+      ID: 'ankpixiv-toolbar-button',
+      IMAGE_ID: 'ankpixiv-toolbar-button-image',
+      TEXT_ID: 'ankpixiv-toolbar-button-text',
+    },
+
+    MENU_ITEM: {
+      ID: 'ankpixiv-menu-download',
     },
 
     Prefs: new AnkPref('extensions.ankpixiv'),
@@ -1181,8 +1192,6 @@ try {
       if (!AnkBase.Prefs.get('displayDownloaded', true))
         return;
 
-      const ElementID = 'ankpixiv-downloaded-display';
-
       let doc;
 
       try {
@@ -1195,7 +1204,7 @@ try {
       if (!doc)
         return;
 
-      var elm = doc.getElementById(ElementID);
+      var elm = doc.getElementById(AnkBase.DOWNLOAD_DISPLAY.ID);
       if (elm)
         elm.parentNode.removeChild(elm);
 
@@ -1206,7 +1215,7 @@ try {
       let textNode = doc.createElement(R18 ? 'blink' : 'textnode');
       textNode.textContent = AnkBase.Locale((mode === AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED && R18) ? AnkBase.DOWNLOAD_DISPLAY.USED : mode);
       div.setAttribute('style', AnkBase.Prefs.get('downloadedDisplayStyle', ''));
-      div.setAttribute('id', ElementID);
+      div.setAttribute('id', AnkBase.DOWNLOAD_DISPLAY.ID);
       if (R18) {
         let v = AnkBase.Prefs.get('downloadedAnimationStyle', 1);
         if (v > 0)
@@ -1573,35 +1582,37 @@ try {
     addToolbarIcon: function () {
       try {
         CustomizableUI.createWidget({
-          id: 'ankpixiv-toolbar-button',
+          id: AnkBase.BUTTON.ID,
           type: "custom",
+          defaultArea: CustomizableUI.AREA_NAVBAR,
+          removable: true,
           onBuild: function (aDocument) {
-            var toolbarbutton = aDocument.createElementNS('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul', 'toolbarbutton');
-
-            var props = {
-                id: 'ankpixiv-toolbar-button',
-                defaultArea: CustomizableUI.AREA_NAVBAR,
-                removable: true,
-                label: "Ank Pixiv Tool",
-                tooltiptext: "ankpixiv",
-            };
-            for (var p in props) {
-              toolbarbutton.setAttribute(p, props[p]);
+            function createElement (tag, attr) {
+              let e = aDocument.createElementNS('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul', tag);
+              for (let p in attr)
+                e.setAttribute(p, attr[p]);
+              return e;
             }
 
-            toolbarbutton.addEventListener('click', function(e) AnkBase.onDownloadButtonClick(e));
+            var image = createElement('image', { id: AnkBase.BUTTON.IMAGE_ID });
+            var label = createElement('label', { id: AnkBase.BUTTON.TEXT_ID, collapsed: true });
 
-            var image = aDocument.createElementNS('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul', 'image');
-            image.setAttribute('id', 'ankpixiv-toolbar-button-image');
-            var label = aDocument.createElementNS('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul', 'label');
-            label.setAttribute('id', 'ankpixiv-toolbar-button-text');
-            label.setAttribute('collapsed', true);
-
-            var hbox = aDocument.createElementNS('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul', 'hbox');
+            var hbox = createElement('hbox');
             hbox.appendChild(image);
             hbox.appendChild(label);
 
+            var toolbarbutton = createElement(
+              'toolbarbutton',
+              {
+                id: AnkBase.BUTTON.ID,
+                label: 'Ank Pixiv Tool',
+                tooltiptext: 'pixiv',
+                class: 'toolbarbutton-1',
+              }
+            );
             toolbarbutton.appendChild(hbox);
+
+            toolbarbutton.addEventListener('click', function(e) AnkBase.onDownloadButtonClick(e));
 
             return toolbarbutton;
           },
@@ -1613,7 +1624,7 @@ try {
     },
 
     set toolbarText (text) { // {{{
-      let e = document.getElementById('ankpixiv-toolbar-button-text');
+      let e = document.getElementById(AnkBase.BUTTON.TEXT_ID);
       if (e) {
         e.value = text;
         e.collapsed = text.length == 0;
@@ -1938,15 +1949,15 @@ try {
 
         let curmod = AnkBase.installSupportedModule(doc);
         if (!curmod) {
-          AnkBase.changeEnabled.call(AnkBase, null, 'ankpixiv-toolbar-button-image');//
-          AnkBase.changeEnabled.call(AnkBase, null, 'ankpixiv-menu-download');
+          AnkBase.changeEnabled.call(AnkBase, null, AnkBase.BUTTON.IMAGE_ID);//
+          AnkBase.changeEnabled.call(AnkBase, null, AnkBase.MENU_ITEM.ID);
           return;       // 対象外のサイト
         }
 
         AnkUtils.dump('triggered: '+ev.type+', '+location);
 
-        AnkBase.changeEnabled.call(AnkBase, curmod, 'ankpixiv-toolbar-button-image');
-        AnkBase.changeEnabled.call(AnkBase, curmod, 'ankpixiv-menu-download');
+        AnkBase.changeEnabled.call(AnkBase, curmod, AnkBase.BUTTON.IMAGE_ID);
+        AnkBase.changeEnabled.call(AnkBase, curmod, AnkBase.MENU_ITEM.ID);
         curmod.markDownloaded(null, ev.type !== 'focus' && ev.persisted);                     // focus当たる度にDB検索されると困るので引数なし
         curmod.initFunctions();
 

@@ -627,26 +627,11 @@ try {
     * DOM関数
     ********************************************************************************/
 
-    /*
-     * createHTMLDocument
-     * http://nanto.asablo.jp/blog/2009/10/29/4660197
-     */
     createHTMLDocument: function (source) { // {{{
-      let wcnt = window.content;
-      let doc = wcnt.document.implementation.createDocument(
-        'http://www.w3.org/1999/xhtml',
-        'html',
-        wcnt.document.implementation.createDocumentType(
-          'html',
-          '-//W3C//DTD HTML 4.01//EN',
-          'http://www.w3.org/TR/html4/strict.dtd'
-        )
-      );
-      let range = wcnt.document.createRange();
-      range.selectNodeContents(wcnt.document.documentElement);
-      let content = doc.adoptNode(range.createContextualFragment(source));
-      doc.documentElement.appendChild(content);
-      return doc;
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(source , "text/html");
+      if(doc.getElementsByTagName("parsererror").length == 0)
+        return doc;
     }, // }}}
 
     /*

@@ -604,12 +604,10 @@ try {
           }
         }
 
-        // FIXME AnkUtils.createHTMLDocument()でHTML Elementのclass情報が欠けてしまうのでhtmlテキストに対してマッチングしているのを直す
         if (im.length == 0) {
           // ブック
-          let m = html.match(/<html[^>]+?class=\"(.+?)\"/);
-          if (m && m[1].indexOf('_book-viewer') != -1) {
-            let ltr = m[1].indexOf('ltr') != -1;
+          if (doc.documentElement.classList.contains('_book-viewer')) {
+            let ltr = doc.documentElement.classList.contains('ltr');
             let re = mangaOriginalSizeCheck ? /pixiv\.context\.originalImages\[\d+\]\s*=\s*\"(.+?)\"/ : /pixiv\.context\.images\[\d+\]\s*=\s*\"(.+?)\"/;
             AnkUtils.A(doc.querySelectorAll('script')).forEach(function (e) {
               let mimg = e.text.match(re);
