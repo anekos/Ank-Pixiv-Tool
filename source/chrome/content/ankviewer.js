@@ -503,18 +503,6 @@ function AnkViewer (module) {
   function imgCtrl (func)
     AnkUtils.A(imgPanel.querySelectorAll('#ank-pixiv-large-viewer-image')).forEach(function (e) func(e))
 
-  // 中画像をクリックしたら開く
-  let target = medImg;
-  if (largeLink) {
-    AnkUtils.A(largeLink.querySelectorAll('img')).some(function (e) {
-      if (e === medImg) {
-        target = largeLink;
-        return true;
-      }
-    });
-  }
-  target.addEventListener('click', function (e) noMoreEvent(changeImageSize)(e), false);
-
   // 画像を読み込んだら表示サイズの調整を行う
   imgCtrl(function (e) e.addEventListener('load', autoResize, true));
 
@@ -583,10 +571,14 @@ function AnkViewer (module) {
   doc.goNextMangaPage = goNextPage;
   doc.rotateFitMode = rotateFitMode;
 
+  // 中画像クリックイベントから呼び出してください
+  this.openViewer = function () {
+    changeImageSize();
+  };
+
 }
 
 AnkViewer.prototype.reset = function () {
   this.images = null;
   this.facing = null;
 };
-

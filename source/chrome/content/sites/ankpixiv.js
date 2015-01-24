@@ -84,9 +84,8 @@ try {
           if (e)
             return e.querySelector('a');
 
-          e = illust.mediumImage;
-          if (e)
-            return e.parentNode.parentNode;
+          if (illust.mediumImage)
+            return query('.works_display a');
         },
 
         get datetime ()
@@ -192,7 +191,7 @@ try {
           query('.original-image'),
 
         get imageOverlay ()
-          query('.works_display ._layout-thumbnail'), 
+          query('.works_display'), 
 
         get openCaption ()
           query('.ui-expander-container > .ui-expander-target > .expand'),
@@ -497,31 +496,22 @@ try {
         });
       }
 
-      // 単ページイラスト
-      if (!self.in.manga) {
-        let result = (function () {
-          if (self.elements.illust.bigImage) {
-            let src = self.elements.illust.bigImage.getAttribute('data-src');
-            AnkUtils.dump(src);
-            if (src) {
-              return {
-                images: [ src ],
-                facing: null,
-              }
-            }
-          }
-          return AnkBase.NULL_RET;
-        })();
-        return doCallback(result);
+      // 単ページイラスト(Aパターン)
+      if (!self.in.manga && self.elements.illust.bigImage && self.elements.illust.bigImage.getAttribute('data-src')) {
+        // イラスト
+        return doCallback({
+          images: [ self.elements.illust.bigImage.getAttribute('data-src') ],
+          facing: null,
+        });
       }
 
-      // マンガ or ブック
+      // マンガ or ブック or 単ページイラスト(Bパターン)
 
       // 取得済みならそのまま返す(ここはdoCallbackではない)
-      if (!mangaOriginalSizeCheck && self._image.thumbnail && self._image.thumbnail.lenght > 0) {
+      if (self.in.manga && !mangaOriginalSizeCheck && self._image.thumbnail && self._image.thumbnail.images.length > 0) {
         return callback(self._image.thumbnail);
       }
-      if (mangaOriginalSizeCheck && self._image.original && self._image.original.length > 0) {
+      if (self._image.original && self._image.original.images.length > 0) {
         return callback(self._image.original);
       }
 
@@ -538,6 +528,14 @@ try {
         if (!doc || doc.querySelector('.errorArea') || doc.querySelector('.errortxt')) {
           window.alert(AnkBase.Locale('serverError'));
           return AnkBase.NULL_RET;
+        }
+
+        if (!self.in.manga) {
+          // イラスト(Bパターン)
+          return {
+            images: [ doc.querySelector('img').src ],
+            facing: null,
+          }
         }
 
         referer = indexPage;
@@ -686,7 +684,7 @@ try {
         var jq = doc.defaultView.wrappedJSObject.jQuery
 
         // 完全に読み込まれていないっぽいときは、遅延する
-        if (!(body && medImg && wrapper && userTags)) { // {{{
+        if (!(body && medImg && wrapper && userTags && imgOvr)) { // {{{
           return false;   // リトライしてほしい
         } // }}}
 
@@ -714,30 +712,28 @@ try {
           }
         }
 
-        // 大画像関係
-        if (!self.in.ugoira) {
-          if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true)) {
-            if (imgOvr && jq) {
-              // FIXME 多分このunbindがbindの後になる場合がある。setTimeoutでもう一回実行しているのは場当たり的な対応
-              jq(imgOvr).off('click');
-              setTimeout(function () jq(imgOvr).off('click'), 1000);
-            }
-
-            new AnkViewer(self);
-          }
-        }
-
         // FIXME AnkViewer無効時に、中クリックして、Pixivのデフォルト動作で大画像を見ると、ダウンロードマークが消える
-        // 中画像クリック時に保存する
-        if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
-          let e = imgOvr || largeLink;
-          e.addEventListener(
-            'click',
-            // FIXME AnkViewer有効かつ中クリックダウンロード有効時に、getImageUrl()が２重に実行されてしまうので、0.5秒遅延させる
-            function () setTimeout(function () AnkBase.downloadCurrentImageAuto(self), 500),
-            true
-          );
-        } // }}}
+        let useViewer = !self.in.ugoira && AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true);
+        let useClickDownload = AnkBase.Prefs.get('downloadWhenClickMiddle');
+        if (useViewer || useClickDownload) {
+          if (useViewer)
+            self.viewer = new AnkViewer(self);
+
+          // TODO imgOvrの方になった場合は、medImgより広い領域がクリック可能となるが、jQuery.on('click')を無効化できないため止む無し
+          (largeLink || imgOvr).addEventListener('click', function (e) {
+            // mangaIndexPageへのアクセスが複数回実行されないように、getImageUrl()のコールバックでopenViewer()とdownloadCurrentImageAuto()を実行する
+            self.getImageUrl(AnkBase.Prefs.get('downloadOriginalSize', false), function () {
+              if (useViewer)
+                self.viewer.openViewer();
+              if (useClickDownload)
+                AnkBase.downloadCurrentImageAuto(self);
+            });
+            if (!self.in.ugoira) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }, !self.in.ugoira);
+        }
 
         // レイティングによるダウンロード
         if (AnkBase.Prefs.get('downloadWhenRate', false)) { // {{{

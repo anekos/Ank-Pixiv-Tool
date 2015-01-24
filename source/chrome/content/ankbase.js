@@ -1939,26 +1939,29 @@ try {
             return doc;
         })();
 
-        if (!doc || doc.AnkPixivModule) {
-          if (doc)
-            AnkUtils.dump('skip: '+ev.type+', '+doc.location.href);
+        if (!doc)
           return;
-        }
 
         location = 'location: '+doc.location;
+        let curmod = (function () {
+          if (doc.AnkPixivModule) {
+            AnkUtils.dump('skip: '+ev.type+', '+location);
+            return doc.AnkPixivModule;
+          }
 
-        let curmod = AnkBase.installSupportedModule(doc);
+          AnkUtils.dump('triggered: '+ev.type+', '+location);
+          return AnkBase.installSupportedModule(doc);
+        })();
+
         if (!curmod) {
           AnkBase.changeEnabled.call(AnkBase, null, AnkBase.BUTTON.IMAGE_ID);//
           AnkBase.changeEnabled.call(AnkBase, null, AnkBase.MENU_ITEM.ID);
           return;       // 対象外のサイト
         }
 
-        AnkUtils.dump('triggered: '+ev.type+', '+location);
-
         AnkBase.changeEnabled.call(AnkBase, curmod, AnkBase.BUTTON.IMAGE_ID);
         AnkBase.changeEnabled.call(AnkBase, curmod, AnkBase.MENU_ITEM.ID);
-        curmod.markDownloaded(null, ev.type !== 'focus' && ev.persisted);                     // focus当たる度にDB検索されると困るので引数なし
+        curmod.markDownloaded(null, ev.type !== 'focus' && ev.persisted); // focus当たる度にDB検索されると困るので引数なし
         curmod.initFunctions();
 
         // FIXME 保留
