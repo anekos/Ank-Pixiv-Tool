@@ -1,5 +1,5 @@
 
-function AnkViewer (module, getImage) {
+function AnkViewer (module) {
 
   if (!module)
     return null;

@@ -9,6 +9,8 @@ try {
 
     self.curdoc = doc;
 
+    self.viewer;
+
     self.marked = false;
 
     self._functionsInstalled = false;
@@ -376,8 +378,9 @@ try {
           return ugoku && ugoku.src;
         },
 
+        // ダウンロード時のみの利用なので downloadOriginalSize のチェックだけでよい
         get image () // {{{
-          AnkBase.Prefs.get('downloadOriginalSize', false) ? self._image.original : self._image.thumbnail, // }}}
+          self.in.manga && !AnkBase.Prefs.get('downloadOriginalSize', false) ? self._image.thumbnail : self._image.original, // }}}
       };
 
       return {
@@ -389,9 +392,6 @@ try {
 
   };
 
-  /********************************************************************************
-  * メソッド
-  ********************************************************************************/
 
   AnkPixivModule.prototype = {
 
@@ -443,7 +443,7 @@ try {
     /**
      * ダウンロード可能か
      */
-    get isDownloadable () {
+    isDownloadable: function () {
       return this.in.medium && !this.in.myIllust;
     },
 
@@ -476,34 +476,48 @@ try {
      * 画像URLリストの取得
      */
     getImageUrl: function (mangaOriginalSizeCheck, callback) {
+      function doCallback (v) {
+        if (self.in.manga && !mangaOriginalSizeCheck) {
+          self._image.thumbnail = v;
+        }
+        else {
+          self._image.original = v;
+        }
+
+        callback(v);
+      }
+
+      let self = this;
 
       // うごイラ
-      if (this.in.ugoira) {
-        return callback({
-          images: [ this.info.path.ugokuIllustFullscreenSrc || this.info.path.ugokuIllustSrc ],
+      if (self.in.ugoira) {
+        return doCallback({
+          images: [ self.info.path.ugokuIllustFullscreenSrc || self.info.path.ugokuIllustSrc ],
           facing: null,
         });
       }
 
       // 単ページイラスト
-      if (!this.in.manga) {
-        if (this.elements.illust.bigImage) {
-          let src = this.elements.illust.bigImage.getAttribute('data-src');
-          if (src) {
-            return callback({
-              images: [ src ],
-              facing: null,
-            });
+      if (!self.in.manga) {
+        let result = (function () {
+          if (self.elements.illust.bigImage) {
+            let src = self.elements.illust.bigImage.getAttribute('data-src');
+            AnkUtils.dump(src);
+            if (src) {
+              return {
+                images: [ src ],
+                facing: null,
+              }
+            }
           }
-        }
-        return callback(AnkBase.NULL_RET);
+          return AnkBase.NULL_RET;
+        })();
+        return doCallback(result);
       }
 
       // マンガ or ブック
 
-      let self = this;
-
-      // 取得済みならそのまま返す
+      // 取得済みならそのまま返す(ここはdoCallbackではない)
       if (!mangaOriginalSizeCheck && self._image.thumbnail && self._image.thumbnail.lenght > 0) {
         return callback(self._image.thumbnail);
       }
@@ -626,11 +640,11 @@ try {
         if (im.length > 0) {
           if (fp.length > 0 && fp[fp.length - 1] < fp.length) {
             // 見開きがある場合
-            AnkUtils.dump("Facing Page Check: " + fp.length + " pics in " + fp[fp.length - 1] + " pages");
+            AnkUtils.dump("Facing Page Check: " + im.length + " pics in " + fp[fp.length - 1] + " pages");
           }
           else {
             // 見開きがない場合
-            AnkUtils.dump("Facing Page Check: " + fp.length + " pics");
+            AnkUtils.dump("Facing Page Check: " + im.length + " pics");
             fp = null;
           }
 
@@ -642,14 +656,7 @@ try {
         return AnkBase.NULL_RET;
 
       }).then(function (result) {
-        if (!mangaOriginalSizeCheck) {
-          self._image.thumbnail = result;
-        }
-        else {
-          self._image.original = result;
-        }
-        if (callback)
-          callback(result);
+          doCallback(result);
         },
         function (e) {
           window.alert(AnkBase.Locale('serverError'));
@@ -703,9 +710,22 @@ try {
               dcaption.classList.add('area_inside');
               dcaption.classList.add('ank-pixiv-downloaded-filename-text');
               div.appendChild(dcaption);
-  
+
               e.insertBefore(div, e.querySelector('.profile-unit+*'));
             }
+          }
+        }
+
+        // 大画像関係
+        if (!self.in.ugoira) {
+          if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true)) {
+            if (imgOvr && jq) {
+              // FIXME 多分このunbindがbindの後になる場合がある。setTimeoutでもう一回実行しているのは場当たり的な対応
+              jq(imgOvr).off('click');
+              setTimeout(function () jq(imgOvr).off('click'), 1000);
+            }
+
+            new AnkViewer(self);
           }
         }
 
@@ -713,33 +733,16 @@ try {
         // 中画像クリック時に保存する
         if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
           let e = imgOvr || largeLink;
-          // FIXME downloadCurrentImageAuto()を置き換える
           e.addEventListener(
             'click',
-            function () AnkBase.downloadCurrentImageAuto(self),
+            // FIXME AnkViewer有効かつ中クリックダウンロード有効時に、getImageUrl()が２重に実行されてしまうので、0.5秒遅延させる
+            function () setTimeout(function () AnkBase.downloadCurrentImageAuto(self), 500),
             true
           );
         } // }}}
 
-        // 大画像関係
-        if (!self.in.ugoira) {
-          if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true)) {
-            if (imgOvr && jq) {
-              // FIXME 多分このunbindがbindの後になる場合がある。setTimeoutでもう一回実行しているのは場当たり的な対応
-              jq(imgOvr).unbind('click');
-              setTimeout(function () jq(imgOvr).unbind('click'), 1000);
-            }
-
-            new AnkViewer(self);
-          }
-        }
-
-        return true;
         // レイティングによるダウンロード
-        (function () { // {{{
-          if (!AnkBase.Prefs.get('downloadWhenRate', false))
-            return;
-
+        if (AnkBase.Prefs.get('downloadWhenRate', false)) { // {{{
           let point = AnkBase.Prefs.get('downloadRate', 10);
           AnkUtils.A(doc.querySelectorAll('.rating')).forEach(function (e) {
             e.addEventListener(
@@ -753,14 +756,14 @@ try {
               true
             );
           });
-        })(); // }}}
+        } // }}}
 
         // 保存済み表示
         AnkBase.insertDownloadedDisplayById(
-          mod.elements.illust.downloadedDisplayParent,
-          mod.info.illust.id,
-          mod.SERVICE_ID,
-          mod.info.illust.R18
+          self.elements.illust.downloadedDisplayParent,
+          self.info.illust.id,
+          self.SERVICE_ID,
+          self.info.illust.R18
         );
 
         // キャプションを開く
@@ -769,7 +772,7 @@ try {
         // }}}
 
         // イメレスにマーキング
-        mod.markDownloaded(doc,true);
+        self.markDownloaded(doc,true);
 
         return true;
       }; // }}}

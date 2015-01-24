@@ -1,5 +1,6 @@
 
 Components.utils.import("resource://gre/modules/osfile.jsm");
+Components.utils.import("resource:///modules/CustomizableUI.jsm");
 
 try {
 
@@ -81,11 +82,8 @@ try {
     get currentDoc ()
       window.gBrowser.selectedBrowser.contentDocument,
 
-    get currentModule () {
-      let doc = AnkBase.currentDoc;
-      if (doc)
-        return doc.AnkPixivModule;
-    },
+    get currentModule ()
+      AnkBase.currentDoc && AnkBase.currentDoc.AnkPixivModule,
 
     get current () { // {{{
       function clone (obj) {
@@ -103,52 +101,6 @@ try {
         {}
       );
     }, // }}}
-
-    infoText: function (context) { // {{{
-      //let pref = AnkBase.Prefs.get('infoText.ignore', 'illust.dateTime.');
-      //let ignore = pref ? pref.split(/[,\s]+/) : [];
-
-      // FIXME ignoreが機能していなかったので直そうかと思ったが、今まで出力されていたmeta.txtのいくつかの項目が急に出力されなくなるので、保留
-      //ignore = [];
-      function indent (s)
-        (typeof s === 'undefined' ? '---' : s).toString().split(/\n/).map(function (v) "\t" + v).join("\n")
-
-      function textize (names, value) {
-        let name = names.join('.');
-
-        //if (ignore.some(function (v) name.indexOf(v) == 0))
-        //  return '';
-
-        if (typeof value === 'object') {
-          let result = '';
-          for (let [n, v] in Iterator(value)) {
-            if (v && typeof v !== 'function')
-              result += textize(names.concat([n]), v);
-          }
-          return result;
-        } else {
-          return value ? name + "\n" + indent(value) + "\n" : '';
-        }
-      }
-
-      return textize([], context.info);
-    }, // }}}
-
-    memoizedName: function (member_id, service_id) {
-      let result = AnkBase.Storage.select(
-        'members',
-        'id = ?1 and service_id = ?2',
-        function (stmt){
-          let result = [];
-          stmt.bindUTF8StringParameter(0, member_id);
-          stmt.bindUTF8StringParameter(1, service_id);
-          while (stmt.executeStep())
-            result.push(AnkStorage.statementToObject(stmt));
-          return result;
-        }
-      );
-      return result && result.length && result[0].name;
-    },
 
     /********************************************************************************
     * モジュール関連
@@ -534,7 +486,7 @@ try {
 
             if (onComplete) {
               ++download.downloaded;
-              AnkBase.updateStatusBarText();
+              AnkBase.updateToolbarText();
               return onComplete(prefInitDir, file.path);
             }
           }
@@ -554,8 +506,7 @@ try {
       channel.referrer = refererURI;
       channel.setRequestHeader("Range", null, false);
       wbpersist.saveChannel(channel, file);
-}, // }}}
-
+    }, // }}}
 
     /*
      * downloadToRetryable
@@ -722,7 +673,7 @@ try {
     downloadCurrentImage: function (module, useDialog, confirmDownloaded, debug) { // {{{
       try {
         // 同一ページでも、表示中の状態によってダウンロードの可否が異なる場合がある
-        if (!module.isDownloadable)
+        if (!module.isDownloadable())
           return false;
 
         if (typeof useDialog === 'undefined')
@@ -772,7 +723,6 @@ try {
       ev.initEvent('ankDownload', true, false);
       ev.__download = {
         context: context,
-        metaText: AnkBase.infoText(context),
         useDialog: useDialog,
         debug: debug,
         downloaded: 0,                  // ダウンロードの完了した画像数
@@ -826,7 +776,7 @@ try {
 
                 AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.TIMEOUT);
                 AnkBase.downloading.images -= c.info.path.image.images.length;
-                AnkBase.updateStatusBarText();
+                AnkBase.updateToolbarText();
 
                 let title         = c.info.illust.title;
                 let member_id     = c.info.member.id;
@@ -845,7 +795,7 @@ try {
             // add download
             AnkBase.downloading.pages.push(d);
             AnkBase.downloading.images += d.context.info.path.image.images.length;
-            AnkBase.updateStatusBarText();
+            AnkBase.updateToolbarText();
 
             // たまたま開いているタブがダウンロードを始めるのと同じサイトだったならマーキング処理
             let curmod = AnkBase.currentModule;
@@ -856,7 +806,7 @@ try {
             if (AnkBase.findDownload(d, true)) {
               // タイムアウト関連ですでにキューから刈り取られている場合はここに入らない
               AnkBase.downloading.images -= d.context.info.path.image.images.length;
-              AnkBase.updateStatusBarText();
+              AnkBase.updateToolbarText();
             }
   
             let c = d.context;
@@ -895,7 +845,7 @@ try {
         let download = waited[0];
         download.start = new Date().getTime();
         download.limit = download.start + AnkBase.RETRY.INTERVAL * download.context.info.path.image.images.length;
-        AnkBase.updateStatusBarText();
+        AnkBase.updateToolbarText();
         AnkBase.insertDownloadedDisplay(download.context.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADING);
 
         AnkBase.downloadExecuter(download);
@@ -918,9 +868,7 @@ try {
           return context.SITE_NAME;     // デフォルトサイト名を利用
         }
 
-        // FIXME ここにinfoText(context)があったがdead object例外が出るのでdownload.metaTextに移した。しかし本来はnew AnkContext()時に値が確定していなければいけない
         let context = download.context;
-        let metaText = download.metaText;
         let useDialog = download.useDialog;
         let debug = download.debug;
         let start = download.start;
@@ -936,6 +884,7 @@ try {
         let tags          = context.info.illust.tags;
         let title         = context.info.illust.title;
         let comment       = context.info.illust.comment;
+        let metaText      = context.metaText;
         let filenames     = [];
         let shortTags     = context.info.illust.shortTags;
         let service_id    = context.SERVICE_ID;
@@ -1359,6 +1308,22 @@ try {
       }
     }, // }}}
 
+    memoizedName: function (member_id, service_id) {
+      let result = AnkBase.Storage.select(
+        'members',
+        'id = ?1 and service_id = ?2',
+        function (stmt){
+          let result = [];
+          stmt.bindUTF8StringParameter(0, member_id);
+          stmt.bindUTF8StringParameter(1, service_id);
+          while (stmt.executeStep())
+            result.push(AnkStorage.statementToObject(stmt));
+          return result;
+        }
+      );
+      return result && result.length && result[0].name;
+    },
+
 
     /********************************************************************************
     * データベース統計
@@ -1605,21 +1570,63 @@ try {
     * ステータスバー
     ********************************************************************************/
 
-    set statusbarText (text) { // {{{
-      let es = document.querySelectorAll('#ankpixiv-toolbar-button-text');
-      for (let [, e] in AnkUtils.IA(es)) {
+    addToolbarIcon: function () {
+      try {
+        CustomizableUI.createWidget({
+          id: 'ankpixiv-toolbar-button',
+          type: "custom",
+          onBuild: function (aDocument) {
+            var toolbarbutton = aDocument.createElementNS('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul', 'toolbarbutton');
+
+            var props = {
+                id: 'ankpixiv-toolbar-button',
+                defaultArea: CustomizableUI.AREA_NAVBAR,
+                removable: true,
+                label: "Ank Pixiv Tool",
+                tooltiptext: "ankpixiv",
+            };
+            for (var p in props) {
+              toolbarbutton.setAttribute(p, props[p]);
+            }
+
+            toolbarbutton.addEventListener('click', function(e) AnkBase.onDownloadButtonClick(e));
+
+            var image = aDocument.createElementNS('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul', 'image');
+            image.setAttribute('id', 'ankpixiv-toolbar-button-image');
+            var label = aDocument.createElementNS('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul', 'label');
+            label.setAttribute('id', 'ankpixiv-toolbar-button-text');
+            label.setAttribute('collapsed', true);
+
+            var hbox = aDocument.createElementNS('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul', 'hbox');
+            hbox.appendChild(image);
+            hbox.appendChild(label);
+
+            toolbarbutton.appendChild(hbox);
+
+            return toolbarbutton;
+          },
+        });
+      }
+      catch (e) {
+        AnkUtils.dumpError(e, true);
+      }
+    },
+
+    set toolbarText (text) { // {{{
+      let e = document.getElementById('ankpixiv-toolbar-button-text');
+      if (e) {
         e.value = text;
         e.collapsed = text.length == 0;
       }
       return text;
     }, // }}}
 
-    updateStatusBarText: function () { // {{{
+    updateToolbarText: function () { // {{{
       let queued = AnkBase.livingDownloads;
       let dp = queued.length;
       let remainImages = AnkBase.downloading.images;
       queued.forEach(function (d) remainImages -= d.downloaded);
-      AnkBase.statusbarText = dp ? dp+'('+remainImages+'/'+AnkBase.downloading.images+')' : '';
+      AnkBase.toolbarText = dp ? dp+'('+remainImages+'/'+AnkBase.downloading.images+')' : '';
     }, // }}}
 
 
@@ -1898,70 +1905,49 @@ try {
       AnkBase.updateDatabase();
       AnkBase.registerSheet();
       window.addEventListener('ankDownload', AnkBase.downloadHandler, true);
-      window.addEventListener('pageshow', AnkBase.onPageshow, true);
+      window.addEventListener('pageshow', AnkBase.onFocus, true);
       window.addEventListener('focus', AnkBase.onFocus, true);
       setInterval(function (e) AnkBase.cleanupDownload(), AnkBase.DOWNLOAD.CLEANUP_INTERVAL);
-    }, // }}}
-
-    onPageshow: function (ev) { // {{{
-
-      let location = null;
-
-      try {
-        location = ev.target.location.href;
-
-        let doc = AnkBase.currentDoc;
-        if (typeof doc === 'undefined' || !doc || ev.target !== doc)
-          return;       // documentがない、またはタブ内のトップ要素以外がターゲットなら無視する
-
-        if (doc.AnkPixivModule)
-          return;
-
-        let curmod = AnkBase.installSupportedModule(doc);
-        if (!curmod) {
-          AnkBase.changeEnabled.call(AnkBase, null, 'ankpixiv-toolbar-button-image');
-          AnkBase.changeEnabled.call(AnkBase, null, 'ankpixiv-menu-download');
-          return;       // 対象外のサイト
-        }
-
-        AnkUtils.dump('triggered: pageshow, '+location);
-
-        AnkBase.changeEnabled.call(AnkBase, curmod, 'ankpixiv-toolbar-button-image');
-        AnkBase.changeEnabled.call(AnkBase, curmod, 'ankpixiv-menu-download');
-        curmod.markDownloaded(null,ev.persisted);  // 戻るボタンなどで、キャッシュ上のページに遷移した場合は、マーキング強制
-        curmod.initFunctions();
-
-      } catch (e) {
-        AnkUtils.dumpError(e,false,location);   // dead object対策
-      }
+      this.toolbar = AnkBase.addToolbarIcon();
     }, // }}}
 
     onFocus: function (ev) { // {{{
 
+      if (ev.type !== 'focus' && ev.type !== 'pageshow')
+        return;
+
       let location = null;
 
       try {
-        location = 'location: '+ev.target.location;
+        let doc = (function () {
+          let win = ev.currentTarget;
+          if (win.toString().match(/\[Object ChromeWindow\]/,'i'))
+            return win.content.document;
+          let doc = AnkBase.currentDoc;
+          if (typeof doc !== 'undefined' && doc && doc === ev.target)
+            return doc;
+        })();
 
-        if (!ev.target.toString().match(/\[object Window\]/,'i'))
-          return;       // windowオブジェクト以外がターゲットなら無視する
-
-        let doc = ev.target.content.document;
-        if (doc.AnkPixivModule)
+        if (!doc || doc.AnkPixivModule) {
+          if (doc)
+            AnkUtils.dump('skip: '+ev.type+', '+doc.location.href);
           return;
+        }
+
+        location = 'location: '+doc.location;
 
         let curmod = AnkBase.installSupportedModule(doc);
         if (!curmod) {
-          AnkBase.changeEnabled.call(AnkBase, null, 'ankpixiv-toolbar-button-image');
+          AnkBase.changeEnabled.call(AnkBase, null, 'ankpixiv-toolbar-button-image');//
           AnkBase.changeEnabled.call(AnkBase, null, 'ankpixiv-menu-download');
           return;       // 対象外のサイト
         }
 
-        AnkUtils.dump('triggered: focus, '+location);
+        AnkUtils.dump('triggered: '+ev.type+', '+location);
 
         AnkBase.changeEnabled.call(AnkBase, curmod, 'ankpixiv-toolbar-button-image');
         AnkBase.changeEnabled.call(AnkBase, curmod, 'ankpixiv-menu-download');
-        curmod.markDownloaded();                     // focus当たる度にDB検索されると困るので引数なし
+        curmod.markDownloaded(null, ev.type !== 'focus' && ev.persisted);                     // focus当たる度にDB検索されると困るので引数なし
         curmod.initFunctions();
 
         // FIXME 保留
@@ -2008,7 +1994,7 @@ try {
         return;
 
       let useDialog = AnkBase.Prefs.get('showSaveDialog', true);
-      if (curmod.isDownloadable) {
+      if (curmod.isDownloadable()) {
         switch(button) {
           case 0: AnkBase.downloadCurrentImage(curmod, useDialog); break;
           case 1: AnkBase.downloadCurrentImage(curmod, !useDialog); break;
