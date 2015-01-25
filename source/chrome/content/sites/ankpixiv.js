@@ -17,7 +17,7 @@ try {
 
     self._image = {
         thumbnail: null,
-        originai: null,
+        original: null,
     };
 
     /********************************************************************************
@@ -239,7 +239,7 @@ try {
           self.elements.doc.location.href,
 
         get id ()
-          self.illustId,
+          self.getIllustId(),
 
         get dateTime () {
           let e = self.elements.illust.datetime;
@@ -449,7 +449,7 @@ try {
     /**
      * イラストID
      */
-    get illustId () {
+    getIllustId: function () {
       let m = this.curdoc.location.href.match(/illust_id=(\d+)/);
       return m && parseInt(m[1], 10);
     },
@@ -471,193 +471,219 @@ try {
       });
     },
 
+    // TODO 長すぎる
     /**
      * 画像URLリストの取得
      */
     getImageUrl: function (mangaOriginalSizeCheck, callback) {
-      function doCallback (v) {
-        if (self.in.manga && !mangaOriginalSizeCheck) {
-          self._image.thumbnail = v;
+      function doCallback (original, thumbnail) {
+        if (self.in.manga) {
+          self._image.thumbnail = thumbnail;
+          self._image.original = original;
+          return callback(mangaOriginalSizeCheck ? original : thumbnail);
         }
         else {
-          self._image.original = v;
+          self._image.original = original;
+          return callback(original);
         }
-
-        callback(v);
       }
 
       let self = this;
 
+      // 取得済みならそのまま返す(ここはdoCallbackではない)
+      if (self.in.manga && !mangaOriginalSizeCheck) {
+        if (self._image.thumbnail && self._image.thumbnail.images.length > 0)
+          return callback(self._image.thumbnail);
+      }
+      if (self._image.original && self._image.original.images.length > 0) {
+        return callback(self._image.original);
+      }
+
       // うごイラ
       if (self.in.ugoira) {
+        let src = self.info.path.ugokuIllustFullscreenSrc || self.info.path.ugokuIllustSrc;
+        if (!src) {
+          window.alert(AnkBase.Locale('cannotFindImages'));
+          return;
+        }
         return doCallback({
-          images: [ self.info.path.ugokuIllustFullscreenSrc || self.info.path.ugokuIllustSrc ],
+          images: [ src ],
           facing: null,
         });
       }
 
       // 単ページイラスト(Aパターン)
-      if (!self.in.manga && self.elements.illust.bigImage && self.elements.illust.bigImage.getAttribute('data-src')) {
+      if (!self.in.manga) {
         // イラスト
-        return doCallback({
-          images: [ self.elements.illust.bigImage.getAttribute('data-src') ],
-          facing: null,
-        });
+        let src = self.elements.illust.bigImage && self.elements.illust.bigImage.getAttribute('data-src');
+        if (src)
+          return doCallback({
+            images: [ src ],
+            facing: null,
+          });
       }
 
-      // マンガ or ブック or 単ページイラスト(Bパターン)
-
-      // 取得済みならそのまま返す(ここはdoCallbackではない)
-      if (self.in.manga && !mangaOriginalSizeCheck && self._image.thumbnail && self._image.thumbnail.images.length > 0) {
-        return callback(self._image.thumbnail);
-      }
-      if (self._image.original && self._image.original.images.length > 0) {
-        return callback(self._image.original);
-      }
+      // ブック or マンガ or 単ページイラスト(Bパターン)
 
       // マンガインデックスページを参照して画像URLリストを取得する
       Task.spawn(function* () {
 
         let indexPage = self.info.path.mangaIndexPage;
         let referer = self.info.illust.pageUrl;
-        AnkUtils.dump('MANGA INDEX PAGE: '+indexPage);
+        AnkUtils.dump('MANGA INDEX PAGE: '+indexPage+', '+referer);
         let html = yield AnkUtils.httpGETAsync(indexPage, referer);
         let doc = AnkUtils.createHTMLDocument(html);
 
         // サーバエラーのトラップ
         if (!doc || doc.querySelector('.errorArea') || doc.querySelector('.errortxt')) {
           window.alert(AnkBase.Locale('serverError'));
-          return AnkBase.NULL_RET;
+          return null;
         }
 
         if (!self.in.manga) {
           // イラスト(Bパターン)
+          let src = doc.querySelector('img').src;
+          if (!src) {
+            window.alert(AnkBase.Locale('cannotFindImages'));
+            return null;
+          }
           return {
-            images: [ doc.querySelector('img').src ],
-            facing: null,
-          }
+            original: {
+              images: [ src ],
+              facing: null,
+            }
+          };
         }
 
-        referer = indexPage;
-
-        // pixivの構成変更で、ページ単位で設定できていた見開き表示が、作品単位でしか設定できなくなったようだ
-        const MAXPAGE = 1000;
-        let imMed = [];
-        AnkUtils.A(doc.querySelectorAll('.manga > .item-container > img')).some(function (v) {
-          if (imMed.length > MAXPAGE)
-            return true;
-          imMed.push(v.getAttribute('data-src'));
-        });
-
-        let im = [];
+        let thumb = [];
+        let orig = [];
         let fp = [];
-        if (!mangaOriginalSizeCheck) {
-          // サムネイル画像
-          im = imMed;
-        } else {
-          // オリジナル画像
-          let reBig = /(_p\d+)\./;
-          let replaceBig = '_big$1.';
-          let reMaster = /^(https?:\/\/[^/]+).*?\/img-master\/(.+?)_master\d+(\.\w+)$/;
-          let replaceMaster = '$1/img-original/$2$3';
 
-          let a = AnkUtils.A(doc.querySelectorAll('.manga > .item-container > a'));
-          for (let i=0; i<a.length && i<MAXPAGE; i++) {
-            let href = indexPage;
-            href = href.replace(/^(https?:\/\/.+?)(?:\/.*)$/,"$1")+a[i].href;
-            AnkUtils.dump('ORIGINAL IMAGE PAGE: '+href);
-            let html = yield AnkUtils.httpGETAsync(href, indexPage);
-            let doc = AnkUtils.createHTMLDocument(html);
-
-            // サーバエラーのトラップ
-            if (!doc || doc.querySelector('.errorArea') || doc.querySelector('.errortxt')) {
-              window.alert(AnkBase.Locale('serverError'));
-              return AnkBase.NULL_RET;
-            }
-
-            let src = doc.querySelector('img').src;
-
-            if (AnkBase.Prefs.get('forceCheckMangaImagesAll', false)) {
-              im.push(src);
-            } else {
-              // 最初の一枚以外は拡張子チェックを行わない
-              if (imMed[0] ==  src) {
-                AnkUtils.dump('MANGA IMAGE: plane mode');
-                im = imMed;
-              }
-              else if (imMed[0].replace(reMaster, replaceMaster).replace(/\.\w+$/, '') == src.replace(/(\.\w+)$/, '')) {
-                let replaceExt = RegExp.$1;
-                AnkUtils.dump('MANGA IMAGE: master mode ... '+imMed[0]+' -> '+imMed[0].replace(reMaster, replaceMaster).replace(/\.\w+$/, replaceExt));
-                im = imMed.map(function (v) v.replace(reMaster, replaceMaster).replace(/\.\w+$/, replaceExt));
-              }
-              else if (imMed[0].replace(reBig, replaceBig) ==  src) {
-                AnkUtils.dump('MANGA IMAGE: big mode ... '+imMed[0]+' -> '+imMed[0].replace(reBig, replaceBig));
-                im = imMed.map(function (v) v.replace(reBig, replaceBig));
-              }
-              else {
-                AnkUtils.dump('MANGA IMAGE: UNKNOWN MODE ... '+imMed[0]+' -> '+src);
-              }
-              break;
-            }
-          }
-        }
-
-        if (im.length == 0) {
+        if (doc.documentElement.classList.contains('_book-viewer')) {
           // ブック
-          if (doc.documentElement.classList.contains('_book-viewer')) {
-            let ltr = doc.documentElement.classList.contains('ltr');
-            let re = mangaOriginalSizeCheck ? /pixiv\.context\.originalImages\[\d+\]\s*=\s*\"(.+?)\"/ : /pixiv\.context\.images\[\d+\]\s*=\s*\"(.+?)\"/;
-            AnkUtils.A(doc.querySelectorAll('script')).forEach(function (e) {
-              let mimg = e.text.match(re);
-              if (mimg)
-                im.push(mimg[1].replace(/\\(.)/g, '$1'));
-            });
+          // pixivの構成変更で、ページ単位で設定できていた見開き表示が、作品単位でしか設定できなくなったようだ
 
-            for (var i=0; i<im.length; i++) {
-              let p = i+1;
-              if (p == 1) {
-                fp.push(p);
-              }
-              else {
-                let oddp = p%2;
-                fp.push((p - oddp) / 2 + 1)
+          function swap (a, i) {
+            let tmp = a[i-1];
+            a[i-1] = a[i];
+            a[i] = tmp;
+          }
 
-                // 見開きの向きに合わせて画像の順番を入れ替える
-                if (ltr && oddp) {
-                  let tmp = im[i-1];
-                  im[i-1] = im[i];
-                  im[i] = tmp;
-                }
+          let ltr = doc.documentElement.classList.contains('ltr');
+
+          AnkUtils.A(doc.querySelectorAll('script')).forEach(function (e) {
+            let mt = e.text.match(/pixiv\.context\.images\[\d+\]\s*=\s*\"(.+?)\"/);
+            if (mt)
+              thumb.push(mt[1].replace(/\\(.)/g, '$1'));
+            let mo = e.text.match(/pixiv\.context\.originalImages\[\d+\]\s*=\s*\"(.+?)\"/);
+            if (mo)
+              orig.push(mo[1].replace(/\\(.)/g, '$1'));
+          });
+
+          for (var i=0; i<thumb.length; i++) {
+            let p = i+1;
+            if (p == 1) {
+              fp.push(p);
+            }
+            else {
+              let oddp = p%2;
+              fp.push((p - oddp) / 2 + 1)
+
+              // 見開きの向きに合わせて画像の順番を入れ替える
+              if (ltr && oddp) {
+                swap(thumb, i);
+                swap(orig, i);
               }
             }
           }
         }
+        else {
+          // マンガ
+          const MAXPAGE = 1000;
 
-        if (im.length > 0) {
+          AnkUtils.A(doc.querySelectorAll('.manga > .item-container > img')).some(function (v) {
+            if (thumb.length > MAXPAGE)
+              return true;
+            thumb.push(v.getAttribute('data-src'));
+          });
+
+          if (mangaOriginalSizeCheck) {
+            // オリジナル画像
+            let reBig = /(_p\d+)\./;
+            let replaceBig = '_big$1.';
+            let reMaster = /^(https?:\/\/[^/]+).*?\/img-master\/(.+?)_master\d+(\.\w+)$/;
+            let replaceMaster = '$1/img-original/$2$3';
+
+            let a = AnkUtils.A(doc.querySelectorAll('.manga > .item-container > a'));
+            for (let i=0; i<a.length && i<thumb.length; i++) {
+              let href = indexPage;
+              href = href.replace(/^(https?:\/\/.+?)(?:\/.*)$/,"$1")+a[i].href;
+              AnkUtils.dump('ORIGINAL IMAGE PAGE: '+href+', '+indexPage);
+              let html = yield AnkUtils.httpGETAsync(href, indexPage);
+              let doc = AnkUtils.createHTMLDocument(html);
+
+              // サーバエラーのトラップ
+              if (!doc || doc.querySelector('.errorArea') || doc.querySelector('.errortxt')) {
+                window.alert(AnkBase.Locale('serverError'));
+                return null;
+              }
+  
+              let src = doc.querySelector('img').src;
+  
+              if (!AnkBase.Prefs.get('forceCheckMangaImagesAll', false)) {
+                // 最初の一枚以外は拡張子チェックを行わないモード
+                if (thumb[0] ==  src) {
+                  AnkUtils.dump('MANGA IMAGE: plane mode');
+                  orig = thumb.map(function (v) v);
+                }
+                else if (thumb[0].replace(reMaster, replaceMaster).replace(/\.\w+$/, '') == src.replace(/(\.\w+)$/, '')) {
+                  let replaceExt = RegExp.$1;
+                  AnkUtils.dump('MANGA IMAGE: master mode ... '+thumb[0]+' -> '+thumb[0].replace(reMaster, replaceMaster).replace(/\.\w+$/, replaceExt));
+                  orig = thumb.map(function (v) v.replace(reMaster, replaceMaster).replace(/\.\w+$/, replaceExt));
+                }
+                else if (thumb[0].replace(reBig, replaceBig) ==  src) {
+                  AnkUtils.dump('MANGA IMAGE: big mode ... '+thumb[0]+' -> '+thumb[0].replace(reBig, replaceBig));
+                  orig = thumb.map(function (v) v.replace(reBig, replaceBig));
+                }
+                else {
+                  AnkUtils.dump('MANGA IMAGE: UNKNOWN MODE ... '+thumb[0]+' -> '+src);
+                }
+                break;
+              }
+  
+              orig.push(src);
+            }
+          }
+        }
+
+        if (thumb.length > 0) {
           if (fp.length > 0 && fp[fp.length - 1] < fp.length) {
             // 見開きがある場合
-            AnkUtils.dump("Facing Page Check: " + im.length + " pics in " + fp[fp.length - 1] + " pages");
+            AnkUtils.dump("Facing Page Check: (thumb) " + thumb.length + ", (orig) "+orig.length+" pics in " + fp[fp.length - 1] + " pages");
           }
           else {
             // 見開きがない場合
-            AnkUtils.dump("Facing Page Check: " + im.length + " pics");
+            AnkUtils.dump("Facing Page Check: (thumb) " + thumb.length + ", (orig) "+orig.length+" pics");
             fp = null;
           }
 
-          return { images: im, facing: fp, };
+          return {
+            thumbnail: { images: thumb, facing: fp, },
+            original: { images: orig, facing: fp, }
+          };
         }
 
         // error
-        window.alert(AnkBase.Locale('serverError'));
-        return AnkBase.NULL_RET;
+        window.alert(AnkBase.Locale('cannotFindImages'));
+        return null;
 
       }).then(function (result) {
-          doCallback(result);
+          if (result)
+            doCallback(result.original, result.thumbnail);
         },
         function (e) {
           window.alert(AnkBase.Locale('serverError'));
           AnkUtils.dumpError(e);
-          callback(AnkBase.NULL_RET);
         }
       );
     },
@@ -681,7 +707,6 @@ try {
         var openCaption = self.elements.illust.openCaption;
         var userTags = self.elements.illust.userTags;
         var imgOvr = self.elements.illust.imageOverlay;
-        var jq = doc.defaultView.wrappedJSObject.jQuery
 
         // 完全に読み込まれていないっぽいときは、遅延する
         if (!(body && medImg && wrapper && userTags && imgOvr)) { // {{{
@@ -714,15 +739,17 @@ try {
 
         // FIXME AnkViewer無効時に、中クリックして、Pixivのデフォルト動作で大画像を見ると、ダウンロードマークが消える
         let useViewer = !self.in.ugoira && AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true);
-        let useClickDownload = AnkBase.Prefs.get('downloadWhenClickMiddle');
+        let useClickDownload = AnkBase.Prefs.get('downloadWhenClickMiddle', false);
+        let useOriginalSize = useViewer && AnkBase.Prefs.get('viewOriginalSize', false) ||
+                              useClickDownload && AnkBase.Prefs.get('downloadOriginalSize', false);
         if (useViewer || useClickDownload) {
           if (useViewer)
             self.viewer = new AnkViewer(self);
 
           // TODO imgOvrの方になった場合は、medImgより広い領域がクリック可能となるが、jQuery.on('click')を無効化できないため止む無し
+          // mangaIndexPageへのアクセスが複数回実行されないように、getImageUrl()のコールバックでopenViewer()とdownloadCurrentImageAuto()を実行する
           (largeLink || imgOvr).addEventListener('click', function (e) {
-            // mangaIndexPageへのアクセスが複数回実行されないように、getImageUrl()のコールバックでopenViewer()とdownloadCurrentImageAuto()を実行する
-            self.getImageUrl(AnkBase.Prefs.get('downloadOriginalSize', false), function () {
+            self.getImageUrl(useOriginalSize, function () {
               if (useViewer)
                 self.viewer.openViewer();
               if (useClickDownload)

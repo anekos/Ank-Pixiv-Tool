@@ -93,25 +93,10 @@ try {
     get currentDoc ()
       window.gBrowser.selectedBrowser.contentDocument,
 
-    get currentModule ()
-      AnkBase.currentDoc && AnkBase.currentDoc.AnkPixivModule,
-
-    get current () { // {{{
-      function clone (obj) {
-        if (obj && typeof obj === 'object' && !(obj instanceof HTMLElement)) {
-          let res = {};
-          for (let [n, v] in Iterator(obj))
-            res[n] = clone(v);
-          return res;
-        }
-        return obj;
-      }
-
-      return 'in info elements'.split(/\s+/).reduce(
-        function (r, name) (r[name] = clone(AnkBase[name]), r),
-        {}
-      );
-    }, // }}}
+    get currentModule () {
+      let curdoc = AnkBase.currentDoc;
+      return curdoc && curdoc.AnkPixivModule;
+    },
 
     /********************************************************************************
     * モジュール関連
@@ -694,13 +679,13 @@ try {
           confirmDownloaded = AnkBase.Prefs.get('confirmExistingDownload');
 
         // ダウンロード中だったらやめようぜ！
-        if (AnkBase.isDownloading(module.illustId, module.SERVICE_ID)) {
+        if (AnkBase.isDownloading(module.getIllustId(), module.SERVICE_ID)) {
           //window.alert(AnkBase.Locale('alreadyDownloading'));
           return false;
         }
 
         /* ダウンロード済みかの確認 */
-        if (AnkBase.isDownloaded(module.illustId, module.SERVICE_ID)) {
+        if (AnkBase.isDownloaded(module.getIllustId(), module.SERVICE_ID)) {
           if (confirmDownloaded) {
             if (!window.confirm(AnkBase.Locale('downloadExistingImage')))
               return false;
