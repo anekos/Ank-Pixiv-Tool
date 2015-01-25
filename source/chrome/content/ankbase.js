@@ -1452,32 +1452,21 @@ try {
     ********************************************************************************/
 
     updateDatabase: function () { // {{{
-      let ver = AnkBase.DB_VERSION;
 
-      let uver = AnkBase.Storage.getUserVersion();
-      if (uver >= ver) {
-        AnkUtils.dump("database is up to date. version "+uver);
-        return;
-      }
+      // version 7
 
-      AnkUtils.dump('update database. version '+uver+' -> '+ver);
-
-      // version 6
-      try {
-        let srvid = 'PXV';
-
-        AnkBase.Storage.dropIndexes('histories',['illust_id']);
-        AnkBase.Storage.dropIndexes('members',['id']);
-
-        let set = 'service_id = \'' + srvid + '\', version = '+ver;
-        let cond = 'service_id is null';
-        AnkBase.Storage.update('histories', set, cond);
-        AnkBase.Storage.update('members', set, cond);
-
-        AnkBase.Storage.setUserVersion(ver);
-      } catch (e) {
-        AnkUtils.dumpError(e);
-      }
+      let set = 'service_id = ?, version = ?';
+      let values = ['PXV', AnkBase.DB_VERSION];
+      let cond = 'service_id is null';
+      AnkBase.Storage.updateDatabase(
+        parseInt(AnkBase.DB_VERSION,10),
+        [
+          { type:'dropIndex', table:'histories', columns:['illust_id'] },
+          { type:'dropIndex', table:'members',   columns:['id'] },
+          { type:'update', table:'histories', set:set, values:values, cond:cond },
+          { type:'update', table:'members',   set:set, values:values, cond:cond },
+        ]
+      );
     }, // }}}
 
     fixStorageEncode: function () { // {{{
@@ -1862,49 +1851,57 @@ try {
     }, // }}}
 
     onInit: function () { // {{{
-      function initStorage () { // {{{
-        AnkBase.Storage = new AnkStorage(
-          AnkBase.Prefs.get('storageFilepath', 'ankpixiv.sqlite'),
-          {
-            histories: {
-              illust_id: "string",
-              member_id: "string",
-              local_path: "string",
-              title: "string",
-              tags: "string",
-              server: "string",
-              datetime: "datetime",
-              saved: "boolean",
-              filename: "string",
-              version: "integer",
-              comment: "string",
-              service_id: "string",
-            },
-            members: {
-              id: "string",
-              name: "string",
-              pixiv_id: "string",
-              version: "integer",
-              service_id: "string",
-            }
-          },
-          {
-            index: {
-              histories: ['illust_id,service_id','filename'],
-              members: ['id,service_id']
-            }
-          }
-        );
-      } // }}}
+      let dbTables = {
+        histories: {
+          illust_id: { def:"string" },
+          member_id: { def:"string" },
+          local_path: { def:"string" },
+          title: { def:"string" },
+          tags: { def:"string" },
+          server: { def:"string" },
+          datetime: { def:"datetime" },
+          saved: { def:"boolean" },
+          filename: { def:"string" },
+          version: { def:"integer" },
+          comment: { def:"string" },
+          service_id: { def:"string" },
+        },
+        members: {
+          id: { def:"string" },
+          name: { def:"string" },
+          pixiv_id: { def:"string" },
+          version: { def:"integer" },
+          service_id: { def:"string" },
+        }
+      };
 
-      initStorage();
-      AnkBase.updateDatabase();
-      AnkBase.registerSheet();
-      window.addEventListener('ankDownload', AnkBase.downloadHandler, true);
-      window.addEventListener('pageshow', AnkBase.onFocus, true);
-      window.addEventListener('focus', AnkBase.onFocus, true);
-      setInterval(function (e) AnkBase.cleanupDownload(), AnkBase.DOWNLOAD.CLEANUP_INTERVAL);
-      this.toolbar = AnkBase.addToolbarIcon();
+      let dbOptions = {
+        index: {
+          histories: [
+            ['illust_id','service_id'],
+            ['filename']
+          ],
+          members: [
+            ['id','service_id']
+          ],
+        }
+      };
+
+      AnkBase.Storage = new AnkStorage(
+        AnkBase.Prefs.get('storageFilepath', 'ankpixiv.sqlite'),
+        dbTables,
+        dbOptions,
+        function () {
+          AnkBase.updateDatabase();
+          AnkBase.registerSheet();
+          window.addEventListener('ankDownload', AnkBase.downloadHandler, true);
+          window.addEventListener('pageshow', AnkBase.onFocus, true);
+          window.addEventListener('focus', AnkBase.onFocus, true);
+          setInterval(function (e) AnkBase.cleanupDownload(), AnkBase.DOWNLOAD.CLEANUP_INTERVAL);
+          this.toolbar = AnkBase.addToolbarIcon();
+        }
+      );
+
     }, // }}}
 
     onFocus: function (ev) { // {{{
