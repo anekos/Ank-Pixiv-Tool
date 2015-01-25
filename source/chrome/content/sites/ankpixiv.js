@@ -476,17 +476,6 @@ try {
      * 画像URLリストの取得
      */
     getImageUrl: function (mangaOriginalSizeCheck, callback) {
-      function doCallback (original, thumbnail) {
-        if (self.in.manga) {
-          self._image.thumbnail = thumbnail;
-          self._image.original = original;
-          return callback(mangaOriginalSizeCheck ? original : thumbnail);
-        }
-        else {
-          self._image.original = original;
-          return callback(original);
-        }
-      }
 
       let self = this;
 
@@ -499,15 +488,23 @@ try {
         return callback(self._image.original);
       }
 
+      function doCallback (original, thumbnail) {
+        if (self.in.manga) {
+          self._image.thumbnail = thumbnail;
+          self._image.original = original;
+          return callback(mangaOriginalSizeCheck ? original : thumbnail);
+        }
+        else {
+          self._image.original = original;
+          return callback(original);
+        }
+      }
+
       // うごイラ
       if (self.in.ugoira) {
         let src = self.info.path.ugokuIllustFullscreenSrc || self.info.path.ugokuIllustSrc;
-        if (src) {
-          return doCallback({
-            images: [ src ],
-            facing: null,
-          });
-        }
+        if (src)
+          return doCallback({ original: { images: [ src ], facing: null } });
 
         window.alert(AnkBase.Locale('cannotFindImages'));
         return;
@@ -517,19 +514,14 @@ try {
       if (!self.in.manga) {
         let src = self.elements.illust.bigImage && self.elements.illust.bigImage.getAttribute('data-src');
         if (src)
-          return doCallback({
-            images: [ src ],
-            facing: null,
-          });
+          return doCallback({ original: { images: [ src ], facing: null } });
 
         // Bパターンに続く
       }
 
       // ブック or マンガ or 単ページイラスト(Bパターン)
-
-      // マンガインデックスページを参照して画像URLリストを取得する
       Task.spawn(function* () {
-
+        // マンガインデックスページを参照して画像URLリストを取得する
         let indexPage = self.info.path.mangaIndexPage;
         let referer = self.info.illust.pageUrl;
         AnkUtils.dump('MANGA INDEX PAGE: '+indexPage+', '+referer);
@@ -545,27 +537,20 @@ try {
         // 単ページイラスト(Bパターン)
         if (!self.in.manga) {
           let src = doc.querySelector('img').src;
-          if (src) {
-            return {
-              original: {
-                images: [ src ],
-                facing: null,
-              }
-            };
-          }
+          if (src)
+            return { original: { images: [ src ], facing: null } };
 
           window.alert(AnkBase.Locale('cannotFindImages'));
           return null;
         }
 
+        // ブック or マンガ
         let thumb = [];
         let orig = [];
         let fp = [];
-
         if (doc.documentElement.classList.contains('_book-viewer')) {
           // ブック
           // pixivの構成変更で、ページ単位で設定できていた見開き表示が、作品単位でしか設定できなくなったようだ
-
           function swap (a, i) {
             let tmp = a[i-1];
             a[i-1] = a[i];
@@ -573,7 +558,6 @@ try {
           }
 
           let ltr = doc.documentElement.classList.contains('ltr');
-
           AnkUtils.A(doc.querySelectorAll('script')).forEach(function (e) {
             let mt = e.text.match(/pixiv\.context\.images\[\d+\]\s*=\s*\"(.+?)\"/);
             if (mt)
@@ -673,7 +657,7 @@ try {
 
           return {
             thumbnail: { images: thumb, facing: fp, },
-            original: { images: orig, facing: fp, }
+            original:  { images: orig,  facing: fp, }
           };
         }
 
@@ -764,7 +748,7 @@ try {
           );
         }
 
-        function addRatingListener () {
+        function addRatingEventListener () {
           let point = AnkBase.Prefs.get('downloadRate', 10);
           AnkUtils.A(doc.querySelectorAll('.rating')).forEach(function (e) {
             e.addEventListener(
@@ -794,7 +778,7 @@ try {
 
         // レイティングによるダウンロード
         if (AnkBase.Prefs.get('downloadWhenRate', false))
-          addRatingListener();
+          addRatingEventListener();
 
         // 保存済み表示
         AnkBase.insertDownloadedDisplayById(
