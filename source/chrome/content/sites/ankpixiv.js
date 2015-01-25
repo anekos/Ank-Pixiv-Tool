@@ -502,25 +502,27 @@ try {
       // うごイラ
       if (self.in.ugoira) {
         let src = self.info.path.ugokuIllustFullscreenSrc || self.info.path.ugokuIllustSrc;
-        if (!src) {
-          window.alert(AnkBase.Locale('cannotFindImages'));
-          return;
+        if (src) {
+          return doCallback({
+            images: [ src ],
+            facing: null,
+          });
         }
-        return doCallback({
-          images: [ src ],
-          facing: null,
-        });
+
+        window.alert(AnkBase.Locale('cannotFindImages'));
+        return;
       }
 
       // 単ページイラスト(Aパターン)
       if (!self.in.manga) {
-        // イラスト
         let src = self.elements.illust.bigImage && self.elements.illust.bigImage.getAttribute('data-src');
         if (src)
           return doCallback({
             images: [ src ],
             facing: null,
           });
+
+        // Bパターンに続く
       }
 
       // ブック or マンガ or 単ページイラスト(Bパターン)
@@ -540,19 +542,20 @@ try {
           return null;
         }
 
+        // 単ページイラスト(Bパターン)
         if (!self.in.manga) {
-          // イラスト(Bパターン)
           let src = doc.querySelector('img').src;
-          if (!src) {
-            window.alert(AnkBase.Locale('cannotFindImages'));
-            return null;
+          if (src) {
+            return {
+              original: {
+                images: [ src ],
+                facing: null,
+              }
+            };
           }
-          return {
-            original: {
-              images: [ src ],
-              facing: null,
-            }
-          };
+
+          window.alert(AnkBase.Locale('cannotFindImages'));
+          return null;
         }
 
         let thumb = [];
@@ -609,10 +612,10 @@ try {
 
           if (mangaOriginalSizeCheck) {
             // オリジナル画像
-            let reBig = /(_p\d+)\./;
-            let replaceBig = '_big$1.';
-            let reMaster = /^(https?:\/\/[^/]+).*?\/img-master\/(.+?)_master\d+(\.\w+)$/;
-            let replaceMaster = '$1/img-original/$2$3';
+            const reBig = /(_p\d+)\./;
+            const replaceBig = '_big$1.';
+            const reMaster = /^(https?:\/\/[^/]+).*?\/img-master\/(.+?)_master\d+(\.\w+)$/;
+            const replaceMaster = '$1/img-original/$2$3';
 
             let a = AnkUtils.A(doc.querySelectorAll('.manga > .item-container > a'));
             for (let i=0; i<a.length && i<thumb.length; i++) {
@@ -627,12 +630,12 @@ try {
                 window.alert(AnkBase.Locale('serverError'));
                 return null;
               }
-  
+
               let src = doc.querySelector('img').src;
-  
+
               if (!AnkBase.Prefs.get('forceCheckMangaImagesAll', false)) {
                 // 最初の一枚以外は拡張子チェックを行わないモード
-                if (thumb[0] ==  src) {
+                if (thumb[0] == src) {
                   AnkUtils.dump('MANGA IMAGE: plane mode');
                   orig = thumb.map(function (v) v);
                 }
@@ -648,6 +651,7 @@ try {
                 else {
                   AnkUtils.dump('MANGA IMAGE: UNKNOWN MODE ... '+thumb[0]+' -> '+src);
                 }
+
                 break;
               }
   
@@ -699,7 +703,6 @@ try {
 
       let proc = function () {
         // インストールに必用な各種要素
-        var doc = self.elements.doc;
         var body = self.elements.illust.body;
         var wrapper = self.elements.illust.wrapper;
         var medImg = self.elements.illust.mediumImage;
@@ -713,8 +716,7 @@ try {
           return false;   // リトライしてほしい
         } // }}}
 
-        // デバッグ用
-        if (AnkBase.Prefs.get('showDownloadedFilename', false)) {
+        function createDebugMessageArea() {
           let e = self.elements.illust.uiLayoutWest;
           if (e) {
             {
@@ -737,33 +739,32 @@ try {
           }
         }
 
-        // FIXME AnkViewer無効時に、中クリックして、Pixivのデフォルト動作で大画像を見ると、ダウンロードマークが消える
-        let useViewer = !self.in.ugoira && AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true);
-        let useClickDownload = AnkBase.Prefs.get('downloadWhenClickMiddle', false);
-        let useOriginalSize = useViewer && AnkBase.Prefs.get('viewOriginalSize', false) ||
-                              useClickDownload && AnkBase.Prefs.get('downloadOriginalSize', false);
-        if (useViewer || useClickDownload) {
+        function addMiddleClickEventListener () {
           if (useViewer)
             self.viewer = new AnkViewer(self);
 
+          let useCapture = !self.in.ugoira;
+
+          // FIXME AnkViewer無効時に、中クリックして、Pixivのデフォルト動作で大画像を見ると、ダウンロードマークが消える
           // TODO imgOvrの方になった場合は、medImgより広い領域がクリック可能となるが、jQuery.on('click')を無効化できないため止む無し
           // mangaIndexPageへのアクセスが複数回実行されないように、getImageUrl()のコールバックでopenViewer()とdownloadCurrentImageAuto()を実行する
           (largeLink || imgOvr).addEventListener('click', function (e) {
-            self.getImageUrl(useOriginalSize, function () {
-              if (useViewer)
-                self.viewer.openViewer();
-              if (useClickDownload)
-                AnkBase.downloadCurrentImageAuto(self);
-            });
-            if (!self.in.ugoira) {
-              e.preventDefault();
-              e.stopPropagation();
-            }
-          }, !self.in.ugoira);
+              self.getImageUrl(useOriginalSize, function () {
+                if (useViewer)
+                  self.viewer.openViewer();
+                if (useClickDownload)
+                  AnkBase.downloadCurrentImageAuto(self);
+              });
+              if (!self.in.ugoira) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            },
+            useCapture
+          );
         }
 
-        // レイティングによるダウンロード
-        if (AnkBase.Prefs.get('downloadWhenRate', false)) { // {{{
+        function addRatingListener () {
           let point = AnkBase.Prefs.get('downloadRate', 10);
           AnkUtils.A(doc.querySelectorAll('.rating')).forEach(function (e) {
             e.addEventListener(
@@ -777,7 +778,23 @@ try {
               true
             );
           });
-        } // }}}
+        }
+
+        // デバッグ用
+        if (AnkBase.Prefs.get('showDownloadedFilename', false))
+          createDebugMessageArea();
+
+        // 中画像クリック
+        let useViewer = !self.in.ugoira && AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true);
+        let useClickDownload = AnkBase.Prefs.get('downloadWhenClickMiddle', false);
+        let useOriginalSize = useViewer        && AnkBase.Prefs.get('viewOriginalSize', false) ||
+                              useClickDownload && AnkBase.Prefs.get('downloadOriginalSize', false);
+        if (useViewer || useClickDownload)
+          addMiddleClickEventListener();
+
+        // レイティングによるダウンロード
+        if (AnkBase.Prefs.get('downloadWhenRate', false))
+          addRatingListener();
 
         // 保存済み表示
         AnkBase.insertDownloadedDisplayById(
@@ -788,9 +805,8 @@ try {
         );
 
         // キャプションを開く
-        if (AnkBase.Prefs.get('openCaption', false) && openCaption && openCaption.style.display === 'block') // {{{
+        if (AnkBase.Prefs.get('openCaption', false) && openCaption && openCaption.style.display === 'block')
           setTimeout(function () openCaption.click(), 1000);
-        // }}}
 
         // イメレスにマーキング
         self.markDownloaded(doc,true);
@@ -799,6 +815,7 @@ try {
       }; // }}}
 
       let self = this;
+      let doc = this.curdoc;
 
       // install now
       return AnkBase.delayFunctionInstaller(proc, 500, 20, self.SITE_NAME, '');
