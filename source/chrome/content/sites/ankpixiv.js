@@ -350,9 +350,6 @@ try {
           let e = self.elements.illust.userName;
           return e && AnkUtils.trim(e.textContent);
         },
-
-        get memoizedName ()
-          null,
       };
 
       let path = {
@@ -667,7 +664,7 @@ try {
 
       }).then(function (result) {
           if (result)
-            doCallback(result.original, result.thumbnail);
+            doCallback(result);
         },
         function (e) {
           window.alert(AnkBase.Locale('serverError'));

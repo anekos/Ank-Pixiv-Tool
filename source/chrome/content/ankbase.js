@@ -776,9 +776,8 @@ try {
                 let title         = c.info.illust.title;
                 let member_id     = c.info.member.id;
                 let member_name   = c.info.member.name || member_id;
-                let memoized_name = c.info.member.memoizedName || member_name;
                 let pageUrl       = c.info.illust.pageUrl;
-                let desc = '\n' + title + ' / ' + memoized_name + '\n' + pageUrl + '\n';
+                let desc = '\n' + title + ' / ' + member_name + '\n' + pageUrl + '\n';
                 let msg =
                   AnkBase.Locale('downloadTimeout') + '\n' +
                   desc;
@@ -843,7 +842,15 @@ try {
         AnkBase.updateToolbarText();
         AnkBase.insertDownloadedDisplay(download.context.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADING);
 
-        AnkBase.downloadExecuter(download);
+        let qa = [];
+        qa.push({ id: 0, table:'members', cond:'id = :memberId and service_id = :servId', values:{memberId:download.context.info.member.id, servId:download.context.SERVICE_ID} });
+        AnkBase.Storage.select(qa, function (id, rows) {
+          if (rows.length > 0)
+            download.context.info.member.memoizedName = rows[0].getResultByName('name');
+          AnkUtils.dump('xxx '+download.context.info.member.memoizedName);
+
+          AnkBase.downloadExecuter(download);
+        });
 
       } catch (e) {
         AnkUtils.dumpError(e, true);
@@ -899,6 +906,7 @@ try {
               if (!isExists) {
                 AnkUtils.dump('xxxxxxxx user exists xxxxxxxx');
                 // insert member
+                /*
                 AnkBase.Storage.insert(
                   'members', {
                     id: member_id,
@@ -1300,22 +1308,6 @@ try {
         return null;
       }
     }, // }}}
-
-    memoizedName: function (member_id, service_id) {
-      let result = AnkBase.Storage.select(
-        'members',
-        'id = ?1 and service_id = ?2',
-        function (stmt){
-          let result = [];
-          stmt.bindUTF8StringParameter(0, member_id);
-          stmt.bindUTF8StringParameter(1, service_id);
-          while (stmt.executeStep())
-            result.push(AnkStorage.statementToObject(stmt));
-          return result;
-        }
-      );
-      return result && result.length && result[0].name;
-    },
 
 
     /********************************************************************************
@@ -1763,7 +1755,7 @@ try {
           let box = boxies[id].node;
           let illust_id = boxies[id].illust_id;
 
-          AnkUtils.dump('xxx '+boxies.length+', '+id+', '+illust_id+', '+isExists);
+          AnkUtils.dump('markBoxNode: '+boxies.length+', '+id+', '+illust_id+', '+isExists);
 
           if (overlay === false) {
             // 従来形式

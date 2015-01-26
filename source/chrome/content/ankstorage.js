@@ -78,6 +78,13 @@ try {
     },
 
     /**
+     * 更新系トランザクション
+     */
+    insert: function () {
+      AnkUtils.dump('insert: ********** UNIMPLEMENTED **********');
+    },
+
+    /**
      * 参照系トランザクション
      */
     select: function (qa, callback, onSuccess, onError) {
