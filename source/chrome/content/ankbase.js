@@ -898,7 +898,7 @@ try {
             AnkBase.Storage.exists(qa, function (id, isExists) {
               if (!isExists) {
                 AnkUtils.dump('xxxxxxxx user exists xxxxxxxx');
-                /*
+                // insert member
                 AnkBase.Storage.insert(
                   'members', {
                     id: member_id,

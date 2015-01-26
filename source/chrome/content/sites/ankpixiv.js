@@ -352,7 +352,7 @@ try {
         },
 
         get memoizedName ()
-          AnkBase.memoizedName(member.id, self.SERVICE_ID),
+          null,
       };
 
       let path = {

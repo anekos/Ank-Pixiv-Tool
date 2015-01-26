@@ -99,8 +99,9 @@ AnkContext = function (module) {
         name:
           module.info.member.name,
 
+        // DBへのI/Oが発生するので後で確定する
         memoizedName:
-          module.info.member.memoizedName,
+          null,
       },
 
       path: {

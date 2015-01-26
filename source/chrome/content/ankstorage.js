@@ -35,9 +35,9 @@ try {
     /**
      * 更新系トランザクション
      */
-    executeUpdateSQLs: function (qa, callback) {
+    executeUpdateSQLs: function (qa, callback, onSuccess, onError) {
       let self = this;
-      Task.spawn(function () {
+      Task.spawn(function* () {
         let conn;
         try {
           conn = yield Sqlite.openConnection({ path: self.dbfile.path });
@@ -64,25 +64,35 @@ try {
           if (conn)
             yield conn.close();
         }
-      }).then(null, function (e) AnkUtils.dumpError(e, true));
+      }).then(
+        function (r) {
+          if (onSuccess)
+            onSuccess(r);
+        },
+        function (e) {
+          AnkUtils.dumpError(e, true);
+          if (onError)
+            onError();
+        }
+      );
     },
 
     /**
-     * 参照系トランザクション（存在確認）
+     * 参照系トランザクション
      */
-    exists: function exists (qa, callback) {
+    select: function (qa, callback, onSuccess, onError) {
       let self = this;
-      Task.spawn(function () {
+      Task.spawn(function* () {
         let conn;
         try {
           conn = yield Sqlite.openConnection({ path: self.dbfile.path });
           yield conn.executeTransaction(function* () {
             for (let i=0; i<qa.length; i++) {
-              let query = 'select illust_id from '+qa[i].table+(qa[i].cond ? ' where '+qa[i].cond : '')+' limit 1';
-              AnkUtils.dump('exists: '+(i+1)+', '+query);
+              let query = 'select * from '+qa[i].table+(qa[i].cond ? ' where '+qa[i].cond : '')+(qa[i].opts ? ' '+qa[i].opts : '');
+              AnkUtils.dump('select: '+(i+1)+', '+query);
               let rows = yield conn.execute(query, qa[i].values);
               if (callback)
-                callback(qa[i].id, !!rows.length);
+                callback(qa[i].id, rows);
             }
           });
         }
@@ -93,7 +103,30 @@ try {
           if (conn)
             yield conn.close();
         }
-      }).then(null, function (e) AnkUtils.dumpError(e, true));
+      }).then(
+        function (r) {
+          if (onSuccess)
+            onSuccess(r);
+        },
+        function (e) {
+          AnkUtils.dumpError(e, true);
+          if (onError)
+            onError();
+        }
+      );
+    },
+
+    /**
+     * 参照系トランザクション（存在確認）
+     */
+    exists: function (qa, callback) {
+      let self = this;
+      for (let i=0; i<qa.length; i++)
+        qa[i].opts = 'limit 1';
+      self.select(qa, function (id, rows) {
+        if (callback)
+          callback(id, !!rows.length);
+      });
     },
 
     /*
