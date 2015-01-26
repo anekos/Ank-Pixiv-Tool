@@ -85,6 +85,9 @@ try {
       PAGE_NUMBER: "#page-number#",
     },
 
+    QUERY: {
+      DOWNLOADED: 'illust_id = :illId and service_id = :servId',
+    },
 
     /********************************************************************************
     * プロパティ
@@ -267,9 +270,10 @@ try {
      * 同じファイル名が存在するか？
      */
     filenameExists: function (filename) // {{{
-      AnkBase.Storage.exists('histories',
-                              'filename = ?',
-                              function (stmt) stmt.bindUTF8StringParameter(0, filename)), // }}}
+      false,
+//      AnkBase.Storage.exists('histories',
+//                              'filename = ?',
+//                              function (stmt) stmt.bindUTF8StringParameter(0, filename)), // }}}
 
     /*
      * newLocalFile
@@ -386,16 +390,6 @@ try {
       }
 
       return AnkBase.showFilePickerWithMeta(prefInitDir, filenames[0], ext, isFile);
-    }, // }}}
-
-    /*
-     * isDownloaded
-     *    illust_id:     イラストID
-     *    service_id:    サイト識別子
-     *    return:        ダウンロード済み？
-     */
-    isDownloaded: function (illust_id,service_id) { // {{{
-      return AnkBase.Storage.exists('histories', 'illust_id = \'' + illust_id + '\' and service_id = \'' + service_id + '\'');
     }, // }}}
 
     /*
@@ -685,18 +679,23 @@ try {
         }
 
         /* ダウンロード済みかの確認 */
-        if (AnkBase.isDownloaded(module.getIllustId(), module.SERVICE_ID)) {
-          if (confirmDownloaded) {
-            if (!window.confirm(AnkBase.Locale('downloadExistingImage')))
+        let qa = [];
+        let cond = 'illust_id = :illId and service_id = :servId';
+        qa.push({ id:-1, table:'histories', cond:cond, values:{ illId:module.getIllustId(), servId:module.SERVICE_ID } });
+        AnkBase.Storage.exists(qa, function (id, isExists) {
+          if (isExists) {
+            if (confirmDownloaded) {
+              if (!window.confirm(AnkBase.Locale('downloadExistingImage')))
+                return false;
+            } else {
               return false;
-          } else {
-            return false;
+            }
           }
-        }
 
-        // ダウンロード用のコンテキストの収集(contextの取得に時間がかかる場合があるのでダウンロードマークを表示しておく)
-        AnkBase.insertDownloadedDisplay(module.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.INITIALIZE);
-        module.downloadCurrentImage(useDialog, debug);
+          // ダウンロード用のコンテキストの収集(contextの取得に時間がかかる場合があるのでダウンロードマークを表示しておく)
+          AnkBase.insertDownloadedDisplay(module.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.INITIALIZE);
+          module.downloadCurrentImage(useDialog, debug);
+        });
 
       } catch (e) {
         AnkUtils.dumpError(e, true);
@@ -894,29 +893,24 @@ try {
 
         if (AnkBase.Prefs.get('saveHistory', true)) {
           try {
-            if (AnkBase.Storage.exists('members', 'id = \'' + member_id + '\' and service_id = \'' + service_id + '\'')) {
-              // 古いデータには pixiv_id がついていなかったら付加する
-              // (DB_VERSION = 5 で pixiv_id がついた
-              AnkBase.Storage.createStatement(
-                'update members set pixiv_id = ?1, version = ?2 where (id = ?3) and (pixiv_id is null)',
-                function (stmt) {
-                  stmt.bindUTF8StringParameter(0, pixiv_id);
-                  stmt.bindInt32Parameter(1, AnkBase.DB_VERSION);
-                  stmt.bindUTF8StringParameter(2, member_id);
-                  stmt.executeStep();
-                }
-              );
-            } else {
-              AnkBase.Storage.insert(
-                'members', {
-                  id: member_id,
-                  name: member_name,
-                  pixiv_id: pixiv_id,
-                  version: AnkBase.DB_VERSION,
-                  service_id: service_id
-                }
-              );
-            }
+            let qa = [];
+            qa.push({ table:'members', cond:'id = :memberId and service_id = :servId', values:{ memberId:member_id, servId:service_id } });
+            AnkBase.Storage.exists(qa, function (id, isExists) {
+              if (!isExists) {
+                AnkUtils.dump('xxxxxxxx user exists xxxxxxxx');
+                /*
+                AnkBase.Storage.insert(
+                  'members', {
+                    id: member_id,
+                    name: member_name,
+                    pixiv_id: pixiv_id,
+                    version: AnkBase.DB_VERSION,
+                    service_id: service_id
+                  }
+                );
+                */
+              }
+            });
           } catch (e) {
             AnkUtils.dumpError(e, true);
           }
@@ -1215,25 +1209,30 @@ try {
       if (!appendTo)
         return;
 
-      if (AnkBase.isDownloading(illust_id, service_id)) { // {{{
-        AnkBase.insertDownloadedDisplay(
-          appendTo,
-          false,
-          AnkBase.DOWNLOAD_DISPLAY.DOWNLOADING
-        );
-      } else if (AnkBase.isDownloaded(illust_id, service_id)) {
-        AnkBase.insertDownloadedDisplay(
-          appendTo,
-          R18,
-          AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED
-        );
-      } else {
-        AnkBase.insertDownloadedDisplay(
-          appendTo,
-          R18,
-          null
-        );
-      } // }}}
+      let qa = [];
+      let cond = 'illust_id = :illId and service_id = :servId';
+      qa.push({ id:-1, table:'histories', cond:cond, values:{ illId:illust_id, servId:service_id } });
+      AnkBase.Storage.exists(qa, function (id, isExists) {
+        if (isExists) {
+          AnkBase.insertDownloadedDisplay(
+            appendTo,
+            R18,
+            AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED
+          );
+        } else if (AnkBase.isDownloading(illust_id, service_id)) { // {{{
+          AnkBase.insertDownloadedDisplay(
+            appendTo,
+            false,
+            AnkBase.DOWNLOAD_DISPLAY.DOWNLOADING
+          );
+        } else {
+          AnkBase.insertDownloadedDisplay(
+            appendTo,
+            R18,
+            null
+          );
+        } // }}}
+      });
     }, // }}}
 
     /*
@@ -1453,18 +1452,19 @@ try {
 
     updateDatabase: function () { // {{{
 
-      // version 7
+      // version 6->7
 
-      let set = 'service_id = ?, version = ?';
-      let values = ['PXV', AnkBase.DB_VERSION];
+      let version = parseInt(AnkBase.DB_VERSION,10); 
+      let set = 'service_id = :servId, version = :vers';
       let cond = 'service_id is null';
+      let values = { servId:'PXV', vers:version };
       AnkBase.Storage.updateDatabase(
-        parseInt(AnkBase.DB_VERSION,10),
+        version,
         [
           { type:'dropIndex', table:'histories', columns:['illust_id'] },
           { type:'dropIndex', table:'members',   columns:['id'] },
-          { type:'update', table:'histories', set:set, values:values, cond:cond },
-          { type:'update', table:'members',   set:set, values:values, cond:cond },
+          { type:'update', table:'histories', set:set, cond:cond, values:values },
+          { type:'update', table:'members',   set:set, cond:cond, values:values },
         ]
       );
     }, // }}}
@@ -1701,10 +1701,23 @@ try {
     ********************************************************************************/
 
     markDownloaded: function(IsIllust, Targets, overlay, module, node, force, ignorePref) { // {{{
-      let target = AnkBase.getMarkTarget(module, node, force, ignorePref);
-      if (!target)
-        return;
 
+      if (!AnkBase.Prefs.get('markDownloaded', false) && !ignorePref)
+        return null;
+
+      if (!force && module.marked)
+        return null;
+
+      let target = (function () {
+        if (typeof node === 'string' || typeof node === 'number')
+          return { node: module.curdoc, illust_id: node};
+
+        return { node: (node ? node : module.curdoc), illust_id: undefined };
+      })();
+
+      module.marked = true;
+
+      let boxies = [];
       let checked = [];
       Targets.forEach(function ([selector, nTrackback, targetClass]) {
         AnkUtils.A(target.node.querySelectorAll(selector)) .
@@ -1726,25 +1739,16 @@ try {
           }).
           filter(function (m) m) .
           forEach(function ([link, id]) {
-            if (!(target.illust_id && target.illust_id != id))
-              AnkBase.markBoxNode(AnkUtils.trackbackParentNode(link, nTrackback, targetClass), id, module, overlay);
+            if (!(target.illust_id && target.illust_id != id)) {
+              let e = AnkUtils.trackbackParentNode(link, nTrackback, targetClass);
+              if (e && !e.classList.contains(AnkBase.CLASS_NAME.DOWNLOADED)) {
+                boxies.push({ node:e, illust_id:id });
+              }
+            }
           });
       });
-    }, // }}}
 
-    getMarkTarget: function (module, node, force, ignorePref) { // {{{
-      if (!AnkBase.Prefs.get('markDownloaded', false) && !ignorePref)
-        return null;
-
-      if (!force && module.marked)
-        return null;
-
-      module.marked = true;
-
-      if (typeof node === 'string' || typeof node === 'number')
-        return { node: module.curdoc, illust_id: node};
-
-      return { node: (node ? node : module.curdoc), illust_id: undefined };
+      AnkBase.markBoxNode(boxies, module, overlay);
     }, // }}}
 
     /*
@@ -1752,85 +1756,106 @@ try {
      *                true   ダウンロード済みアイコンのオーバーレイ表示（縦座標自動設定）
      *                number ダウンロード済みアイコンのオーバーレイ表示（縦座標=top: *number*px !important）
      */
-    markBoxNode: function (box, illust_id, module, overlay) { // {{{
-      if (!box)
-        return;
+    markBoxNode: function (boxies, module, overlay) { // {{{
 
-      if (overlay === false) {
-        // 従来形式
-        let cnDownloaded  = AnkBase.CLASS_NAME.DOWNLOADED;
-        let cnDownloading = AnkBase.CLASS_NAME.DOWNLOADING;
+      let proc = function (id, isExists) {
+        try {
+          let box = boxies[id].node;
+          let illust_id = boxies[id].illust_id;
 
-        if (box.classList.contains(cnDownloaded))
-          return;
+          AnkUtils.dump('xxx '+boxies.length+', '+id+', '+illust_id+', '+isExists);
 
-        if (AnkBase.isDownloaded(illust_id, module.SERVICE_ID)) {
-          if (box.classList.contains(cnDownloading))
-            box.classList.remove(cnDownloading);
-          box.classList.add(cnDownloaded);
-        }
-        else if (AnkBase.isDownloading(illust_id, module.SERVICE_ID)) {
-          if (!box.classList.contains(cnDownloading))
-            box.classList.add(cnDownloading);
-        }
-      }
-      else {
-        // DLアイコンのオーバーレイ形式
-        function appendIcon (div) {
-          let st = window.getComputedStyle(box, null);
-          let pos = st.position;
-          if (box.tagName.toLowerCase() === 'div') {
-            // 親がボックス要素
-            if (st.position === 'static') {
-              box.style.setProperty('position', 'relative', 'important');
-              box.style.removeProperty('top');
-              box.style.removeProperty('bottom');
-              box.style.removeProperty('left');
-              box.style.removeProperty('right');
+          if (overlay === false) {
+            // 従来形式
+            let cnDownloaded  = AnkBase.CLASS_NAME.DOWNLOADED;
+            let cnDownloading = AnkBase.CLASS_NAME.DOWNLOADING;
+
+            if (box.classList.contains(cnDownloaded))
+              return;
+
+            if (isExists) {
+              if (box.classList.contains(cnDownloading))
+                box.classList.remove(cnDownloading);
+              box.classList.add(cnDownloaded);
             }
-            div.style.setProperty('position', 'absolute', 'important');
-            div.style.setProperty('top', '2px', 'important');
-            div.style.setProperty('left', '2px', 'important');
+            else if (AnkBase.isDownloading(illust_id, module.SERVICE_ID)) {
+              if (!box.classList.contains(cnDownloading))
+                box.classList.add(cnDownloading);
+            }
           }
           else {
-            // 親がボックス要素以外
-            div.style.setProperty('position', 'relative', 'important');
-            if (typeof overlay == 'number') {
-              div.style.setProperty('top', overlay+'px', 'important');
+            // DLアイコンのオーバーレイ形式
+            function appendIcon (div) {
+              let st = window.getComputedStyle(box, null);
+              let pos = st.position;
+              if (box.tagName.toLowerCase() === 'div') {
+                // 親がボックス要素
+                if (st.position === 'static') {
+                  box.style.setProperty('position', 'relative', 'important');
+                  box.style.removeProperty('top');
+                  box.style.removeProperty('bottom');
+                  box.style.removeProperty('left');
+                  box.style.removeProperty('right');
+                }
+                div.style.setProperty('position', 'absolute', 'important');
+                div.style.setProperty('top', '2px', 'important');
+                div.style.setProperty('left', '2px', 'important');
+              }
+              else {
+                // 親がボックス要素以外
+                div.style.setProperty('position', 'relative', 'important');
+                if (typeof overlay == 'number') {
+                  div.style.setProperty('top', overlay+'px', 'important');
+                }
+                else {
+                  let m = st.height.match(/(\d+(?:\.\d+)?)px/);
+                  if (m)
+                    div.style.setProperty('top', (2-parseFloat(m[1]))+'px', 'important');
+                }
+              }
+              box.appendChild(div);
             }
-            else {
-              let m = st.height.match(/(\d+(?:\.\d+)?)px/);
-              if (m)
-                div.style.setProperty('top', (2-parseFloat(m[1]))+'px', 'important');
+
+            let cnDownloaded  = AnkBase.CLASS_NAME.DOWNLOADED_OVERLAY;
+            let cnDownloading = AnkBase.CLASS_NAME.DOWNLOADING_OVERLAY;
+
+            if (box.querySelector('.'+cnDownloaded))
+              return;
+
+            if (isExists) {
+              let div = box.querySelector('.'+cnDownloading);
+              if (div) {
+                div.classList.remove(cnDownloading);
+              } else {
+                div = module.curdoc.createElement('div');
+                appendIcon(div);
+              }
+              div.classList.add(cnDownloaded);
+            }
+            else if (AnkBase.isDownloading(illust_id, module.SERVICE_ID)) {
+              if (!box.querySelector('.'+cnDownloading)) {
+                let div = module.curdoc.createElement('div');
+                appendIcon(div);
+                div.classList.add(cnDownloading);
+              }
             }
           }
-          box.appendChild(div);
         }
-
-        let cnDownloaded  = AnkBase.CLASS_NAME.DOWNLOADED_OVERLAY;
-        let cnDownloading = AnkBase.CLASS_NAME.DOWNLOADING_OVERLAY;
-
-        if (box.querySelector('.'+cnDownloaded))
-          return;
-
-        if (AnkBase.isDownloaded(illust_id, module.SERVICE_ID)) {
-          let div = box.querySelector('.'+cnDownloading);
-          if (div) {
-            div.classList.remove(cnDownloading);
-          } else {
-            div = module.curdoc.createElement('div');
-            appendIcon(div);
-          }
-          div.classList.add(cnDownloaded);
+        catch (e) {
+          AnkUtils.dumpError(e); 
         }
-        else if (AnkBase.isDownloading(illust_id, module.SERVICE_ID)) {
-          if (!box.querySelector('.'+cnDownloading)) {
-            let div = module.curdoc.createElement('div');
-            appendIcon(div);
-            div.classList.add(cnDownloading);
-          }
-        }
+      };
+
+      //
+
+      let qa = [];
+      let cond = 'illust_id = :illId and service_id = :servId';
+      for (let i=0; i<boxies.length; i++) {
+        let v = boxies[i];
+        qa.push({ id:i, table:'histories', cond:cond, values:{ illId:v.illust_id, servId:module.SERVICE_ID } });
       }
+
+      AnkBase.Storage.exists(qa, proc);
     }, // }}}
 
     clearMarkedFlags: function () {
@@ -1887,18 +1912,16 @@ try {
         }
       };
 
-      AnkBase.Storage = new AnkStorage(
-        AnkBase.Prefs.get('storageFilepath', 'ankpixiv.sqlite'),
-        dbTables,
-        dbOptions,
+      AnkBase.Storage = new AnkStorage(AnkBase.Prefs.get('storageFilepath', 'ankpixiv.sqlite'), dbTables, dbOptions);
+      AnkBase.Storage.createDatabase(
         function () {
           AnkBase.updateDatabase();
           AnkBase.registerSheet();
+          AnkBase.addToolbarIcon();
           window.addEventListener('ankDownload', AnkBase.downloadHandler, true);
           window.addEventListener('pageshow', AnkBase.onFocus, true);
           window.addEventListener('focus', AnkBase.onFocus, true);
           setInterval(function (e) AnkBase.cleanupDownload(), AnkBase.DOWNLOAD.CLEANUP_INTERVAL);
-          this.toolbar = AnkBase.addToolbarIcon();
         }
       );
 

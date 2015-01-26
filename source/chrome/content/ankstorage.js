@@ -4,7 +4,7 @@ Components.utils.import("resource://gre/modules/Sqlite.jsm");
 try {
 
 
-  AnkStorage = function (filename, tables, options, callback) { // {{{
+  AnkStorage = function (filename, tables, options) { // {{{
     this.filename = filename;
     this.tables = {};
     this.options = options || {};
@@ -26,18 +26,15 @@ try {
 
     this.dbfile = file;
 
-    this.createTables(callback);
-
     return this;
   }; // }}}
 
 
   AnkStorage.prototype = {
 
-    /*
-     * 
+    /**
+     * 更新系トランザクション
      */
-
     executeUpdateSQLs: function (qa, callback) {
       let self = this;
       Task.spawn(function () {
@@ -47,7 +44,7 @@ try {
           yield conn.executeTransaction(function* () {
             for (let i=0; i<qa.length; i++) {
               if ('query' in qa[i]) {
-                AnkUtils.dump('executeSQLs: '+(i+1)+', '+qa[i].query+(qa[i].values ? ' . '+qa[i].values.length : ''));
+                AnkUtils.dump('executeSQLs: '+(i+1)+', '+qa[i].query);
                 yield conn.execute(qa[i].query, qa[i].values);
               }
               else if ('SchemaVersion' in qa[i]) {
@@ -70,6 +67,35 @@ try {
       }).then(null, function (e) AnkUtils.dumpError(e, true));
     },
 
+    /**
+     * 参照系トランザクション（存在確認）
+     */
+    exists: function exists (qa, callback) {
+      let self = this;
+      Task.spawn(function () {
+        let conn;
+        try {
+          conn = yield Sqlite.openConnection({ path: self.dbfile.path });
+          yield conn.executeTransaction(function* () {
+            for (let i=0; i<qa.length; i++) {
+              let query = 'select illust_id from '+qa[i].table+(qa[i].cond ? ' where '+qa[i].cond : '')+' limit 1';
+              AnkUtils.dump('exists: '+(i+1)+', '+query);
+              let rows = yield conn.execute(query, qa[i].values);
+              if (callback)
+                callback(qa[i].id, !!rows.length);
+            }
+          });
+        }
+        catch (e) {
+          AnkUtils.dumpError(e, true); 
+        }
+        finally {
+          if (conn)
+            yield conn.close();
+        }
+      }).then(null, function (e) AnkUtils.dumpError(e, true));
+    },
+
     /*
      * 
      */
@@ -77,15 +103,15 @@ try {
     /**
      * データベースの作成
      */
-    createTables: function (callback) { // {{{
+    createDatabase: function (callback) { // {{{
       let qa = [];
       //データベースのテーブルを作成
       for (let tableName in this.tables) {
-        qa.push({ query: this.createTableSQL(this.tables[tableName]) });
+        qa.push({ query: this.getCreateTableSQL(this.tables[tableName]) });
       }
       if (this.options.index) {
         for (let tableName in this.options.index)
-          this.createIndexSQLs(tableName, this.options.index[tableName]).forEach(function (q) qa.push({ query: q }));
+          this.getCreateIndexSQLs(tableName, this.options.index[tableName]).forEach(function (q) qa.push({ query: q }));
       }
       this.executeUpdateSQLs(qa, callback);
     }, // }}}
@@ -120,25 +146,35 @@ try {
 
           AnkUtils.dump('update database. version '+uver+' -> '+ver);
 
-          let qa = [];
-          options.forEach(function (q) {
-            if (q.type == 'update') {
-              qa.push({ query:'update '+q.table+' set '+q.set+' where '+q.cond, values:q.values });
-            }
-            else if (q.type == 'dropIndex') {
-              let indexName = self.indexName(q.table,q.columns);
-              qa.push({ query:'drop index if exists '+indexName });
-            }
-          });
-          qa.push({ SchemaVersion: ver });
-
-          self.executeUpdateSQLs(qa, callback);
+          try {
+            let qa = self.getUpdateSQLs(options);
+            qa.push({ SchemaVersion: ver });
+            self.executeUpdateSQLs(qa, callback);
+          }
+          catch (e) {
+            AnkUtils.dumpError(e, true);
+          }
         },
         function (e) AnkUtils.dumpError(e, true)
       );
     },
 
-    createTableSQL: function (table) { // {{{
+    getUpdateSQLs: function (options) {
+      let self = this;
+      let qa = [];
+      options.forEach(function (q) {
+        if (q.type == 'update') {
+          qa.push({ query:'update '+q.table+' set '+q.set+' where '+q.cond, values:q.values });
+        }
+        else if (q.type == 'dropIndex') {
+          let indexName = self.indexName(q.table,q.columns);
+          qa.push({ query:'drop index if exists '+indexName });
+        }
+      });
+      return qa;
+    },
+
+    getCreateTableSQL: function (table) { // {{{
       let fs = [];
       for (let fieldName in table.fields)
         fs.push(fieldName + ' ' + table.fields[fieldName].def + (table.fields[fieldName].constraint ? ' '+table.fields[fieldName].constraint : ''));
@@ -146,7 +182,7 @@ try {
       return 'create table if not exists '+table.name+' ('+fs.join()+')';
     }, // }}}
 
-    createIndexSQLs: function(tableName, columns) {
+    getCreateIndexSQLs: function(tableName, columns) {
       let qa = [];
       for (let i=0; i<columns.length; i++)
         qa.push('create index if not exists ' + this.indexName(tableName, columns[i]) + ' on ' + tableName + ' (' + columns[i].join() + ')');

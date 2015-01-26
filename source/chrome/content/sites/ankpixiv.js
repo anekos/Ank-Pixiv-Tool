@@ -488,15 +488,15 @@ try {
         return callback(self._image.original);
       }
 
-      function doCallback (original, thumbnail) {
+      function doCallback (image) {
         if (self.in.manga) {
-          self._image.thumbnail = thumbnail;
-          self._image.original = original;
-          return callback(mangaOriginalSizeCheck ? original : thumbnail);
+          self._image.thumbnail = image.thumbnail;
+          self._image.original = image.original;
+          return callback(mangaOriginalSizeCheck ? image.original : image.thumbnail);
         }
         else {
-          self._image.original = original;
-          return callback(original);
+          self._image.original = image.original;
+          return callback(image.original);
         }
       }
 
@@ -810,6 +810,7 @@ try {
      */
     installListPageFunctions: function () { /// {
 
+      // TODO AutoPagerizeと違い、追加伸長した要素だけでなく、すべての要素のチェックが走る
       let followExpansion = function () {
         var recommend = self.elements.illust.recommendList;
         var feed = self.elements.illust.feedList;
