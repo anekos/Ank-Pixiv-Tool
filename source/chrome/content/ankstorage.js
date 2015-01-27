@@ -64,15 +64,6 @@ try {
     },
 
     /**
-     * 更新系トランザクション
-     */
-    insert: function () {
-      return Task.spawn(function* () {
-        AnkUtils.dump('insert: ********** UNIMPLEMENTED **********');
-      });
-    },
-
-    /**
      * 参照系トランザクション
      */
     select: function (qa, callback) {
@@ -90,7 +81,7 @@ try {
               AnkUtils.dump('select: '+(i+1)+', '+query);
               let rows = yield conn.execute(query, qa[i].values);
               if (!callback)
-                return rows.length > 0 && rows[0];
+                return rows && rows.length > 0 && rows[0];
 
               callback(qa[i].id, rows);
             }
@@ -123,7 +114,7 @@ try {
 
       return self.select(qa, function (id, rows) {
         if (callback)
-          callback(id, !!rows.length);
+          callback(id, rows.length > 0 && rows[0]);
       });
     },
 
@@ -139,6 +130,12 @@ try {
       //データベースのテーブルを作成
       for (let tableName in this.tables) {
         qa.push({ type:'createTable', table:tableName, fields:this.tables[tableName] });;
+      }
+      if (this.options.unique) {
+        for (let tableName in this.options.unique) {
+          let columns = this.options.unique[tableName];
+          qa.push({ type:'createUnique', table:tableName, columns:columns });
+        }
       }
       if (this.options.index) {
         for (let tableName in this.options.index) {
@@ -187,6 +184,10 @@ try {
             fs.push(fieldName + ' ' + q.fields[fieldName].def + (q.fields[fieldName].constraint ? ' '+q.fields[fieldName].constraint : ''));
           qa.push({ query:'create table if not exists '+q.table+' ('+fs.join()+')' });
         }
+        else if (q.type == 'createUnique') {
+          let indexName = self.uniqueName(q.table,q.columns);
+          qa.push({ query:'create unique index if not exists ' + indexName + ' on ' + q.table + ' (' + q.columns.join() + ')' });
+        }
         else if (q.type == 'createIndex') {
           let indexName = self.indexName(q.table,q.columns);
           qa.push({ query:'create index if not exists ' + indexName + ' on ' + q.table + ' (' + q.columns.join() + ')' });
@@ -196,7 +197,27 @@ try {
           qa.push({ query:'drop index if exists '+indexName });
         }
         else if (q.type == 'update') {
-          qa.push({ query:'update '+q.table+' set '+q.set+' where '+q.cond, values:q.values });
+          let values = {};
+          let fps = [];
+          for (fieldName in q.set) {
+            fps.push(fieldName+' = :'+fieldName);
+            values[fieldName] = q.set[fieldName];
+          }
+          for (fieldName in q.values) {
+            values[fieldName] = q.values[fieldName];
+          }
+          qa.push({ query:'update '+q.table+' set '+fps.join()+' where '+q.cond, values:values });
+        }
+        else if (q.type == 'insert') {
+          let values = {};
+          let fs = [];
+          let ps = [];
+          for (fieldName in q.set) {
+            fs.push(fieldName);
+            ps.push(':'+fieldName);
+            values[fieldName] = q.set[fieldName];
+          }
+          qa.push({ query:'insert into '+q.table+' ('+fs.join()+') values ('+ps.join()+')', values:values });
         }
         else if (q.type == 'SchemaVersion') {
           qa.push({ SchemaVersion:q.SchemaVersion });
@@ -207,6 +228,10 @@ try {
 
     indexName: function (tableName, columnNames) { // {{{
       return tableName + '_index_' + columnNames.join('_');
+    }, // }}}
+
+    uniqueName: function (tableName, columnNames) { // {{{
+      return tableName + '_unique_' + columnNames.join('_');
     }, // }}}
 
   };

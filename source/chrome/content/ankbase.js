@@ -878,15 +878,18 @@ try {
 
         let savedDateTime = new Date();
 
+        // FIXME memoized_nameの取得をここに移したため、meta.txtにmemoized_nameが記録されないようになってしまった
+        // FIXME membersに重複エントリができる可能性がある。(重複削除してから)unique制約をつけるか、１トランザクション中にselect→insertするか等
         let row = yield AnkBase.Storage.exists(AnkBase.getMemberExistsQuery(download.context.info.member.id,download.context.SERVICE_ID));
         if (row) {
           download.context.info.member.memoizedName = row.getResultByName('name');
         }
         else {
           if (AnkBase.Prefs.get('saveHistory', true)) {
+            let record = { id:member_id, name: member_name, pixiv_id:pixiv_id, version:AnkBase.DB_VERSION, service_id:service_id };
             let qa = [];
-            qa.push({ table:'members', set:{ id:member_id, name: member_name, pixiv_id:pixiv_id, version:AnkBase.DB_VERSION, service_id:service_id } });
-            yield AnkBase.Storage.insert(qa);
+            qa.push({ type:'insert', table:'members', set:record });
+            yield AnkBase.Storage.update(AnkBase.Storage.getUpdateSQLs(qa));
           }
         }
 
@@ -1022,17 +1025,17 @@ try {
                                       : AnkUtils.extractFilename(local_path);
 
             if (AnkBase.Prefs.get('saveHistory', true)) {
-              yield Task.spawn(function () {
+//              yield Task.spawn(function () {
                 record['local_path'] = local_path;
                 record['filename'] = relPath;
                 let qa = [];
-                qa.push({id:0, table:'histories', set:record });
-                yield AnkBase.Storage.insert(qa);
-              }).then(null, function (e) {
-                AnkUtils.dumpError(e, true);
-                caption = 'Error - onComplete';
-                text = e;
-              });
+                qa.push({ type:'insert', table:'histories', set:record });
+                yield AnkBase.Storage.update(AnkBase.Storage.getUpdateSQLs(qa));
+//              }).then(null, function (e) {
+//                AnkUtils.dumpError(e, true);
+//                caption = 'Error - onComplete';
+//                text = e;
+//              });
             }
 
             if (AnkBase.Prefs.get('saveMeta', true))
@@ -1274,13 +1277,13 @@ try {
     }, // }}}
 
     getIllustExistsQuery: function (illust_id, service_id, id) {
-      const cond = 'illust_id = :illId and service_id = :servId';
-      return [ { id:(id !== undefined ? id:-1), table:'histories', cond:cond, values:{ illId:illust_id, servId:service_id } } ];
+      const cond = 'illust_id = :illust_id and service_id = :service_id';
+      return [ { id:(id !== undefined ? id:-1), table:'histories', cond:cond, values:{ illust_id:illust_id, service_id:service_id } } ];
     },
 
     getMemberExistsQuery: function (member_id, service_id, id) {
-      const cond = 'id = :memberId and service_id = :servId';
-      return [ { id:(id !== undefined ? id:-1), table:'members', cond:cond, values:{ memberId:member_id, servId:service_id } } ];
+      const cond = 'id = :id and service_id = :service_id';
+      return [ { id:(id !== undefined ? id:-1), table:'members', cond:cond, values:{ id:member_id, service_id:service_id } } ];
     },
 
     getFileExistsQuery: function (filename, id) {
@@ -1424,7 +1427,7 @@ try {
 
     updateDatabase: function () { // {{{
       return Task.spawn(function* () {
-        // version 6->7
+        // version 6->7->8
         let ver = parseInt(AnkBase.DB_VERSION,10);
         let uver = yield AnkBase.Storage.getDatabaseVersion();
         if (uver >= ver) {
@@ -1434,18 +1437,17 @@ try {
 
         AnkUtils.dump('update database. version '+uver+' -> '+ver);
 
-        let set = 'service_id = :servId, version = :vers';
         let cond = 'service_id is null';
-        let values = { servId:'PXV', vers:ver };
+        let set = { service_id:'PXV', version:ver };
 
         let qa = [];
         qa.push({ type:'dropIndex', table:'histories', columns:['illust_id'] });
         qa.push({ type:'dropIndex', table:'members',   columns:['id'] });
-        qa.push({ type:'update', table:'histories', set:set, cond:cond, values:values });
-        qa.push({ type:'update', table:'members',   set:set, cond:cond, values:values });
+        qa.push({ type:'update', table:'histories', set:set, cond:cond, values:null });
+        qa.push({ type:'update', table:'members',   set:set, cond:cond, values:null });
         qa.push({ type:'SchemaVersion', SchemaVersion:ver });
 
-        return yield AnkBase.Storage.update(AnkBase.Storage.getUpdateSQLs(qa));
+        yield AnkBase.Storage.update(AnkBase.Storage.getUpdateSQLs(qa));
       });
 
     }, // }}}
@@ -1624,26 +1626,26 @@ try {
       let checked = [];
       Targets.forEach(function ([selector, nTrackback, targetClass]) {
         AnkUtils.A(target.node.querySelectorAll(selector)) .
-          map(function (link) {
+          map(function (elm) {
             // 一度チェックしたエレメントは二度チェックしない（異なるTarget指定で同じエレメントが重複してマッチする場合があるので、先にマッチしたものを優先）
-            if (checked.indexOf(link) != -1)
+            if (checked.indexOf(elm) != -1)
               return false;
 
-            checked.push(link);
+            checked.push(elm);
 
-            let href = (link.tagName.toLowerCase() === 'a')   ? link.href :
-                       (link.tagName.toLowerCase() === 'img') ? link.src :
-                                                                false;
+            let href = (elm.tagName.toLowerCase() === 'a')   ? elm.href :
+                       (elm.tagName.toLowerCase() === 'img') ? elm.src :
+                                                               false;
             if (href) {
               let m = IsIllust.exec(href);
               if (m)
-                return [link, m[1]];
+                return [elm, m[1]];
             }
           }).
           filter(function (m) m) .
-          forEach(function ([link, id]) {
+          forEach(function ([elm, id]) {
             if (!(target.illust_id && target.illust_id != id)) {
-              let e = AnkUtils.trackbackParentNode(link, nTrackback, targetClass);
+              let e = AnkUtils.trackbackParentNode(elm, nTrackback, targetClass);
               if (e && !e.classList.contains(AnkBase.CLASS_NAME.DOWNLOADED)) {
                 boxies.push({ node:e, illust_id:id });
               }
@@ -1661,8 +1663,10 @@ try {
      */
     markBoxNode: function (boxies, module, overlay) { // {{{
 
-      let proc = function (id, isExists) {
+      let proc = function (id, rows) {
         try {
+          let isExists = !!rows;
+
           let box = boxies[id].node;
           let illust_id = boxies[id].illust_id;
 
@@ -1751,11 +1755,13 @@ try {
 
       //
 
-      let qa = [];
-      for (let i=0; i<boxies.length; i++)
-        qa.push(AnkBase.getIllustExistsQuery(boxies[i].illust_id, module.SERVICE_ID, i).pop());
+      Task.spawn(function () {
+        let qa = [];
+        for (let i=0; i<boxies.length; i++)
+          qa.push(AnkBase.getIllustExistsQuery(boxies[i].illust_id, module.SERVICE_ID, i).pop());
 
-      AnkBase.Storage.exists(qa, proc);
+        yield AnkBase.Storage.exists(qa, proc);
+      }).then(null, function (e) AnkUtils.dumpError(e));
     }, // }}}
 
     clearMarkedFlags: function () {

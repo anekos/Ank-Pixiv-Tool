@@ -334,9 +334,10 @@ function AnkViewer (module) {
     } else {
       // 画像のリストが取得できなければviewerを開かない
       if (!images || images.length === 0) {
-        module.getImageUrl(AnkBase.Prefs.get('viewOriginalSize',false), function (image) {
-          if (image.images.length === 0)
-            return false; // server error.
+        Task.spawn(function () {
+          let image = yield module.getImageUrl(AnkBase.Prefs.get('viewOriginalSize',false));
+          if (!image || image.images.length === 0)
+            return; // server error.
 
           images = image.images;
           if (AnkBase.Prefs.get('useFacingView', true)) {
@@ -349,7 +350,7 @@ function AnkViewer (module) {
           }
           show();
           bigMode = !bigMode;
-        });
+        }).then(null, function (e) AnkUtils.dumpError(e));
       }
       else {
         show();
