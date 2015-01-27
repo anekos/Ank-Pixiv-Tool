@@ -1,30 +1,24 @@
 
 Components.utils.import("resource://gre/modules/Sqlite.jsm");
+Components.utils.import("resource://gre/modules/FileUtils.jsm");
 
 try {
 
 
   AnkStorage = function (filename, tables, options) { // {{{
-    this.filename = filename;
-    this.tables = {};
+    this.dbpath = filename;
+    this.tables = tables;
     this.options = options || {};
-
-    for (let key in tables) {
-      this.tables[key] = new AnkTable(key, tables[key]);
-    }
 
     let file;
 
     if (~filename.indexOf(AnkUtils.SYS_SLASH)) {
       file = AnkUtils.makeLocalFile(filename);
     } else {
-      file = Components.classes["@mozilla.org/file/directory_service;1"].
-               getService(Components.interfaces.nsIProperties).
-               get("ProfD", Components.interfaces.nsIFile);
-      file.append(filename);
+      file = FileUtils.getDir("ProfD", [filename]);
     }
 
-    this.dbfile = file;
+    this.dbpath = file.path;
 
     return this;
   }; // }}}
@@ -35,13 +29,16 @@ try {
     /**
      * 更新系トランザクション
      */
-    executeUpdateSQLs: function (qa, callback, onSuccess, onError) {
+    update: function (qa) {
       let self = this;
-      Task.spawn(function* () {
+      return Task.spawn(function* () {
+        if (!qa || qa.length == 0)
+          return;
+
         let conn;
         try {
-          conn = yield Sqlite.openConnection({ path: self.dbfile.path });
-          yield conn.executeTransaction(function* () {
+          conn = yield Sqlite.openConnection({ path: self.dbpath });
+          return yield conn.executeTransaction(function* () {
             for (let i=0; i<qa.length; i++) {
               if ('query' in qa[i]) {
                 AnkUtils.dump('executeSQLs: '+(i+1)+', '+qa[i].query);
@@ -52,85 +49,79 @@ try {
                 yield conn.setSchemaVersion(qa[i].SchemaVersion);
               }
             }
-          });
 
-          if (callback)
-            callback();
+            return true;
+          });
         }
         catch (e) {
-          AnkUtils.dumpError(e, true); 
+          AnkUtils.dumpError(e); 
         }
         finally {
           if (conn)
             yield conn.close();
         }
-      }).then(
-        function (r) {
-          if (onSuccess)
-            onSuccess(r);
-        },
-        function (e) {
-          AnkUtils.dumpError(e, true);
-          if (onError)
-            onError();
-        }
-      );
+      });
     },
 
     /**
      * 更新系トランザクション
      */
     insert: function () {
-      AnkUtils.dump('insert: ********** UNIMPLEMENTED **********');
+      return Task.spawn(function* () {
+        AnkUtils.dump('insert: ********** UNIMPLEMENTED **********');
+      });
     },
 
     /**
      * 参照系トランザクション
      */
-    select: function (qa, callback, onSuccess, onError) {
+    select: function (qa, callback) {
       let self = this;
-      Task.spawn(function* () {
+      return Task.spawn(function* () {
+        if (!qa || qa.length == 0)
+          return;
+
         let conn;
         try {
-          conn = yield Sqlite.openConnection({ path: self.dbfile.path });
-          yield conn.executeTransaction(function* () {
+          conn = yield Sqlite.openConnection({ path: self.dbpath });
+          return yield conn.executeTransaction(function* () {
             for (let i=0; i<qa.length; i++) {
               let query = 'select * from '+qa[i].table+(qa[i].cond ? ' where '+qa[i].cond : '')+(qa[i].opts ? ' '+qa[i].opts : '');
               AnkUtils.dump('select: '+(i+1)+', '+query);
               let rows = yield conn.execute(query, qa[i].values);
-              if (callback)
-                callback(qa[i].id, rows);
+              if (!callback)
+                return rows.length > 0 && rows[0];
+
+              callback(qa[i].id, rows);
             }
+
+            return true;
           });
         }
         catch (e) {
-          AnkUtils.dumpError(e, true); 
+          AnkUtils.dumpError(e); 
         }
         finally {
           if (conn)
             yield conn.close();
         }
-      }).then(
-        function (r) {
-          if (onSuccess)
-            onSuccess(r);
-        },
-        function (e) {
-          AnkUtils.dumpError(e, true);
-          if (onError)
-            onError();
-        }
-      );
+      });
     },
 
     /**
      * 参照系トランザクション（存在確認）
      */
     exists: function (qa, callback) {
+      if (!qa || qa.length == 0)
+        return;
+
       let self = this;
       for (let i=0; i<qa.length; i++)
-        qa[i].opts = 'limit 1';
-      self.select(qa, function (id, rows) {
+        qa[i].opts = (qa[i].opts ? qa[i].opts+' ':'')+'limit 1';
+      if (!callback)
+        return self.select(qa);
+
+      return self.select(qa, function (id, rows) {
         if (callback)
           callback(id, !!rows.length);
       });
@@ -143,90 +134,74 @@ try {
     /**
      * データベースの作成
      */
-    createDatabase: function (callback) { // {{{
+    createDatabase: function () { // {{{
       let qa = [];
       //データベースのテーブルを作成
       for (let tableName in this.tables) {
-        qa.push({ query: this.getCreateTableSQL(this.tables[tableName]) });
+        qa.push({ type:'createTable', table:tableName, fields:this.tables[tableName] });;
       }
       if (this.options.index) {
-        for (let tableName in this.options.index)
-          this.getCreateIndexSQLs(tableName, this.options.index[tableName]).forEach(function (q) qa.push({ query: q }));
+        for (let tableName in this.options.index) {
+          let columns = this.options.index[tableName];
+          for (let i in columns) {
+            qa.push({ type:'createIndex', table:tableName, columns:columns[i] });
+          }
+        }
       }
-      this.executeUpdateSQLs(qa, callback);
+
+      return this.update(this.getUpdateSQLs(qa));
     }, // }}}
 
     /**
-     * データベースのバージョンアップ
+     * データベースバージョンの取得
      */
-    updateDatabase: function (ver, options, callback) {
+    getDatabaseVersion: function () {
       let self = this;
-      Task.spawn(function* () {
+      return Task.spawn(function* () {
         let conn;
         try {
-          conn = yield Sqlite.openConnection({ path: self.dbfile.path });
+          conn = yield Sqlite.openConnection({ path:self.dbpath });
           return yield conn.getSchemaVersion();
         }
         catch (e) {
           AnkUtils.dumpError(e, true);
-          return -1;
         }
         finally {
           if (conn)
             yield conn.close();
         }
-      }).then(
-        function (uver) {
-          if (uver == -1)
-            return;
-          if (uver >= ver) {
-            AnkUtils.dump("database is up to date. version "+uver);
-            return;
-          }
-
-          AnkUtils.dump('update database. version '+uver+' -> '+ver);
-
-          try {
-            let qa = self.getUpdateSQLs(options);
-            qa.push({ SchemaVersion: ver });
-            self.executeUpdateSQLs(qa, callback);
-          }
-          catch (e) {
-            AnkUtils.dumpError(e, true);
-          }
-        },
-        function (e) AnkUtils.dumpError(e, true)
-      );
+      });
     },
+
+    /*
+     * 
+     */
 
     getUpdateSQLs: function (options) {
       let self = this;
       let qa = [];
       options.forEach(function (q) {
-        if (q.type == 'update') {
-          qa.push({ query:'update '+q.table+' set '+q.set+' where '+q.cond, values:q.values });
+        if (q.type == 'createTable') {
+          let fs = [];
+          for (let fieldName in q.fields)
+            fs.push(fieldName + ' ' + q.fields[fieldName].def + (q.fields[fieldName].constraint ? ' '+q.fields[fieldName].constraint : ''));
+          qa.push({ query:'create table if not exists '+q.table+' ('+fs.join()+')' });
+        }
+        else if (q.type == 'createIndex') {
+          let indexName = self.indexName(q.table,q.columns);
+          qa.push({ query:'create index if not exists ' + indexName + ' on ' + q.table + ' (' + q.columns.join() + ')' });
         }
         else if (q.type == 'dropIndex') {
           let indexName = self.indexName(q.table,q.columns);
           qa.push({ query:'drop index if exists '+indexName });
         }
+        else if (q.type == 'update') {
+          qa.push({ query:'update '+q.table+' set '+q.set+' where '+q.cond, values:q.values });
+        }
+        else if (q.type == 'SchemaVersion') {
+          qa.push({ SchemaVersion:q.SchemaVersion });
+        }
       });
-      return qa;
-    },
-
-    getCreateTableSQL: function (table) { // {{{
-      let fs = [];
-      for (let fieldName in table.fields)
-        fs.push(fieldName + ' ' + table.fields[fieldName].def + (table.fields[fieldName].constraint ? ' '+table.fields[fieldName].constraint : ''));
-
-      return 'create table if not exists '+table.name+' ('+fs.join()+')';
-    }, // }}}
-
-    getCreateIndexSQLs: function(tableName, columns) {
-      let qa = [];
-      for (let i=0; i<columns.length; i++)
-        qa.push('create index if not exists ' + this.indexName(tableName, columns[i]) + ' on ' + tableName + ' (' + columns[i].join() + ')');
-
       return qa;
     },
 
@@ -234,20 +209,7 @@ try {
       return tableName + '_index_' + columnNames.join('_');
     }, // }}}
 
-    /*
-     * 
-     */
-
   };
-
-  AnkTable = function (name, fields, constraints) { // {{{
-    this.name = name;
-    this.constraints = constraints || fields.constraints || {};
-    delete fields.constraints;
-    this.fields = fields;
-    return this;
-  }; // }}}
-
 
 } catch (error) {
  dump("[" + error.name + "]\n" +

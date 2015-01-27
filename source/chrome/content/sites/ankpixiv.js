@@ -395,7 +395,7 @@ try {
      * 定数
      ********************************************************************************/
 
-    URL:       'http://www.pixiv.net/',
+    URL:        'http://www.pixiv.net/',
     DOMAIN:     'www.pixiv.net',
     SERVICE_ID: 'PXV',
     SITE_NAME:  'Pixiv',
@@ -780,9 +780,9 @@ try {
         // 保存済み表示
         AnkBase.insertDownloadedDisplayById(
           self.elements.illust.downloadedDisplayParent,
+          self.info.illust.R18,
           self.info.illust.id,
-          self.SERVICE_ID,
-          self.info.illust.R18
+          self.SERVICE_ID
         );
 
         // キャプションを開く

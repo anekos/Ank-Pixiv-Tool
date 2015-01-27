@@ -1,5 +1,8 @@
 
+Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/osfile.jsm");
+Components.utils.import("resource://gre/modules/FileUtils.jsm");
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
 Components.utils.import("resource:///modules/CustomizableUI.jsm");
 
 try {
@@ -85,10 +88,6 @@ try {
       PAGE_NUMBER: "#page-number#",
     },
 
-    QUERY: {
-      DOWNLOADED: 'illust_id = :illId and service_id = :servId',
-    },
-
     /********************************************************************************
     * プロパティ
     ********************************************************************************/
@@ -163,9 +162,7 @@ try {
       filePicker.defaultString = defaultFilename;
 
       if (prefInitDir) {
-        let initdir = AnkUtils.ccci("@mozilla.org/file/local;1", Components.interfaces.nsILocalFile);
-        initdir.initWithPath(prefInitDir);
-        filePicker.displayDirectory = initdir;
+        filePicker.displayDirectory = AnkBase.newLocalFile(prefInitDir);
       }
 
       let ret = filePicker.show();
@@ -269,33 +266,30 @@ try {
      *    return:   boolean
      * 同じファイル名が存在するか？
      */
-    filenameExists: function (filename) // {{{
-      false,
-//      AnkBase.Storage.exists('histories',
-//                              'filename = ?',
-//                              function (stmt) stmt.bindUTF8StringParameter(0, filename)), // }}}
+    filenameExists: function (filename) { // {{{
+      return Task.spawn(function* () {
+        return yield AnkBase.Storage.exists(AnkBase.getFileExistsQuery(filename));
+      });
+    },
 
     /*
      * newLocalFile
      *    url:      String パス
-     *    return:   nsILocalFile
+     *    return:   nsIFile
      * nsILocalFileを作成
      */
     newLocalFile: function (path) { // {{{
-      let temp = AnkUtils.ccci('@mozilla.org/file/local;1', Components.interfaces.nsILocalFile);
-      temp.initWithPath(AnkUtils.replaceFileSeparatorToSYS(path));
-      return temp;
+      return new FileUtils.File(AnkUtils.replaceFileSeparatorToSYS(path));
     }, // }}}
 
     /*
      * newFileURI
      *    url:      String パス
-     *    return:   nsILocalFile
+     *    return:   nsIURI
      * nsILocalFileを作成
      */
     newFileURI: function (path) { // {{{
-      let IOService = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService);
-      return IOService.newFileURI(AnkBase.newLocalFile(path));
+      return Services.io.newFileURI(AnkBase.newLocalFile(path));
     }, // }}}
 
     /*
@@ -337,35 +331,39 @@ try {
      * 設定によっては、ダイアログを表示する
      */
     getSaveFilePath: function (prefInitDir, filenames, ext, useDialog, isFile, lastImgno, lastPageno) { // {{{
-      function _file (initDir, basename, ext, isMeta) {
-        // TODO File#join
-        let filename = (function () {
-          if (isFile) {
-            return basename + ext;
-          } else {
-            let p = isMeta ? AnkBase.getSaveMangaPath(basename, ext) :
-                             AnkBase.getSaveMangaPath(basename, ext, lastImgno, lastPageno);
-            return OS.Path.join(p.path, p.name);
-          }
-        })();
-        let filepath = OS.Path.join(initDir, filename);
-        let url = (isFile || isMeta) ? filepath :
-                                       OS.Path.join(initDir, basename);
+      return Task.spawn(function* () {
+        function _file (initDir, basename, ext, isMeta) {
+          // TODO File#join
+          let filename = (function () {
+            if (isFile) {
+              return basename + ext;
+            } else {
+              let p = isMeta ? AnkBase.getSaveMangaPath(basename, ext) :
+                               AnkBase.getSaveMangaPath(basename, ext, lastImgno, lastPageno);
+              return OS.Path.join(p.path, p.name);
+            }
+          })();
+          let filepath = OS.Path.join(initDir, filename);
+          let url = (isFile || isMeta) ? filepath :
+                                         OS.Path.join(initDir, basename);
 
-        return {
-          filename: filename,
-          filepath: filepath,   // マンガ形式の場合、１ページ目の画像のパス
-          url: url,             // マンガ形式の場合、初期パス＋ファイル名テンプレート
-          file: AnkBase.newLocalFile(url)
-        };
-      }
+          return {
+            filename: filename,
+            filepath: filepath,   // マンガ形式の場合、１ページ目の画像のパス
+            url: url,             // マンガ形式の場合、初期パス＋ファイル名テンプレート
+            file: AnkBase.newLocalFile(url)
+          };
+        }
 
-      function _exists (file) {
-        let f = isFile ? file.file : AnkBase.newLocalFile(file.filepath);
-        return (f.exists() || AnkBase.filenameExists(AnkUtils.getRelativePath(f.path, prefInitDir)));
-      }
+        function _exists (file) {
+          return Task.spawn(function* () {
+            let f = isFile ? file.file : AnkBase.newLocalFile(file.filepath);
+            if (f.exists())
+              return true;
+            return yield AnkBase.filenameExists(AnkUtils.getRelativePath(f.path, prefInitDir));
+          });
+        }
 
-      try {
         let initDir = AnkBase.newLocalFile(prefInitDir);
 
         if (!initDir.exists())
@@ -375,7 +373,12 @@ try {
           let image = _file(prefInitDir, filenames[i], ext);
           let meta = _file(prefInitDir, filenames[i], '.txt', true);
 
-          if (_exists(image) || _exists(meta))
+          let b = yield _exists(image);
+          if (b)
+            continue;
+
+          b = yield _exists(meta);
+          if (b)
             continue;
 
           if (useDialog) {
@@ -384,12 +387,9 @@ try {
             return {image: image.file, meta: meta.file};
           }
         }
-      } catch (e) {
-        // FIXME ?
-        AnkUtils.dump(e);
-      }
 
-      return AnkBase.showFilePickerWithMeta(prefInitDir, filenames[0], ext, isFile);
+        return AnkBase.showFilePickerWithMeta(prefInitDir, filenames[0], ext, isFile);
+      });
     }, // }}}
 
     /*
@@ -400,8 +400,7 @@ try {
      */
     isDownloading: function (illust_id, service_id) {
       function find (v) {
-        // illust_idは === ではなく == で比較する
-        return (v.context.SERVICE_ID === service_id) && (v.context.info.illust.id == illust_id);
+        return (v.context.SERVICE_ID === service_id) && (v.context.info.illust.id == illust_id); // illust_idは === ではなく == で比較する
       }
 
       return AnkBase.downloading.pages.some(find);
@@ -429,13 +428,10 @@ try {
       dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
 
       // 各種オブジェクトの生成
-      let sourceURI = AnkUtils.ccci('@mozilla.org/network/standard-url;1', Components.interfaces.nsIURI);
-      sourceURI.spec = url;
-      let refererURI = AnkUtils.ccci('@mozilla.org/network/standard-url;1', Components.interfaces.nsIURI);
-      refererURI.spec = referer;
+      let sourceURI = NetUtil.newURI(url);
+      let refererURI = NetUtil.newURI(referer);
 
-      let channel = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Components.interfaces.nsIIOService).
-                      newChannelFromURI(sourceURI).QueryInterface(Ci.nsIHttpChannel);
+      let channel = Services.io.newChannelFromURI(sourceURI).QueryInterface(Ci.nsIHttpChannel);
       let wbpersist = AnkUtils.ccci('@mozilla.org/embedding/browser/nsWebBrowserPersist;1',
                                 Components.interfaces.nsIWebBrowserPersist);
 
@@ -546,9 +542,8 @@ try {
       let dir = file.parent;
       dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
 
-      let out = AnkUtils.ccci('@mozilla.org/network/file-output-stream;1', Ci.nsIFileOutputStream);
+      let out = FileUtils.openFileOutputStream(file, FileUtils.MODE_WRONLY | FileUtils.MODE_APPEND | FileUtils.MODE_CREATE, 0664, 0);
       let conv = AnkUtils.ccci('@mozilla.org/intl/converter-output-stream;1', Ci.nsIConverterOutputStream);
-      out.init(file, 0x02 | 0x10 | 0x08, 0664, 0);
       conv.init(out, 'UTF-8', text.length, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
       conv.writeString(text);
       conv.close();
@@ -661,10 +656,10 @@ try {
      * 現在表示されている画像を保存する
      */
     downloadCurrentImage: function (module, useDialog, confirmDownloaded, debug) { // {{{
-      try {
+      Task.spawn(function () {
         // 同一ページでも、表示中の状態によってダウンロードの可否が異なる場合がある
         if (!module.isDownloadable())
-          return false;
+          return;
 
         if (typeof useDialog === 'undefined')
           useDialog = AnkBase.Prefs.get('showSaveDialog', true);
@@ -675,31 +670,24 @@ try {
         // ダウンロード中だったらやめようぜ！
         if (AnkBase.isDownloading(module.getIllustId(), module.SERVICE_ID)) {
           //window.alert(AnkBase.Locale('alreadyDownloading'));
-          return false;
+          return;
         }
 
-        /* ダウンロード済みかの確認 */
-        let qa = [];
-        let cond = 'illust_id = :illId and service_id = :servId';
-        qa.push({ id:-1, table:'histories', cond:cond, values:{ illId:module.getIllustId(), servId:module.SERVICE_ID } });
-        AnkBase.Storage.exists(qa, function (id, isExists) {
-          if (isExists) {
-            if (confirmDownloaded) {
-              if (!window.confirm(AnkBase.Locale('downloadExistingImage')))
-                return false;
-            } else {
-              return false;
-            }
+        // ダウンロード済みかの確認
+        let row = yield AnkBase.Storage.exists(AnkBase.getIllustExistsQuery(module.getIllustId(), module.SERVICE_ID));
+        if (row) {
+          if (confirmDownloaded) {
+            if (!window.confirm(AnkBase.Locale('downloadExistingImage')))
+              return;
+          } else {
+            return;
           }
+        }
 
-          // ダウンロード用のコンテキストの収集(contextの取得に時間がかかる場合があるのでダウンロードマークを表示しておく)
-          AnkBase.insertDownloadedDisplay(module.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.INITIALIZE);
-          module.downloadCurrentImage(useDialog, debug);
-        });
-
-      } catch (e) {
-        AnkUtils.dumpError(e, true);
-      }
+        // ダウンロード用のコンテキストの収集(contextの取得に時間がかかる場合があるのでダウンロードマークを表示しておく)
+        AnkBase.insertDownloadedDisplay(module.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.INITIALIZE);
+        module.downloadCurrentImage(useDialog, debug);
+      }).then(null, function (e) AnkUtils.dumpError(e, true));
     },
 
     findDownload: function (download, remove) {
@@ -842,15 +830,7 @@ try {
         AnkBase.updateToolbarText();
         AnkBase.insertDownloadedDisplay(download.context.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADING);
 
-        let qa = [];
-        qa.push({ id: 0, table:'members', cond:'id = :memberId and service_id = :servId', values:{memberId:download.context.info.member.id, servId:download.context.SERVICE_ID} });
-        AnkBase.Storage.select(qa, function (id, rows) {
-          if (rows.length > 0)
-            download.context.info.member.memoizedName = rows[0].getResultByName('name');
-          AnkUtils.dump('xxx '+download.context.info.member.memoizedName);
-
-          AnkBase.downloadExecuter(download);
-        });
+        AnkBase.downloadExecuter(download);
 
       } catch (e) {
         AnkUtils.dumpError(e, true);
@@ -858,7 +838,7 @@ try {
     },
 
     downloadExecuter: function (download) {
-      try {
+      Task.spawn(function () {
         function getSiteName (context) {
           if (context.info.path.initDir) 
             return null;                // サイト別初期ディレクトリが設定されていればそちらを優先
@@ -882,7 +862,7 @@ try {
         let member_id     = context.info.member.id;
         let member_name   = context.info.member.name || member_id;
         let pixiv_id      = context.info.member.pixivId;
-        let memoized_name = context.info.member.memoizedName || member_name;
+        let memoized_name = member_name;
         let tags          = context.info.illust.tags;
         let title         = context.info.illust.title;
         let comment       = context.info.illust.comment;
@@ -898,29 +878,15 @@ try {
 
         let savedDateTime = new Date();
 
-        if (AnkBase.Prefs.get('saveHistory', true)) {
-          try {
+        let row = yield AnkBase.Storage.exists(AnkBase.getMemberExistsQuery(download.context.info.member.id,download.context.SERVICE_ID));
+        if (row) {
+          download.context.info.member.memoizedName = row.getResultByName('name');
+        }
+        else {
+          if (AnkBase.Prefs.get('saveHistory', true)) {
             let qa = [];
-            qa.push({ table:'members', cond:'id = :memberId and service_id = :servId', values:{ memberId:member_id, servId:service_id } });
-            AnkBase.Storage.exists(qa, function (id, isExists) {
-              if (!isExists) {
-                AnkUtils.dump('xxxxxxxx user exists xxxxxxxx');
-                // insert member
-                /*
-                AnkBase.Storage.insert(
-                  'members', {
-                    id: member_id,
-                    name: member_name,
-                    pixiv_id: pixiv_id,
-                    version: AnkBase.DB_VERSION,
-                    service_id: service_id
-                  }
-                );
-                */
-              }
-            });
-          } catch (e) {
-            AnkUtils.dumpError(e, true);
+            qa.push({ table:'members', set:{ id:member_id, name: member_name, pixiv_id:pixiv_id, version:AnkBase.DB_VERSION, service_id:service_id } });
+            yield AnkBase.Storage.insert(qa);
           }
         }
 
@@ -1049,22 +1015,24 @@ try {
         };
 
         let onComplete = function (prefInitDir, local_path) {
-          try {
+          Task.spawn(function () {
             let caption = AnkBase.Locale('finishedDownload');
             let text = filenames[0];
             let relPath = prefInitDir ? AnkUtils.getRelativePath(local_path, prefInitDir)
                                       : AnkUtils.extractFilename(local_path);
 
             if (AnkBase.Prefs.get('saveHistory', true)) {
-              try {
+              yield Task.spawn(function () {
                 record['local_path'] = local_path;
                 record['filename'] = relPath;
-                AnkBase.Storage.insert('histories', record);
-              } catch (e) {
+                let qa = [];
+                qa.push({id:0, table:'histories', set:record });
+                yield AnkBase.Storage.insert(qa);
+              }).then(null, function (e) {
                 AnkUtils.dumpError(e, true);
                 caption = 'Error - onComplete';
                 text = e;
-              }
+              });
             }
 
             if (AnkBase.Prefs.get('saveMeta', true))
@@ -1082,15 +1050,15 @@ try {
             if (curmod && curmod.SERVICE_ID === service_id)
               curmod.markDownloaded(illust_id,true);
 
-            return true;
+//            return true;
 
-          } catch (e) {
+          }).then(null, function (e) {
             let s = '';
             for (let n in e) {
               s += n + ': ' + e[n] + '\n';
             }
             window.alert(s);
-          }
+          });
         };
 
         let onError = function (responseStatus) {
@@ -1114,7 +1082,7 @@ try {
         };
 
         // XXX 前方で宣言済み
-        destFiles = AnkBase.getSaveFilePath(prefInitDir, filenames, ext, useDialog, !context.in.manga, images.length, facing ? facing[facing.length-1] : undefined);
+        destFiles = yield AnkBase.getSaveFilePath(prefInitDir, filenames, ext, useDialog, !context.in.manga, images.length, facing ? facing[facing.length-1] : undefined);
         if (!destFiles) {
           AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.FAILED);
           return;
@@ -1136,9 +1104,7 @@ try {
           AnkBase.downloadIllust(images[0], ref, prefInitDir, destFiles.image, download, onComplete, onError);
         }
 
-      } catch (e) {
-        AnkUtils.dumpError(e, true);
-      }
+      }).then(null, function (e) AnkUtils.dumpError(e, true));
     }, // }}}
 
     /*
@@ -1213,15 +1179,13 @@ try {
         appendTo.appendChild(div);
     }, // }}}
 
-    insertDownloadedDisplayById: function (appendTo, illust_id, service_id, R18) { // {{{
+    insertDownloadedDisplayById: function (appendTo, R18, illust_id, service_id) { // {{{
       if (!appendTo)
         return;
 
-      let qa = [];
-      let cond = 'illust_id = :illId and service_id = :servId';
-      qa.push({ id:-1, table:'histories', cond:cond, values:{ illId:illust_id, servId:service_id } });
-      AnkBase.Storage.exists(qa, function (id, isExists) {
-        if (isExists) {
+      Task.spawn(function () {
+        let row = yield AnkBase.Storage.exists(AnkBase.getIllustExistsQuery(illust_id, service_id));
+        if (row) {
           AnkBase.insertDownloadedDisplay(
             appendTo,
             R18,
@@ -1240,7 +1204,7 @@ try {
             null
           );
         } // }}}
-      });
+      }).then(null, function (e) AnkUtils.dumpError(e));
     }, // }}}
 
     /*
@@ -1308,6 +1272,22 @@ try {
         return null;
       }
     }, // }}}
+
+    getIllustExistsQuery: function (illust_id, service_id, id) {
+      const cond = 'illust_id = :illId and service_id = :servId';
+      return [ { id:(id !== undefined ? id:-1), table:'histories', cond:cond, values:{ illId:illust_id, servId:service_id } } ];
+    },
+
+    getMemberExistsQuery: function (member_id, service_id, id) {
+      const cond = 'id = :memberId and service_id = :servId';
+      return [ { id:(id !== undefined ? id:-1), table:'members', cond:cond, values:{ memberId:member_id, servId:service_id } } ];
+    },
+
+    getFileExistsQuery: function (filename, id) {
+      const cond = 'filename = :filename';
+      return [ { id:(id !== undefined ? id:-1), table:'histories', cond:cond, values:{ filename:filename } } ];
+    },
+
 
 
     /********************************************************************************
@@ -1443,102 +1423,33 @@ try {
     ********************************************************************************/
 
     updateDatabase: function () { // {{{
+      return Task.spawn(function* () {
+        // version 6->7
+        let ver = parseInt(AnkBase.DB_VERSION,10);
+        let uver = yield AnkBase.Storage.getDatabaseVersion();
+        if (uver >= ver) {
+          AnkUtils.dump("database is up to date. version "+uver);
+          return;
+        }
 
-      // version 6->7
+        AnkUtils.dump('update database. version '+uver+' -> '+ver);
 
-      let version = parseInt(AnkBase.DB_VERSION,10); 
-      let set = 'service_id = :servId, version = :vers';
-      let cond = 'service_id is null';
-      let values = { servId:'PXV', vers:version };
-      AnkBase.Storage.updateDatabase(
-        version,
-        [
-          { type:'dropIndex', table:'histories', columns:['illust_id'] },
-          { type:'dropIndex', table:'members',   columns:['id'] },
-          { type:'update', table:'histories', set:set, cond:cond, values:values },
-          { type:'update', table:'members',   set:set, cond:cond, values:values },
-        ]
-      );
+        let set = 'service_id = :servId, version = :vers';
+        let cond = 'service_id is null';
+        let values = { servId:'PXV', vers:ver };
+
+        let qa = [];
+        qa.push({ type:'dropIndex', table:'histories', columns:['illust_id'] });
+        qa.push({ type:'dropIndex', table:'members',   columns:['id'] });
+        qa.push({ type:'update', table:'histories', set:set, cond:cond, values:values });
+        qa.push({ type:'update', table:'members',   set:set, cond:cond, values:values });
+        qa.push({ type:'SchemaVersion', SchemaVersion:ver });
+
+        return yield AnkBase.Storage.update(AnkBase.Storage.getUpdateSQLs(qa));
+      });
+
     }, // }}}
 
-    fixStorageEncode: function () { // {{{
-      try {
-        let storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
-                                           Components.interfaces.mozIStorageStatementWrapper);
-        let db = AnkBase.Storage.database;
-        let updates = [];
-
-        let update = function (columnName, value, rowid) {
-          updates.push(function () {
-            let stmt = db.createStatement('update histories set ' + columnName + ' =  ?1 where rowid = ?2');
-            try {
-              stmt.bindUTF8StringParameter(0, value);
-              stmt.bindInt32Parameter(1, rowid);
-              stmt.execute();
-            } finally {
-              stmt.reset();
-            }
-          });
-        };
-
-        let stmt = db.createStatement('select rowid, * from histories');
-        stmt.reset();
-        storageWrapper.initialize(stmt);
-        while (storageWrapper.step()) {
-          let rowid = storageWrapper.row["rowid"];
-          let filename = storageWrapper.row["filename"];
-          let local_path = storageWrapper.row["local_path"];
-          if (local_path) update('local_path', decodeURIComponent(local_path), rowid);
-          if (filename)
-            update('filename', decodeURIComponent(filename), rowid);
-          else
-            update('filename', decodeURIComponent(AnkUtils.extractFilename(local_path)), rowid);
-        }
-        for (let i in updates) {
-          (updates[i])();
-        }
-      } catch (e) {
-        AnkUtils.dumpError(e, true);
-      }
-    }, // }}}
-
-    exchangeFilename: function () { // {{{
-      try {
-        let storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
-                                           Components.interfaces.mozIStorageStatementWrapper);
-        let db = AnkBase.Storage.database;
-        let updates = [];
-
-        let update = function (columnName, value, rowid) {
-          updates.push(function () {
-            let stmt = db.createStatement('update histories set ' + columnName + ' =  ?1 where rowid = ?2');
-            try {
-              stmt.bindUTF8StringParameter(0, value);
-              stmt.bindInt32Parameter(1, rowid);
-              stmt.execute();
-            } finally {
-              stmt.reset();
-            }
-          });
-        };
-
-        let stmt = db.createStatement('select rowid, * from histories where rowid >= 180');
-        stmt.reset();
-        storageWrapper.initialize(stmt);
-        while (storageWrapper.step()) {
-          let rowid = storageWrapper.row["rowid"];
-          let filename = storageWrapper.row["filename"];
-          if (filename) {
-            update('filename', filename.replace(/^([^\-]+) - ([^\.]+)(\.\w{2,4})$/, '$2 - $1$3'), rowid);
-          }
-        }
-        for (let i in updates) {
-          (updates[i])();
-        }
-      } catch (e) {
-        AnkUtils.dumpError(e, true);
-      }
-    }, // }}}
 
 
     /********************************************************************************
@@ -1841,11 +1752,8 @@ try {
       //
 
       let qa = [];
-      let cond = 'illust_id = :illId and service_id = :servId';
-      for (let i=0; i<boxies.length; i++) {
-        let v = boxies[i];
-        qa.push({ id:i, table:'histories', cond:cond, values:{ illId:v.illust_id, servId:module.SERVICE_ID } });
-      }
+      for (let i=0; i<boxies.length; i++)
+        qa.push(AnkBase.getIllustExistsQuery(boxies[i].illust_id, module.SERVICE_ID, i).pop());
 
       AnkBase.Storage.exists(qa, proc);
     }, // }}}
@@ -1904,10 +1812,10 @@ try {
         }
       };
 
-      AnkBase.Storage = new AnkStorage(AnkBase.Prefs.get('storageFilepath', 'ankpixiv.sqlite'), dbTables, dbOptions);
-      AnkBase.Storage.createDatabase(
-        function () {
-          AnkBase.updateDatabase();
+      Task.spawn(function () {
+        AnkBase.Storage = new AnkStorage(AnkBase.Prefs.get('storageFilepath', 'ankpixiv.sqlite'), dbTables, dbOptions);
+        if (yield AnkBase.Storage.createDatabase()) {
+          yield AnkBase.updateDatabase();
           AnkBase.registerSheet();
           AnkBase.addToolbarIcon();
           window.addEventListener('ankDownload', AnkBase.downloadHandler, true);
@@ -1915,7 +1823,7 @@ try {
           window.addEventListener('focus', AnkBase.onFocus, true);
           setInterval(function (e) AnkBase.cleanupDownload(), AnkBase.DOWNLOAD.CLEANUP_INTERVAL);
         }
-      );
+      }).then(null, function (e) AnkUtils.dumpError(e));
 
     }, // }}}
 
