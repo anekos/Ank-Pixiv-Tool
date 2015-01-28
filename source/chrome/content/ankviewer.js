@@ -1,5 +1,7 @@
 
-function AnkViewer (module) {
+Components.utils.import("resource://gre/modules/Task.jsm");
+
+AnkViewer = function (module) {
 
   if (!module)
     return null;
@@ -325,7 +327,6 @@ function AnkViewer (module) {
       updateButtons();
     }
 
-    let ads = module.elements.illust.ads;
     let wrapperTopMargin;
 
     if (bigMode) {
@@ -415,6 +416,7 @@ function AnkViewer (module) {
   let largeLink = module.elements.illust.largeLink;
   let openComment = module.elements.illust.openComment; 
   let openCaption = module.elements.illust.openCaption; 
+  let ads = module.elements.illust.ads;
   let bgImage = win.getComputedStyle(doc.body, '').backgroundImage;
   let images = null;
   let facing = null;
@@ -577,9 +579,10 @@ function AnkViewer (module) {
     changeImageSize();
   };
 
-}
+  // ページ遷移なしで画像情報が変わった時のために内部情報をリセット
+  this.reset = function () {
+    images = null;
+    facing = null;
+  };
 
-AnkViewer.prototype.reset = function () {
-  this.images = null;
-  this.facing = null;
 };

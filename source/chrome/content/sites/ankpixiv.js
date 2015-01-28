@@ -16,8 +16,8 @@ try {
     self._functionsInstalled = false;
 
     self._image = {
-        thumbnail: null,
-        original: null,
+      thumbnail: null,
+      original: null,
     };
 
     /********************************************************************************
@@ -69,6 +69,15 @@ try {
 
       get bookmarkAdd () // {{{
         self.info.illust.pageUrl.match(/\.pixiv\.net\/bookmark_add\.php\?/), // }}}
+
+      get bookmarkList () // {{{
+        self.info.illust.pageUrl.match(/\.pixiv\.net\/bookmark\.php\?/), // }}}
+
+      get feedList () // {{{
+        self.info.illust.pageUrl.match(/\.pixiv\.net\/stacc\//), // }}}
+
+      get rankingList () // {{{
+        self.info.illust.pageUrl.match(/\.pixiv\.net\/ranking\.php\?/), // }}}
     }; // }}}
 
     self.elements = (function () { // {{{
@@ -129,7 +138,7 @@ try {
         // この作品をブックマークした人はこんな作品もブックマークしています
         // あなたのブックマークタグ「○○」へのおすすめ作品
         get recommendList()
-          AnkUtils.A(queryAll('._image-items')).pop(),
+          query('#illust-recommend ._image-items'),
 
         get ugoiraContainer ()
           query('.works_display ._ugoku-illust-player-container'),
@@ -409,7 +418,7 @@ try {
     },
 
     /********************************************************************************
-     * グローバルメソッド
+     * 
      ********************************************************************************/
 
     /**
@@ -440,7 +449,7 @@ try {
      * ダウンロード可能か
      */
     isDownloadable: function () {
-      return this.in.medium && !this.in.myIllust;
+      return this._functionsInstalled && this.in.medium && !this.in.myIllust;
     },
 
     /**
@@ -467,6 +476,65 @@ try {
         AnkBase.addDownload(context, useDialog, debug);
       }).then(null, function (e) AnkUtils.dumpError(e));
     },
+
+    /*
+     * ダウンロード済みイラストにマーカーを付ける
+     *    node:     対象のノード (AutoPagerize などで追加されたノードのみに追加するためにあるよ)
+     *    force:    追加済みであっても、強制的にマークする
+     */ 
+    markDownloaded: function (node, force, ignorePref) { // {{{
+      const IsIllust = /&illust_id=(\d+)/;
+      const Targets = [
+                        ['li > a.work', 1],                       // 作品一覧、ブックマーク
+                        ['.rank-detail a._work', 2],              // ホーム（ランキング）
+                        ['.ranking-item a._work', 2],             // ランキング
+                        ['.worksListOthersImg > ul > li > a', 1], // プロファイル（ブックマーク、イメージレスポンス）
+                        ['.worksImageresponseImg > a', 2],        // イラストページ（イメージレスポンス）
+                        ['li > a.response-in-work', 1],           // イラストページ（イメージレスポンス）
+                        ['.search_a2_result > ul > li > a', 1],   // イメージレスポンス
+                        ['.stacc_ref_illust_img > a', 3],         // フィード（お気に入りに追加したイラスト）
+                        ['.stacc_ref_user_illust_img > a', 1],    // フィード（お気に入りに追加したユーザ内のイラスト）
+                        ['.hotimage > a.work', 1],                // タグページ（週間ベスト）
+                        ['.image-item > a:nth-child(1)', 1],      // タグページ（全期間＆新着）
+                        ['.sibling-items > .after > a', 1],       // 前の作品
+                        ['.sibling-items > .before > a', 1],      // 次の作品
+                      ];
+
+      return AnkBase.markDownloaded(IsIllust, Targets, false, this, node, force, ignorePref);
+    }, // }}}
+
+    /*
+     * 評価する
+     */
+    setRating: function (pt) { // {{{
+      function proc (pt) {
+        if (!self.in.medium)
+          throw 'not in illust page';
+        if (pt < 1 || 10 < pt)
+          throw 'out of range';
+
+        let rating = doc.defaultView.wrappedJSObject.pixiv.rating;
+        if (typeof rating.rate === 'number') {
+          rating.apply.call(rating, pt);
+          if (!AnkBase.Prefs.get('downloadWhenRate', false))
+            return true;
+          let point = AnkBase.Prefs.get('downloadRate', 10);
+          if (point <= pt)
+            AnkBase.downloadCurrentImage(self, AnkBase.Prefs.get('confirmExistingDownloadWhenAuto'));
+        } else {
+          return false;
+        }
+      }
+
+      let self = this;
+      let doc = this.curdoc;
+
+      return proc(pt);
+    }, // }}}
+
+    /********************************************************************************
+     * 
+     ********************************************************************************/
 
     /**
      * 画像URLリストの取得
@@ -668,7 +736,7 @@ try {
     },
 
     /********************************************************************************
-     * ローカルメソッド
+     * 
      ********************************************************************************/
 
     /*
@@ -878,7 +946,7 @@ try {
 
       // install now
       if (AnkBase.Prefs.get('markDownloaded', false)) {
-        if (!this.in.illustList && !this.in.bookmarkNew && !this.in.bookmarkAdd) {
+        if (this.in.bookmarkList || this.in.feedList || this.in.rankingList) {
           AnkBase.delayFunctionInstaller(followExpansion, 500, 20, self.SITE_NAME, 'followExpansion');
         }
         AnkBase.delayFunctionInstaller(autoPagerize, 500, 20, self.SITE_NAME, 'autoPagerize');
@@ -886,70 +954,14 @@ try {
       }
     },
 
-    /*
-     * ダウンロード済みイラストにマーカーを付ける
-     *    node:     対象のノード (AutoPagerize などで追加されたノードのみに追加するためにあるよ)
-     *    force:    追加済みであっても、強制的にマークする
-     */ 
-    markDownloaded: function (node, force, ignorePref) { // {{{
-      const IsIllust = /&illust_id=(\d+)/;
-      const Targets = [
-                        ['li > a.work', 1],                       // 作品一覧、ブックマーク
-                        ['.rank-detail a._work', 2],              // ホーム（ランキング）
-                        ['.ranking-item a._work', 2],             // ランキング
-                        ['.worksListOthersImg > ul > li > a', 1], // プロファイル（ブックマーク、イメージレスポンス）
-                        ['.worksImageresponseImg > a', 2],        // イラストページ（イメージレスポンス）
-                        ['li > a.response-in-work', 1],           // イラストページ（イメージレスポンス）
-                        ['.search_a2_result > ul > li > a', 1],   // イメージレスポンス
-                        ['.stacc_ref_illust_img > a', 3],         // フィード（お気に入りに追加したイラスト）
-                        ['.stacc_ref_user_illust_img > a', 1],    // フィード（お気に入りに追加したユーザ内のイラスト）
-                        ['.hotimage > a.work', 1],                // タグページ（週間ベスト）
-                        ['.image-item > a:nth-child(1)', 1],      // タグページ（全期間＆新着）
-                        ['.sibling-items > .after > a', 1],       // 前の作品
-                        ['.sibling-items > .before > a', 1],      // 次の作品
-                      ];
-
-      return AnkBase.markDownloaded(IsIllust, Targets, false, this, node, force, ignorePref);
-    }, // }}}
-
-    /*
-     * 評価する
-     */
-    rate: function (pt) { // {{{
-      function setRating (pt) {
-        if (!self.in.medium)
-          throw 'not in illust page';
-        if (pt < 1 || 10 < pt)
-          throw 'out of range';
-
-        let rating = doc.defaultView.wrappedJSObject.pixiv.rating;
-        if (typeof rating.rate === 'number') {
-          rating.apply.call(rating, pt);
-          if (!AnkBase.Prefs.get('downloadWhenRate', false))
-            return true;
-          let point = AnkBase.Prefs.get('downloadRate', 10);
-          if (point <= pt)
-            AnkBase.downloadCurrentImage(self, AnkBase.Prefs.get('confirmExistingDownloadWhenAuto'));
-        } else {
-          return false;
-        }
-      }
-
-      let self = this;
-      let doc = this.curdoc;
-
-      return setRating(pt);
-    }, // }}}
-
   };
 
 
   /********************************************************************************
-  * ベースとなるインスタンスの生成＋本体へのインストール - ankpixiv.xulにも登録を
+  * 本体へのインストール - ankpixiv.xulにも登録を
   ********************************************************************************/
 
   AnkBase.addModule(AnkPixivModule);
-
 
 } catch (error) {
  dump("[" + error.name + "]\n" +

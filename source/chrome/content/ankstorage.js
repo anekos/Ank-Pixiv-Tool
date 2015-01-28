@@ -71,14 +71,14 @@ try {
       return Task.spawn(function* () {
         if (!qa || qa.length == 0)
           return;
-
+        AnkUtils.dump('######## select * from '+qa[0].table+(qa[0].cond ? ' where '+qa[0].cond : '')+(qa[0].opts ? ' '+qa[0].opts : ''));
         let conn;
         try {
           conn = yield Sqlite.openConnection({ path: self.dbpath });
           return yield conn.executeTransaction(function* () {
             for (let i=0; i<qa.length; i++) {
               let query = 'select * from '+qa[i].table+(qa[i].cond ? ' where '+qa[i].cond : '')+(qa[i].opts ? ' '+qa[i].opts : '');
-              AnkUtils.dump('select: '+(i+1)+', '+query);
+              //AnkUtils.dump('select: '+(i+1)+', '+query);
               let rows = yield conn.execute(query, qa[i].values);
               if (!callback)
                 return rows && rows.length > 0 && rows[0];
@@ -103,18 +103,16 @@ try {
      * 参照系トランザクション（存在確認）
      */
     exists: function (qa, callback) {
-      if (!qa || qa.length == 0)
-        return;
-
       let self = this;
       for (let i=0; i<qa.length; i++)
         qa[i].opts = (qa[i].opts ? qa[i].opts+' ':'')+'limit 1';
+
       if (!callback)
         return self.select(qa);
 
       return self.select(qa, function (id, rows) {
         if (callback)
-          callback(id, rows.length > 0 && rows[0]);
+          callback(id, rows && rows.length > 0 && rows[0]);
       });
     },
 
@@ -181,7 +179,7 @@ try {
         if (q.type == 'createTable') {
           let fs = [];
           for (let fieldName in q.fields)
-            fs.push(fieldName + ' ' + q.fields[fieldName].def + (q.fields[fieldName].constraint ? ' '+q.fields[fieldName].constraint : ''));
+            fs.push(fieldName + ' ' + q.fields[fieldName].type + (q.fields[fieldName].constraint ? ' '+q.fields[fieldName].constraint : ''));
           qa.push({ query:'create table if not exists '+q.table+' ('+fs.join()+')' });
         }
         else if (q.type == 'createUnique') {
