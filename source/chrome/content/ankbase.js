@@ -1410,7 +1410,7 @@ try {
     * データベース関連
     ********************************************************************************/
 
-    updateDatabase: function () { // {{{
+    updateDatabaseVersion: function () { // {{{
       return Task.spawn(function* () {
         // version 6->7->8
         let ver = parseInt(AnkBase.DB_DEF.VERSION,10);
@@ -1443,6 +1443,7 @@ try {
 
     addToolbarIcon: function () {
       try {
+        // FIXME　複数ウィンドウを開いた時は、clickイベントを振りなおさないといけない
         let widget = CustomizableUI.getWidget(AnkBase.TOOLBAR_BUTTON.ID);
         if (widget && widget.provider == CustomizableUI.PROVIDER_API)
           return; // すでにアイコン登録済みならなにもしない
@@ -1779,14 +1780,17 @@ try {
       Task.spawn(function () {
         AnkBase.Storage = new AnkStorage(AnkBase.Prefs.get('storageFilepath', 'ankpixiv.sqlite'), AnkBase.DB_DEF.TABLES, AnkBase.DB_DEF.OPTIONS);
         // TODO Firefox35だとyieldが正しい値を返してこない
-        if (yield AnkBase.Storage.createDatabase()) {
-          yield AnkBase.updateDatabase();
+        let isOpened = yield AnkBase.Storage.openDatabase(function () {
+          window.addEventListener('unload', function (e) AnkBase.Storage.closeDatabase(), false);
+        });
+        if (isOpened) {
+          yield AnkBase.Storage.createDatabase()
+          yield AnkBase.updateDatabaseVersion();
           AnkBase.registerSheet();
           AnkBase.addToolbarIcon();
           window.addEventListener('ankDownload', AnkBase.downloadHandler, true);
           window.addEventListener('pageshow', AnkBase.onFocus, true);
           window.addEventListener('focus', AnkBase.onFocus, true);
-          window.addEventListener('close', function (e) AnkUtils.dump('xxxxxxxx CLOSED xxxxxxxx'), false);
           setInterval(function (e) AnkBase.cleanupDownload(), AnkBase.DOWNLOAD_THREAD.CLEANUP_INTERVAL);
         }
       }).then(null, function (e) AnkUtils.dumpError(e));

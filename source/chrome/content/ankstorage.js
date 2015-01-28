@@ -6,6 +6,7 @@ try {
 
 
   AnkStorage = function (filename, tables, options) { // {{{
+    
     this.dbpath = filename;
     this.tables = tables;
     this.options = options || {};
@@ -20,46 +21,55 @@ try {
 
     this.dbpath = file.path;
 
+    this.conn = null;
+
     return this;
   }; // }}}
 
 
   AnkStorage.prototype = {
 
+    openDatabase: function (callback) {
+      let self = this;
+      return Task.spawn(function* () {
+        self.conn = yield Sqlite.openConnection({ path:self.dbpath });
+        if (self.conn) {
+          callback();
+          return true;
+        }
+      });
+    },
+
+    closeDatabase: function () {
+      let self = this;
+      if (self.conn) {
+        self.conn.close().then(null, function (e) AnkUtils.dumpError(e));
+      }
+    },
+
     /**
      * 更新系トランザクション
      */
     update: function (qa) {
+      if (!qa || qa.length == 0)
+        return;
+
       let self = this;
       return Task.spawn(function* () {
-        if (!qa || qa.length == 0)
-          return;
-
-        let conn;
-        try {
-          conn = yield Sqlite.openConnection({ path: self.dbpath });
-          return yield conn.executeTransaction(function* () {
-            for (let i=0; i<qa.length; i++) {
-              if ('query' in qa[i]) {
-                AnkUtils.dump('executeSQLs: '+(i+1)+', '+qa[i].query);
-                yield conn.execute(qa[i].query, qa[i].values);
-              }
-              else if ('SchemaVersion' in qa[i]) {
-                AnkUtils.dump('executeSQLs: '+(i+1)+', SchemaVersion = '+qa[i].SchemaVersion);
-                yield conn.setSchemaVersion(qa[i].SchemaVersion);
-              }
+        return yield self.conn.executeTransaction(function* () {
+          for (let i=0; i<qa.length; i++) {
+            if ('query' in qa[i]) {
+              AnkUtils.dump('executeSQLs: '+(i+1)+', '+qa[i].query);
+              yield self.conn.execute(qa[i].query, qa[i].values);
             }
+            else if ('SchemaVersion' in qa[i]) {
+              AnkUtils.dump('executeSQLs: '+(i+1)+', SchemaVersion = '+qa[i].SchemaVersion);
+              yield self.conn.setSchemaVersion(qa[i].SchemaVersion);
+            }
+          }
 
-            return true;
-          });
-        }
-        catch (e) {
-          AnkUtils.dumpError(e); 
-        }
-        finally {
-          if (conn)
-            yield conn.close();
-        }
+          return true;
+        });
       });
     },
 
@@ -67,35 +77,24 @@ try {
      * 参照系トランザクション
      */
     select: function (qa, callback) {
+      if (!qa || qa.length == 0)
+        return;
+
       let self = this;
       return Task.spawn(function* () {
-        if (!qa || qa.length == 0)
-          return;
-        AnkUtils.dump('######## select * from '+qa[0].table+(qa[0].cond ? ' where '+qa[0].cond : '')+(qa[0].opts ? ' '+qa[0].opts : ''));
-        let conn;
-        try {
-          conn = yield Sqlite.openConnection({ path: self.dbpath });
-          return yield conn.executeTransaction(function* () {
-            for (let i=0; i<qa.length; i++) {
-              let query = 'select * from '+qa[i].table+(qa[i].cond ? ' where '+qa[i].cond : '')+(qa[i].opts ? ' '+qa[i].opts : '');
-              //AnkUtils.dump('select: '+(i+1)+', '+query);
-              let rows = yield conn.execute(query, qa[i].values);
-              if (!callback)
-                return rows && rows.length > 0 && rows[0];
+        return yield self.conn.executeTransaction(function* () {
+          for (let i=0; i<qa.length; i++) {
+            let query = 'select * from '+qa[i].table+(qa[i].cond ? ' where '+qa[i].cond : '')+(qa[i].opts ? ' '+qa[i].opts : '');
+            AnkUtils.dump('select: '+(i+1)+', '+query);
+            let rows = yield self.conn.execute(query, qa[i].values);
+            if (!callback)
+              return rows && rows.length > 0 && rows[0];
 
-              callback(qa[i].id, rows);
-            }
+            callback(qa[i].id, rows);
+          }
 
-            return true;
-          });
-        }
-        catch (e) {
-          AnkUtils.dumpError(e); 
-        }
-        finally {
-          if (conn)
-            yield conn.close();
-        }
+          return true;
+        });
       });
     },
 
@@ -105,7 +104,7 @@ try {
     exists: function (qa, callback) {
       let self = this;
       for (let i=0; i<qa.length; i++)
-        qa[i].opts = (qa[i].opts ? qa[i].opts+' ':'')+'limit 1';
+        qa[i].opts = (qa[i].opts ? qa[i].opts+' ':'')+' limit 1';
 
       if (!callback)
         return self.select(qa);
@@ -153,18 +152,7 @@ try {
     getDatabaseVersion: function () {
       let self = this;
       return Task.spawn(function* () {
-        let conn;
-        try {
-          conn = yield Sqlite.openConnection({ path:self.dbpath });
-          return yield conn.getSchemaVersion();
-        }
-        catch (e) {
-          AnkUtils.dumpError(e, true);
-        }
-        finally {
-          if (conn)
-            yield conn.close();
-        }
+        return yield self.conn.getSchemaVersion();
       });
     },
 
