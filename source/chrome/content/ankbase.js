@@ -559,12 +559,9 @@ try {
       let dir = file.parent;
       dir.exists() || dir.create(dir.DIRECTORY_TYPE, 0755);
 
-      let out = FileUtils.openFileOutputStream(file, FileUtils.MODE_WRONLY | FileUtils.MODE_APPEND | FileUtils.MODE_CREATE, 0664, 0);
-      let conv = AnkUtils.ccci('@mozilla.org/intl/converter-output-stream;1', Ci.nsIConverterOutputStream);
-      conv.init(out, 'UTF-8', text.length, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
-      conv.writeString(text);
-      conv.close();
-      out.close();
+      let encoder = new TextEncoder();
+      let array = encoder.encode(text);
+      OS.File.writeAtomic(file.path, array, { encoding:"utf-8", tmpPath:file.path+".tmp" }).then(null, function (e) AnkUtils.dumpError(e));
     }, // }}}
 
     /*
@@ -1412,7 +1409,7 @@ try {
 
     updateDatabaseVersion: function () { // {{{
       return Task.spawn(function* () {
-        // version 6->7->8
+        // version 6->7
         let ver = parseInt(AnkBase.DB_DEF.VERSION,10);
         let uver = yield AnkBase.Storage.getDatabaseVersion();
         if (uver >= ver) {
@@ -1442,48 +1439,20 @@ try {
     ********************************************************************************/
 
     addToolbarIcon: function () {
+      let widget = document.getElementById(AnkBase.TOOLBAR_BUTTON.ID);
       try {
-        // FIXME　複数ウィンドウを開いた時は、clickイベントを振りなおさないといけない
-        let widget = CustomizableUI.getWidget(AnkBase.TOOLBAR_BUTTON.ID);
-        if (widget && widget.provider == CustomizableUI.PROVIDER_API)
-          return; // すでにアイコン登録済みならなにもしない
-
-        CustomizableUI.createWidget({
-          id: AnkBase.TOOLBAR_BUTTON.ID,
-          type: "custom",
-          defaultArea: CustomizableUI.AREA_NAVBAR,
-          removable: true,
-          onBuild: function (aDocument) {
-            function createElement (tag, attr) {
-              let e = aDocument.createElementNS('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul', tag);
-              for (let p in attr)
-                e.setAttribute(p, attr[p]);
-              return e;
-            }
-
-            var image = createElement('image', { id: AnkBase.TOOLBAR_BUTTON.IMAGE_ID });
-            var label = createElement('label', { id: AnkBase.TOOLBAR_BUTTON.TEXT_ID, collapsed: true });
-
-            var hbox = createElement('hbox');
-            hbox.appendChild(image);
-            hbox.appendChild(label);
-
-            var toolbarbutton = createElement(
-              'toolbarbutton',
-              {
-                id: AnkBase.TOOLBAR_BUTTON.ID,
-                label: 'Ank Pixiv Tool',
-                tooltiptext: 'pixiv',
-                class: 'toolbarbutton-1',
-              }
-            );
-            toolbarbutton.appendChild(hbox);
-
-            toolbarbutton.addEventListener('click', function(e) AnkBase.onDownloadButtonClick(e));
-
-            return toolbarbutton;
-          },
-        });
+        var firefoxnav = document.getElementById("nav-bar");
+        var curSet = firefoxnav.currentSet;
+        if (curSet.indexOf(AnkBase.TOOLBAR_BUTTON.ID) == -1) {
+          var set = [firefoxnav.currentSet, AnkBase.TOOLBAR_BUTTON.ID].join();
+          firefoxnav.setAttribute("currentset", set);
+          firefoxnav.currentSet = set;
+          document.persist("nav-bar", "currentset");
+          try {
+            BrowserToolboxCustomizeDone(true);
+          }
+          catch (e) { }
+        }
       }
       catch (e) {
         AnkUtils.dumpError(e, true);
@@ -1768,6 +1737,13 @@ try {
     * イベント
     ********************************************************************************/
 
+    firstRun: function () {
+      if (AnkBase.Prefs.get('firstRun', true)) {
+        AnkBase.Prefs.set('firstRun', false, 'boolean');
+        return true;
+      }
+    },
+
     openPrefWindow: function () { // {{{
       window.openDialog("chrome://ankpixiv/content/options.xul", "Pref Dialog",
                         "centerscreen,chrome,modal", arguments);
@@ -1787,7 +1763,9 @@ try {
           yield AnkBase.Storage.createDatabase()
           yield AnkBase.updateDatabaseVersion();
           AnkBase.registerSheet();
-          AnkBase.addToolbarIcon();
+          if (AnkBase.firstRun()) {
+            AnkBase.addToolbarIcon();
+          }
           window.addEventListener('ankDownload', AnkBase.downloadHandler, true);
           window.addEventListener('pageshow', AnkBase.onFocus, true);
           window.addEventListener('focus', AnkBase.onFocus, true);
