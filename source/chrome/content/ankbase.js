@@ -1602,15 +1602,13 @@ try {
           filter(function (m) m) .
           forEach(function ([elm, id]) {
             if (!(target.illust_id && target.illust_id != id)) {
-              let e = AnkUtils.trackbackParentNode(elm, nTrackback, targetClass);
-              if (e && !e.classList.contains(AnkBase.DOWNLOAD_MARK.DOWNLOADED)) {
-                boxies.push({ node:e, illust_id:id });
+              let box = AnkUtils.trackbackParentNode(elm, nTrackback, targetClass);
+              if (box && !box.classList.contains(AnkBase.DOWNLOAD_MARK.DOWNLOADED)) {
+                AnkBase.markBoxNode(box, id, module, overlay);
               }
             }
           });
       });
-
-      AnkBase.markBoxNode(boxies, module, overlay);
     }, // }}}
 
     /*
@@ -1618,110 +1616,92 @@ try {
      *                true   ダウンロード済みアイコンのオーバーレイ表示（縦座標自動設定）
      *                number ダウンロード済みアイコンのオーバーレイ表示（縦座標=top: *number*px !important）
      */
-    markBoxNode: function (boxies, module, overlay) { // {{{
-
-      let proc = function (id, rows) {
-        try {
-          let isExists = !!rows;
-
-          let box = boxies[id].node;
-          let illust_id = boxies[id].illust_id;
-
-          AnkUtils.dump('markBoxNode: '+boxies.length+', '+id+', '+illust_id+', '+isExists);
-
-          if (overlay === false) {
-            // 従来形式
-            let cnDownloaded  = AnkBase.DOWNLOAD_MARK.DOWNLOADED;
-            let cnDownloading = AnkBase.DOWNLOAD_MARK.DOWNLOADING;
-
-            // XXX for "can't access dead object".
-            if (typeof box === 'undefined')
-              return;
-
-            if (box.classList.contains(cnDownloaded))
-              return;
-
-            if (isExists) {
-              if (box.classList.contains(cnDownloading))
-                box.classList.remove(cnDownloading);
-              box.classList.add(cnDownloaded);
-            }
-            else if (AnkBase.isDownloading(illust_id, module.SERVICE_ID)) {
-              if (!box.classList.contains(cnDownloading))
-                box.classList.add(cnDownloading);
-            }
-          }
-          else {
-            // DLアイコンのオーバーレイ形式
-            function appendIcon (div) {
-              let st = window.getComputedStyle(box, null);
-              let pos = st.position;
-              if (box.tagName.toLowerCase() === 'div') {
-                // 親がボックス要素
-                if (st.position === 'static') {
-                  box.style.setProperty('position', 'relative', 'important');
-                  box.style.removeProperty('top');
-                  box.style.removeProperty('bottom');
-                  box.style.removeProperty('left');
-                  box.style.removeProperty('right');
-                }
-                div.style.setProperty('position', 'absolute', 'important');
-                div.style.setProperty('top', '2px', 'important');
-                div.style.setProperty('left', '2px', 'important');
-              }
-              else {
-                // 親がボックス要素以外
-                div.style.setProperty('position', 'relative', 'important');
-                if (typeof overlay == 'number') {
-                  div.style.setProperty('top', overlay+'px', 'important');
-                }
-                else {
-                  let m = st.height.match(/(\d+(?:\.\d+)?)px/);
-                  if (m)
-                    div.style.setProperty('top', (2-parseFloat(m[1]))+'px', 'important');
-                }
-              }
-              box.appendChild(div);
-            }
-
-            let cnDownloaded  = AnkBase.DOWNLOAD_MARK.DOWNLOADED_OVERLAY;
-            let cnDownloading = AnkBase.DOWNLOAD_MARK.DOWNLOADING_OVERLAY;
-
-            if (box.querySelector('.'+cnDownloaded))
-              return;
-
-            if (isExists) {
-              let div = box.querySelector('.'+cnDownloading);
-              if (div) {
-                div.classList.remove(cnDownloading);
-              } else {
-                div = module.curdoc.createElement('div');
-                appendIcon(div);
-              }
-              div.classList.add(cnDownloaded);
-            }
-            else if (AnkBase.isDownloading(illust_id, module.SERVICE_ID)) {
-              if (!box.querySelector('.'+cnDownloading)) {
-                let div = module.curdoc.createElement('div');
-                appendIcon(div);
-                div.classList.add(cnDownloading);
-              }
-            }
-          }
-        }
-        catch (e) {
-          AnkUtils.dumpError(e); 
-        }
-      };
-
-      //
+    markBoxNode: function (box, illust_id, module, overlay) { // {{{
 
       Task.spawn(function () {
-        let qa = [];
-        for (let i=0; i<boxies.length; i++)
-          qa.push(AnkBase.getIllustExistsQuery(boxies[i].illust_id, module.SERVICE_ID, i).pop());
+        let row = yield AnkBase.Storage.exists(AnkBase.getIllustExistsQuery(illust_id, module.SERVICE_ID, -1));
 
-        yield AnkBase.Storage.exists(qa, proc);
+        AnkUtils.dump('markBoxNode: '+illust_id+', '+!!row);
+
+        if (overlay === false) {
+          // 従来形式
+          let cnDownloaded  = AnkBase.DOWNLOAD_MARK.DOWNLOADED;
+          let cnDownloading = AnkBase.DOWNLOAD_MARK.DOWNLOADING;
+
+          // XXX for "can't access dead object".
+          if (typeof box === 'undefined')
+            return;
+
+          if (box.classList.contains(cnDownloaded))
+            return;
+
+          if (!!row) {
+            if (box.classList.contains(cnDownloading))
+              box.classList.remove(cnDownloading);
+            box.classList.add(cnDownloaded);
+          }
+          else if (AnkBase.isDownloading(illust_id, module.SERVICE_ID)) {
+            if (!box.classList.contains(cnDownloading))
+              box.classList.add(cnDownloading);
+          }
+        }
+        else {
+          // DLアイコンのオーバーレイ形式
+          function appendIcon (div) {
+            let st = window.getComputedStyle(box, null);
+            let pos = st.position;
+            if (box.tagName.toLowerCase() === 'div') {
+              // 親がボックス要素
+              if (st.position === 'static') {
+                box.style.setProperty('position', 'relative', 'important');
+                box.style.removeProperty('top');
+                box.style.removeProperty('bottom');
+                box.style.removeProperty('left');
+                box.style.removeProperty('right');
+              }
+              div.style.setProperty('position', 'absolute', 'important');
+              div.style.setProperty('top', '2px', 'important');
+              div.style.setProperty('left', '2px', 'important');
+            }
+            else {
+              // 親がボックス要素以外
+              div.style.setProperty('position', 'relative', 'important');
+              if (typeof overlay == 'number') {
+                div.style.setProperty('top', overlay+'px', 'important');
+              }
+              else {
+                let m = st.height.match(/(\d+(?:\.\d+)?)px/);
+                if (m)
+                  div.style.setProperty('top', (2-parseFloat(m[1]))+'px', 'important');
+              }
+            }
+            box.appendChild(div);
+          }
+
+          let cnDownloaded  = AnkBase.DOWNLOAD_MARK.DOWNLOADED_OVERLAY;
+          let cnDownloading = AnkBase.DOWNLOAD_MARK.DOWNLOADING_OVERLAY;
+
+          if (box.querySelector('.'+cnDownloaded))
+            return;
+
+          if (!!row) {
+            let div = box.querySelector('.'+cnDownloading);
+            if (div) {
+              div.classList.remove(cnDownloading);
+            } else {
+              div = module.curdoc.createElement('div');
+              appendIcon(div);
+            }
+            div.classList.add(cnDownloaded);
+          }
+          else if (AnkBase.isDownloading(illust_id, module.SERVICE_ID)) {
+            if (!box.querySelector('.'+cnDownloading)) {
+              let div = module.curdoc.createElement('div');
+              appendIcon(div);
+              div.classList.add(cnDownloading);
+            }
+          }
+        }
       }).then(null, function (e) AnkUtils.dumpError(e));
     }, // }}}
 
