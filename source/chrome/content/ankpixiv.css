@@ -15,11 +15,16 @@
 #ankpixiv-toolbar-button-image[lost="true"] {
   -moz-image-region: rect(48px 24px 72px 0px);
 }
+#ankpixiv-toolbar-button-image[notready="true"] {
+  -moz-image-region: rect(72px 24px 96px 0px);
+}
 #ankpixiv-toolbar-button:hover {
 }
 
 [iconsize="small"] #ankpixiv-toolbar-button-image {
   list-style-image: url("toolbar-button.png");
+  padding-left: 8px !important;  
+  padding-right: 8px !important;
   -moz-image-region: rect(0px 40px 16px 24px);
 }
 [iconsize="small"] #ankpixiv-toolbar-button-image[dark="true"] {
@@ -27,6 +32,9 @@
 }
 [iconsize="small"] #ankpixiv-toolbar-button-image[lost="true"] {
   -moz-image-region: rect(48px 40px 64px 24px);
+}
+[iconsize="small"] #ankpixiv-toolbar-button-image[notready="true"] {
+  -moz-image-region: rect(72px 40px 88px 24px);
 }
 [iconsize="small"] #ankpixiv-toolbar-button-image:hover {
 }

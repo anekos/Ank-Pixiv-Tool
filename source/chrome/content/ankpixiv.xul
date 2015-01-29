@@ -27,10 +27,6 @@
   <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/ankyfrog.js" />
 -->
 <!-- サイト別.jsの登録はここまで -->
-  <script type="application/x-javascript"><![CDATA[
-    AnkBase.onInit();
-  ]]></script>
-
   <stringbundleset id="ankpixiv-bundle-set">
     <stringbundle id="ankpixiv-string-bundle" src="chrome://ankpixiv/locale/ankpixiv.properties" />
   </stringbundleset>
@@ -45,7 +41,7 @@
                    tooltiptext="&iconLabel;" onclick="AnkBase.onDownloadButtonClick(event)"
                    class="toolbarbutton-1">
      <hbox>
-       <image id="ankpixiv-toolbar-button-image" />
+       <image id="ankpixiv-toolbar-button-image" notready="true" lost="true" />
        <label id="ankpixiv-toolbar-button-text" value="" collapsed="true" />
      </hbox>
     </toolbarbutton>
@@ -56,6 +52,9 @@
               oncommand="AnkBase.onContextMenu(event);" />
   </popup>
 
+  <script type="application/x-javascript"><![CDATA[
+    AnkBase.onInit();
+  ]]></script>
 
 </overlay>
 

@@ -71,13 +71,13 @@ try {
         self.info.illust.pageUrl.match(/\.pixiv\.net\/bookmark_add\.php\?/), // }}}
 
       get bookmarkList () // {{{
-        self.info.illust.pageUrl.match(/\.pixiv\.net\/bookmark\.php\?/), // }}}
+        self.info.illust.pageUrl.match(/\.pixiv\.net\/bookmark\.php/), // }}}
 
       get feedList () // {{{
         self.info.illust.pageUrl.match(/\.pixiv\.net\/stacc\//), // }}}
 
       get rankingList () // {{{
-        self.info.illust.pageUrl.match(/\.pixiv\.net\/ranking\.php\?/), // }}}
+        self.info.illust.pageUrl.match(/\.pixiv\.net\/ranking\.php/), // }}}
     }; // }}}
 
     self.elements = (function () { // {{{
@@ -474,7 +474,7 @@ try {
 
         let context = new AnkContext(self);
         AnkBase.addDownload(context, useDialog, debug);
-      }).then(null, function (e) AnkUtils.dumpError(e));
+      }).then(null, function (e) AnkUtils.dumpError(e, true));
     },
 
     /*
@@ -573,7 +573,6 @@ try {
           if (src)
             return setSelectedImage({ original: { images: [ src ], facing: null } });
 
-          window.alert(AnkBase.Locale('cannotFindImages'));
           return null;
         }
 
@@ -598,8 +597,7 @@ try {
 
           // サーバエラーのトラップ
           if (!doc || doc.querySelector('.errorArea') || doc.querySelector('.errortxt')) {
-            window.alert(AnkBase.Locale('serverError'));
-            return null;
+            throw new Error(AnkBase.Locale('serverError'));
           }
 
           // 単ページイラスト(Bパターン)
@@ -607,8 +605,6 @@ try {
             let src = doc.querySelector('img').src;
             if (src)
               return setSelectedImage({ original: { images: [ src ], facing: null } });
-
-            window.alert(AnkBase.Locale('cannotFindImages'));
             return null;
           }
 
@@ -679,8 +675,7 @@ try {
 
                 // サーバエラーのトラップ
                 if (!doc || doc.querySelector('.errorArea') || doc.querySelector('.errortxt')) {
-                  window.alert(AnkBase.Locale('serverError'));
-                  return null;
+                  throw new Error(AnkBase.Locale('serverError'));
                 }
 
                 let src = doc.querySelector('img').src;
@@ -795,13 +790,17 @@ try {
             function (e) {
               Task.spawn(function () {
                 // mangaIndexPageへのアクセスが複数回実行されないように、getImageUrl()を一度実行してからopenViewer()とdownloadCurrentImageAuto()を順次実行する
-                yield self.getImageUrl(useOriginalSize);
+                let image = yield self.getImageUrl(useOriginalSize);
+                if (!image || image.images.length == 0) {
+                  window.alert(AnkBase.Locale('cannotFindImages'));
+                  return;
+                }
 
                 if (useViewer)
                   self.viewer.openViewer();
                 if (useClickDownload)
                   AnkBase.downloadCurrentImageAuto(self);
-              }).then(null, function (e) AnkUtils.dumpError(e));
+              }).then(null, function (e) AnkUtils.dumpError(e, true));
 
               if (useCapture) {
                 e.preventDefault();

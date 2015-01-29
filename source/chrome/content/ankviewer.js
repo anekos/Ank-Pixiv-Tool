@@ -351,7 +351,7 @@ AnkViewer = function (module) {
           }
           show();
           bigMode = !bigMode;
-        }).then(null, function (e) AnkUtils.dumpError(e));
+        }).then(null, function (e) AnkUtils.dumpError(e, true));
       }
       else {
         show();

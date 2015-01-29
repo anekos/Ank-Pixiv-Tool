@@ -1439,7 +1439,6 @@ try {
     ********************************************************************************/
 
     addToolbarIcon: function () {
-      let widget = document.getElementById(AnkBase.TOOLBAR_BUTTON.ID);
       try {
         var firefoxnav = document.getElementById("nav-bar");
         var curSet = firefoxnav.currentSet;
@@ -1475,6 +1474,28 @@ try {
       queued.forEach(function (d) remainImages -= d.downloaded);
       AnkBase.toolbarText = dp ? dp+'('+remainImages+'/'+AnkBase.downloading.images+')' : '';
     }, // }}}
+
+    changeToolbarIconEnabled: function (module, id) {
+      let elem = document.getElementById(id);
+      if (!elem)
+        return;
+      if (!module) {
+        elem.setAttribute('lost', true);
+        elem.setAttribute('dark', false);
+      }
+      else {
+        elem.setAttribute('lost', false);
+        elem.setAttribute('dark', !module.in.illustPage);
+      }
+    },
+
+    changeToolbarIconReady: function (ready, id) {
+      let elem = document.getElementById(id);
+      if (!elem)
+        return;
+      elem.setAttribute('notready', !ready);
+    },
+
 
 
     /********************************************************************************
@@ -1717,13 +1738,6 @@ try {
     * イベント
     ********************************************************************************/
 
-    firstRun: function () {
-      if (AnkBase.Prefs.get('firstRun', true)) {
-        AnkBase.Prefs.set('firstRun', false, 'boolean');
-        return true;
-      }
-    },
-
     openPrefWindow: function () { // {{{
       window.openDialog("chrome://ankpixiv/content/options.xul", "Pref Dialog",
                         "centerscreen,chrome,modal", arguments);
@@ -1733,6 +1747,13 @@ try {
      * 起動時の初期化
      */
     onInit: function () { // {{{
+      function firstRun () {
+        if (AnkBase.Prefs.get('firstRun', true)) {
+          AnkBase.Prefs.set('firstRun', false, 'boolean');
+          return true;
+        }
+      }
+
       Task.spawn(function () {
         AnkBase.Storage = new AnkStorage(AnkBase.Prefs.get('storageFilepath', 'ankpixiv.sqlite'), AnkBase.DB_DEF.TABLES, AnkBase.DB_DEF.OPTIONS);
         // TODO Firefox35だとyieldが正しい値を返してこない
@@ -1740,16 +1761,17 @@ try {
           window.addEventListener('unload', function (e) AnkBase.Storage.closeDatabase(), false);
         });
         if (isOpened) {
+          AnkBase.registerSheet();
+          if (firstRun()) {
+            window.addEventListener("load",  function() AnkBase.addToolbarIcon(), false);
+          }
           yield AnkBase.Storage.createDatabase()
           yield AnkBase.updateDatabaseVersion();
-          AnkBase.registerSheet();
-          if (AnkBase.firstRun()) {
-            AnkBase.addToolbarIcon();
-          }
           window.addEventListener('ankDownload', AnkBase.downloadHandler, true);
           window.addEventListener('pageshow', AnkBase.onFocus, true);
           window.addEventListener('focus', AnkBase.onFocus, true);
           setInterval(function (e) AnkBase.cleanupDownload(), AnkBase.DOWNLOAD_THREAD.CLEANUP_INTERVAL);
+          AnkBase.changeToolbarIconReady.call(AnkBase, true, AnkBase.TOOLBAR_BUTTON.IMAGE_ID);
         }
       }).then(null, function (e) AnkUtils.dumpError(e));
 
@@ -1790,13 +1812,13 @@ try {
         })();
 
         if (!curmod) {
-          AnkBase.changeEnabled.call(AnkBase, null, AnkBase.TOOLBAR_BUTTON.IMAGE_ID);//
-          AnkBase.changeEnabled.call(AnkBase, null, AnkBase.MENU_ITEM.ID);
+          AnkBase.changeToolbarIconEnabled.call(AnkBase, null, AnkBase.TOOLBAR_BUTTON.IMAGE_ID);//
+          AnkBase.changeToolbarIconEnabled.call(AnkBase, null, AnkBase.MENU_ITEM.ID);
           return;       // 対象外のサイト
         }
 
-        AnkBase.changeEnabled.call(AnkBase, curmod, AnkBase.TOOLBAR_BUTTON.IMAGE_ID);
-        AnkBase.changeEnabled.call(AnkBase, curmod, AnkBase.MENU_ITEM.ID);
+        AnkBase.changeToolbarIconEnabled.call(AnkBase, curmod, AnkBase.TOOLBAR_BUTTON.IMAGE_ID);
+        AnkBase.changeToolbarIconEnabled.call(AnkBase, curmod, AnkBase.MENU_ITEM.ID);
         curmod.markDownloaded(null, ev.type !== 'focus' && ev.persisted); // focus当たる度にDB検索されると困るので引数なし
         curmod.initFunctions();
 
@@ -1814,20 +1836,6 @@ try {
         AnkUtils.dumpError(e,false,location);
       }
     }, // }}}
-
-    changeEnabled: function (module, id) {
-      let elem = document.getElementById(id);
-      if (!elem)
-        return;
-      if (!module) {
-        elem.setAttribute('lost', true);
-        elem.setAttribute('dark', false);
-      }
-      else {
-        elem.setAttribute('lost', false);
-        elem.setAttribute('dark', !module.in.illustPage);
-      }
-    },
 
     /**
      * ツール―バーボタンクリックのイベントハンドラ
