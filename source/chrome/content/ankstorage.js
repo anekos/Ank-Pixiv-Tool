@@ -76,7 +76,7 @@ try {
     /**
      * 参照系トランザクション
      */
-    select: function (qa, callback) {
+    select: function (qa, callback, onRow) {
       if (!qa || qa.length == 0)
         return;
 
@@ -86,7 +86,7 @@ try {
           for (let i=0; i<qa.length; i++) {
             let query = 'select * from '+qa[i].table+(qa[i].cond ? ' where '+qa[i].cond : '')+(qa[i].opts ? ' '+qa[i].opts : '');
             AnkUtils.dump('select: '+(i+1)+', '+query);
-            let rows = yield self.conn.execute(query, qa[i].values);
+            let rows = yield self.conn.execute(query, qa[i].values, onRow);
             if (!callback)
               return rows && rows.length > 0 && rows[0];
 

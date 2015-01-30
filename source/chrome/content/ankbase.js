@@ -53,6 +53,76 @@ try {
       }
     },
 
+    DEFAULT_STYLE: (function () {/*
+      .ank-pixiv-tool-downloaded {
+        background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAABGdBTUEAALGPC/xhBQAAABVJREFUGFdj/M+ABIAcOEKwQEqQZQAoTgz1O3uPKAAAAABJRU5ErkJggg==") !important;
+        background-repeat: repeat-x !important;
+        background-position: bottom !important;
+        background-color: pink !important;
+      }
+      .ank-pixiv-tool-downloaded-overlay {
+        background-image: url("chrome://ankpixiv/content/downloaded.png");
+        background-color: transparent !important;
+        border-radius: 4px 4px 4px 4px !important;
+        box-shadow: 2px 2px 2px #000 !important;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+      }
+      .ank-pixiv-tool-downloading {
+        background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAEklEQVR42mNkaGCAAyYGBmI4ABoEAIiZRp63AAAAAElFTkSuQmCC") !important;
+        background-repeat: repeat-x !important;
+        background-position: bottom !important;
+        background-color: lime !important;
+      }
+      .ank-pixiv-tool-downloading-overlay {
+        background-image: url("chrome://ankpixiv/content/downloading.png");
+        background-color: transparent !important;
+        border-radius: 4px 4px 4px 4px !important;
+        box-shadow: 2px 2px 2px #000 !important;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+      }
+      #ankpixiv-downloaded-display.R18 {
+        animation-timing-function: ease;
+        animation-duration: 10s;
+        animation-name: slidein;
+        animation-iteration-count: infinite !important;
+        animation-direction: alternate;
+      }
+      #ankpixiv-downloaded-display.R18-shake {
+        animation-timing-function: linear;
+        animation-duration: 5s;
+        animation-name: shake;
+        animation-iteration-count: infinite !important;
+        animation-direction: normal;
+      }
+      @keyframes slidein {
+        from {
+          transform: rotateY(0deg);
+        }
+        to {
+          transform: rotateY(360deg);
+        }
+      }
+      @keyframes shake {
+        0%, 10.0%, 14.5%, 100% {
+          transform: translateX(0);
+        }
+        10.5%, 11.5%, 12.5%, 13.5% {
+          transform: translateX(-10px);
+        }
+        11.0%, 12.0%, 13.0%, 14.0% {
+          transform: translateX(10px);
+        }
+      }
+    */}).toString().replace(/^[\s\S]*?\/\*([\s\S]+)\*\/[\s\S]*$/, '$1'),
+
     DOWNLOAD_DISPLAY: {
       ID:           'ankpixiv-downloaded-display',
 
@@ -156,6 +226,15 @@ try {
           }
         }
       }
+    }, // }}}
+
+    /********************************************************************************
+     * オプションウィンドウ
+     ********************************************************************************/
+
+    openPrefWindow: function () { // {{{
+      window.openDialog("chrome://ankpixiv/content/options.xul", "Pref Dialog",
+                        "centerscreen,chrome,modal", arguments);
     }, // }}}
 
     /********************************************************************************
@@ -1279,41 +1358,42 @@ try {
     * データベース統計
     ********************************************************************************/
 
-    getYourFantasy: function () { // {{{
-      try {
+    // FIXME 件数が多い場合、selectを分割しないとfirefoxがフリーズする
+    getYourFantasy: function (top3) { // {{{
+      return Task.spawn(function* () {
         function R18 (s)
           (s == 'R-18');
 
         function ignore (s)
-          (!s || (/^(R-18|\u30AA\u30EA\u30B8\u30CA\u30EB)$/i(s)));
+          (!s || re.exec(s));
 
         function inc (name)
           (name && !ignore(name) && (typeof stat[name] === 'number' ? stat[name]++ : stat[name] = 1));
 
-        let storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
-                                           Components.interfaces.mozIStorageStatementWrapper);
-        let db = AnkBase.Storage.database;
+        const re = /^(R-18|\u30AA\u30EA\u30B8\u30CA\u30EB|c)$/i;
+
+        top3 = top3 || 3;
 
         let stat = {};
-        let stmt = db.createStatement('select * from histories');
-        stmt.reset();
-        storageWrapper.initialize(stmt);
-        while (storageWrapper.step()) {
-          let tags = storageWrapper.row["tags"];
-          if (!tags)
-            continue;
-          tags = tags.split(/\s+/);
-          if (tags.some(R18))
-            tags.forEach(inc);
-        }
+        let qa = [];
+        qa.push({ table:'histories', cond:'service_id = :service_id', values:{ service_id:'PXV'} });
+        yield AnkBase.Storage.select(qa, null, function (row) {
+          let tags = row.getResultByName('tags');
+          if (tags) {
+            tags = tags.split(/\s+/);
+            if (tags.some(R18)) {
+              tags.forEach(inc);
+            }
+          }
+        });
 
         let nums = [];
         for (let [n, v] in Iterator(stat))
           if (v > 2)
             nums.push(v);
 
-        nums.sort(function (a, b) (a - b));
-        let low = nums[nums.length - 3];
+        nums.sort(function (a, b) (b - a));
+        let low = nums[nums.length < top3 ? nums.length - 1 : top3 - 1];
 
         let table = {}, sum = 0;
         for (let [n, v] in Iterator(stat)) {
@@ -1322,12 +1402,9 @@ try {
             sum += v;
           }
         }
-        return {table: table, sum: sum};
 
-      } catch (e) {
-        AnkUtils.dumpError(e, false);
-      }
-
+        return { table: table, sum: sum };
+      }).then(null, function (e) AnkUtils.dumpError(e));
     }, // }}}
 
     displayYourFantasy: function (module) { // {{{
@@ -1496,86 +1573,24 @@ try {
       elem.setAttribute('notready', !ready);
     },
 
-
-
     /********************************************************************************
     * スタイル
     ********************************************************************************/
 
     registerSheet: function (style) { // {{{
-      const DefaultStyle = [
-        '.ank-pixiv-tool-downloaded {',
-        '  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAABGdBTUEAALGPC/xhBQAAABVJREFUGFdj/M+ABIAcOEKwQEqQZQAoTgz1O3uPKAAAAABJRU5ErkJggg==) !important;',
-        '  background-repeat: repeat-x !important;',
-        '  background-position: bottom !important;',
-        '  background-color: pink !important;',
-        '}',
-        '.ank-pixiv-tool-downloaded-overlay {',
-        '  background-image: url("chrome://ankpixiv/content/downloaded.png");',
-        '  background-color: transparent !important;',
-        '  border-radius: 4px 4px 4px 4px !important;',
-        '  box-shadow: 2px 2px 2px #000 !important;',
-        '  position: absolute;',
-        '  top: 2px;',
-        '  left: 2px;',
-        '  width: 16px;',
-        '  height: 16px;',
-        '}',
-        '.ank-pixiv-tool-downloading {',
-        '  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAEklEQVR42mNkaGCAAyYGBmI4ABoEAIiZRp63AAAAAElFTkSuQmCC) !important;',
-        '  background-repeat: repeat-x !important;',
-        '  background-position: bottom !important;',
-        '  background-color: lime !important;',
-        '}',
-        '.ank-pixiv-tool-downloading-overlay {',
-        '  background-image: url("chrome://ankpixiv/content/downloading.png");',
-        '  background-color: transparent !important;',
-        '  border-radius: 4px 4px 4px 4px !important;',
-        '  box-shadow: 2px 2px 2px #000 !important;',
-        '  position: absolute;',
-        '  top: 2px;',
-        '  left: 2px;',
-        '  width: 16px;',
-        '  height: 16px;',
-        '}',
-        '#ankpixiv-downloaded-display.R18 {',
-        '  animation-timing-function: ease;',
-        '  animation-duration: 10s;',
-        '  animation-name: slidein;',
-        '  animation-iteration-count: infinite !important;',
-        '  animation-direction: alternate;',
-        '}',
-        '#ankpixiv-downloaded-display.R18-shake {',
-        '  animation-timing-function: line;',
-        '  animation-duration: 5s;',
-        '  animation-name: shake;',
-        '  animation-iteration-count: infinite !important;',
-        '  animation-direction: normal;',
-        '}',
-        '@keyframes slidein {',
-        '  from {',
-        '    transform: rotateY(0deg);',
-        '  }',
-        '  to {',
-        '    transform: rotateY(360deg);',
-        '  }',
-        '}',
-        '@keyframes shake {',
-        '  0%, 10.0%, 14.5%, 100% {',
-        '    transform: translateX(0);',
-        '  }',
-        '  10.5%, 11.5%, 12.5%, 13.5% {',
-        '    transform: translateX(-10px);',
-        '  }',
-        '  11.0%, 12.0%, 13.0%, 14.0% {',
-        '    transform: translateX(10px);',
-        '  }',
-        '}'
-      ].join("\n");
-
       const domains = AnkBase.siteModules.map(function (v) v.prototype.DOMAIN);
 
-      AnkUtils.registerSheet(style || DefaultStyle, domains);
+      AnkUtils.registerSheet(style || AnkBase.DEFAULT_STYLE, domains);
+
+      // FIXME consoleに'syntax error: defaultstyle.css'が出るのを解消できたら外部ファイルにする
+      /*
+      AnkUtils.httpGETAsync('chrome://ankpixiv/content/defaultstyle.css').then(
+        function (result) {
+          AnkUtils.registerSheet(result, domains);
+        },
+        function (e) AnkUtils.dumpError(e,true)
+      );
+      */
     }, // }}}
 
 
@@ -1738,11 +1753,6 @@ try {
     * イベント
     ********************************************************************************/
 
-    openPrefWindow: function () { // {{{
-      window.openDialog("chrome://ankpixiv/content/options.xul", "Pref Dialog",
-                        "centerscreen,chrome,modal", arguments);
-    }, // }}}
-
     /**
      * 起動時の初期化
      */
@@ -1773,7 +1783,7 @@ try {
           setInterval(function (e) AnkBase.cleanupDownload(), AnkBase.DOWNLOAD_THREAD.CLEANUP_INTERVAL);
           AnkBase.changeToolbarIconReady.call(AnkBase, true, AnkBase.TOOLBAR_BUTTON.IMAGE_ID);
         }
-      }).then(null, function (e) AnkUtils.dumpError(e));
+      }).then(null, function (e) AnkUtils.dumpError(e, true));
 
     }, // }}}
 
@@ -1781,7 +1791,6 @@ try {
      * ページを移動した・タブを開いた等のイベントハンドラ
      */
     onFocus: function (ev) { // {{{
-
       if (ev.type !== 'focus' && ev.type !== 'pageshow')
         return;
 
@@ -1816,23 +1825,17 @@ try {
           AnkBase.changeToolbarIconEnabled.call(AnkBase, null, AnkBase.MENU_ITEM.ID);
           return;       // 対象外のサイト
         }
-
         AnkBase.changeToolbarIconEnabled.call(AnkBase, curmod, AnkBase.TOOLBAR_BUTTON.IMAGE_ID);
         AnkBase.changeToolbarIconEnabled.call(AnkBase, curmod, AnkBase.MENU_ITEM.ID);
-        curmod.markDownloaded(null, ev.type !== 'focus' && ev.persisted); // focus当たる度にDB検索されると困るので引数なし
+
+        if (ev.type === 'focus')
+          curmod.markDownloaded(); // focus当たる度にDB検索されると困るので引数なし
+        else
+          curmod.markDownloaded(null, ev.persisted);
+
         curmod.initFunctions();
-
-        // FIXME 保留
-        /*
-        if (!AnkBase.Store.get(curmod.elements.doc).onFocusDone) {
-          AnkBase.Store.get(curmod.elements.doc).onFocusDone = true;
-
-          if (curmod.in.myPage && !curmod.elements.mypage.fantasyDisplay)
-            AnkBase.displayYourFantasy(curmod);
-        }
-        */
-
-      } catch (e) {
+      }
+      catch (e) {
         AnkUtils.dumpError(e,false,location);
       }
     }, // }}}

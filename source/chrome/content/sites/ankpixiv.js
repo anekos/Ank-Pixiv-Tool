@@ -945,7 +945,7 @@ try {
 
       // install now
       if (AnkBase.Prefs.get('markDownloaded', false)) {
-        if (this.in.bookmarkList || this.in.feedList || this.in.rankingList) {
+        if (this.in.bookmarkList || this.in.bookmarkAdd || this.in.feedList || this.in.rankingList) {
           AnkBase.delayFunctionInstaller(followExpansion, 500, 20, self.SITE_NAME, 'followExpansion');
         }
         AnkBase.delayFunctionInstaller(autoPagerize, 500, 20, self.SITE_NAME, 'autoPagerize');
