@@ -526,9 +526,9 @@ try {
         // 保存済み表示
         AnkBase.insertDownloadedDisplayById(
           self.elements.illust.downloadedDisplayParent,
+          self.info.illust.R18,
           self.info.illust.id,
-          self.SERVICE_ID,
-          self.info.illust.R18
+          self.SERVICE_ID
         );
 
         // 他のイラスト・関連イラストなどにマーキング
@@ -549,9 +549,8 @@ try {
      */
     installListPageFunctions: function () { /// {
 
-      let autoPagerize = function (mod) {
-        var doc = mod.elements.doc;
-        var aptarget = mod.elements.illust.autoPagerizeTarget;
+      let autoPagerize = function () {
+        var aptarget = self.elements.illust.autoPagerizeTarget;
 
         if (!(doc && aptarget)) {
           return false;     // リトライしてほしい
@@ -575,7 +574,7 @@ try {
               setTimeout(
                 function() {
                   AnkUtils.A(a) .
-                    forEach(function (node) mod.markDownloaded(node, true));
+                    forEach(function (node) self.markDownloaded(node, true));
                 },
                 500     // ボックスの高さが確定するまでマーキングを遅延させる。値は適当
               );
@@ -586,24 +585,25 @@ try {
         return true;
       };
 
-      let delayMarking = function (mod) {
-        var doc = mod.elements.doc;
-        var body = mod.elements.illust.body;
+      let delayMarking = function () {
+        var body = self.elements.illust.body;
 
         if (!(body && doc.readyState === 'complete')) {
           return false;   // リトライしてほしい
         }
 
         // リスト表示が遅くてダウンロードマーク表示が漏れることがあるので、再度処理を実行
-        mod.markDownloaded(doc,true);
+        self.markDownloaded(doc,true);
 
         return true;
       };
 
+      let self = this;
+      let doc = this.curdoc;
 
       // install now
-      AnkBase.delayFunctionInstaller(this, autoPagerize, 500, 20, 'autoPagerize');
-      return AnkBase.delayFunctionInstaller(this, delayMarking, 500, 20, 'delayMarking');
+      AnkBase.delayFunctionInstaller(autoPagerize, 500, 20, self.SITE_NAME, 'autoPagerize');
+      AnkBase.delayFunctionInstaller(delayMarking, 500, 20, self.SITE_NAME, 'delayMarking');
     }, // }}}
 
   };
