@@ -12,6 +12,7 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             onload="return onLoad()"
             ondialogaccept="return onSave()"
+            ondialogcancel="return onCancel()"
             xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankutils.js" />
@@ -47,22 +48,49 @@
       function onLoad () {
         document.getElementById('confirm-existing-when-auto').disabled =
           !AnkBase.Prefs.get('confirmExistingDownload');
+        this.setSiteModules();
         return true;
       }
-      function onSave (event) {
-        // check for nonexistent path
+
+      function setSiteModules () {
+        let siteModules = window.arguments && window.arguments.length > 0 && window.arguments[0].siteModules;
+        if (!siteModules)
+          return;
+        let box = document.getElementById('site-module-table');
+        if (!box)
+          return;
+        siteModules.forEach(function (sm) {
+          let row = document.createElement('checkbox');
+          row.setAttribute('label', sm.name);
+          row.setAttribute('checked', sm.enabled);
+          row.setAttribute('ankpixiv-module-id', sm.id);
+          box.appendChild(row);
+        });
+      }
+
+      function onSave () {
         try {
-          let path = document.getElementById('initial-directory').value;
-          if (path) {
-            let initdir = AnkUtils.ccci("@mozilla.org/file/local;1", Components.interfaces.nsILocalFile);
-            initdir.initWithPath(path);
-            if (!initdir.exists())
-              throw 'Initial directory does not exist';
+          // removed: check for nonexistent path
+
+          let box = document.getElementById('site-module-table');
+          if (box) {
+            let dismods = [];
+            let rows = box.querySelectorAll('checkbox');
+            Array.slice(rows).forEach(function (row) {
+              if (row.getAttribute('checked') != 'true')
+                dismods.push(row.getAttribute('ankpixiv-module-id'));
+            });
+            AnkBase.Prefs.set('disabledSiteModules', dismods.join());
           }
         } catch (e) {
-          if (!confirm(AnkBase.Locale('notifyNonexistentDirectory')))
-            return false;
+          AnkUtils.dumpError(e);
         }
+        return true;
+      }
+
+      function onCancel () {
+        if (document.documentElement.instantApply)
+          this.onSave();
         return true;
       }
 
@@ -110,6 +138,7 @@
           <tab label="&tab.download;" />
           <tab label="&tab.filename;" />
           <tab label="&tab.viewer;" />
+          <tab label="&tab.sitemodules;" />
           <tab label="&tab.miscellaneous;" />
         </tabs>
         <tabpanels>
@@ -265,6 +294,10 @@
               <checkbox preference="use-load-progress" label="&useLoadProgress;" />
               <checkbox preference="view-original-size" label="&viewOriginalSize;" />
             </vbox>
+          </tabpanel>
+          <tabpanel>
+            <arrowscrollbox orient="vertical" flex="1" id="site-module-table">
+            </arrowscrollbox>
           </tabpanel>
           <tabpanel>
             <vbox>

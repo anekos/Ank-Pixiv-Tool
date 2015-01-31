@@ -21,6 +21,7 @@
 <!ENTITY tab.download "ダウンロード">
 <!ENTITY tab.filename "ファイル名">
 <!ENTITY tab.viewer "ビュアー">
+<!ENTITY tab.sitemodules "対応サイト">
 <!ENTITY tab.miscellaneous "その他">
 <!ENTITY fitLargeImageInWindowSize "大サイズ画像をウィンドウサイズにあわせる">
 <!ENTITY dontResizeIfSmall "ウィンドウより小さいときはリサイズしない">

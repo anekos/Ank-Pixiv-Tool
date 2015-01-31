@@ -21,6 +21,7 @@
 <!ENTITY tab.download "下载">
 <!ENTITY tab.filename "文件名">
 <!ENTITY tab.viewer "查看器">
+<!ENTITY tab.sitemodules "Supported Sites">
 <!ENTITY tab.miscellaneous "其他">
 <!ENTITY fitLargeImageInWindowSize "在窗口大小适应大图。">
 <!ENTITY dontResizeIfSmall "插图小于窗口时不调整尺寸。">

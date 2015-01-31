@@ -21,6 +21,7 @@
 <!ENTITY tab.download "Загрузка">
 <!ENTITY tab.filename "Имя файла">
 <!ENTITY tab.viewer "Просмотрщик">
+<!ENTITY tab.sitemodules "Supported Sites">
 <!ENTITY tab.miscellaneous "Разное">
 <!ENTITY fitLargeImageInWindowSize "Вписать большие изображения в размеры окна.">
 <!ENTITY dontResizeIfSmall "Не изменять размер, если размеры иллюстрации меньше размеров окна.">

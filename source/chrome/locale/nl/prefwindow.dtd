@@ -21,6 +21,7 @@
 <!ENTITY tab.download "Downloaden">
 <!ENTITY tab.filename "Bestandsnaam">
 <!ENTITY tab.viewer "Weergave">
+<!ENTITY tab.sitemodules "Supported Sites">
 <!ENTITY tab.miscellaneous "Diversen">
 <!ENTITY fitLargeImageInWindowSize "Grote afbeeldingen aan venster aanpassen.">
 <!ENTITY dontResizeIfSmall "Grootte niet aanpassen als afbeelding kleiner dan venster is.">

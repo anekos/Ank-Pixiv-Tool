@@ -21,6 +21,7 @@
 <!ENTITY tab.download "Nerladdning">
 <!ENTITY tab.filename "Filnamn">
 <!ENTITY tab.viewer "Viewer">
+<!ENTITY tab.sitemodules "Supported Sites">
 <!ENTITY tab.miscellaneous "Övrigt">
 <!ENTITY fitLargeImageInWindowSize "Anpassa stora bilder till fönsterstorleken.">
 <!ENTITY dontResizeIfSmall "Ändra inte storlek om bilden är mindre än fönstret.">

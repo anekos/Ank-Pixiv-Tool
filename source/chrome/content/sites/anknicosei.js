@@ -1,7 +1,7 @@
 
 try {
 
-  let AnkModule = function (currentDoc) {
+  let AnkPixivModule = function (currentDoc) {
 
     /********************************************************************************
     * 定数
@@ -9,10 +9,6 @@ try {
 
     var self = this;
 
-    self.URL        = 'http://seiga.nicovideo.jp/';   // イラストページ以外でボタンを押したときに開くトップページのURL
-    self.DOMAIN     = 'nicovideo.jp';         // CSSの適用対象となるドメイン
-    self.SERVICE_ID = 'NCS';                  // 履歴DBに登録するサイト識別子
-    self.SITE_NAME  = 'Nicosei';              // ?site-name?で置換されるサイト名のデフォルト値 
 
 
     /********************************************************************************
@@ -326,7 +322,27 @@ try {
   * メソッド
   ********************************************************************************/
 
-  AnkModule.prototype = {
+  AnkPixivModule.prototype = {
+
+    /********************************************************************************
+     * 定数
+     ********************************************************************************/
+
+    URL:        'http://seiga.nicovideo.jp/', // イラストページ以外でボタンを押したときに開くトップページのURL
+    DOMAIN:     'nicovideo.jp',               // CSSの適用対象となるドメイン
+    SERVICE_ID: 'NCS',                        // 履歴DBに登録するサイト識別子
+    SITE_NAME:  'Nicosei',                    // ?site-name?で置換されるサイト名のデフォルト値 
+
+    /********************************************************************************
+     * 
+     ********************************************************************************/
+
+    /**
+     * このモジュールの対応サイトかどうか
+     */
+    isSupported: function (doc) {
+      return doc.location.href.match(/^https?:\/\/seiga\.nicovideo\.jp\/(?:seiga|shunga|watch|comic|search|tag|my|user\/illust|illust\/(?:ranking|list))(?:\/|\?|$)/);
+    },
 
     /*
      * イラストページにviewerやダウンロードトリガーのインストールを行う
@@ -500,13 +516,10 @@ try {
 
 
   /********************************************************************************
-  * ベースとなるインスタンスの生成＋本体へのインストール - ankpixiv.xulにも登録を
+  * 本体へのインストール - ankpixiv.xulにも登録を
   ********************************************************************************/
 
-  AnkModule.prototype.dup = function () new AnkModule(this.elements.doc);
-
-  AnkBase.addModule(new AnkModule());
-
+  AnkBase.addModule(AnkPixivModule);
 
 } catch (error) {
  dump("[" + error.name + "]\n" +

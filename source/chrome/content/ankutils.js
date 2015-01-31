@@ -49,7 +49,8 @@ try {
         filename = filename.replace(/[\\\/]/g, '_');
       if (!opts.token)
         filename = filename.replace(/[\?]/g, '_');
-      return filename.replace(/[:;\.\*\"\<\>\|\#]/g, '_').replace(/[\n\r\t\xa0]/g, ' ').trim();
+      filename = filename.replace(/\.+$/, '');
+      return filename.replace(/[:;\*\"\<\>\|\#]/g, '_').replace(/[\n\r\t\xa0]/g, ' ').trim();
     }, // }}}
 
     /*
@@ -622,6 +623,15 @@ try {
       return file;
     }, // }}}
 
+    getErrorMessage: function (e) {
+      if (e) {
+        if (e instanceof OS.File.Error)
+          return e.operation;
+        if (e instanceof Error)
+          return e.message;
+      }
+      return e;
+    },
 
     /********************************************************************************
     * DOM関数

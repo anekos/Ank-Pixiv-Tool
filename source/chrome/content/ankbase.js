@@ -222,10 +222,10 @@ try {
      * サイトモジュールのインスタンスをカレントドキュメントにインストールする
      */
     installSupportedModule: function (doc) { // {{{
-      let disabledModules = AnkBase.Prefs.get('disabledSiteModules', '').split(',').map(function (v) AnkUtils.trim(v.toLowerCase()));
+      let disabledModules = AnkBase.Prefs.get('disabledSiteModules', '').split(',');
       for (let i=0; i<AnkBase.siteModules.length; i++) {
         let module = AnkBase.siteModules[i];
-        if (disabledModules.indexOf(module.prototype.SITE_NAME.toLowerCase()) == -1) {
+        if (disabledModules.indexOf(module.prototype.SERVICE_ID) == -1) {
           if (module.prototype.isSupported(doc)) {
             AnkUtils.dump('SUPPORTED: '+doc.location.href+",\n"+Error().stack);
             doc.AnkPixivModule = new module(doc);
@@ -234,6 +234,20 @@ try {
         }
       }
     }, // }}}
+
+    /**
+     * 
+     */
+    getModuleSettings: function () {
+      let sets = [];
+      let disabledModules = AnkBase.Prefs.get('disabledSiteModules', '').split(',');
+      for (let i=0; i<AnkBase.siteModules.length; i++) {
+        let module = AnkBase.siteModules[i];
+        let en = disabledModules.indexOf(module.prototype.SERVICE_ID) == -1;
+        sets.push({name:module.prototype.SITE_NAME, id:module.prototype.SERVICE_ID, enabled:en})
+      }
+      return sets;
+    },
 
     /**
      * ページの読み込み遅延を待ってから機能をインストールする
@@ -266,8 +280,14 @@ try {
      * 設定ウィンドウ
      */
     openPrefWindow: function () { // {{{
-      window.openDialog("chrome://ankpixiv/content/options.xul", "Pref Dialog",
-                        "centerscreen,chrome,modal", arguments);
+      window.openDialog(
+        "chrome://ankpixiv/content/options.xul",
+        "Pref Dialog",
+        "centerscreen,chrome,modal",
+        {
+          siteModules: AnkBase.getModuleSettings()
+        }
+      );
     }, // }}}
 
     /*
@@ -487,8 +507,6 @@ try {
           });
         }
 
-//        let initDir = AnkBase.newLocalFile(prefInitDir);
-
         let initDirExists = yield OS.File.exists(prefInitDir);
         if (!initDirExists)
           return AnkBase.showFilePickerWithMeta(prefInitDir, filenames[0], ext, isFile);
@@ -628,11 +646,9 @@ try {
      *    referer:        リファラ
      *    fp:             見開きページ情報
      *    download:       ダウンロードキューエントリー
-     *    onComplete      終了時のアラート
-     *    onError         終了時のアラート
      * 複数のファイルをダウンロードする
      */
-    downloadMultipleFiles: function (localdir, urls, fp, referer, download, onComplete, onError) { // {{{
+    downloadMultipleFiles: function (localdir, urls, fp, referer, download) { // {{{
       return Task.spawn(function* () {
         const MAX_FILE = 1000;
 
@@ -654,7 +670,7 @@ try {
           if (status != 200) {
             AnkUtils.dump('Delete invalid file. => ' + file.path);
             yield OS.File.remove(file.path).then(null, function (e) AnkUtils.dump('Failed to delete invalid file. => ' + e));
-            return onError(status);
+            return status;
           }
 
           ++download.downloaded;
@@ -664,7 +680,7 @@ try {
           yield AnkBase.fixFileExt(file);
         }
 
-        return onComplete(localdir.path);
+        return 200;
       });
     }, // }}}
 
@@ -674,17 +690,15 @@ try {
      *    url:            URL
      *    referer:        リファラ
      *    download:       ダウンロードキューエントリー
-     *    onComplete      終了時のアラート
-     *    onError         終了時のアラート
      * 一枚絵のファイルをダウンロードする
      */
-    downloadSingleImage: function (file, url, referer, download, onComplete, onError) { // {{{
-      Task.spawn(function* () {
+    downloadSingleImage: function (file, url, referer, download) { // {{{
+      return Task.spawn(function* () {
         let status = yield AnkBase.downloadToRetryable(file, url, referer, AnkBase.DOWNLOAD_RETRY.MAX_TIMES);
         if (status != 200) {
           AnkUtils.dump('Delete invalid file. => ' + file.path);
           yield OS.File.remove(file.path).then(null, function (e) AnkUtils.dump('Failed to delete invalid file. => ' + e));
-          return onError(status);
+          return status;
         }
 
         ++download.downloaded;
@@ -693,7 +707,7 @@ try {
         // ファイルの拡張子の修正
         yield AnkBase.fixFileExt(file);
 
-        return onComplete(file.path);
+        return 200;
       });
     }, // }}}
 
@@ -919,47 +933,67 @@ try {
     },
 
     downloadExecuter: function (download) {
+      function getSiteName (context) {
+        if (context.info.path.initDir) 
+          return null;                // サイト別初期ディレクトリが設定されていればそちらを優先
+
+        let v = AnkBase.Prefs.get('siteName.'+context.SITE_NAME);
+        if (v)
+          return v;                   // サイトの別名定義がされていればそちらを優先
+
+        return context.SITE_NAME;     // デフォルトサイト名を利用
+      }
+
+      let context   = download.context;
+      let useDialog = download.useDialog;
+      let debug     = download.debug;
+      let start     = download.start;
+
+      let destFiles;
+      let illust_id     = context.info.illust.id;
+      let ext           = context.info.path.ext;
+      let ref           = context.info.illust.referer;
+      let member_id     = context.info.member.id;
+      let member_name   = context.info.member.name || member_id;
+      let pixiv_id      = context.info.member.pixivId;
+      let memoized_name = member_name;
+      let tags          = context.info.illust.tags;
+      let title         = context.info.illust.title;
+      let comment       = context.info.illust.comment;
+      let metaText      = context.metaText;
+      let filenames     = [];
+      let shortTags     = context.info.illust.shortTags;
+      let service_id    = context.SERVICE_ID;
+      let site_name     = getSiteName(context);
+      let images        = context.info.path.image.images;
+      let facing        = context.info.path.image.facing;
+      let pageUrl       = context.info.illust.pageUrl;
+      let prefInitDir   = context.info.path.initDir || AnkBase.Prefs.get('initialDirectory') || AnkUtils.findHomeDir();
+
+      let savedDateTime = new Date();
+
+      function onError (responseStatus) {
+        responseStatus = AnkUtils.getErrorMessage(responseStatus);
+        let desc = '\n' + title + ' / ' + memoized_name + '\n' + pageUrl + '\n';
+        let msg =
+          AnkBase.Locale('downloadFailed') + '\n' +
+          (responseStatus ? 'Status: ' + responseStatus + '\n' : '') +
+          desc;
+
+        window.alert(msg);
+        AnkUtils.dump(msg);
+
+        let confirmMsg =
+          AnkBase.Locale('confirmOpenIllustrationPage') + '\n' +
+          desc;
+
+        if (window.confirm(confirmMsg))
+          AnkUtils.openTab(pageUrl);
+
+        AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.FAILED);
+      };
+
       Task.spawn(function () {
-
-        function getSiteName (context) {
-          if (context.info.path.initDir) 
-            return null;                // サイト別初期ディレクトリが設定されていればそちらを優先
-
-          let v = AnkBase.Prefs.get('siteName.'+context.SITE_NAME);
-          if (v)
-            return v;                   // サイトの別名定義がされていればそちらを優先
-
-          return context.SITE_NAME;     // デフォルトサイト名を利用
-        }
-
-        let context   = download.context;
-        let useDialog = download.useDialog;
-        let debug     = download.debug;
-        let start     = download.start;
-
-        let destFiles;
-        let illust_id     = context.info.illust.id;
-        let ext           = context.info.path.ext;
-        let ref           = context.info.illust.referer;
-        let member_id     = context.info.member.id;
-        let member_name   = context.info.member.name || member_id;
-        let pixiv_id      = context.info.member.pixivId;
-        let memoized_name = member_name;
-        let tags          = context.info.illust.tags;
-        let title         = context.info.illust.title;
-        let comment       = context.info.illust.comment;
-        let metaText      = context.metaText;
-        let filenames     = [];
-        let shortTags     = context.info.illust.shortTags;
-        let service_id    = context.SERVICE_ID;
-        let site_name     = getSiteName(context);
-        let images        = context.info.path.image.images;
-        let facing        = context.info.path.image.facing;
-        let pageUrl       = context.info.illust.pageUrl;
-        let prefInitDir   = context.info.path.initDir || AnkBase.Prefs.get('initialDirectory') || AnkUtils.findHomeDir();
-
-        let savedDateTime = new Date();
-
         // FIXME memoized_nameの取得をここに移したため、meta.txtにmemoized_nameが記録されないようになってしまった
         // FIXME membersに重複エントリができる可能性がある。(重複削除してから)unique制約をつけるか、１トランザクション中にselect→insertするか等
         let row = yield AnkBase.Storage.exists(AnkBase.getMemberExistsQuery(download.context.info.member.id,download.context.SERVICE_ID));
@@ -968,9 +1002,9 @@ try {
         }
         else {
           if (AnkBase.Prefs.get('saveHistory', true)) {
-            let record = { id:member_id, name: member_name, pixiv_id:pixiv_id, version:AnkBase.DB_DEF.VERSION, service_id:service_id };
+            let set = { id:member_id, name: member_name, pixiv_id:pixiv_id, version:AnkBase.DB_DEF.VERSION, service_id:service_id };
             let qa = [];
-            qa.push({ type:'insert', table:'members', set:record });
+            qa.push({ type:'insert', table:'members', set:set });
             yield AnkBase.Storage.update(AnkBase.Storage.getUpdateSQLs(qa));
           }
         }
@@ -1054,84 +1088,6 @@ try {
           filenames.push(AnkUtils.replaceFileSeparatorToSYS(repl(alternateFilename)));
         })();
 
-        let record = {
-          member_id:  member_id,
-          illust_id:  illust_id,
-          title:      title,
-          tags:       AnkUtils.join(tags, ' '),
-          server:     context.info.illust.server,
-          saved:      true,
-          datetime:   AnkUtils.toSQLDateTimeString(savedDateTime),
-          comment:    comment,
-          version:    AnkBase.DB_DEF.VERSION,
-          service_id: service_id,
-        };
-
-        let onComplete = function (local_path) {
-          Task.spawn(function () {
-            let caption = AnkBase.Locale('finishedDownload');
-            let text = filenames[0];
-            let relPath = prefInitDir ? AnkUtils.getRelativePath(local_path, prefInitDir)
-                                      : AnkUtils.extractFilename(local_path);
-
-            if (AnkBase.Prefs.get('saveHistory', true)) {
-              Task.spawn(function () {
-                record['local_path'] = local_path;
-                record['filename'] = relPath;
-                let qa = [];
-                qa.push({ type:'insert', table:'histories', set:record });
-                yield AnkBase.Storage.update(AnkBase.Storage.getUpdateSQLs(qa));
-              }).then(null, function (e) {
-                AnkUtils.dumpError(e, true);
-                caption = 'Error - onComplete';
-                text = e;
-              });
-            }
-
-            if (AnkBase.Prefs.get('saveMeta', true))
-              AnkBase.saveTextFile(destFiles.meta, metaText);
-
-            if (AnkBase.Prefs.get('showCompletePopup', true))
-              AnkBase.popupAlert(caption, text);
-
-            AnkUtils.dump('download completed: '+images.length+' pics in '+(new Date().getTime() - start)+' msec');
-
-            AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED);
-
-            // たまたま開いているタブがダウンロードが完了したのと同じサイトだったならマーキング処理
-            let curmod = AnkBase.currentModule;
-            if (curmod && curmod.SERVICE_ID === service_id)
-              curmod.markDownloaded(illust_id,true);
-
-          }).then(null, function (e) {
-            let s = '';
-            for (let n in e) {
-              s += n + ': ' + e[n] + '\n';
-            }
-            window.alert(s);
-          });
-        };
-
-        let onError = function (responseStatus) {
-          let desc = '\n' + title + ' / ' + memoized_name + '\n' + pageUrl + '\n';
-          let msg =
-            AnkBase.Locale('downloadFailed') + '\n' +
-            (responseStatus ? 'Status: ' + responseStatus + '\n' : '') +
-            desc;
-
-          window.alert(msg);
-          AnkUtils.dump(msg);
-
-          let confirmMsg =
-            AnkBase.Locale('confirmOpenIllustrationPage') + '\n' +
-            desc;
-
-          if (window.confirm(confirmMsg))
-            AnkUtils.openTab(pageUrl);
-
-          AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.FAILED);
-        };
-
         // XXX 前方で宣言済み
         destFiles = yield AnkBase.getSaveFilePath(prefInitDir, filenames, ext, useDialog, !context.in.manga, images.length, facing ? facing[facing.length-1] : undefined);
         if (!destFiles) {
@@ -1148,14 +1104,65 @@ try {
 
         AnkBase.clearMarkedFlags();
 
+        // ダウンロード実行
+        let statusResult;
         if (context.in.manga) {
-          yield AnkBase.downloadMultipleFiles(destFiles.image, images, facing, ref, download, onComplete, onError);
+          statusResult = yield AnkBase.downloadMultipleFiles(destFiles.image, images, facing, ref, download);
         }
         else {
-          yield AnkBase.downloadSingleImage(destFiles.image, images[0], ref, download, onComplete, onError);
+          statusResult = yield AnkBase.downloadSingleImage(destFiles.image, images[0], ref, download);
         }
 
-      }).then(null, function (e) AnkUtils.dumpError(e, true));
+        if (statusResult != 200) {
+          // ダウンロード失敗
+          onError(statusResult)
+        }
+        else {
+          // ダウンロード成功
+          let caption = AnkBase.Locale('finishedDownload');
+          let text = filenames[0];
+          let local_path = destFiles.image.path;
+          let relPath = prefInitDir ? AnkUtils.getRelativePath(local_path, prefInitDir)
+                                    : AnkUtils.extractFilename(local_path);
+
+          if (AnkBase.Prefs.get('saveHistory', true)) {
+            yield Task.spawn(function () {
+              let set = {
+                member_id:  member_id,
+                illust_id:  illust_id,
+                title:      title,
+                tags:       AnkUtils.join(tags, ' '),
+                server:     context.info.illust.server,
+                saved:      true,
+                datetime:   AnkUtils.toSQLDateTimeString(savedDateTime),
+                comment:    comment,
+                version:    AnkBase.DB_DEF.VERSION,
+                service_id: service_id,
+                local_path: local_path,
+                filename:   relPath
+              };
+              let qa = [];
+              qa.push({ type:'insert', table:'histories', set:set });
+              yield AnkBase.Storage.update(AnkBase.Storage.getUpdateSQLs(qa));
+            }).then(null, function (e) AnkUtils.dumpError(e)).catch(function (e) AnkUtils.dumpError(e,true));
+          }
+
+          if (AnkBase.Prefs.get('saveMeta', true))
+            AnkBase.saveTextFile(destFiles.meta, metaText);
+
+          if (AnkBase.Prefs.get('showCompletePopup', true))
+            AnkBase.popupAlert(caption, text);
+
+          AnkUtils.dump('download completed: '+images.length+' pics in '+(new Date().getTime() - start)+' msec');
+
+          AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED);
+
+          // たまたま開いているタブがダウンロードが完了したのと同じサイトだったならマーキング処理
+          let curmod = AnkBase.currentModule;
+          if (curmod && curmod.SERVICE_ID === service_id)
+            curmod.markDownloaded(illust_id,true);
+        }
+      }).then(null, function (e) onError(e)).catch(function (e) { AnkUtils.dumpError(e); onError(e); });
     }, // }}}
 
     /*
@@ -1207,19 +1214,29 @@ try {
     }, // }}}
 
     makeDir: function (path, options) {
-      return Task.spawn(function* () {
+      return Task.spawn(function () {
         let file = AnkBase.newLocalFile(path);
-        if (file) {
-          while (!!(file = file.parent)) {
-            if (file.parent && file.exists()) {
-              let opts = {};
-              for (let p in options)
-                opts[p] = options[p];
-              opts.from = file.path;
-              return yield OS.File.makeDir(path, opts);
-            }
+        if (!file)
+          return;
+
+        if (file.parent) {
+          if (yield OS.File.exists(file.parent.path)) {
+            yield OS.File.makeDir(path, options);
+            return;
           }
         }
+
+        while (!!(file = file.parent)) {
+          if (file.parent && file.exists()) {
+            let opts = {};
+            for (let p in options)
+              opts[p] = options[p];
+            opts.from = file.path;
+            yield OS.File.makeDir(path, opts);
+            return;
+          }
+        }
+
         throw new Error('makeDir: wrong path = '+path);
       });
     },
