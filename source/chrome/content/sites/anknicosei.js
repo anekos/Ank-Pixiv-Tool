@@ -1,24 +1,25 @@
 
+Components.utils.import("resource://gre/modules/Task.jsm");
+
 try {
 
-  let AnkPixivModule = function (currentDoc) {
-
-    /********************************************************************************
-    * 定数
-    ********************************************************************************/
+  let AnkPixivModule = function (doc) {
 
     var self = this;
 
+    self.curdoc = doc;
 
+    self.viewer;
+
+    self.marked = false;
+
+    self._functionsInstalled = false;
+
+    self._image;
 
     /********************************************************************************
     * プロパティ
     ********************************************************************************/
-
-    self.on = {
-      get site () // {{{
-        self.info.illust.pageUrl.match(/^https?:\/\/seiga\.nicovideo\.jp\/(?:seiga|shunga|watch|comic|search|tag|my|user\/illust|illust\/(?:ranking|list))(?:\/|\?|$)/), // }}}
-    },
 
     self.in = { // {{{
       get manga () // {{{
@@ -156,19 +157,17 @@ try {
       return {
         illust: illust,
         mypage: mypage,
-        get doc () currentDoc ? currentDoc : window.content.document
+        get doc () self.curdoc,
       };
     })(); // }}}
 
     self.info = (function () { // {{{
       let illust = {
         get pageUrl ()
-          self.elements.doc ? self.elements.doc.location.href : '',
+          self.elements.doc.location.href,
 
         get id ()
-          self.in.manga && self.info.illust.pageUrl.match(/\/watch\/(mg\d+)/)[1]
-          ||
-          self.info.illust.pageUrl.match(/\/seiga\/(im\d+)/)[1],
+          self.getIllustId(),
 
         get dateTime ()
           AnkUtils.decodeDateTimeText(self.elements.illust.datetime.textContent),
@@ -269,33 +268,8 @@ try {
         get mangaIndexPage ()
           null,
 
-        get image () {
-          try {
-            let images;
-            if (self.in.manga) {
-              // マンガの大サイズ画像はないらしい
-              images = AnkUtils.A(self.elements.illust.images).filter(function (e) !!e.getAttribute('data-original')).map(function (e) e.getAttribute('data-original'));
-            } else {
-              let s = AnkUtils.remoteFileExists(self.elements.illust.mediumImage.href);
-              let href = s[1];
-              if (!s[2].match(/^image\//)) {
-                referer = href;
-                let html = AnkUtils.httpGET(href);
-                let doc = AnkUtils.createHTMLDocument(html);
-                let src = doc.querySelector('.illust_view_big > img').src;
-                href = href.replace(/^(https?:\/\/.+?)(?:\/.*)$/,"$1")+src;
-              }
-              images = [href];
-            }
-
-            return { images: images, facing: null, };
-          }
-          catch (e) {
-            AnkUtils.dumpError(e);
-            window.alert(AnkBase.Locale('serverError'));
-            return AnkBase.NULL_RET;
-          }
-        },
+        get image ()
+          self._image,
 
         referer: null
       };
@@ -307,20 +281,8 @@ try {
       };
     })(); // }}}
 
-    Object.defineProperty(this, 'downloadable', { // {{{
-      get: function () {
-        if (self.in.medium && self.elements.illust.flvPlayer)
-          return false;    // ニコニコ形式マンガはDL対象外
-        return true;
-      },
-    }); // }}}
-
   };
 
-
-  /********************************************************************************
-  * メソッド
-  ********************************************************************************/
 
   AnkPixivModule.prototype = {
 
@@ -344,17 +306,139 @@ try {
       return doc.location.href.match(/^https?:\/\/seiga\.nicovideo\.jp\/(?:seiga|shunga|watch|comic|search|tag|my|user\/illust|illust\/(?:ranking|list))(?:\/|\?|$)/);
     },
 
+    /**
+     * ファンクションのインストール
+     */
+    initFunctions: function () {
+      if (this._functionsInstalled)
+        return;
+
+      this._functionsInstalled = true;
+
+      if (this.in.medium) {
+        this.installMediumPageFunctions();
+      }
+      else {
+        this.installListPageFunctions();
+      }
+    },
+
+    /**
+     * ダウンロード可能か
+     */
+    isDownloadable: function () {
+      if (!this._functionsInstalled)
+        return false;
+
+      if (this.in.medium && this.elements.illust.flvPlayer)
+        return false;    // ニコニコ形式マンガはDL対象外
+
+      return true;
+    },
+
+    /**
+     * イラストID
+     */
+    getIllustId: function () {
+      return this.in.manga && this.curdoc.location.href.match(/\/watch\/(mg\d+)/)[1] ||
+                              this.curdoc.location.href.match(/\/seiga\/(im\d+)/)[1];
+    },
+
+    /**
+     * ダウンロード実行
+     */
+    downloadCurrentImage: function (useDialog, debug) {
+      let self = this;
+      Task.spawn(function () {
+        let image = yield self.getImageUrl();
+        if (!image || image.images.length == 0) {
+          window.alert(AnkBase.Locale('cannotFindImages'));
+          return;
+        }
+
+        let context = new AnkContext(self);
+        AnkBase.addDownload(context, useDialog, debug);
+      }).then(null, function (e) AnkUtils.dumpError(e,true)).catch(function (e) AnkUtils.dumpError(e,true));
+    },
+
+    /*
+     * ダウンロード済みイラストにマーカーを付ける
+     *    node:     対象のノード (AutoPagerize などで追加されたノードのみに追加するためにあるよ)
+     *    force:    追加済みであっても、強制的にマークする
+     */
+    markDownloaded: function (node, force, ignorePref) { // {{{
+      const IsIllust = /\/([^/]+?)(?:\?|$)/;
+      const Targets = [
+                        ['li.list_item > a', 1],                       // ○○さんのイラスト
+                        ['div.illust_thumb > div > a', 2],             // マイページ
+                        ['.episode_item > .episode > .thumb > a', 3],  // マンガ一覧
+                        ['div.illust_list_img > div > a', 2],          // 検索結果
+                        ['.list_item_cutout > a', 1],                  // イラストページ（他のイラスト・関連イラストなど）
+                        ['.ranking_image > div > a', 2],               // イラストランキング
+                        ['.center_img > a', 1],                        // 春画ページ（他のイラスト・関連イラストなど）
+                      ];
+
+      return AnkBase.markDownloaded(IsIllust, Targets, true, this, node, force, ignorePref);
+    }, // }}}
+
+    /*
+     * 評価する
+     */
+    setRating: function () { // {{{
+      return true;
+    },
+
+    /********************************************************************************
+     * 
+     ********************************************************************************/
+
+    /**
+     * 画像URLリストの取得
+     */
+    getImageUrl: function () {
+      let self = this;
+      return Task.spawn(function* () {
+        // 取得済みならそのまま返す
+        if (self._image && self._image.images.length > 0)
+          return self._image;
+
+        // マンガの大サイズ画像はないらしい
+        if (self.in.manga) {
+          let images = AnkUtils.A(self.elements.illust.images).filter(function (e) !!e.getAttribute('data-original')).map(function (e) e.getAttribute('data-original'));
+          if (images.length == 0)
+            return null;
+
+          return self._image = { images:images, facing:null };
+        }
+
+        let status = yield AnkUtils.remoteFileExistsAsync(self.elements.illust.mediumImage.href, self.curdoc.location.href);
+        if (!status || !status.type.match(/^image\//)) {
+          let href = status.url;
+          referer = href;
+          let html = yield AnkUtils.httpGETAsync(href);
+          let doc = AnkUtils.createHTMLDocument(html);
+          let src = doc.querySelector('.illust_view_big > img').getAttribute('src');
+          href = href.replace(/^(https?:\/\/.+?)(?:\/.*)$/,"$1")+src;
+          return self._image = { images:[href], facing:null };
+        }
+      });
+    },
+
+    /********************************************************************************
+     * 
+     ********************************************************************************/
+
     /*
      * イラストページにviewerやダウンロードトリガーのインストールを行う
      */
     installMediumPageFunctions: function () { // {{{
 
       let proc = function (mod) { // {{{
-        var doc = mod.elements.doc;
-        var body = mod.elements.illust.body;
-        var wrapper = mod.elements.illust.wrapper;
-        var medImg = mod.elements.illust.mediumImage;
-        var flvPlayer = mod.elements.illust.flvPlayer;
+        var doc = self.elements.doc;
+        var body = self.elements.illust.body;
+        var wrapper = self.elements.illust.wrapper;
+        var medImg = self.elements.illust.mediumImage;
+        var flvPlayer = self.elements.illust.flvPlayer;
 
         // 完全に読み込まれていないっぽいときは、遅延する
         if (!(body && wrapper && (medImg || flvPlayer))) { // {{{
@@ -366,25 +450,50 @@ try {
           return true;
         }
 
+        function createDebugMessageArea() {
+        }
+
+        // デバッグ用
+        if (AnkBase.Prefs.get('showDownloadedFilename', false))
+          createDebugMessageArea();
+
         // 大画像関係
-        if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
+        if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true)) {
           new AnkViewer(
             mod,
-            function () mod.info.path.image
+            function () self.info.path.image
           );
         }
 
-        // 中画像クリック時に保存する
-        if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
+        function addMiddleClickEventListener () {
+          if (useViewer)
+            self.viewer = new AnkViewer(self);
+
           medImg.addEventListener(
             'click',
-            function () AnkBase.downloadCurrentImageAuto(mod),
+            function (e) {
+              Task.spawn(function () {
+                // mangaIndexPageへのアクセスが複数回実行されないように、getImageUrl()を一度実行してからopenViewer()とdownloadCurrentImageAuto()を順次実行する
+                let image = yield self.getImageUrl();
+                if (!image || image.images.length == 0) {
+                  window.alert(AnkBase.Locale('cannotFindImages'));
+                  return;
+                }
+
+                if (useViewer)
+                  self.viewer.openViewer();
+                if (useClickDownload)
+                  AnkBase.downloadCurrentImageAuto(self);
+              }).then(null, function (e) AnkUtils.dumpError(e,true)).catch(function (e) AnkUtils.dumpError(e,true));
+
+              e.preventDefault();
+              e.stopPropagation();
+            },
             true
           );
-        } // }}}
+        }
 
-        // レイティング("クリップ","マイリスト登録","とりあえず一発登録",""お気に入り登録)によるダウンロード
-        (function () { // {{{
+        function addRatingEventListener () {
           if (!AnkBase.Prefs.get('downloadWhenRate', false))
             return;
 
@@ -398,29 +507,41 @@ try {
             if (e)
               e.addEventListener(
                 'click',
-                function () AnkBase.downloadCurrentImageAuto(mod),
+                function () AnkBase.downloadCurrentImageAuto(self),
                 true
               );
           });
-        })(); // }}}
+        }
+
+        // 中画像クリック
+        let useViewer = AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true);
+        let useClickDownload = AnkBase.Prefs.get('downloadWhenClickMiddle', false);
+        if (useViewer || useClickDownload)
+          addMiddleClickEventListener();
+
+        // レイティング("クリップ","マイリスト登録","とりあえず一発登録",""お気に入り登録)によるダウンロード
+        if (AnkBase.Prefs.get('downloadWhenRate', false))
+          addRatingEventListener();
 
         // 保存済み表示
         AnkBase.insertDownloadedDisplayById(
-          mod.elements.illust.downloadedDisplayParent,
-          mod.info.illust.id,
-          mod.SERVICE_ID,
-          mod.info.illust.R18
+          self.elements.illust.downloadedDisplayParent,
+          self.info.illust.id,
+          self.SERVICE_ID,
+          self.info.illust.R18
         );
 
         // 他のイラスト・関連イラストなどにマーキング
-        mod.markDownloaded(doc,true);
+        self.markDownloaded(doc,true);
 
         return true;
       };
 
+      let self = this;
+      let doc = this.curdoc;
 
       // install now
-      return AnkBase.delayFunctionInstaller(this, proc, 500, 20, '');
+      return AnkBase.delayFunctionInstaller(proc, 500, 20, self.SITE_NAME, '');
     }, // }}}
 
     /*
@@ -481,36 +602,9 @@ try {
 
 
       // install now
-      AnkBase.delayFunctionInstaller(this, autoPagerize, 500, 20, 'ap');
-      return AnkBase.delayFunctionInstaller(this, delayMarking, 500, 20, 'dm');
+      AnkBase.delayFunctionInstaller(this, autoPagerize, 500, 20, 'autoPagerize');
+      return AnkBase.delayFunctionInstaller(this, delayMarking, 500, 20, 'delayMarking');
     }, // }}}
-
-    /*
-     * ダウンロード済みイラストにマーカーを付ける
-     *    node:     対象のノード (AutoPagerize などで追加されたノードのみに追加するためにあるよ)
-     *    force:    追加済みであっても、強制的にマークする
-     */
-    markDownloaded: function (node, force, ignorePref) { // {{{
-      const IsIllust = /\/([^/]+?)(?:\?|$)/;
-      const Targets = [
-                        ['li.list_item > a', 1],                       // ○○さんのイラスト
-                        ['div.illust_thumb > div > a', 2],             // マイページ
-                        ['.episode_item > .episode > .thumb > a', 3],  // マンガ一覧
-                        ['div.illust_list_img > div > a', 2],          // 検索結果
-                        ['.list_item_cutout > a', 1],                  // イラストページ（他のイラスト・関連イラストなど）
-                        ['.ranking_image > div > a', 2],               // イラストランキング
-                        ['.center_img > a', 1],                        // 春画ページ（他のイラスト・関連イラストなど）
-                      ];
-
-      return AnkBase.markDownloaded(IsIllust, Targets, true, this, node, force, ignorePref);
-    }, // }}}
-
-    /*
-     * 評価する
-     */
-    rate: function () { // {{{
-      return true;
-    },
 
   };
 

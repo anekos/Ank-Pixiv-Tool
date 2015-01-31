@@ -474,7 +474,7 @@ try {
 
         let context = new AnkContext(self);
         AnkBase.addDownload(context, useDialog, debug);
-      }).then(null, function (e) AnkUtils.dumpError(e, true));
+      }).then(null, function (e) AnkUtils.dumpError(e,true)).catch(function (e) AnkUtils.dumpError(e,true));
     },
 
     /*
@@ -539,7 +539,7 @@ try {
     /**
      * 画像URLリストの取得
      */
-    getImageUrl: function (mangaOriginalSizeCheck, callback) {
+    getImageUrl: function (mangaOriginalSizeCheck) {
 
       let self = this;
 
@@ -800,7 +800,7 @@ try {
                   self.viewer.openViewer();
                 if (useClickDownload)
                   AnkBase.downloadCurrentImageAuto(self);
-              }).then(null, function (e) AnkUtils.dumpError(e, true));
+              }).then(null, function (e) AnkUtils.dumpError(e,true)).catch(function (e) AnkUtils.dumpError(e,true));
 
               if (useCapture) {
                 e.preventDefault();

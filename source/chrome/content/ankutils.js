@@ -1,5 +1,6 @@
 
 Components.utils.import("resource://gre/modules/Promise.jsm");
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 try {
 
@@ -181,7 +182,7 @@ try {
               "  linenumber: " + error.lineNumber + "\n" +
               "  stack: " + error.stack + "\n";
       } catch (e) {
-        return error.toString();
+        return e.toString();
       }
     }, // }}}
 
@@ -468,6 +469,50 @@ try {
      *    url:          チェックする
      *    callback:     function (exists) 存在していれば exists が真
      */
+   remoteFileExistsAsync: function (url,referer) { // {{{
+     function promise (url) {
+       return new Promise(function (resolve, reject) {
+         let ios = AnkUtils.ccgs("@mozilla.org/network/io-service;1", Components.interfaces.nsIIOService);
+         let ch = ios.newChannel(url, null, null).QueryInterface(Components.interfaces.nsIHttpChannel);;
+         ch.requestMethod = "HEAD";
+         ch.redirectionLimit = 0;
+         if (referer)
+           ch.referrer = NetUtil.newURI(referer);
+         ch.asyncOpen({
+           onStartRequest: function(aRequest,aContext) { },
+           onDataAvailable: function (aRequest,aContext,aInputStream,aOffset,aCount) { },
+           onStopRequest: function(aRequest,aContext,aStatusCode) {
+             if (ch.responseStatus == 200) {
+               resolve({ status:ch.responseStatus, url:url, referer:referer, type:ch.contentType });
+             }
+             else if (ch.responseStatus == 302) {
+               let redirect_to = ch.getResponseHeader('Location');
+               AnkUtils.dump('redirect: from='+url+' to='+redirect_to);
+               resolve({ status:ch.responseStatus, url:redirect_to });
+             }
+             else {
+               reject();
+             }
+           }
+         }, null);
+       });
+     }
+
+     const REDIRECT_LOOP_MAX = 2;
+
+     return Task.spawn(function* () {
+       for (let redirect_loop=0; redirect_loop < REDIRECT_LOOP_MAX; redirect_loop++) {
+         let status = yield promise(url,referer);
+         if (status.status == 302) {
+           referer = url;
+           url = status.url;
+         }
+         else
+           return status;
+       }
+     });
+   }, // }}}
+
    remoteFileExists: function (url, callback, redirect_loop) { // {{{
 
      const REDIRECT_LOOP_MAX = 2;
