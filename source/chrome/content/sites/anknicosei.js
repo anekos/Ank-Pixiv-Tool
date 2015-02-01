@@ -116,9 +116,10 @@ try {
 
         // require for AnkViewer
 
-        get body ()
-          let (e = queryAll('body'))
-            e && e.length > 0 && e[0],
+        get body () {
+          let e = queryAll('body');
+          return e && e.length > 0 && e[0];
+        },
 
         get wrapper ()
           query('#main'),
@@ -219,13 +220,15 @@ try {
           }
         },
 
-        get comment ()
-          let (e = self.elements.illust.comment)
-            (e ? AnkUtils.textContent(e) : ''),
+        get comment () {
+          let e = self.elements.illust.comment;
+          return e ? AnkUtils.textContent(e) : '';
+        },
 
-        get R18 ()
-          let (e = self.elements.illust.illustType)
-            (e && !!e.href.match(/\/shunga\//)),
+        get R18 () {
+          let e = self.elements.illust.illustType;
+          return e && !!e.href.match(/\/shunga\//);
+        },
 
         get mangaPages ()
           self.info.path.image.images.length,
@@ -434,7 +437,6 @@ try {
     installMediumPageFunctions: function () { // {{{
 
       let proc = function (mod) { // {{{
-        var doc = self.elements.doc;
         var body = self.elements.illust.body;
         var wrapper = self.elements.illust.wrapper;
         var medImg = self.elements.illust.mediumImage;
@@ -566,10 +568,10 @@ try {
              'div.illust_thumb',        // イラスト定点観測
              'li.list_item',            // ○○さんのイラスト
             ] .
-              some(function (q)
-                let (n = e.target.querySelectorAll(q))
-                  n && n.length > 0 && !!(a = n)
-              );
+              some(function (q) {
+                let n = e.target.querySelectorAll(q);
+                return n && n.length > 0 && !!(a = n);
+              });
             if (a)
               setTimeout(
                 function() {

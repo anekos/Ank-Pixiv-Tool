@@ -15,6 +15,7 @@
 <!-- サイト別.jsの登録はここから -->
   <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anknicosei.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/ankpixiv.js" />
+  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktwitter.js" />
 <!--
   <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/ankimgly.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anknijie.js" />
@@ -23,7 +24,6 @@
   <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktumblr.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktwipple.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktwitpic.js" />
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktwitter.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/ankyfrog.js" />
 -->
 <!-- サイト別.jsの登録はここまで -->
