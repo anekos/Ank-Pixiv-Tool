@@ -16,7 +16,8 @@ try {
     self.marked = false;
 
     self._functionsInstalled = false;
-    self._contentChangefunctionsInstalled = false;
+
+    self._image;
 
 
     /********************************************************************************
@@ -26,8 +27,7 @@ try {
     self.in = { // {{{
       // elementを見ているが、これに関しては問題ないはず
       get manga () // {{{
-        !self.in.gallery && // ポップアップは除外
-        self.elements.illust.mediaSet && self.info.illust.mangaPages > 1, // }}},
+        self.info.illust.mangaPages > 1, // }}},
 
       get medium () // {{{
         self.in.illustPage, // }}}
@@ -140,6 +140,9 @@ try {
 
         get galleryEnabled ()
           query('.gallery-enabled'),
+
+        get galleryDatetime ()
+          query('.Gallery-content a.tweet-timestamp'),
 
         // require for AnkBase
 
@@ -264,7 +267,7 @@ try {
           null,
 
         get image ()
-          self.getImageUrlSync(),
+          self._image,
       };
 
       return {
@@ -309,48 +312,53 @@ try {
 
       this._functionsInstalled = true;
 
-      if (this.in.medium) {
-        this.installMediumPageFunctions();
+      let self = this;
+      let doc = this.curdoc;
+
+      function inits () {
+        if (self.in.medium) {
+          self.installMediumPageFunctions();
+        }
+        else {
+          self.installListPageFunctions();
+        }
       }
-      else {
-        this.installListPageFunctions();
-      }
+
+      inits();
 
       // TODO 試験実装
-      if (!this._contentChangefunctionsInstalled) {
 
-        this._contentChangefunctionsInstalled = true;
+      function contentChange () {
+        var content = doc.querySelector('.route-profile');
 
-        function contentChange () {
-          var content = doc.querySelector('.route-profile');
-
-          if (!(content && doc.readyState === 'complete')) {
-            return false;   // リトライしてほしい
-          }
-
-          new MutationObserver(function () {
-            AnkUtils.dump('rise contentChange: '+self.curdoc.location.href);
-            self._functionsInstalled = false;
-            self.initFunctions();
-          }).observe(content, {attributes: true});
-          return true;
+        if (!(content && doc.readyState === 'complete')) {
+          return false;   // リトライしてほしい
         }
 
-        let self = this;
-        let doc = this.curdoc;
-
-        AnkBase.delayFunctionInstaller(contentChange, 1000, 30, self.SITE_NAME, 'contentChange');
+        new MutationObserver(function () {
+          AnkUtils.dump('rise contentChange: '+self.curdoc.location.href);
+          inits();
+        }).observe(content, {attributes: true});
+        return true;
       }
+
+      AnkBase.delayFunctionInstaller(contentChange, 1000, 30, self.SITE_NAME, 'contentChange');
     },
 
     /**
      * ダウンロード可能か
      */
     isDownloadable: function () {
-      if (this.in.gallery)
-        return !!this.getIllustId();    // ポップアップしているならどこでもOK
-      if (this.in.tweet && this.in.illustTweet)
-        return !!this.getIllustId();    // ツイートページはイラストが存在しているときのみOK
+      if (this.in.gallery) {
+        let id = this.getIllustId();
+        AnkUtils.dump('xxa '+id);
+        return !!id;    // ポップアップしているならどこでもOK
+      }
+      else if (this.in.tweet && this.in.illustTweet) {
+        let id = this.getIllustId();
+        AnkUtils.dump('xxz '+id);
+        return !!id;    // ツイートページはイラストが存在しているときのみOK
+      }
       return false;     // 上記以外はNG
     },
 
@@ -358,11 +366,14 @@ try {
      * イラストID
      */
     getIllustId: function () {
+
+      let image = this._getImageUrl();
+
       // twitter自身で保存しているものは画像ファイル名をillust_idにする
-      if (!this.info.path.image || this.info.path.image.images.length == 0)
+      if (!image || image.images.length == 0)
         return null;
 
-      let v = this.info.path.image.images[0];
+      let v = image.images[0];
       if (v) {
         let m = v && v.match(/^https?:\/\/pbs\.twimg\.com\/media\/([^/]+?)\./);   // 外部連携は扱わない
         return m && m[1];
@@ -388,11 +399,16 @@ try {
     downloadCurrentImage: function (useDialog, debug) {
       let self = this;
       Task.spawn(function () {
-        let image = self.getImageUrlSync();
+        let image = yield self.getImageUrlAsync();
         if (!image || image.images.length == 0) {
           window.alert(AnkBase.Locale('cannotFindImages'));
           return;
         }
+
+        self._image = image;
+        image.images.forEach(function (e) {
+          AnkUtils.dump('** '+e);
+        })
 
         let context = new AnkContext(self);
         AnkBase.addDownload(context, useDialog, debug);
@@ -432,21 +448,37 @@ try {
     /**
      * 画像URLリストの取得
      */
-    getImageUrl: function () {
+    getImageUrlAsync: function () {
       let self = this;
-      Task.spawn(function* () {
-        return self.getImageUrlSync();
+      return Task.spawn(function* () {
+        if (self.in.gallery) {
+          // ギャラリーでは複数絵のうちの
+          let dt = self.elements.illust.galleryDatetime;
+          if (!dt)
+            return null;
+
+          let href = dt.href;
+          let html = yield AnkUtils.httpGETAsync(href, self.curdoc.location.href);
+          let doc = AnkUtils.createHTMLDocument(html);
+          let m = Array.slice(doc.querySelectorAll('.cards-media-container div.multi-photo')).
+                     map(function (s) s.getAttribute('data-url')).
+                       filter(function (s) !s.match(/\/proxy\.jpg\?.*?t=(.+?)(?:$|&)/)).
+                         map(function (s) self._convertLargeImageUrl(s));
+          if (m.length > 1)
+            return { images: m, facing: null };
+        }
+
+        return self._getImageUrl();
       });
     },
 
-    getImageUrlSync: function () {
+    _getImageUrl: function () {
       let self = this;
       let e = 
         self.in.gallery                           ? self.elements.illust.mediumImage :
         self.elements.illust.photoFrame           ? self.elements.illust.photoImage :
         self.elements.illust.animatedGifThumbnail ? self.elements.illust.animatedGif :
                                                     self.elements.illust.mediaSet;
-      ;
       if (!e)
         return null;
 
@@ -485,17 +517,22 @@ try {
             }
           }
           else {
-            s = s.replace(/:large/, '');
-            if (/^https?:\/\/pbs\.twimg\.com\/media\//.test(s)) {
-              if (!/\.\w+(:\w+)$/.test(s)) {
-                s += ':orig';
-              }
-            }
+            s = self._convertLargeImageUrl(s);
           }
         }
         m.push(s);
       });
-      return { images: m, facing: null, };
+      return { images: m, facing: null };
+    },
+
+    _convertLargeImageUrl: function (s) {
+      s = s.replace(/:large/, '');
+      if (/^https?:\/\/pbs\.twimg\.com\/media\//.test(s)) {
+        if (!/\.\w+(:\w+)$/.test(s)) {
+          s += ':orig';
+        }
+      }
+      return s;
     },
 
     /********************************************************************************
@@ -575,7 +612,7 @@ try {
      */
     installListPageFunctions: function () { /// {
 
-      let moveGallery = function () {
+      let galleryChanged = function () {
         var body = self.elements.illust.body;
 
         if (!(body && doc.readyState === 'complete')) {
@@ -636,7 +673,7 @@ try {
 
       // install now
       if (AnkBase.Prefs.get('markDownloaded', false)) {
-        AnkBase.delayFunctionInstaller(moveGallery, 1000, 30, self.SITE_NAME, 'moveGallery');
+        AnkBase.delayFunctionInstaller(galleryChanged, 1000, 30, self.SITE_NAME, 'galleryChanged');
         AnkBase.delayFunctionInstaller(followExpansion, 1000, 30, self.SITE_NAME, 'followExpansion');
         AnkBase.delayFunctionInstaller(delayMarking, 1000, 30, self.SITE_NAME, 'delayMarking');
       }

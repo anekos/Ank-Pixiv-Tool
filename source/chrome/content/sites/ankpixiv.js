@@ -466,7 +466,7 @@ try {
     downloadCurrentImage: function (useDialog, debug) {
       let self = this;
       Task.spawn(function () {
-        let image = yield self.getImageUrl(AnkBase.Prefs.get('downloadOriginalSize', false));
+        let image = yield self.getImageUrlAsync(AnkBase.Prefs.get('downloadOriginalSize', false));
         if (!image || image.images.length == 0) {
           window.alert(AnkBase.Locale('cannotFindImages'));
           return;
@@ -539,7 +539,7 @@ try {
     /**
      * 画像URLリストの取得
      */
-    getImageUrl: function (mangaOriginalSizeCheck) {
+    getImageUrlAsync: function (mangaOriginalSizeCheck) {
 
       let self = this;
 
@@ -789,8 +789,8 @@ try {
             'click',
             function (e) {
               Task.spawn(function () {
-                // mangaIndexPageへのアクセスが複数回実行されないように、getImageUrl()を一度実行してからopenViewer()とdownloadCurrentImageAuto()を順次実行する
-                let image = yield self.getImageUrl(useOriginalSize);
+                // mangaIndexPageへのアクセスが複数回実行されないように、getImageUrlAsync()を一度実行してからopenViewer()とdownloadCurrentImageAuto()を順次実行する
+                let image = yield self.getImageUrlAsync(useOriginalSize);
                 if (!image || image.images.length == 0) {
                   window.alert(AnkBase.Locale('cannotFindImages'));
                   return;

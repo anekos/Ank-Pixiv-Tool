@@ -251,7 +251,7 @@ AnkViewer = function (module) {
 
   // 大画像をクリックしたら次に行くか閉じる
   let clickedBigImg = function () {
-    if (module.in.manga && (currentMangaPage < totalMangaPages))
+    if (totalMangaPages > 1 && (currentMangaPage < totalMangaPages))
       goNextPage(1, false);
     else
       changeImageSize();
@@ -295,12 +295,19 @@ AnkViewer = function (module) {
 
       currentMangaPage = 0;
 
-      if (module.in.manga && pageSelector.childNodes.length == 0) {
+      if (pageSelector.childNodes.length == 0) {
         for (let i = 0; i < totalMangaPages; i++) {
           let option = doc.createElement('option');
           option.textContent = (i + 1) + '/' + totalMangaPages;
           option.value = i;
           pageSelector.appendChild(option);
+        }
+
+        if (totalMangaPages == 1) {
+          // マンガでは不要のボタン
+          pageSelector.style.display = 'none';
+          prevButton.style.display = 'none';
+          nextButton.style.display = 'none';
         }
       }
 
@@ -336,7 +343,7 @@ AnkViewer = function (module) {
       // 画像のリストが取得できなければviewerを開かない
       if (!images || images.length === 0) {
         Task.spawn(function () {
-          let image = yield module.getImageUrl(AnkBase.Prefs.get('viewOriginalSize',false));
+          let image = yield module.getImageUrlAsync(AnkBase.Prefs.get('viewOriginalSize',false));
           if (!image || image.images.length === 0)
             return; // server error.
 
@@ -481,19 +488,12 @@ AnkViewer = function (module) {
   imgPanel.appendChild(imgContainer);
   imgContainer.appendChild(fpImg);
   imgContainer.appendChild(bigImg);
-  if (module.in.manga) {
-    viewer.appendChild(buttonPanel);
-    buttonPanel.appendChild(pageSelector);
-    buttonPanel.appendChild(prevButton);
-    buttonPanel.appendChild(nextButton);
-    buttonPanel.appendChild(resizeButton);
-    buttonPanel.appendChild(closeButton);
-  }
-  else {
-    viewer.appendChild(buttonPanel);
-    buttonPanel.appendChild(resizeButton);
-    buttonPanel.appendChild(closeButton);
-  }
+  viewer.appendChild(buttonPanel);
+  buttonPanel.appendChild(pageSelector);
+  buttonPanel.appendChild(prevButton);
+  buttonPanel.appendChild(nextButton);
+  buttonPanel.appendChild(resizeButton);
+  buttonPanel.appendChild(closeButton);
 
   body.insertBefore(viewer, body.firstChild);
 
