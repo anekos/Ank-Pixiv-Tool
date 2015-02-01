@@ -420,11 +420,11 @@ AnkViewer = function (module) {
   let body = module.elements.illust.body;
   let wrapper = module.elements.illust.wrapper;
   let medImg = module.elements.illust.mediumImage;
-  let largeLink = module.elements.illust.largeLink;
   let openComment = module.elements.illust.openComment; 
   let openCaption = module.elements.illust.openCaption; 
   let ads = module.elements.illust.ads;
   let bgImage = win.getComputedStyle(doc.body, '').backgroundImage;
+
   let images = null;
   let facing = null;
   let totalMangaPages = 0;

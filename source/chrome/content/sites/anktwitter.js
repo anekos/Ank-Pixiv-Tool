@@ -1,11 +1,9 @@
 
+Components.utils.import("resource://gre/modules/Task.jsm");
+
 try {
 
   let AnkPixivModule = function (doc) {
-
-    /********************************************************************************
-    * 定数
-    ********************************************************************************/
 
     var self = this;
 
@@ -25,7 +23,6 @@ try {
     ********************************************************************************/
 
     self.in = { // {{{
-      // elementを見ているが、これに関しては問題ないはず
       get manga () // {{{
         self.info.illust.mangaPages > 1, // }}},
 
@@ -33,8 +30,8 @@ try {
         self.in.illustPage, // }}}
 
       get illustPage () // {{{
-        self.in.tweet ||         // ツイート
-        self.in.gallery,         // ポップアップ中
+        self.in.tweet   ||  // ツイート
+        self.in.gallery,    // ポップアップ中
       // }}}
 
       get myPage ()
@@ -50,11 +47,11 @@ try {
       get tweet () // {{{
         self.info.illust.pageUrl.match(/^https?:\/\/twitter\.com\/[^/]+\/status\//), // }}}
 
-      // elementを見ているが、これに関しては問題ないはず
-      get illustTweet() // {{{
-        (self.elements.illust.mediumImage || self.elements.illust.animatedGifThumbnail || self.elements.illust.photoFrame), // }}}
+      get illustTweet()
+        self.elements.illust.mediumImage          ||  // イラスト
+        self.elements.illust.animatedGifThumbnail ||  // GIF
+        self.elements.illust.photoFrame,              // 外部画像連携
 
-      // elementを見ているが、これに関しては問題ないはず
       get gallery () // {{{
         self.elements.illust.galleryEnabled, // }}}
     }; // }}}
@@ -66,9 +63,12 @@ try {
       function queryAll (q)
         self.elements.doc.querySelectorAll(q)
 
-      function queryEither (gQuery, tQuery)
-        self.in.gallery ? illust.gallery.querySelector(gQuery) :
-                          (illust.tweet && illust.tweet.querySelector(tQuery))
+      function queryEitherGorT (gQuery, tQuery) {
+        if (self.in.gallery)
+          return illust.gallery.querySelector(gQuery);
+        if (illust.tweet)
+          return illust.tweet.querySelector(tQuery);
+      }
 
       let illust =  {
         // 外部画像連携
@@ -109,25 +109,25 @@ try {
         },
 
         get largeLink ()
-          queryEither('.twitter-timeline-link', '.twitter-timeline-link'),
+          queryEitherGorT('.twitter-timeline-link', '.twitter-timeline-link'),
 
         get datetime ()
-          queryEither('.tweet-timestamp', 'span.metadata > span'),
+          queryEitherGorT('.tweet-timestamp', 'span.metadata > span'),
 
         get title ()
-          queryEither('.tweet-text', '.tweet-text'),
+          queryEitherGorT('.tweet-text', '.tweet-text'),
 
         get comment ()
           illust.title,
 
         get avatar ()
-          queryEither('.avatar', '.avatar'),
+          queryEitherGorT('.avatar', '.avatar'),
 
         get userName ()
-          queryEither('.simple-tweet', '.user-actions'),
+          queryEitherGorT('.simple-tweet', '.user-actions'),
 
         get memberLink ()
-          queryEither('.account-group', '.account-group'),
+          queryEitherGorT('.account-group', '.account-group'),
 
         get tags ()
           null,
@@ -147,7 +147,7 @@ try {
         // require for AnkBase
 
         get downloadedDisplayParent ()
-          queryEither('.stream-item-header', '.tweet-actions'),
+          queryEitherGorT('.stream-item-header', '.tweet-actions'),
 
         get downloadedFilenameArea ()
           query('.ank-pixiv-downloaded-filename-text'),
@@ -248,7 +248,7 @@ try {
           self.elements.illust.userName.getAttribute('data-name'),
 
         get memoizedName ()
-          AnkBase.memoizedName(member.id, self.SERVICE_ID),
+          null,
       };
 
       let path = {
@@ -399,16 +399,13 @@ try {
     downloadCurrentImage: function (useDialog, debug) {
       let self = this;
       Task.spawn(function () {
-        let image = yield self.getImageUrlAsync();
+        let image = yield self.getImageUrlAsync(AnkBase.Prefs.get('downloadOriginalSize', false));
         if (!image || image.images.length == 0) {
           window.alert(AnkBase.Locale('cannotFindImages'));
           return;
         }
 
         self._image = image;
-        image.images.forEach(function (e) {
-          AnkUtils.dump('** '+e);
-        })
 
         let context = new AnkContext(self);
         AnkBase.addDownload(context, useDialog, debug);

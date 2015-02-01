@@ -256,7 +256,7 @@ try {
           AnkUtils.trim(self.elements.illust.userName.textContent),
 
         get memoizedName ()
-          AnkBase.memoizedName(member.id, self.SERVICE_ID),
+          null,
       };
 
       let path = {
