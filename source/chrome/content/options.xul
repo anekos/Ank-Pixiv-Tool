@@ -56,32 +56,35 @@
         let siteModules = window.arguments && window.arguments.length > 0 && window.arguments[0].siteModules;
         if (!siteModules)
           return;
+
+        let prefs = document.querySelector('preferences');
         let box = document.getElementById('site-module-table');
-        if (!box)
+        if (!prefs || !box)
           return;
+
         siteModules.forEach(function (sm) {
-          let row = document.createElement('checkbox');
-          row.setAttribute('label', sm.name);
-          row.setAttribute('checked', sm.enabled);
-          row.setAttribute('ankpixiv-module-id', sm.id);
+          let prefid = 'ankpixiv-use-module-id-'+sm.id;
+
+          let row = document.createElement('row');
+
+          let item1 = document.createElement('checkbox');
+          item1.setAttribute('preference', prefid);
+          item1.setAttribute('label', sm.name);
+          row.appendChild(item1);
+
           box.appendChild(row);
+
+          let pref = document.createElement('preference');
+          pref.setAttribute('id', prefid);
+          pref.setAttribute('name', 'extensions.ankpixiv.useSiteModule.'+sm.id);
+          pref.setAttribute('type', 'bool');
+          prefs.appendChild(pref);
         });
       }
 
       function onSave () {
         try {
           // removed: check for nonexistent path
-
-          let box = document.getElementById('site-module-table');
-          if (box) {
-            let dismods = [];
-            let rows = box.querySelectorAll('checkbox');
-            Array.slice(rows).forEach(function (row) {
-              if (row.getAttribute('checked') != 'true')
-                dismods.push(row.getAttribute('ankpixiv-module-id'));
-            });
-            AnkBase.Prefs.set('disabledSiteModules', dismods.join());
-          }
         } catch (e) {
           AnkUtils.dumpError(e);
         }
@@ -90,7 +93,7 @@
 
       function onCancel () {
         if (document.documentElement.instantApply)
-          this.onSave();
+          return this.onSave();
         return true;
       }
 
@@ -138,8 +141,8 @@
           <tab label="&tab.download;" />
           <tab label="&tab.filename;" />
           <tab label="&tab.viewer;" />
-          <tab label="&tab.sitemodules;" />
           <tab label="&tab.miscellaneous;" />
+          <tab label="&tab.sitemodules;" />
         </tabs>
         <tabpanels>
           <tabpanel>
@@ -296,8 +299,14 @@
             </vbox>
           </tabpanel>
           <tabpanel>
+            <!--
             <arrowscrollbox orient="vertical" flex="1" id="site-module-table">
             </arrowscrollbox>
+            -->
+            <grid>
+              <rows id="site-module-table">
+              </rows>
+            </grid>
           </tabpanel>
           <tabpanel>
             <vbox>

@@ -304,7 +304,7 @@ AnkViewer = function (module) {
         }
 
         if (totalMangaPages == 1) {
-          // マンガでは不要のボタン
+          // イラストでは不要のボタン
           pageSelector.style.display = 'none';
           prevButton.style.display = 'none';
           nextButton.style.display = 'none';

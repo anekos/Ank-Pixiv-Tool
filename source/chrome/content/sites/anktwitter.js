@@ -312,52 +312,109 @@ try {
 
       this._functionsInstalled = true;
 
-      let self = this;
-      let doc = this.curdoc;
-
-      function inits () {
+      let inits = function () {
         if (self.in.medium) {
           self.installMediumPageFunctions();
         }
         else {
           self.installListPageFunctions();
         }
-      }
+      };
 
-      inits();
+      // Illust/List共通のFunction
 
-      // TODO 試験実装
+      let self = this;
+      let doc = this.curdoc;
 
-      function contentChange () {
-        var content = doc.querySelector('.route-profile');
-
+      // ページ移動
+      let contentChange = function () {
+        let content = doc.querySelector('div.route-profile, div.route-permalink, div.route-home, div#doc');
         if (!(content && doc.readyState === 'complete')) {
           return false;   // リトライしてほしい
         }
 
-        new MutationObserver(function () {
+        new MutationObserver(function (o) {
           AnkUtils.dump('rise contentChange: '+self.curdoc.location.href);
+          self._image = null;  // 入れ替わりがあるので、ここでリセット
           inits();
         }).observe(content, {attributes: true});
-        return true;
-      }
 
-      AnkBase.delayFunctionInstaller(contentChange, 1000, 30, self.SITE_NAME, 'contentChange');
+        return true;
+      };
+
+      // ギャラリーオープン
+      let galleryOpen = function () {
+        let body = doc.querySelector('body');
+        if (!(body && doc.readyState === 'complete')) {
+          return false;   // リトライしてほしい
+        }
+
+        new MutationObserver(function (o) {
+          o.forEach(function (e) {
+            let en = e.target.classList.contains('gallery-enabled');
+            if (!galleryShown && en) {
+              AnkUtils.dump('rise galleryOpen: '+doc.location.href);
+              galleryShown = true;
+            }
+            else if (galleryShown && !en) {
+              galleryShown = false;
+            }
+          });
+          self._image = null;  // 入れ替わりがあるので、ここでリセット
+        }).observe(body, {attributes: true});
+
+        return true;
+      };
+
+      // FIXME イベント発火→ダウンロード開始の間にギャラリー移動があると目的のもと違う画像がダウンロードされる問題
+
+      // ギャラリー移動
+      let galleryChanged = function () {
+        let media = doc.querySelector('.Gallery-media');
+        if (!(media && doc.readyState === 'complete')) {
+          return false;   // リトライしてほしい
+        }
+
+        // FIXME 移動後に、移動前のギャラリーの処理結果で表示が上書きされてしまう
+        new MutationObserver(function () {
+          if (galleryShown) {
+            AnkUtils.dump('rise galleryChanged: '+doc.location.href);
+            self._image = null;  // 入れ替わりがあるので、ここでリセット
+          }
+          /*
+          AnkBase.insertDownloadedDisplayById(
+            self.elements.illust.downloadedDisplayParent,
+            self.info.illust.R18,
+            self.info.illust.id,
+            self.SERVICE_ID
+          );
+          */
+        }).observe(media, {childList: true});
+
+        return true;
+      };
+
+      //
+
+      let galleryShown;
+
+      inits();
+
+      AnkBase.delayFunctionInstaller(contentChange, 500, 60, self.SITE_NAME, 'contentChange');
+      AnkBase.delayFunctionInstaller(galleryOpen, 500, 60, self.SITE_NAME, 'galleryOpen');
+      AnkBase.delayFunctionInstaller(galleryChanged, 500, 60, self.SITE_NAME, 'galleryChanged');
     },
 
     /**
      * ダウンロード可能か
      */
     isDownloadable: function () {
+      AnkUtils.dump('piyo '+this.in.gallery+', '+this.in.tweet+', '+this.in.illustTweet+', '+this.getIllustId());
       if (this.in.gallery) {
-        let id = this.getIllustId();
-        AnkUtils.dump('xxa '+id);
-        return !!id;    // ポップアップしているならどこでもOK
+        return !!this.getIllustId();    // ポップアップしているならどこでもOK
       }
       else if (this.in.tweet && this.in.illustTweet) {
-        let id = this.getIllustId();
-        AnkUtils.dump('xxz '+id);
-        return !!id;    // ツイートページはイラストが存在しているときのみOK
+        return !!this.getIllustId();    // ツイートページはイラストが存在しているときのみOK
       }
       return false;     // 上記以外はNG
     },
@@ -375,7 +432,7 @@ try {
 
       let v = image.images[0];
       if (v) {
-        let m = v && v.match(/^https?:\/\/pbs\.twimg\.com\/media\/([^/]+?)\./);   // 外部連携は扱わない
+        let m = v && v.match(/^https?:\/\/pbs\.twimg\.com\/(?:media|tweet_video)\/([^/]+?)\./);   // 外部連携は扱わない
         return m && m[1];
       }
 
@@ -388,7 +445,7 @@ try {
       if (v) {
         let m = v && v.match(/\/([^/]+)(?:\?|$)/);
         return m && m[1];
-      };
+      }
 
       return null;
     },
@@ -404,8 +461,6 @@ try {
           window.alert(AnkBase.Locale('cannotFindImages'));
           return;
         }
-
-        self._image = image;
 
         let context = new AnkContext(self);
         AnkBase.addDownload(context, useDialog, debug);
@@ -446,10 +501,22 @@ try {
      * 画像URLリストの取得
      */
     getImageUrlAsync: function () {
+
       let self = this;
+
       return Task.spawn(function* () {
+
+        // 取得済みならそのまま返す
+        if (self._image && self._image.images.length > 0)
+          return self._image;
+
+        function setSelectedImage (image) {
+          self._image = image;
+          return image;
+        }
+
         if (self.in.gallery) {
-          // ギャラリーでは複数絵のうちの
+          // ギャラリーでは複数絵のtweetでも１枚しか表示されないので、tweetページを参照して全部持ってくる
           let dt = self.elements.illust.galleryDatetime;
           if (!dt)
             return null;
@@ -457,15 +524,14 @@ try {
           let href = dt.href;
           let html = yield AnkUtils.httpGETAsync(href, self.curdoc.location.href);
           let doc = AnkUtils.createHTMLDocument(html);
-          let m = Array.slice(doc.querySelectorAll('.cards-media-container div.multi-photo')).
-                     map(function (s) s.getAttribute('data-url')).
-                       filter(function (s) !s.match(/\/proxy\.jpg\?.*?t=(.+?)(?:$|&)/)).
-                         map(function (s) self._convertLargeImageUrl(s));
+          let o = Array.slice(doc.querySelectorAll('.cards-media-container div.multi-photo')).
+                    map(function (s) s.getAttribute('data-url'));
+          let m = self._convertImageUrls(o);
           if (m.length > 1)
-            return { images: m, facing: null };
+            return setSelectedImage({ images: m, facing: null });
         }
 
-        return self._getImageUrl();
+        return setSelectedImage(self._getImageUrl());
       });
     },
 
@@ -491,45 +557,47 @@ try {
         o.push(self.elements.illust.animatedGifThumbnail ? e.getAttribute('video-src') : e.src);
       }
 
-      let m = [];
-      o.forEach(function (s) {
-        if (AnkBase.Prefs.get('downloadOriginalSize', false)) {
-          let m = s.match(/\/proxy\.jpg\?.*?t=(.+?)(?:$|&)/);
-          if (m) {
-            try {
-              let b64 = m[1];
-              let b64dec = window.atob(b64.replace(/-/g,'+').replace(/_/g,'/'));
-              let index = b64dec.indexOf('http');
-              let lenb = b64dec.substr(0, index);
-              let len = lenb.charCodeAt(lenb.length-1);
-              s = b64dec.substr(index, len);
+      let m = self._convertImageUrls(o);
+      if (!m)
+        return null;
 
-              AnkUtils.dump('BASE64: '+b64);
-              AnkUtils.dump('DECODED: '+s);
-            }
-            catch (e) {
-              AnkUtils.dumpError(e);
-              window.alert(AnkBase.Locale('serverError'));
-              return AnkBase.NULL_RET;
-            }
-          }
-          else {
-            s = self._convertLargeImageUrl(s);
-          }
-        }
-        m.push(s);
-      });
       return { images: m, facing: null };
     },
 
-    _convertLargeImageUrl: function (s) {
-      s = s.replace(/:large/, '');
-      if (/^https?:\/\/pbs\.twimg\.com\/media\//.test(s)) {
-        if (!/\.\w+(:\w+)$/.test(s)) {
-          s += ':orig';
+    _convertImageUrls: function (o) {
+      let urls = [];
+      o.forEach(function (s) {
+        let m = s.match(/\/proxy\.jpg\?.*?t=(.+?)(?:$|&)/);
+        if (m) {
+          try {
+            let b64 = m[1];
+            let b64dec = window.atob(b64.replace(/-/g,'+').replace(/_/g,'/'));
+            let index = b64dec.indexOf('http');
+            let lenb = b64dec.substr(0, index);
+            let len = lenb.charCodeAt(lenb.length-1);
+            s = b64dec.substr(index, len);
+
+            AnkUtils.dump('BASE64: '+b64);
+            AnkUtils.dump('DECODED: '+s);
+          }
+          catch (e) {
+            AnkUtils.dumpError(e);
+            window.alert(AnkBase.Locale('serverError'));
+            return null;
+          }
         }
-      }
-      return s;
+        else {
+          s = s.replace(/:large/, '');
+          if (/^https?:\/\/pbs\.twimg\.com\/media\//.test(s)) {
+            if (!/\.\w+(:\w+)$/.test(s)) {
+              s += ':orig';
+            }
+          }
+        }
+        urls.push(s);
+      });
+
+      return urls;
     },
 
     /********************************************************************************
@@ -564,16 +632,35 @@ try {
               let dcaption = doc.createElement('div');
               dcaption.classList.add('ank-pixiv-downloaded-filename-text');
               div.appendChild(dcaption);
+
+              e.appendChild(div);
             }
-  
-            e.appendChild(div);
           }
         }
 
         function addMiddleClickEventListener () {
+          if (useViewer)
+            self.viewer = new AnkViewer(self);
           medImg.addEventListener(
             'click',
-            function (e) AnkBase.downloadCurrentImageAuto(self),
+            function (e) {
+              Task.spawn(function () {
+                // mangaIndexPageへのアクセスが複数回実行されないように、getImageUrlAsync()を一度実行してからopenViewer()とdownloadCurrentImageAuto()を順次実行する
+                let image = yield self.getImageUrlAsync();
+                if (!image || image.images.length == 0) {
+                  window.alert(AnkBase.Locale('cannotFindImages'));
+                  return;
+                }
+
+                if (useViewer)
+                  self.viewer.openViewer();
+                if (useClickDownload)
+                  AnkBase.downloadCurrentImageAuto(self);
+              }).then(null, function (e) AnkUtils.dumpError(e,true)).catch(function (e) AnkUtils.dumpError(e,true));
+
+              e.preventDefault();
+              e.stopPropagation();
+            },
             true
           );
         }
@@ -583,16 +670,21 @@ try {
           createDebugMessageArea();
 
         // 中画像クリック時に保存する
-        if (AnkBase.Prefs.get('downloadWhenClickMiddle'))
+        let useViewer = AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true);
+        let useClickDownload = AnkBase.Prefs.get('downloadWhenClickMiddle', false);
+        if (useViewer || useClickDownload)
           addMiddleClickEventListener()
 
-        // 保存済み表示
+        // 保存済み表示（ギャラリー）
         AnkBase.insertDownloadedDisplayById(
           self.elements.illust.downloadedDisplayParent,
           self.info.illust.R18,
           self.info.illust.id,
           self.SERVICE_ID
         );
+
+        // 保存済み表示（ツイート）
+        self.markDownloaded(doc,true);
 
         return true;
       };
@@ -601,39 +693,13 @@ try {
       let doc = this.curdoc;
 
       // install now
-      return AnkBase.delayFunctionInstaller(proc, 500, 20, self.SITE_NAME, '');
+      return AnkBase.delayFunctionInstaller(proc, 500, 60, self.SITE_NAME, '');
     }, // }}}
 
     /*
      * リストページ用ファンクション
      */
     installListPageFunctions: function () { /// {
-
-      let galleryChanged = function () {
-        var body = self.elements.illust.body;
-
-        if (!(body && doc.readyState === 'complete')) {
-          return false;   // リトライしてほしい
-        }
-
-        // FIXME 移動後に、移動前のギャラリーの処理結果で表示が上書きされてしまう
-        // ギャラリーの移動時に保存済み表示を行う
-        let tw = self.elements.doc.querySelector('.Gallery-media');
-        if (tw && MutationObserver) {
-          new MutationObserver(function () {
-            if (!self.info.illust.id)
-              return;
-            AnkBase.insertDownloadedDisplayById(
-              self.elements.illust.downloadedDisplayParent,
-              self.info.illust.R18,
-              self.info.illust.id,
-              self.SERVICE_ID
-            );
-          }).observe(tw, {childList: true, attributes: true});
-        }
-
-        return true;
-      };
 
       let followExpansion = function () {
         let newGrid = self.elements.doc.querySelector('.AppContent-main .GridTimeline-items');
@@ -670,9 +736,8 @@ try {
 
       // install now
       if (AnkBase.Prefs.get('markDownloaded', false)) {
-        AnkBase.delayFunctionInstaller(galleryChanged, 1000, 30, self.SITE_NAME, 'galleryChanged');
-        AnkBase.delayFunctionInstaller(followExpansion, 1000, 30, self.SITE_NAME, 'followExpansion');
-        AnkBase.delayFunctionInstaller(delayMarking, 1000, 30, self.SITE_NAME, 'delayMarking');
+        AnkBase.delayFunctionInstaller(followExpansion, 500, 60, self.SITE_NAME, 'followExpansion');
+        AnkBase.delayFunctionInstaller(delayMarking, 500, 60, self.SITE_NAME, 'delayMarking');
       }
     }, // }}}
 

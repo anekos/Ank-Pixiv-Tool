@@ -214,6 +214,8 @@ try {
         AnkUtils.dump('skip experimental module: '+module.prototype.SITE_NAME+', '+module.prototype.SERVICE_ID);
       } else {
         AnkUtils.dump('installed module: '+module.prototype.SITE_NAME+', '+module.prototype.SERVICE_ID);
+        if (AnkBase.Prefs.get('useSiteModule.'+module.prototype.SERVICE_ID) === undefined)
+          AnkBase.Prefs.set('useSiteModule.'+module.prototype.SERVICE_ID, true);
         AnkBase.siteModules.push(module);
       }
     },
@@ -222,10 +224,9 @@ try {
      * サイトモジュールのインスタンスをカレントドキュメントにインストールする
      */
     installSupportedModule: function (doc) { // {{{
-      let disabledModules = AnkBase.Prefs.get('disabledSiteModules', '').split(',');
       for (let i=0; i<AnkBase.siteModules.length; i++) {
         let module = AnkBase.siteModules[i];
-        if (disabledModules.indexOf(module.prototype.SERVICE_ID) == -1) {
+        if (AnkBase.isModuleEnabled(module.prototype.SERVICE_ID)) {
           if (module.prototype.isSupported(doc)) {
             AnkUtils.dump('SUPPORTED: '+doc.location.href+",\n"+Error().stack);
             doc.AnkPixivModule = new module(doc);
@@ -236,17 +237,19 @@ try {
     }, // }}}
 
     /**
-     * 
+     * オプションダイアログにサイトモジュールのリストを渡す
      */
     getModuleSettings: function () {
       let sets = [];
-      let disabledModules = AnkBase.Prefs.get('disabledSiteModules', '').split(',');
       for (let i=0; i<AnkBase.siteModules.length; i++) {
         let module = AnkBase.siteModules[i];
-        let en = disabledModules.indexOf(module.prototype.SERVICE_ID) == -1;
-        sets.push({name:module.prototype.SITE_NAME, id:module.prototype.SERVICE_ID, enabled:en})
+        sets.push({ name:module.prototype.SITE_NAME, id:module.prototype.SERVICE_ID, enabled:AnkBase.isModuleEnabled(module.prototype.SERVICE_ID) })
       }
       return sets;
+    },
+
+    isModuleEnabled: function (modid) {
+      return AnkBase.Prefs.get('useSiteModule.'+modid, true);
     },
 
     /**
@@ -767,7 +770,12 @@ try {
         }
 
         // ダウンロード用のコンテキストの収集(contextの取得に時間がかかる場合があるのでダウンロードマークを表示しておく)
-        AnkBase.insertDownloadedDisplay(module.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.INITIALIZE);
+        let curmod = AnkBase.currentModule;
+        if (curmod) {
+          if (module.getIllustId() == curmod.getIllustId())
+            AnkBase.insertDownloadedDisplay(module.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.INITIALIZE);
+        }
+
         module.downloadCurrentImage(useDialog, debug);
       }).then(null, function (e) AnkUtils.dumpError(e, true));
     },
@@ -853,7 +861,12 @@ try {
 
               let c = z.context;
 
-              AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.TIMEOUT);
+              // たまたま開いているタブがダウンロードを始めるのとイラストページだったならマーキング処理
+              let curmod = AnkBase.currentModule;
+              if (curmod) {
+                if (c.info.illust.id == curmod.getIllustId())
+                  AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.TIMEOUT);
+              }
               AnkBase.downloading.images -= c.info.path.image.images.length;
               AnkBase.updateToolbarText();
 
@@ -877,8 +890,9 @@ try {
 
           // たまたま開いているタブがダウンロードを始めるのと同じサイトだったならマーキング処理
           let curmod = AnkBase.currentModule;
-          if (curmod && curmod.SERVICE_ID === d.context.SERVICE_ID)
+          if (curmod && curmod.SERVICE_ID === d.context.SERVICE_ID) {
             curmod.markDownloaded(d.context.info.illust.id,true);
+          }
         } else {
           // remove download
           if (AnkBase.findDownload(d, true)) {
@@ -888,9 +902,13 @@ try {
           }
 
           let c = d.context;
-          let r = d.result;
-          let r18 = (r === AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED) ? c.info.illust.R18 : false;
-          AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, r18, r);
+          let rdisp = d.result;
+          let r18 = (rdisp === AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED) ? c.info.illust.R18 : false;
+          let curmod = AnkBase.currentModule;
+          if (curmod) {
+            if (c.info.illust.id == curmod.getIllustId())
+              AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, r18, rdisp);
+          }
 
           // 動作確認用
           if (AnkBase.Prefs.get('showDownloadedFilename', false)) {
@@ -923,7 +941,11 @@ try {
         download.start = new Date().getTime();
         download.limit = download.start + AnkBase.DOWNLOAD_RETRY.INTERVAL * download.context.info.path.image.images.length;
         AnkBase.updateToolbarText();
-        AnkBase.insertDownloadedDisplay(download.context.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADING);
+        let curmod = AnkBase.currentModule;
+        if (curmod) {
+          if (download.context.info.illust.id == curmod.getIllustId())
+            AnkBase.insertDownloadedDisplay(download.context.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADING);
+        }
 
         AnkBase.downloadExecuter(download);
 

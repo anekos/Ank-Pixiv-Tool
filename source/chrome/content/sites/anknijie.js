@@ -310,8 +310,6 @@ try {
           return;
         }
 
-        self._image = image;
-
         let context = new AnkContext(self);
         AnkBase.addDownload(context, useDialog, debug);
       }).then(null, function (e) AnkUtils.dumpError(e,true)).catch(function (e) AnkUtils.dumpError(e,true));
@@ -369,6 +367,16 @@ try {
       let self = this;
 
       return Task.spawn(function* () {
+
+        // 取得済みならそのまま返す
+        if (self._image && self._image.images.length > 0)
+          return self._image;
+
+        function setSelectedImage (image) {
+          self._image = image;
+          return image;
+        }
+
         let m = [];
 
         if (self.in.doujinPage) {
@@ -382,7 +390,7 @@ try {
             });
         }
 
-        return { images: m, facing: null, };
+        return setSelectedImage({ images: m, facing: null });
       });
     },
 

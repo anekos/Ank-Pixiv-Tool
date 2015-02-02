@@ -399,11 +399,19 @@ try {
      * 画像URLリストの取得
      */
     getImageUrlAsync: function () {
+
       let self = this;
+
       return Task.spawn(function* () {
+
         // 取得済みならそのまま返す
         if (self._image && self._image.images.length > 0)
           return self._image;
+
+        function setSelectedImage (image) {
+          self._image = image;
+          return image;
+        }
 
         // マンガの大サイズ画像はないらしい
         if (self.in.manga) {
@@ -411,7 +419,7 @@ try {
           if (images.length == 0)
             return null;
 
-          return self._image = { images:images, facing:null };
+          return setSelectedImage({ images:images, facing:null });
         }
 
         let status = yield AnkUtils.remoteFileExistsAsync(self.elements.illust.mediumImage.href, self.curdoc.location.href);
@@ -422,7 +430,7 @@ try {
           let doc = AnkUtils.createHTMLDocument(html);
           let src = doc.querySelector('.illust_view_big > img').getAttribute('src');
           href = href.replace(/^(https?:\/\/.+?)(?:\/.*)$/,"$1")+src;
-          return self._image = { images:[href], facing:null };
+          return setSelectedImage({ images:[href], facing:null });
         }
       });
     },
@@ -436,7 +444,7 @@ try {
      */
     installMediumPageFunctions: function () { // {{{
 
-      let proc = function (mod) { // {{{
+      let proc = function () { // {{{
         var body = self.elements.illust.body;
         var wrapper = self.elements.illust.wrapper;
         var medImg = self.elements.illust.mediumImage;
@@ -453,18 +461,6 @@ try {
         }
 
         function createDebugMessageArea() {
-        }
-
-        // デバッグ用
-        if (AnkBase.Prefs.get('showDownloadedFilename', false))
-          createDebugMessageArea();
-
-        // 大画像関係
-        if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true)) {
-          new AnkViewer(
-            mod,
-            function () self.info.path.image
-          );
         }
 
         function addMiddleClickEventListener () {
@@ -514,6 +510,14 @@ try {
               );
           });
         }
+
+        /*
+         * 
+         */
+
+        // デバッグ用
+        if (AnkBase.Prefs.get('showDownloadedFilename', false))
+          createDebugMessageArea();
 
         // 中画像クリック
         let useViewer = AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true);
