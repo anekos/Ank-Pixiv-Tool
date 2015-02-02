@@ -413,7 +413,7 @@ try {
           return false;   // リトライしてほしい
         } // }}}
 
-        function addMiddleClickEventListener () {
+        let addMiddleClickEventListener = function () {
           if (useViewer)
             self.viewer = new AnkViewer(self);
 
@@ -445,9 +445,9 @@ try {
             },
             useCapture
           );
-        }
+        };
 
-        function addRatingEventListener () {
+        let addRatingEventListener = function () {
           [
             self.elements.illust.nuita,
             self.elements.illust.good
@@ -455,16 +455,16 @@ try {
             if (e)
               e.addEventListener('click', function () AnkBase.downloadCurrentImageAuto(self), true);
           });
-        }
+        };
 
-        function markRecommended () {
+        let markRecommended = function () {
           let elm = doc.querySelector('#carouselInner-view');
           if (elm && MutationObserver) {
             new MutationObserver(function (o) {
               o.forEach(function (e) self.markDownloaded(e.target, true));
             }).observe(elm, {childList: true});
           }
-        }
+        };
 
         // 中画像クリック
         let useViewer = !self.in.ugoira && AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true);

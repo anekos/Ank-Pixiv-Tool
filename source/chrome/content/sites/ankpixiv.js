@@ -409,14 +409,6 @@ try {
     SERVICE_ID: 'PXV',
     SITE_NAME:  'Pixiv',
 
-    ID_FANTASY_DISPLAY: 'ankpixiv-fantasy-display',
-
-    PAGE_TYPE: {
-      ILLUST: 1,
-      LIST: 2,
-      NULL: 0,
-    },
-
     /********************************************************************************
      * 
      ********************************************************************************/
@@ -754,7 +746,7 @@ try {
           return false;   // リトライしてほしい
         } // }}}
 
-        function createDebugMessageArea() {
+        let createDebugMessageArea = function() {
           let e = self.elements.illust.uiLayoutWest;
           if (e) {
             {
@@ -777,11 +769,11 @@ try {
           }
         }
 
-        function addMiddleClickEventListener () {
+        let addMiddleClickEventListener = function () {
           if (useViewer)
             self.viewer = new AnkViewer(self);
 
-          let useCapture = !self.in.ugoira;
+          let useCapture = !self.in.ugoira && useViewer;
 
           // FIXME AnkViewer無効時に、中クリックして、Pixivのデフォルト動作で大画像を見ると、ダウンロードマークが消える
           // FIXME imgOvrの方になった場合は、medImgより広い領域がクリック可能となるが、jQuery.on('click')を無効化できないため止む無し
@@ -809,9 +801,9 @@ try {
             },
             useCapture
           );
-        }
+        };
 
-        function addRatingEventListener () {
+        let addRatingEventListener = function () {
           let point = AnkBase.Prefs.get('downloadRate', 10);
           AnkUtils.A(doc.querySelectorAll('.rating')).forEach(function (e) {
             e.addEventListener(
@@ -825,7 +817,7 @@ try {
               true
             );
           });
-        }
+        };
 
         // デバッグ用
         if (AnkBase.Prefs.get('showDownloadedFilename', false))

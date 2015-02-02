@@ -299,21 +299,17 @@
             </vbox>
           </tabpanel>
           <tabpanel>
-            <!--
-            <arrowscrollbox orient="vertical" flex="1" id="site-module-table">
-            </arrowscrollbox>
-            -->
-            <grid>
-              <rows id="site-module-table">
-              </rows>
-            </grid>
-          </tabpanel>
-          <tabpanel>
             <vbox>
               <checkbox preference="open-comment" label="&openComment;" />
               <checkbox preference="open-caption" label="&openCaption;" />
               <checkbox preference="allow-thirdparty-cookie" label="&allowThirdPartyCookie;" />
             </vbox>
+          </tabpanel>
+          <tabpanel>
+            <grid>
+              <rows id="site-module-table">
+              </rows>
+            </grid>
           </tabpanel>
         </tabpanels>
       </tabbox>

@@ -409,7 +409,6 @@ try {
      * ダウンロード可能か
      */
     isDownloadable: function () {
-      AnkUtils.dump('piyo '+this.in.gallery+', '+this.in.tweet+', '+this.in.illustTweet+', '+this.getIllustId());
       if (this.in.gallery) {
         return !!this.getIllustId();    // ポップアップしているならどこでもOK
       }
@@ -429,11 +428,11 @@ try {
       // twitter自身で保存しているものは画像ファイル名をillust_idにする
       if (!image || image.images.length == 0)
         return null;
-
       let v = image.images[0];
       if (v) {
-        let m = v && v.match(/^https?:\/\/pbs\.twimg\.com\/(?:media|tweet_video)\/([^/]+?)\./);   // 外部連携は扱わない
-        return m && m[1];
+        let m = v.match(/^https?:\/\/pbs\.twimg\.com\/(?:media|tweet_video)\/([^/]+?)\./);   // 外部連携は扱わない
+        if (m)
+          return m[1];
       }
 
       // twitpic等の外部連携を利用している場合はtweetの短縮URLをillust_idにする
@@ -443,12 +442,14 @@ try {
 
       v = e.href;  // ツイート
       if (v) {
-        let m = v && v.match(/\/([^/]+)(?:\?|$)/);
-        return m && m[1];
+        let m = v.match(/\/([^/]+)(?:\?|$)/);
+        if (m)
+          return m[1];
       }
 
       return null;
     },
+
 
     /**
      * ダウンロード実行
@@ -524,6 +525,8 @@ try {
           let href = dt.href;
           let html = yield AnkUtils.httpGETAsync(href, self.curdoc.location.href);
           let doc = AnkUtils.createHTMLDocument(html);
+          if (!doc)
+            return null;
           let o = Array.slice(doc.querySelectorAll('.cards-media-container div.multi-photo')).
                     map(function (s) s.getAttribute('data-url'));
           let m = self._convertImageUrls(o);
