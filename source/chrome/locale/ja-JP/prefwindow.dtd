@@ -36,3 +36,4 @@
 <!ENTITY openComment "コメント欄を自動で開く">
 <!ENTITY openCaption "キャプションの続きを自動で開く">
 <!ENTITY allowThirdPartyCookie "サードパーティーCookieを保存する">
+<!ENTITY warnWrongDatetimeFormat "投稿日時を確認できない時に、現在日時で代替する">

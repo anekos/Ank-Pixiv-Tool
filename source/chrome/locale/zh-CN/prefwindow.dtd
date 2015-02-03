@@ -36,3 +36,4 @@
 <!ENTITY openComment "自动打开评论框。">
 <!ENTITY openCaption "自动打开长标题。">
 <!ENTITY allowThirdPartyCookie "运行第三方 Cookie。">
+<!ENTITY warnWrongDatetimeFormat "Use the current date, if cannot confirm the illust date.">

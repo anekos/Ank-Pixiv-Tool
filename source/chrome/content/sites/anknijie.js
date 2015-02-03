@@ -287,7 +287,11 @@ try {
      * ダウンロード可能か
      */
     isDownloadable: function () {
-      return this._functionsInstalled && this.in.medium;
+      if (!this._functionsInstalled)
+        return false;
+
+      if (this.in.medium)
+        return { illust_id:this.getIllustId(), service_id:this.SERVICE_ID };
     },
 
     /**
@@ -353,7 +357,6 @@ try {
 
       return proc(pt);
     },
-
 
     /********************************************************************************
      * 
@@ -467,7 +470,7 @@ try {
         };
 
         // 中画像クリック
-        let useViewer = !self.in.ugoira && AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true);
+        let useViewer = AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true);
         let useClickDownload = AnkBase.Prefs.get('downloadWhenClickMiddle', false);
         if (useViewer || useClickDownload)
           addMiddleClickEventListener();

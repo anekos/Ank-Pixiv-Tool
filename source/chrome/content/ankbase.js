@@ -741,25 +741,26 @@ try {
      * 現在表示されている画像を保存する
      */
     downloadCurrentImage: function (module, useDialog, confirmDownloaded, debug) { // {{{
+      // 同一ページでも、表示中の状態によってダウンロードの可否が異なる場合がある
+      let dw = module.isDownloadable(); 
+      if (!dw)
+        return;
+
+      if (typeof useDialog === 'undefined')
+        useDialog = AnkBase.Prefs.get('showSaveDialog', true);
+
+      if (typeof confirmDownloaded === 'undefined')
+        confirmDownloaded = AnkBase.Prefs.get('confirmExistingDownload');
+
+      // ダウンロード中だったらやめようぜ！
+      if (AnkBase.isDownloading(dw.illust_id, dw.service_id)) {
+        //window.alert(AnkBase.Locale('alreadyDownloading'));
+        return;
+      }
+
       Task.spawn(function () {
-        // 同一ページでも、表示中の状態によってダウンロードの可否が異なる場合がある
-        if (!module.isDownloadable())
-          return;
-
-        if (typeof useDialog === 'undefined')
-          useDialog = AnkBase.Prefs.get('showSaveDialog', true);
-
-        if (typeof confirmDownloaded === 'undefined')
-          confirmDownloaded = AnkBase.Prefs.get('confirmExistingDownload');
-
-        // ダウンロード中だったらやめようぜ！
-        if (AnkBase.isDownloading(module.getIllustId(), module.SERVICE_ID)) {
-          //window.alert(AnkBase.Locale('alreadyDownloading'));
-          return;
-        }
-
         // ダウンロード済みかの確認
-        let row = yield AnkBase.Storage.exists(AnkBase.getIllustExistsQuery(module.getIllustId(), module.SERVICE_ID));
+        let row = yield AnkBase.Storage.exists(AnkBase.getIllustExistsQuery(dw.illust_id, dw.service_id));
         if (row) {
           if (confirmDownloaded) {
             if (!window.confirm(AnkBase.Locale('downloadExistingImage')))
@@ -772,7 +773,7 @@ try {
         // ダウンロード用のコンテキストの収集(contextの取得に時間がかかる場合があるのでダウンロードマークを表示しておく)
         let curmod = AnkBase.currentModule;
         if (curmod) {
-          if (module.getIllustId() == curmod.getIllustId())
+          if (dw.illust_id == curmod.getIllustId())
             AnkBase.insertDownloadedDisplay(module.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.INITIALIZE);
         }
 
@@ -1184,7 +1185,7 @@ try {
           if (curmod && curmod.SERVICE_ID === service_id)
             curmod.markDownloaded(illust_id,true);
         }
-      }).then(null, function (e) onError(e)).catch(function (e) { AnkUtils.dumpError(e); onError(e); });
+      }).then(null, function (e) { AnkUtils.dumpError(e); onError(e); }).catch(function (e) { AnkUtils.dumpError(e); onError(e); });
     }, // }}}
 
     /*

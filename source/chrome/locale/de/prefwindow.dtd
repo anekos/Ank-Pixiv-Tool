@@ -36,3 +36,4 @@
 <!ENTITY openComment "Kommentarfeld automatisch öffnen">
 <!ENTITY openCaption "Automatically open the long caption.">
 <!ENTITY allowThirdPartyCookie "Allow ThirdParty Cookie.">
+<!ENTITY warnWrongDatetimeFormat "Use the current date, if cannot confirm the illust date.">

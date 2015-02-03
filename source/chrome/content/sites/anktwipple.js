@@ -1,28 +1,24 @@
 
 try {
 
-  let AnkModule = function (currentDoc) {
-
-    /********************************************************************************
-    * 定数
-    ********************************************************************************/
+  let AnkPixivModule = function (doc) {
 
     var self = this;
 
-    self.URL        = 'http://twipple.jp/';    // イラストページ以外でボタンを押したときに開くトップページのURL
-    self.DOMAIN     = 'twipple.jp';            // CSSの適用対象となるドメイン
-    self.SERVICE_ID = 'TPL';                  // 履歴DBに登録するサイト識別子
-    self.SITE_NAME  = 'Twipple';              // ?site-name?で置換されるサイト名のデフォルト値
+    self.curdoc = doc;
+
+    self.viewer;
+
+    self.marked = false;
+
+    self._functionsInstalled = false;
+
+    self._image;
 
 
     /********************************************************************************
     * プロパティ
     ********************************************************************************/
-
-    self.on = {
-      get site () // {{{
-        self.info.illust.pageUrl.match(/^https?:\/\/[^/]*twipple\.jp\//), // }}}
-    },
 
     self.in = { // {{{
       get manga () // {{{
@@ -75,13 +71,15 @@ try {
         get tags ()
           null,
 
-        get nextLink()
-          let (e = query('a > img#prev_icon'))
-            e && e.parentNode,
+        get nextLink() {
+          let e = query('a > img#prev_icon');
+          return e && e.parentNode;
+        },
 
-        get prevLink()
-          let (e = query('a > img#next_icon'))
-            e && e.parentNode,
+        get prevLink() {
+          let e = query('a > img#next_icon');
+          return e && e.parentNode;
+        },
 
         // require for AnkBase
 
@@ -90,15 +88,19 @@ try {
 
         // require for AnkViewer
 
-        get body ()
-          let (e = queryAll('body'))
-            e && e.length > 0 && e[0],
+        get body () {
+          let e = queryAll('body');
+          return e && e.length > 0 && e[0];
+        },
 
         get wrapper ()
           query('#wrapper'),
 
         get mediumImage ()
           query('#post_image'),
+
+        get imageOverlay ()
+          query('#img_overlay_container'), 
 
         get ads () {
           let header = query('#headerArea');
@@ -119,17 +121,17 @@ try {
       return {
         illust: illust,
         mypage: mypage,
-        get doc () currentDoc ? currentDoc : window.content.document
+        get doc () self.curdoc
       };
     })(); // }}}
 
     self.info = (function () { // {{{
       let illust = {
         get pageUrl ()
-          self.elements.doc ? self.elements.doc.location.href : '',
+          self.elements.doc.location.href,
 
         get id ()
-          self.info.illust.pageUrl.match(/p\.twipple\.jp\/([^/]+?)(?:\?|$)/)[1],
+          self.getIllustId(),
 
         get dateTime ()
           AnkUtils.decodeDateTimeText(self.elements.illust.datetime.textContent),
@@ -185,7 +187,7 @@ try {
           AnkUtils.trim(self.elements.illust.userName.textContent).replace(/\u3055\u3093$/,''),   // ○○さん
 
         get memoizedName ()
-          AnkBase.memoizedName(member.id, self.SERVICE_ID),
+          null,
       };
 
       let path = {
@@ -198,9 +200,9 @@ try {
         get mangaIndexPage ()
           null,
 
-        get image () {
-          return { images: [self.elements.illust.largeLink.href], facing: null, };
-        },
+        get image ()
+          self._image,
+
       };
 
       return {
@@ -210,8 +212,6 @@ try {
       };
     })(); // }}}
 
-    self.downloadable = true;
-
   };
 
 
@@ -219,60 +219,212 @@ try {
   * メソッド
   ********************************************************************************/
 
-  AnkModule.prototype = {
+  AnkPixivModule.prototype = {
+
+    /********************************************************************************
+     * 定数
+     ********************************************************************************/
+
+     URL:        'http://twipple.jp/',  // イラストページ以外でボタンを押したときに開くトップページのURL
+     DOMAIN:     'twipple.jp',          // CSSの適用対象となるドメイン
+     SERVICE_ID: 'TPL',                 // 履歴DBに登録するサイト識別子
+     SITE_NAME:  'Twipple',             // ?site-name?で置換されるサイト名のデフォルト値
+
+     /********************************************************************************
+      * 
+      ********************************************************************************/
+
+     /**
+      * このモジュールの対応サイトかどうか
+      */
+     isSupported: function (doc) {
+       return doc.location.href.match(/^https?:\/\/[^/]*twipple\.jp\//);
+     },
+
+     /**
+      * ファンクションのインストール
+      */
+     initFunctions: function () {
+       if (this._functionsInstalled)
+         return;
+
+       this._functionsInstalled = true;
+
+       if (this.in.medium) {
+         this.installMediumPageFunctions();
+       }
+       else {
+         this.installListPageFunctions();
+       }
+     },
+
+     /**
+      * ダウンロード可能か
+      */
+     isDownloadable: function () {
+       if (!this._functionsInstalled)
+         return false;
+
+       if (this.in.medium)
+         return { illust_id:this.getIllustId(), service_id:this.SERVICE_ID };
+     },
+
+     /**
+      * イラストID
+      */
+     getIllustId: function () {
+       let m = this.curdoc.location.href.match(/p\.twipple\.jp\/([^/]+?)(?:\?|$)/);
+       return m && m[1];
+     },
+
+     /**
+      * ダウンロード実行
+      */
+     downloadCurrentImage: function (useDialog, debug) {
+       let self = this;
+       Task.spawn(function () {
+         let image = yield self.getImageUrlAsync(AnkBase.Prefs.get('downloadOriginalSize', false));
+         if (!image || image.images.length == 0) {
+           window.alert(AnkBase.Locale('cannotFindImages'));
+           return;
+         }
+
+         let context = new AnkContext(self);
+         AnkBase.addDownload(context, useDialog, debug);
+       }).then(null, function (e) AnkUtils.dumpError(e,true)).catch(function (e) AnkUtils.dumpError(e,true));
+     },
+
+
+     /*
+      * ダウンロード済みイラストにマーカーを付ける
+      *    node:     対象のノード (AutoPagerize などで追加されたノードのみに追加するためにあるよ)
+      *    force:    追加済みであっても、強制的にマークする
+      */
+     markDownloaded: function (node, force, ignorePref) { // {{{
+       const IsIllust = /\/([^/]+?)(?:\?|$)/;
+       const Targets = [
+                         ['.simple_list_photo > div > a', 1],             // 一覧
+                       ];
+
+       return AnkBase.markDownloaded(IsIllust, Targets, true, this, node, force, ignorePref);
+     }, // }}}
+
+     /*
+      * 評価
+      */
+     setRating: function () { // {{{
+       return true;
+     },
+
+     /********************************************************************************
+      * 
+      ********************************************************************************/
+
+     /**
+      * 画像URLリストの取得
+      */
+     getImageUrlAsync: function (mangaOriginalSizeCheck) {
+
+       let self = this;
+
+       return Task.spawn(function* () {
+
+         // 取得済みならそのまま返す
+         if (self._image && self._image.images.length > 0)
+           return self._image;
+
+         function setSelectedImage (image) {
+           self._image = image;
+           return image;
+         }
+
+         return setSelectedImage({ images:[self.elements.illust.largeLink.href], facing:null });
+       });
+     },
+
+     /********************************************************************************
+      * 
+      ********************************************************************************/
 
     /*
      * イラストページにviewerやダウンロードトリガーのインストールを行う
      */
     installMediumPageFunctions: function () { // {{{
 
-      let proc = function (mod) { // {{{
+      let proc = function () { // {{{
         // インストールに必用な各種要素
         // ※ついっぷるはイラストページを開いた後同じページにURLパラメータ付きでリダイレクトしている
-        var body = mod.elements.illust.body;
-        var wrapper = mod.elements.illust.wrapper;
-        var medImg = mod.elements.illust.mediumImage;
+        var body = self.elements.illust.body;
+        var wrapper = self.elements.illust.wrapper;
+        var medImg = self.elements.illust.mediumImage;
+        var largeLink = self.elements.illust.largeLink;
+        var imgOvr = self.elements.illust.imageOverlay;
+        var jq = doc.defaultView.wrappedJSObject.jQuery;
 
         // 完全に読み込まれていないっぽいときは、遅延する
-        if (!(body && wrapper && medImg)) { // {{{
+        if (!(body && wrapper && medImg && imgOvr && jq)) { // {{{
           return false;   // リトライしてほしい
         } // }}}
 
-        if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
-          new AnkViewer(
-            mod,
-            function () mod.info.path.image
-          );
-        }
+        let addMiddleClickEventListener = function () {
+          if (useViewer)
+            self.viewer = new AnkViewer(self);
 
-        // 中画像クリック時に保存する
-        if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
-          ['#img_overlay_container', '#post_image'].forEach(function (v) {
-            let e = mod.elements.doc.querySelector(v);
-            if (e) {
-              e.addEventListener(
-                'click',
-                function () AnkBase.downloadCurrentImageAuto(mod),
-                true
-              );
-            }
-          });
-        } // }}}
+          let useCapture = useViewer;
+
+          let listener = function (e) {
+            if (e.target.getAttribute('id') != 'img_overlay_container')
+              return;
+
+            Task.spawn(function () {
+              // mangaIndexPageへのアクセスが複数回実行されないように、getImageUrlAsync()を一度実行してからopenViewer()とdownloadCurrentImageAuto()を順次実行する
+              let image = yield self.getImageUrlAsync();
+              if (!image || image.images.length == 0) {
+                window.alert(AnkBase.Locale('cannotFindImages'));
+                return;
+              }
+
+              self._image = image;
+
+              if (useViewer)
+                self.viewer.openViewer();
+              if (useClickDownload)
+                AnkBase.downloadCurrentImageAuto(self);
+            }).then(null, function (e) AnkUtils.dumpError(e,true)).catch(function (e) AnkUtils.dumpError(e,true));
+
+            //e.preventDefault();
+            //e.stopPropagation();
+          };
+
+          new MutationObserver(function (o) {
+            if (useViewer)
+              jq(imgOvr).unbind('click');
+            imgOvr.addEventListener('click', listener, false);
+          }).observe(imgOvr, {attributes: true});
+        };
+
+        // 中画像クリック
+        let useViewer = AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true);
+        let useClickDownload = AnkBase.Prefs.get('downloadWhenClickMiddle', false);
+        if (useViewer || useClickDownload)
+          addMiddleClickEventListener();
 
         // 保存済み表示
         AnkBase.insertDownloadedDisplayById(
-          mod.elements.illust.downloadedDisplayParent,
-          mod.info.illust.id,
-          mod.SERVICE_ID,
-          mod.info.illust.R18
+          self.elements.illust.downloadedDisplayParent,
+          self.info.illust.R18,
+          self.info.illust.id,
+          self.SERVICE_ID
         );
 
         return true;
       };
 
+      let self = this;
+      let doc = this.curdoc;
 
       // install now
-      return AnkBase.delayFunctionInstaller(this, proc, 500, 20, '');
+      return AnkBase.delayFunctionInstaller(proc, 500, 20, self.SITE_NAME, '');
     }, // }}}
 
     /*
@@ -280,55 +432,34 @@ try {
      */
     installListPageFunctions: function () { /// {
 
-      let proc = function (mod) {
-        var doc = mod.elements.doc;
-        var body = mod.elements.illust.body;
+      let delayMarking = function () {
+        var body = self.elements.illust.body;
 
         if (!(body && doc.readyState === 'complete')) {
           return false;   // リトライしてほしい
         }
 
         // リスト表示が遅くてダウンロードマーク表示が漏れることがあるので、再度処理を実行
-        mod.markDownloaded(doc,true);
+        self.markDownloaded(doc,true);
 
         return true;
       };
 
+      let self = this;
+      let doc = this.curdoc;
+
       // install now
-      return AnkBase.delayFunctionInstaller(this, proc, 1000, 20, 'ls');  // おそい:interval=1000
+      return AnkBase.delayFunctionInstaller(delayMarking, 1000, 20, 'ls');  // おそい:interval=1000
     }, // }}}
-
-    /*
-     * ダウンロード済みイラストにマーカーを付ける
-     *    node:     対象のノード (AutoPagerize などで追加されたノードのみに追加するためにあるよ)
-     *    force:    追加済みであっても、強制的にマークする
-     */
-    markDownloaded: function (node, force, ignorePref) { // {{{
-      const IsIllust = /\/([^/]+?)(?:\?|$)/;
-      const Targets = [
-                        ['.simple_list_photo > div > a', 1],             // 一覧
-                      ];
-
-      return AnkBase.markDownloaded(IsIllust, Targets, true, this, node, force, ignorePref);
-    }, // }}}
-
-    /*
-     * 評価
-     */
-    rate: function () { // {{{
-      return true;
-    },
 
   };
 
 
   /********************************************************************************
-  * ベースとなるインスタンスの生成＋本体へのインストール - ankpixiv.xulにも登録を
+  * 本体へのインストール - ankpixiv.xulにも登録を
   ********************************************************************************/
 
-  AnkModule.prototype.dup = function () new AnkModule(this.elements.doc);
-
-  AnkBase.addModule(new AnkModule());
+  AnkBase.addModule(AnkPixivModule);
 
 
 } catch (error) {

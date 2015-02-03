@@ -247,11 +247,8 @@ try {
 
       // TODO 日時解析失敗時に、自動で現在日時で代替するのか、それとも他の処理を行うのかは、要検討課題
       let msg = 'unsupported datetime format = \''+dtext+'\'';
-      AnkUtils.dump(msg);
-
       if (!AnkBase.Prefs.get('warnWrongDatetimeFormat', false)) {
-        // (暫定)呼び出し元でnull pointer exceptionを起こさせて処理を中断させる
-        return;
+        throw new Error(msg);
       }
 
       window.alert(msg);

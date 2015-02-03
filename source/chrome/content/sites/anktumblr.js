@@ -1,30 +1,23 @@
 
 try {
 
-  let AnkModule = function (currentDoc) {
-
-    /********************************************************************************
-    * 定数
-    ********************************************************************************/
+  let AnkPixivModule = function (doc) {
 
     var self = this;
 
-    self.URL        = 'https://www.tumblr.com/'; // イラストページ以外でボタンを押したときに開くトップページのURL
-    self.DOMAIN     = 'tumblr.com';              // CSSの適用対象となるドメイン
-    self.SERVICE_ID = 'TBR';                     // 履歴DBに登録するサイト識別子
-    self.SITE_NAME  = 'Tumblr';                  // ?site-name?で置換されるサイト名のデフォルト値
+    self.curdoc = doc;
 
-    self.EXPERIMENTAL = true;                    // 試験実装中のモジュール
+    self.viewer;
 
+    self.marked = false;
+
+    self._functionsInstalled = false;
+
+    self._image;
 
     /********************************************************************************
     * プロパティ
     ********************************************************************************/
-
-    self.on = {
-      get site () // {{{
-        self.info.illust.pageUrl.match(/^https?:\/\/[^/]*tumblr\.com\//), // }}}
-    },
 
     self.in = { // {{{
       get manga () // {{{
@@ -42,6 +35,10 @@ try {
 
       get myIllust ()
         false,  // under construction
+
+      get listPage ()
+        self.info.illust.pageUrl.match(/\/archive$/),
+
     }; // }}}
 
     self.elements = (function () { // {{{
@@ -76,10 +73,12 @@ try {
 
       let illust =  {
         get date ()
-          query('.date > a') ||
-          query('.date') ||
+          query('.date > a')     ||
+          query('.date')         ||
           query('.postmeta > a') ||
-          query('.post-date a'),
+          query('.post-date a')  ||
+          query('.post-date'),
+
 
         get title ()
           query('.copy > p') ||
@@ -91,9 +90,10 @@ try {
           query('.footer-content > h5') ||
           query('#header > h1 > a'),
 
-        get memberLink ()
-          let (e = query('#header > * > .profile-image'))
-            (e && e.parentNode),
+        get memberLink () {
+          let e = query('#header > * > .profile-image');
+          return e && e.parentNode;
+        },
 
         get photoFrame ()
           query('iframe.photoset'),
@@ -107,13 +107,19 @@ try {
         get slideshowFrame ()
           query('.type-photoset'),
 
-        get slideshowImage ()
-          let (e = illust.slideshowFrame)
-            e && e.querySelector('.photo-data img'),
+        get slideshowImage () {
+          let e = illust.slideshowFrame;
+          return e && e.querySelector('.photo-data img');
+        },
 
-        get slideshowSet ()
-          let (e = illust.slideshowFrame)
-            e && e.querySelectorAll('.photo-data img'),
+        get slideshowSet () {
+          let e = illust.slideshowFrame;
+          return e && e.querySelectorAll('.photo-data img');
+        },
+
+        get archiveContent () {
+          return query('.l-content');
+        },
 
         // require for AnkBase
 
@@ -124,9 +130,10 @@ try {
 
         // require for AnkViewer
 
-        get body ()
-          let (e = queryAll('body'))
-            e && e.length > 0 && e[0],
+        get body () {
+          let e = queryAll('body');
+          return e && e.length > 0 && e[0];
+        },
 
         get wrapper ()
           query('.container.section') ||
@@ -165,24 +172,25 @@ try {
       return {
         illust: illust,
         mypage: mypage,
-        get doc () currentDoc ? currentDoc : window.content.document
+        get doc () self.curdoc
       };
     })(); // }}}
 
     self.info = (function () { // {{{
       let illust = {
         get pageUrl ()
-          self.elements.doc ? self.elements.doc.location.href : '',
+          self.elements.doc.location.href,
 
         get id ()
-          self.info.illust.pageUrl.match(/\.tumblr\.com\/post\/([^/]+?)(?:\?|\/|$)/)[1],
+          self.getIllustId(),
 
         get dateTime () {
           let dt = [];
-          let (v = self.elements.illust.date.title)
-            v && dt.push(v);
-          let (v = self.elements.illust.date.textContent)
-            v && dt.push(v);
+          [self.elements.illust.title, self.elements.illust.date].forEach(function (e) {
+            if (e)
+              dt.push(e.textContent);
+          });
+          dt.push('cannot find datetime');
           return AnkUtils.decodeDateTimeText(dt);
         },
 
@@ -212,9 +220,10 @@ try {
         get referer ()
           self.info.illust.pageUrl,
 
-        get title ()
-          let (e = self.elements.illust.title)
-           e && AnkUtils.trim(e.textContent) || '',
+        get title () {
+          let e = self.elements.illust.title;
+          return e && AnkUtils.trim(e.textContent) || '';
+        },
 
         get comment ()
           illust.title,
@@ -237,7 +246,7 @@ try {
           AnkUtils.trim(self.elements.illust.userName ? self.elements.illust.userName.textContent : self.info.member.id),
 
         get memoizedName ()
-          AnkBase.memoizedName(member.id, self.SERVICE_ID),
+          null,
       };
 
       let path = {
@@ -250,19 +259,8 @@ try {
         get mangaIndexPage ()
           null,
 
-        get image () {
-          let m = [];
-          
-          if (self.elements.illust.slideshowFrame) {
-            AnkUtils.A(self.elements.illust.slideshowSet).forEach(function (e) m.push(e.src));
-            return { images: m, facing: null, };
-          }
-          else if (self.elements.illust.photoFrame) {
-            AnkUtils.A(self.elements.illust.photoSet).forEach(function (e) m.push(e.src));
-            return { images: m, facing: null, };
-          }
-          return { images: [self.elements.illust.mediumImage.src], facing: null, };
-        },
+        get image ()
+          self._image,
       };
 
       return {
@@ -272,105 +270,268 @@ try {
       };
     })(); // }}}
 
-    self.downloadable = true;
-
   };
 
 
-  /********************************************************************************
-   * メソッド
-   ********************************************************************************/
+  AnkPixivModule.prototype = {
 
-  AnkModule.prototype = {
+    /********************************************************************************
+     * 定数
+     ********************************************************************************/
+
+     URL:        'https://www.tumblr.com/',  // イラストページ以外でボタンを押したときに開くトップページのURL
+     DOMAIN:     'tumblr.com',               // CSSの適用対象となるドメイン
+     SERVICE_ID: 'TBR',                      // 履歴DBに登録するサイト識別子
+     SITE_NAME:  'Tumblr',                   // ?site-name?で置換されるサイト名のデフォルト値
+
+     EXPERIMENTAL: true,                     // 試験実装中のモジュール
+
+     /********************************************************************************
+      * 
+      ********************************************************************************/
+
+     /**
+      * このモジュールの対応サイトかどうか
+      */
+     isSupported: function (doc) {
+       return doc.location.href.match(/^https?:\/\/[^/]*tumblr\.com\//);
+     },
+
+     /**
+      * ファンクションのインストール
+      */
+     initFunctions: function () {
+       if (this._functionsInstalled)
+         return;
+
+       this._functionsInstalled = true;
+
+       if (this.in.medium) {
+         this.installMediumPageFunctions();
+       }
+       else {
+         this.installListPageFunctions();
+       }
+     },
+
+     /**
+      * ダウンロード可能か
+      */
+     isDownloadable: function () {
+       if (!this._functionsInstalled)
+         return false;
+
+       if (this.in.medium)
+         return { illust_id:this.getIllustId(), service_id:this.SERVICE_ID };
+     },
+
+     /**
+      * イラストID
+      */
+     getIllustId: function () {
+       let m = this.curdoc.location.href.match(/\.tumblr\.com\/post\/([^/]+?)(?:\?|\/|$)/);
+       return m && m[1];
+     },
+
+     /**
+      * ダウンロード実行
+      */
+     downloadCurrentImage: function (useDialog, debug) {
+       let self = this;
+       Task.spawn(function () {
+         let image = yield self.getImageUrlAsync(AnkBase.Prefs.get('downloadOriginalSize', false));
+         if (!image || image.images.length == 0) {
+           window.alert(AnkBase.Locale('cannotFindImages'));
+           return;
+         }
+
+         let context = new AnkContext(self);
+         AnkBase.addDownload(context, useDialog, debug);
+       }).then(null, function (e) AnkUtils.dumpError(e,true)).catch(function (e) AnkUtils.dumpError(e,true));
+     },
+
+     /*
+      * ダウンロード済みイラストにマーカーを付ける
+      *    node:     対象のノード (AutoPagerize などで追加されたノードのみに追加するためにあるよ)
+      *    force:    追加済みであっても、強制的にマークする
+      */
+     markDownloaded: function (node, force, ignorePref) { // {{{
+       const IsIllust = /\.tumblr\.com\/post\/([^/]+?)(?:\?|\/|$)/;
+       const Targets = [
+                         ['#portfolio  div.item > a', 1],   // 一覧
+                         ['.post_micro.is_photo a', 2],  // archive
+                       ];
+
+       return AnkBase.markDownloaded(IsIllust, Targets, true, this, node, force, ignorePref);
+     }, // }}}
+
+     /*
+      * 評価する
+      */
+     setRating: function () { // {{{
+       return true;
+     },
+
+     /********************************************************************************
+      * 
+      ********************************************************************************/
+
+     /**
+      * 画像URLリストの取得
+      */
+     getImageUrlAsync: function (mangaOriginalSizeCheck) {
+
+       let self = this;
+
+       return Task.spawn(function* () {
+
+         // 取得済みならそのまま返す
+         if (self._image && self._image.images.length > 0)
+           return self._image;
+
+         function setSelectedImage (image) {
+           self._image = image;
+           return image;
+         }
+
+         let m = [];
+
+         if (self.elements.illust.slideshowFrame) {
+           AnkUtils.A(self.elements.illust.slideshowSet).forEach(function (e) m.push(e.src));
+           return setSelectedImage({ images: m, facing: null });
+         }
+         else if (self.elements.illust.photoFrame) {
+           AnkUtils.A(self.elements.illust.photoSet).forEach(function (e) m.push(e.src));
+           return setSelectedImage({ images: m, facing: null });
+         }
+
+         return setSelectedImage({ images: [self.elements.illust.mediumImage.src], facing: null });
+       });
+     },
+
+     /********************************************************************************
+      * 
+      ********************************************************************************/
 
      /*
       * イラストページにviewerやダウンロードトリガーのインストールを行う
       */
     installMediumPageFunctions: function () { // {{{
 
-      let proc = function (mod) {
-        var body = mod.elements.illust.body;
-        var wrapper = mod.elements.illust.wrapper;
-        var medImg = mod.elements.illust.mediumImage;
+      let proc = function () {
+        var body = self.elements.illust.body;
+        var wrapper = self.elements.illust.wrapper;
+        var medImg = self.elements.illust.mediumImage;
 
         // FIXME imgがiframe中にある場合、iframe中の最初のimgの完了待ちしかしていないので、失敗するタイミングがあるかも
         if (!(body && medImg && wrapper)) {
           return false;   // リトライしてほしい
         }
 
-        // 大画像関係
-        if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
-          new AnkViewer(
-            mod,
-            function () mod.info.path.image
-          );
-        }
+        let addMiddleClickEventListener = function () {
+          if (useViewer)
+            self.viewer = new AnkViewer(self);
 
-        // 中画像クリック時に保存する
-        if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
+          let useCapture = useViewer;
+
           medImg.addEventListener(
             'click',
-            function () AnkBase.downloadCurrentImageAuto(mod),
-            true
+            function (e) {
+              Task.spawn(function () {
+                // mangaIndexPageへのアクセスが複数回実行されないように、getImageUrlAsync()を一度実行してからopenViewer()とdownloadCurrentImageAuto()を順次実行する
+                let image = yield self.getImageUrlAsync();
+                if (!image || image.images.length == 0) {
+                  window.alert(AnkBase.Locale('cannotFindImages'));
+                  return;
+                }
+
+                self._image = image;
+
+                if (useViewer)
+                  self.viewer.openViewer();
+                if (useClickDownload)
+                  AnkBase.downloadCurrentImageAuto(self);
+              }).then(null, function (e) AnkUtils.dumpError(e,true)).catch(function (e) AnkUtils.dumpError(e,true));
+
+              if (useCapture) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            },
+            useCapture
           );
-        } // }}}
+        };
+
+        // 中画像クリック
+        let useViewer = AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true);
+        let useClickDownload = AnkBase.Prefs.get('downloadWhenClickMiddle', false);
+        if (useViewer || useClickDownload)
+          addMiddleClickEventListener();
 
         // 保存済み表示
         AnkBase.insertDownloadedDisplayById(
-          mod.elements.illust.downloadedDisplayParent,
-          mod.info.illust.id,
-          mod.SERVICE_ID,
-          mod.info.illust.R18
+          self.elements.illust.downloadedDisplayParent,
+          self.info.illust.R18,
+          self.info.illust.id,
+          self.SERVICE_ID
         );
 
         return true;
       };
 
+      let self = this;
+      let doc = this.curdoc;
 
-      // install now
-      return AnkBase.delayFunctionInstaller(this, proc, 500, 20, '');
+      return AnkBase.delayFunctionInstaller(proc, 500, 20, self.SITE_NAME, '');
     }, // }}}
 
     /*
      * リストページ用ファンクション
      */
     installListPageFunctions: function () { /// {
-      // under construction
-      return AnkBase.delayFunctionInstaller(this, function() true, 500, 20, 'ls');
+      let followExpansion = function () {
+        var archive = self.elements.illust.archiveContent;
+
+        if (!archive) {
+          return false;     // リトライしてほしい
+        }
+
+        // 伸びるおすすめリストに追随する
+        new MutationObserver(function (o) {
+          o.forEach(function (e) self.markDownloaded(e.target, true));
+        }).observe(archive, {childList: true});
+
+        return true;
+      };
+
+      let delayMarking = function () {
+        var doc = self.elements.doc;
+        var body = doc.getElementsByTagName('body');
+
+        if (!((body && body.length>0) && doc.readyState === 'complete')) {
+          return false;   // リトライしてほしい
+        }
+
+        // リスト表示が遅くてダウンロードマーク表示が漏れることがあるので、再度処理を実行
+        self.markDownloaded(doc,true);
+
+        return true;
+      };
+
+      let self = this;
+      let doc = this.curdoc;
+
+      AnkBase.delayFunctionInstaller(followExpansion, 500, 30, self.SITE_NAME, 'followExpansion');
+      return AnkBase.delayFunctionInstaller(delayMarking, 500, 30, self.SITE_NAME, 'delayMarking');
     }, // }}}
-
-    /*
-     * ダウンロード済みイラストにマーカーを付ける
-     *    node:     対象のノード (AutoPagerize などで追加されたノードのみに追加するためにあるよ)
-     *    force:    追加済みであっても、強制的にマークする
-     */
-    markDownloaded: function (node, force, ignorePref) { // {{{
-      const IsIllust = /\.tumblr\.com\/post\/([^/]+?)(?:\?|\/|$)/;
-      const Targets = [
-                        ['#portfolio  div.item > a', 1],   // 一覧
-                        ['.post_micro.is_photo a', 2],  // archive
-                      ];
-
-      return AnkBase.markDownloaded(IsIllust, Targets, true, this, node, force, ignorePref);
-    }, // }}}
-
-    /*
-     * 評価する
-     */
-    rate: function () { // {{{
-      return true;
-    },
 
   };
 
+  /********************************************************************************
+   * 本体へのインストール - ankpixiv.xulにも登録を
+   ********************************************************************************/
 
-    /********************************************************************************
-    * ベースとなるインスタンスの生成＋本体へのインストール - ankpixiv.xulにも登録を
-    ********************************************************************************/
-
-    AnkModule.prototype.dup = function () new AnkModule(this.elements.doc);
-
-  AnkBase.addModule(new AnkModule());
+  AnkBase.addModule(AnkPixivModule);
 
 
 } catch (error) {

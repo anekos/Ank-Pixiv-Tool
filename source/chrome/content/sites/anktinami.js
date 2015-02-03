@@ -196,7 +196,7 @@ try {
           AnkUtils.trim(self.elements.illust.userName.textContent),
 
         get memoizedName ()
-          AnkBase.memoizedName(member.id, self.SERVICE_ID),
+          null,
       };
 
       let path = {
@@ -266,7 +266,11 @@ try {
       * ダウンロード可能か
       */
      isDownloadable: function () {
-       return this._functionsInstalled && this.in.medium;
+       if (!this._functionsInstalled)
+         return false;
+
+       if (this.in.medium)
+         return { illust_id:this.getIllustId(), service_id:this.SERVICE_ID };
      },
 
      /**

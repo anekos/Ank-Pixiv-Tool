@@ -133,7 +133,8 @@
         <preference id="view-original-size" name="extensions.ankpixiv.viewOriginalSize" type="bool" />
         <preference id="open-comment" name="extensions.ankpixiv.openComment" type="bool" />
         <preference id="open-caption" name="extensions.ankpixiv.openCaption" type="bool" />
-        <preference id="allow-thirdparty-cookie" name="extensions.ankpixiv.allowThirdPartyCookie" type="bool" />
+        <preference id="allow-thirdparty-cookie" name="extensions.ankpixiv.allowThirdPartyCookie" type="bool" />warnWrongDatetimeFormat
+        <preference id="warn-wrong-datetime-format" name="extensions.ankpixiv.warnWrongDatetimeFormat" type="bool" />
       </preferences>
 
       <tabbox>
@@ -303,6 +304,7 @@
               <checkbox preference="open-comment" label="&openComment;" />
               <checkbox preference="open-caption" label="&openCaption;" />
               <checkbox preference="allow-thirdparty-cookie" label="&allowThirdPartyCookie;" />
+              <checkbox preference="warn-wrong-datetime-format" label="&warnWrongDatetimeFormat;" />
             </vbox>
           </tabpanel>
           <tabpanel>

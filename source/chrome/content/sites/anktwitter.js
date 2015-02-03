@@ -366,8 +366,6 @@ try {
         return true;
       };
 
-      // FIXME イベント発火→ダウンロード開始の間にギャラリー移動があると目的のもと違う画像がダウンロードされる問題
-
       // ギャラリー移動
       let galleryChanged = function () {
         let media = doc.querySelector('.Gallery-media');
@@ -409,13 +407,11 @@ try {
      * ダウンロード可能か
      */
     isDownloadable: function () {
-      if (this.in.gallery) {
-        return !!this.getIllustId();    // ポップアップしているならどこでもOK
-      }
-      else if (this.in.tweet && this.in.illustTweet) {
-        return !!this.getIllustId();    // ツイートページはイラストが存在しているときのみOK
-      }
-      return false;     // 上記以外はNG
+      if (!this._functionsInstalled)
+        return false;
+
+      if (this.in.gallery || (this.in.tweet && this.in.illustTweet))  // ポップアップしている or イラストツイート
+        return { illust_id:this.getIllustId(), service_id:this.SERVICE_ID };
     },
 
     /**
@@ -450,6 +446,7 @@ try {
       return null;
     },
 
+    // FIXME イベント発火→ダウンロード開始の間にギャラリー移動があると目的のもと違う画像がダウンロードされる問題がある
 
     /**
      * ダウンロード実行

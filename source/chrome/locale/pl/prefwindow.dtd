@@ -36,3 +36,4 @@
 <!ENTITY openComment "Otwieraj automatycznie pole komentarza">
 <!ENTITY openCaption "Otwieraj automatycznie opis zdarzeń">
 <!ENTITY allowThirdPartyCookie "Akceptuj ciasteczka z innych witryn">
+<!ENTITY warnWrongDatetimeFormat "Use the current date, if cannot confirm the illust date.">

@@ -36,3 +36,4 @@
 <!ENTITY openComment "Automatisch de reacties openen.">
 <!ENTITY openCaption "Automatisch lange titel openen.">
 <!ENTITY allowThirdPartyCookie "Cookies van derden toestaan.">
+<!ENTITY warnWrongDatetimeFormat "Use the current date, if cannot confirm the illust date.">

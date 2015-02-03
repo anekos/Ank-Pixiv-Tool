@@ -441,7 +441,11 @@ try {
      * ダウンロード可能か
      */
     isDownloadable: function () {
-      return this._functionsInstalled && this.in.medium && !this.in.myIllust;
+      if (!this._functionsInstalled)
+        return false;
+
+      if (this.in.medium && !this.in.myIllust)
+        return { illust_id:this.getIllustId(), service_id:this.SERVICE_ID };
     },
 
     /**
@@ -877,11 +881,9 @@ try {
         }
 
         // 伸びるおすすめリストに追随する
-        if (MutationObserver) {
-          new MutationObserver(function (o) {
-            o.forEach(function (e) self.markDownloaded(e.target, true));
-          }).observe(elm, {childList: true});
-        }
+        new MutationObserver(function (o) {
+          o.forEach(function (e) self.markDownloaded(e.target, true));
+        }).observe(elm, {childList: true});
 
         return true;
       };

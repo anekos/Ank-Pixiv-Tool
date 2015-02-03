@@ -336,7 +336,7 @@ try {
       if (this.in.medium && this.elements.illust.flvPlayer)
         return false;    // ニコニコ形式マンガはDL対象外
 
-      return true;
+      return { illust_id:this.getIllustId(), service_id:this.SERVICE_ID };
     },
 
     /**
