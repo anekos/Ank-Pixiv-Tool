@@ -56,6 +56,9 @@ try {
       get illustTweet() // {{{
         (self.elements.illust.mediumImage || self.elements.illust.animatedGifThumbnail || self.elements.illust.photoFrame), // }}}
 
+      get videoTweet()
+        self.elements.illust.videoFrame,
+
       // elementを見ているが、これに関しては問題ないはず
       get gallery () // {{{
         self.elements.illust.galleryEnabled, // }}}
@@ -101,6 +104,28 @@ try {
         get animatedGifThumbnail ()
           let (e = illust.tweet)
             e && e.querySelector('.js-media-container > img.animated-gif-thumbnail'),
+
+        get videoFrame () {
+          let e = illust.tweet && illust.tweet.querySelector('.card2 > div > iframe');
+          let f = e && AnkUtils.trackbackParentNode(e, 2);
+          let n = f && f.getAttribute('data-card2-name');
+          if ( n === '__entity_video' || n === 'player')
+            return e;
+        },
+
+        get videoContent () {
+          let e = illust.videoFrame.contentDocument;
+          if (e) {
+            let c = e.querySelector('#ExternalIframeContainer');
+            if (c) {
+              return c;
+            }
+            let f = e.querySelector('iframe');
+            if (f && f.contentDocument) {
+              return f.contentDocument.querySelector('video');
+            }
+          }
+        },
 
         get largeLink ()
           queryEither('.twitter-timeline-link', '.twitter-timeline-link'),
@@ -272,12 +297,35 @@ try {
           null,
 
         get image () {
-          let e = 
-            self.in.gallery                           ? self.elements.illust.mediumImage :
-            self.elements.illust.photoFrame           ? self.elements.illust.photoImage :
-            self.elements.illust.animatedGifThumbnail ? self.elements.illust.animatedGif :
-                                                        self.elements.illust.mediaSet;
-          ;
+          if (!self.in.gallery && self.in.videoTweet) {
+            let c = self.elements.illust.videoContent;
+            let m = [];
+            if (c.tagName === 'video') {
+              m.push(c.src);
+            }
+            else {
+              try {
+                JSON.parse(c.getAttribute('data-player-config'), function (key, value) {
+                  if (key === 'source')
+                    m.push(value);
+                });
+              }
+              catch (e) {
+                //
+              }
+            }
+            return { images: m, facing: null };
+          }
+
+          let e = (function () {
+            if (self.in.gallery)
+              return self.elements.illust.mediumImage;
+            if (self.elements.illust.photoFrame)
+              return self.elements.illust.photoImage;
+            if (self.elements.illust.animatedGifThumbnail)
+              return self.elements.illust.animatedGif;
+            return self.elements.illust.mediaSet;
+          })(); 
 
           let o = [];
           if (e instanceof NodeList) {
@@ -338,6 +386,8 @@ try {
       get: function () {
         if (self.in.gallery)
           return true;    // ポップアップしているならどこでもOK
+        if (self.in.videoTweet)
+          return true;    // 動画投稿
         if (self.in.tweet && self.in.illustTweet)
           return true;    // ツイートページはイラストが存在しているときのみOK
         return false;     // 上記以外はNG
@@ -365,11 +415,18 @@ try {
         var medImg = mod.elements.illust.mediumImage;
         var largeLink = mod.elements.illust.largeLink;
         var photoFrame = mod.in.tweet ? mod.elements.illust.photoFrame : null;
+        var videoFrame = mod.in.tweet ? mod.elements.illust.videoFrame : null;
 
         // 完全に読み込まれていないっぽいときは、遅延する
-        let cond = photoFrame        ? mod.elements.illust.photoImage :
-                                       largeLink;
-        if (!(body && medImg && cond)) {
+        let cond = (function () {
+          if (videoFrame)
+            return mod.elements.illust.videoContent;
+          if (photoFrame)
+            return medImg && mod.elements.illust.photoImage;
+          return medImg && largeLink;
+        })();
+                                       
+        if (!(body && cond)) {
           return false;   // リトライしてほしい
         }
 
@@ -377,7 +434,6 @@ try {
         if (AnkBase.Prefs.get('showDownloadedFilename', false)) {
           let e = doc.querySelector('.client-and-actions');
           if (e) {
-            AnkUtils.dump('XXXXXXXXXXXXXXXXXXXXXXXXXXXX');
             {
               let div = doc.createElement('div');
               div.classList.add('ank-pixiv-downloaded-filename');
@@ -392,14 +448,17 @@ try {
         }
 
         // 中画像クリック時に保存する
-        if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
-          medImg.addEventListener(
-            'click',
-            function () AnkBase.downloadCurrentImageAuto(mod),
-            true
-          );
+        if (medImg) {
+          if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
+            medImg.addEventListener(
+              'click',
+              function () AnkBase.downloadCurrentImageAuto(mod),
+              true
+            );
+          }
         } // }}}
 
+          
         // 保存済み表示
         AnkBase.insertDownloadedDisplayById(
           mod.elements.illust.downloadedDisplayParent,

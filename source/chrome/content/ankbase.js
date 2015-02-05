@@ -1356,8 +1356,11 @@ try {
       if (header.match(/^GIF8/))
         return '.gif';
 
-      if (header.match(/^\x00\x00\x00\x1Cftyp/))
+      if (header.match(/^\x00\x00/) && header.match(/ftyp/))
         return '.mp4';
+
+      if (header.match(/\x1A\x45\xDF\xA3/))
+        return '.webm';
 
       if (header.match(/^PK\x03\x04/))
         return '.zip';
