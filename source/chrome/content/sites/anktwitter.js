@@ -116,13 +116,15 @@ try {
         get videoContent () {
           let e = illust.videoFrame.contentDocument;
           if (e) {
-            let c = e.querySelector('#ExternalIframeContainer');
-            if (c) {
-              return c;
-            }
             let f = e.querySelector('iframe');
-            if (f && f.contentDocument) {
-              return f.contentDocument.querySelector('video');
+            f = f && f.contentDocument;
+            f = f && f.querySelector('video');
+            if (f)
+              return f;
+
+            let c = e.querySelector('#ExternalIframeContainer');
+            if (c && c.getAttribute('data-player-config')) {
+              return c;
             }
           }
         },
@@ -300,7 +302,7 @@ try {
           if (!self.in.gallery && self.in.videoTweet) {
             let c = self.elements.illust.videoContent;
             let m = [];
-            if (c.tagName === 'video') {
+            if (c.tagName.toLowerCase() === 'video') {
               m.push(c.src);
             }
             else {
