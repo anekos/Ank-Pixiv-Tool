@@ -36,4 +36,5 @@
 <!ENTITY openComment "Аутоматски отвори оквир за коментаре">
 <!ENTITY openCaption "Automatically open the long caption.">
 <!ENTITY allowThirdPartyCookie "Allow ThirdParty Cookie.">
-<!ENTITY warnWrongDatetimeFormat "Use the current date, if cannot confirm the illust date.">
+<!ENTITY ignoreWrongDatetimeFormat "Use the current date, when cannot confirm the illust date.">
+<!ENTITY warnWrongDatetimeFormat "Don't show &quot;unsupported datetime format&quot; warnings.">

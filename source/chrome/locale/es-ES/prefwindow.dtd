@@ -36,4 +36,5 @@
 <!ENTITY openComment "Abrir automáticamente la caja de comentario.">
 <!ENTITY openCaption "Abrir automáticamente las leyendas largas.">
 <!ENTITY allowThirdPartyCookie "Permitir Cookies de terceros.">
-<!ENTITY warnWrongDatetimeFormat "Use the current date, if cannot confirm the illust date.">
+<!ENTITY ignoreWrongDatetimeFormat "Use the current date, when cannot confirm the illust date.">
+<!ENTITY warnWrongDatetimeFormat "Don't show &quot;unsupported datetime format&quot; warnings.">

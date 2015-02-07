@@ -243,7 +243,12 @@ try {
       let sets = [];
       for (let i=0; i<AnkBase.siteModules.length; i++) {
         let module = AnkBase.siteModules[i];
-        sets.push({ name:module.prototype.SITE_NAME, id:module.prototype.SERVICE_ID, enabled:AnkBase.isModuleEnabled(module.prototype.SERVICE_ID) })
+        sets.push({
+          name:         module.prototype.SITE_NAME,
+          id:           module.prototype.SERVICE_ID,
+          enabled:      AnkBase.isModuleEnabled(module.prototype.SERVICE_ID),
+          experimental: module.prototype.EXPERIMENTAL,
+        });
       }
       return sets;
     },
@@ -672,7 +677,7 @@ try {
           let status = yield AnkBase.downloadToRetryable(file, url, referer, AnkBase.DOWNLOAD_RETRY.MAX_TIMES);
           if (status != 200) {
             AnkUtils.dump('Delete invalid file. => ' + file.path);
-            yield OS.File.remove(file.path).then(null, function (e) AnkUtils.dump('Failed to delete invalid file. => ' + e));
+            yield OS.File.remove(file.path).then(null).catch(function (e) AnkUtils.dump('Failed to delete invalid file. => ' + e));
             return status;
           }
 
@@ -700,7 +705,7 @@ try {
         let status = yield AnkBase.downloadToRetryable(file, url, referer, AnkBase.DOWNLOAD_RETRY.MAX_TIMES);
         if (status != 200) {
           AnkUtils.dump('Delete invalid file. => ' + file.path);
-          yield OS.File.remove(file.path).then(null, function (e) AnkUtils.dump('Failed to delete invalid file. => ' + e));
+          yield OS.File.remove(file.path).then(null).catch(function (e) AnkUtils.dump('Failed to delete invalid file. => ' + e));
           return status;
         }
 
@@ -729,7 +734,7 @@ try {
         let encoder = new TextEncoder();
         let array = encoder.encode(text);
         yield OS.File.writeAtomic(file.path, array, { encoding:"utf-8", tmpPath:file.path+".tmp" });
-      }).then(null, function (e) AnkUtils.dumpError(e));
+      }).then(null).catch(function (e) AnkUtils.dumpError(e));
     }, // }}}
 
     /*
@@ -778,7 +783,7 @@ try {
         }
 
         module.downloadCurrentImage(useDialog, debug);
-      }).then(null, function (e) AnkUtils.dumpError(e, true));
+      }).then(null).catch(function (e) AnkUtils.dumpError(e, true));
     },
 
     /*
@@ -1167,7 +1172,7 @@ try {
               let qa = [];
               qa.push({ type:'insert', table:'histories', set:set });
               yield AnkBase.Storage.update(AnkBase.Storage.getUpdateSQLs(qa));
-            }).then(null, function (e) AnkUtils.dumpError(e)).catch(function (e) AnkUtils.dumpError(e,true));
+            }).then(null).catch(function (e) AnkUtils.dumpError(e,true));
           }
 
           if (AnkBase.Prefs.get('saveMeta', true))
@@ -1185,7 +1190,7 @@ try {
           if (curmod && curmod.SERVICE_ID === service_id)
             curmod.markDownloaded(illust_id,true);
         }
-      }).then(null, function (e) { AnkUtils.dumpError(e); onError(e); }).catch(function (e) { AnkUtils.dumpError(e); onError(e); });
+      }).then(null).catch(function (e) { AnkUtils.dumpError(e); onError(e); });
     }, // }}}
 
     /*
@@ -1444,7 +1449,8 @@ try {
       AnkUtils.httpGETAsync('chrome://ankpixiv/content/defaultstyle.css').then(
         function (result) {
           AnkUtils.registerSheet(result, domains);
-        },
+        }
+      ).catch(
         function (e) AnkUtils.dumpError(e,true)
       );
       */
@@ -1595,7 +1601,7 @@ try {
             }
           }
         }
-      }).then(null, function (e) AnkUtils.dumpError(e));
+      }).then(null).catch(function (e) AnkUtils.dumpError(e));
     }, // }}}
 
     clearMarkedFlags: function () {
@@ -1675,7 +1681,7 @@ try {
             null
           );
         } // }}}
-      }).then(null, function (e) AnkUtils.dumpError(e));
+      }).then(null).catch(function (e) AnkUtils.dumpError(e));
     }, // }}}
 
     /********************************************************************************
@@ -1712,7 +1718,7 @@ try {
           setInterval(function (e) AnkBase.cleanupDownload(), AnkBase.DOWNLOAD_THREAD.CLEANUP_INTERVAL);
           AnkBase.changeToolbarIconReady.call(AnkBase, true, AnkBase.TOOLBAR_BUTTON.IMAGE);
         }
-      }).then(null, function (e) AnkUtils.dumpError(e, true));
+      }).then(null).catch(function (e) AnkUtils.dumpError(e, true));
 
     }, // }}}
 

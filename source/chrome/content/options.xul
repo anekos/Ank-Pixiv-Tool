@@ -69,7 +69,7 @@
 
           let item1 = document.createElement('checkbox');
           item1.setAttribute('preference', prefid);
-          item1.setAttribute('label', sm.name);
+          item1.setAttribute('label', sm.name+(sm.experimental ? ' (experimental)':''));
           row.appendChild(item1);
 
           box.appendChild(row);
@@ -133,8 +133,9 @@
         <preference id="view-original-size" name="extensions.ankpixiv.viewOriginalSize" type="bool" />
         <preference id="open-comment" name="extensions.ankpixiv.openComment" type="bool" />
         <preference id="open-caption" name="extensions.ankpixiv.openCaption" type="bool" />
-        <preference id="allow-thirdparty-cookie" name="extensions.ankpixiv.allowThirdPartyCookie" type="bool" />warnWrongDatetimeFormat
-        <preference id="warn-wrong-datetime-format" name="extensions.ankpixiv.warnWrongDatetimeFormat" type="bool" />
+        <preference id="allow-thirdparty-cookie" name="extensions.ankutils.allowThirdPartyCookie" type="bool" />
+        <preference id="ignore-wrong-datetime-format" name="extensions.ankutils.ignoreWrongDatetimeFormat" type="bool" />
+        <preference id="warn-wrong-datetime-format" name="extensions.ankutils.warnWrongDatetimeFormat" type="bool" inverted="true"/>
       </preferences>
 
       <tabbox>
@@ -304,6 +305,7 @@
               <checkbox preference="open-comment" label="&openComment;" />
               <checkbox preference="open-caption" label="&openCaption;" />
               <checkbox preference="allow-thirdparty-cookie" label="&allowThirdPartyCookie;" />
+              <checkbox preference="ignore-wrong-datetime-format" label="&ignoreWrongDatetimeFormat;" />
               <checkbox preference="warn-wrong-datetime-format" label="&warnWrongDatetimeFormat;" />
             </vbox>
           </tabpanel>

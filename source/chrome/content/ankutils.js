@@ -1,5 +1,7 @@
 
+Components.utils.import("resource://gre/modules/Preferences.jsm");
 Components.utils.import("resource://gre/modules/Promise.jsm");
+Components.utils.import("resource://gre/modules/Task.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 try {
@@ -20,7 +22,6 @@ try {
 
     get currentDocument () // {{{
       window.content.document, // }}}
-
 
     /********************************************************************************
     * 文字列関数
@@ -247,11 +248,13 @@ try {
 
       // TODO 日時解析失敗時に、自動で現在日時で代替するのか、それとも他の処理を行うのかは、要検討課題
       let msg = 'unsupported datetime format = \''+dtext+'\'';
-      if (!AnkBase.Prefs.get('warnWrongDatetimeFormat', false)) {
+      if (!AnkUtils.Prefs.get('ignoreWrongDatetimeFormat', false)) {
         throw new Error(msg);
       }
 
-      window.alert(msg);
+      if (!AnkUtils.Prefs.get('warnWrongDatetimeFormat', true))
+        window.alert(msg);
+
       return AnkUtils.getDecodedDateTime(new Date(), true);
     }, // }}}
 
@@ -543,7 +546,7 @@ try {
         let xhr = new XMLHttpRequest();
         xhr.open('HEAD', url, true);
         try {
-          xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = AnkBase.Prefs.get('allowThirdPartyCookie', true);
+          xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = AnkUtils.Prefs.get('allowThirdPartyCookie', true);
         } catch(ex) {
           /* unsupported by this version of FF */
         }
@@ -580,7 +583,7 @@ try {
      let xhr = new XMLHttpRequest();
      xhr.open((post ? 'POST' : 'GET'), url, false);
      try {
-       xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = AnkBase.Prefs.get('allowThirdPartyCookie', true);
+       xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = AnkUtils.Prefs.get('allowThirdPartyCookie', true);
      } catch(ex) {
        /* unsupported by this version of FF */
      }
@@ -605,7 +608,7 @@ try {
        let xhr = new XMLHttpRequest();
        xhr.open((post ? 'POST' : 'GET'), url, true);
        try {
-         xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = AnkBase.Prefs.get('allowThirdPartyCookie', true);
+         xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = AnkUtils.Prefs.get('allowThirdPartyCookie', true);
        } catch(ex) {
          /* unsupported by this version of FF */
        }
@@ -802,13 +805,6 @@ try {
 
   AnkPref.prototype = {
     /*
-     * prefs
-     *    nsIPrefBranch
-     */
-    prefs: Components.classes["@mozilla.org/preferences-service;1"]. // {{{
-             getService(Components.interfaces.nsIPrefBranch), // }}}
-
-    /*
      * get
      *    name:   項目名
      *    def:    デフォルト値
@@ -816,52 +812,17 @@ try {
      * 設定値を取得
      */
     get: function (name, def) { // {{{
-      try {
-        name = this.prefix + name;
-        let type = this.prefs.getPrefType(name);
-        const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
-        switch (type) {
-          case nsIPrefBranch.PREF_STRING:
-            try {
-              return this.prefs.getComplexValue(name, Components.interfaces.nsISupportsString).data;
-            }
-            catch (e) {
-              return this.prefs.getCharPref(name);
-            }
-            break;
-          case nsIPrefBranch.PREF_INT:
-            return this.prefs.getIntPref(name);
-          case nsIPrefBranch.PREF_BOOL:
-            return this.prefs.getBoolPref(name);
-          default:
-            return def;
-        }
-      } catch (e) {
-        return def;
-      }
+      return Preferences.get(this.prefix+name, def);
     }, // }}}
 
     /*
      * set
      *    name:   項目名
      *    value:  設定する値
-     *    type:   型(省略可)
      *    return: ?
      */
-    set: function (name, value, type) { // {{{
-      name = this.prefix + name;
-      switch (type || typeof value) {
-        case 'string':
-          let str = AnkUtils.ccci('@mozilla.org/supports-string;1', Components.interfaces.nsISupportsString);
-          str.data = value;
-          return this.prefs.setComplexValue(name, Components.interfaces.nsISupportsString, str);
-        case 'boolean':
-          return this.prefs.setBoolPref(name, value);
-        case 'number':
-          return this.prefs.setIntPref(name, value);
-        default:
-          alert('unknown pref type');
-      }
+    set: function (name, value) { // {{{
+      Preferences.set(this.prefix+name, value);
     }, // }}}
   };
 

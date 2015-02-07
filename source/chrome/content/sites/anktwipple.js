@@ -291,7 +291,7 @@ try {
 
          let context = new AnkContext(self);
          AnkBase.addDownload(context, useDialog, debug);
-       }).then(null, function (e) AnkUtils.dumpError(e,true)).catch(function (e) AnkUtils.dumpError(e,true));
+       }).then(null).catch(function (e) AnkUtils.dumpError(e,true));
      },
 
 
@@ -390,7 +390,7 @@ try {
                 self.viewer.openViewer();
               if (useClickDownload)
                 AnkBase.downloadCurrentImageAuto(self);
-            }).then(null, function (e) AnkUtils.dumpError(e,true)).catch(function (e) AnkUtils.dumpError(e,true));
+            }).then(null).catch(function (e) AnkUtils.dumpError(e,true));
 
             //e.preventDefault();
             //e.stopPropagation();

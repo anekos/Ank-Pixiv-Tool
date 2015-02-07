@@ -27,4 +27,3 @@ pref("extensions.ankpixiv.useExperimentalModules", false);
 pref("extensions.ankpixiv.warnWrongDatetimeFormat", false);
 pref("extensions.ankpixiv.openComment", false);
 pref("extensions.ankpixiv.openCaption", false);
-pref("extensions.ankpixiv.allowThirdPartyCookie", true);

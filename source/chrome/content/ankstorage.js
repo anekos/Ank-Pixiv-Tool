@@ -44,7 +44,7 @@ try {
     closeDatabase: function () {
       let self = this;
       if (self.conn) {
-        self.conn.close().then(null, function (e) AnkUtils.dumpError(e));
+        self.conn.close().then(function () this.conn=null).catch(function (e) AnkUtils.dumpError(e));
       }
     },
 

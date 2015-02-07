@@ -36,4 +36,5 @@
 <!ENTITY openComment "Automatisch de reacties openen.">
 <!ENTITY openCaption "Automatisch lange titel openen.">
 <!ENTITY allowThirdPartyCookie "Cookies van derden toestaan.">
-<!ENTITY warnWrongDatetimeFormat "Use the current date, if cannot confirm the illust date.">
+<!ENTITY ignoreWrongDatetimeFormat "Use the current date, when cannot confirm the illust date.">
+<!ENTITY warnWrongDatetimeFormat "Don't show &quot;unsupported datetime format&quot; warnings.">
