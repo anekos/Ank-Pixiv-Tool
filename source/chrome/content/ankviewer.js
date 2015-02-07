@@ -35,6 +35,8 @@ AnkViewer = function (module) {
   // 大画像のロード
   let loadBigImage = function (pageno) {
     function setImgSrc (is) {
+      loadings = is.length;
+
       if (is.length > 0) {
         AnkUtils.dump('VIEW => ' + is[0]);
         bigImg.setAttribute('src', is[0]);
@@ -358,7 +360,7 @@ AnkViewer = function (module) {
           }
           show();
           bigMode = !bigMode;
-        }).then(null, function (e) AnkUtils.dumpError(e,true)).catch(function (e) AnkUtils.dumpError(e,true));
+        }).then(null).catch(function (e) AnkUtils.dumpError(e,true));
       }
       else {
         show();
@@ -434,6 +436,7 @@ AnkViewer = function (module) {
   let pos = {};
   let openpos = {};
   let scrollbarSize = AnkUtils.scrollbarSize;
+  let loadings = 0;
   // }}}
 
   /********************************************************************************
@@ -556,7 +559,8 @@ AnkViewer = function (module) {
     };
 
     let loadedFunc = function () {
-      imgCtrl(function (e) e.style.setProperty('opacity', '1', 'important'));
+      if (--loadings <= 0)
+        imgCtrl(function (e) e.style.setProperty('opacity', '1', 'important'));
     };
 
     // 画像ロード中は半透明にする
