@@ -1,29 +1,28 @@
-try {
+/********************************************************************************
+* 外部向け - 他拡張と連携して処理を行う
+********************************************************************************/
 
-  /********************************************************************************
-  * 外部向け - 他拡張と連携して処理を行う
-  ********************************************************************************/
+(function (global) {
 
-  AnkPixiv = {
-      /*
-       * ダウンロード
-       */
-      downloadCurrentImage: function (useDialog, confirmDownloaded, debug) { // {{{
-        AnkBase.expose.downloadCurrentImage(useDialog, confirmDownloaded, debug);
-      }, // }}}
+  let AnkPixiv = {};
 
-      /*
-       * 評価
-       */
-      rate: function (pt) { // {{{
-        AnkBase.expose.rate(pt);
-      }, // }}}
+  AnkPixiv.prototype = {
+    /*
+     * ダウンロード
+     */
+    downloadCurrentImage: function (useDialog, confirmDownloaded, debug) { // {{{
+      AnkBase.expose.downloadCurrentImage(useDialog, confirmDownloaded, debug);
+    }, // }}}
+
+    /*
+     * 評価
+     */
+    rate: function (pt) { // {{{
+      AnkBase.expose.rate(pt);
+    } // }}}
   };
 
-} catch (error) {
-  dump("[" + error.name + "]\n" +
-       "  message: " + error.message + "\n" +
-       "  filename: " + error.fileName + "\n" +
-       "  linenumber: " + error.lineNumber + "\n" +
-       "  stack: " + error.stack + "\n");
- }
+  // --------
+  global["AnkPixiv"] = AnkPixiv;
+
+})(this);

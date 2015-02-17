@@ -36,12 +36,12 @@
         let box = currentFilenameElement;
         let pref = document.getElementById(box.getAttribute('preference'));
         let now = box.value;
-        let [ap, bp] = [box.selectionStart, box.selectionEnd];
-        let [as, bs] = [now.slice(0, ap), now.slice(bp, now.length)];
-        box.value = as + token + bs;
+        let [xp, yp] = [box.selectionStart, box.selectionEnd];
+        let [xs, ys] = [now.slice(0, xp), now.slice(yp, now.length)];
+        box.value = xs + token + ys;
         pref.value = box.value;
-        let (p = ap + token.length)
-          box.setSelectionRange(p, p);
+        let zp = xp + token.length;
+        box.setSelectionRange(zp, zp);
         box.focus();
       }
 
@@ -53,7 +53,7 @@
       }
 
       function setSiteModules () {
-        let siteModules = window.arguments && window.arguments.length > 0 && window.arguments[0].siteModules;
+        let siteModules = AnkBase.getModuleSettings();
         if (!siteModules)
           return;
 
@@ -228,6 +228,8 @@
                   </listbox>
                  </hbox>
               </groupbox>
+              <checkbox preference="ignore-wrong-datetime-format" label="&ignoreWrongDatetimeFormat;" />
+              <checkbox preference="warn-wrong-datetime-format" label="&warnWrongDatetimeFormat;" />
             </vbox>
           </tabpanel>
           <tabpanel>
@@ -305,8 +307,6 @@
               <checkbox preference="open-comment" label="&openComment;" />
               <checkbox preference="open-caption" label="&openCaption;" />
               <checkbox preference="allow-thirdparty-cookie" label="&allowThirdPartyCookie;" />
-              <checkbox preference="ignore-wrong-datetime-format" label="&ignoreWrongDatetimeFormat;" />
-              <checkbox preference="warn-wrong-datetime-format" label="&warnWrongDatetimeFormat;" />
             </vbox>
           </tabpanel>
           <tabpanel>
@@ -323,7 +323,7 @@
         let menupopup = document.getElementById('large-image-size-menupopup');
         for (let [k, v] in Iterator(AnkBase.FIT)) {
           let menuitem = document.createElement('menuitem');
-          menuitem.setAttribute('label', AnkBase.Locale('largeImageSize.' + k));
+          menuitem.setAttribute('label', AnkBase.Locale.get('largeImageSize.' + k));
           menuitem.setAttribute('value', v);
           menupopup.appendChild(menuitem);
         }

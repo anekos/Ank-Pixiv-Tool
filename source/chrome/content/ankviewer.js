@@ -243,7 +243,7 @@ AnkViewer = function (module) {
     if (e.target instanceof Ci.nsIImageLoadingContent && e.target.currentURI) {
       let req = e.target.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
       AnkUtils.dump('self: imageStatus = ' + req.imageStatus.toString(2));
-      if (confirm(AnkBase.Locale('confirmForReloadBigImage'))) {
+      if (confirm(AnkBase.Locale.get('confirmForReloadBigImage'))) {
         e.target.forceReload();
         return;
       }

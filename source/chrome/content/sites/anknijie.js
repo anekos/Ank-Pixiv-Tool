@@ -1,7 +1,7 @@
 
 Components.utils.import("resource://gre/modules/Task.jsm");
 
-try {
+(function (global) {
 
   let AnkPixivModule = function (doc) {
 
@@ -310,7 +310,7 @@ try {
       Task.spawn(function () {
         let image = yield self.getImageUrlAsync(AnkBase.Prefs.get('downloadOriginalSize', false));
         if (!image || image.images.length == 0) {
-          window.alert(AnkBase.Locale('cannotFindImages'));
+          window.alert(AnkBase.Locale.get('cannotFindImages'));
           return;
         }
 
@@ -429,7 +429,7 @@ try {
                 // mangaIndexPageへのアクセスが複数回実行されないように、getImageUrlAsync()を一度実行してからopenViewer()とdownloadCurrentImageAuto()を順次実行する
                 let image = yield self.getImageUrlAsync();
                 if (!image || image.images.length == 0) {
-                  window.alert(AnkBase.Locale('cannotFindImages'));
+                  window.alert(AnkBase.Locale.get('cannotFindImages'));
                   return;
                 }
 
@@ -530,18 +530,7 @@ try {
 
   };
 
+  // --------
+  global["exports"] = AnkPixivModule;
 
-  /********************************************************************************
-  * 本体へのインストール - ankpixiv.xulにも登録を
-  ********************************************************************************/
-
-  AnkBase.addModule(AnkPixivModule);
-
-
-} catch (error) {
- dump("[" + error.name + "]\n" +
-      "  message: " + error.message + "\n" +
-      "  filename: " + error.fileName + "\n" +
-      "  linenumber: " + error.lineNumber + "\n" +
-      "  stack: " + error.stack + "\n");
-}
+})(this);

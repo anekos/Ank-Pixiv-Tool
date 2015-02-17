@@ -1,11 +1,11 @@
 
+Components.utils.import("resource://gre/modules/Task.jsm");
 Components.utils.import("resource://gre/modules/Sqlite.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
 
-try {
+(function (global) {
 
-
-  AnkStorage = function (filename, tables, options, debug) { // {{{
+  let AnkStorage = function (filename, tables, options, debug) { // {{{
 
     this.dbpath = filename;
     this.tables = tables;
@@ -44,7 +44,7 @@ try {
     closeDatabase: function () {
       let self = this;
       if (self.conn) {
-        self.conn.close().then(function () this.conn=null).catch(function (e) AnkUtils.dumpError(e));
+        self.conn.close().then(function () { this.conn=null }).catch(function (e) { AnkUtils.dumpError(e) });
       }
     },
 
@@ -222,14 +222,11 @@ try {
 
     uniqueName: function (tableName, columnNames) { // {{{
       return tableName + '_unique_' + columnNames.join('_');
-    }, // }}}
+    } // }}}
 
   };
 
-} catch (error) {
- dump("[" + error.name + "]\n" +
-      "  message: " + error.message + "\n" +
-      "  filename: " + error.fileName + "\n" +
-      "  linenumber: " + error.lineNumber + "\n" +
-      "  stack: " + error.stack + "\n");
-}
+  // --------
+  global["exports"] = AnkStorage;
+
+})(this);
