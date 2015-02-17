@@ -227,6 +227,6 @@ Components.utils.import("resource://gre/modules/FileUtils.jsm");
   };
 
   // --------
-  global["exports"] = AnkStorage;
+  global["StorageModule"] = AnkStorage;
 
 })(this);

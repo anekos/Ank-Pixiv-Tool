@@ -133,9 +133,9 @@
         <preference id="view-original-size" name="extensions.ankpixiv.viewOriginalSize" type="bool" />
         <preference id="open-comment" name="extensions.ankpixiv.openComment" type="bool" />
         <preference id="open-caption" name="extensions.ankpixiv.openCaption" type="bool" />
-        <preference id="allow-thirdparty-cookie" name="extensions.ankutils.allowThirdPartyCookie" type="bool" />
-        <preference id="ignore-wrong-datetime-format" name="extensions.ankutils.ignoreWrongDatetimeFormat" type="bool" />
-        <preference id="warn-wrong-datetime-format" name="extensions.ankutils.warnWrongDatetimeFormat" type="bool" inverted="true"/>
+        <preference id="allow-thirdparty-cookie" name="extensions.ankpixiv.allowThirdPartyCookie" type="bool" />
+        <preference id="ignore-wrong-datetime-format" name="extensions.ankpixiv.ignoreWrongDatetimeFormat" type="bool" />
+        <preference id="warn-wrong-datetime-format" name="extensions.ankpixiv.warnWrongDatetimeFormat" type="bool" inverted="true"/>
       </preferences>
 
       <tabbox>

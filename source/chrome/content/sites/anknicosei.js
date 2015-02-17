@@ -22,97 +22,116 @@ Components.utils.import("resource://gre/modules/Task.jsm");
     ********************************************************************************/
 
     self.in = { // {{{
-      get manga () // {{{
-        self.info.illust.pageUrl.match(/seiga\.nicovideo\.jp\/watch\/mg/), // }}}
+      get manga () {// {{{
+        return self.info.illust.pageUrl.match(/seiga\.nicovideo\.jp\/watch\/mg/);
+      }, // }}}
 
-      get medium () // {{{
-        self.in.illustPage, // }}}
+      get medium () { // {{{
+        return self.in.illustPage;
+      }, // }}}
 
-      get illustPage () // {{{
-        self.in.manga
-        ||
-        self.info.illust.pageUrl.match(/seiga\.nicovideo\.jp\/seiga\/im/), // }}}
+      get illustPage () { // {{{
+        return self.in.manga
+          ||
+          self.info.illust.pageUrl.match(/seiga\.nicovideo\.jp\/seiga\/im/);
+      }, // }}}
 
-      get myPage ()
-        false,  // under construction
+      get myPage () {
+        return false;
+      },  // under construction
 
-      get myIllust ()
-        false,  // under construction
+      get myIllust () {
+        return false;
+      }  // under construction
     }; // }}}
 
     self.elements = (function () { // {{{
-      function query (q)
-        self.elements.doc.querySelector(q)
+      function query (q) {
+        return self.elements.doc.querySelector(q);
+      }
 
-      function queryAll (q)
-        self.elements.doc.querySelectorAll(q)
+      function queryAll (q) {
+        return self.elements.doc.querySelectorAll(q);
+      }
 
       let illust =  {
-        get images ()
-          self.in.manga && queryAll('#page_contents > .page img'),
+        get images () {
+          return self.in.manga && queryAll('#page_contents > .page img');
+        },
 
-        get datetime ()
-          self.in.manga && query('.created')
-          ||
-          query('.inner.cfix > .other_info > .date')  // seiga
-          ||
-          query('.bold'),                             // shunga
+        get datetime () {
+          return self.in.manga && query('.created')
+            ||
+            query('.inner.cfix > .other_info > .date')  // seiga
+            ||
+            query('.bold');                             // shunga
+        },
 
-        get title ()
-          self.in.manga && queryAll('.title > h1 > *')
-          ||
-          query('.inner.cfix > .title')               // seiga
-          ||
-          query('.title_text'),                       // shunga
+        get title () {
+          return self.in.manga && queryAll('.title > h1 > *')
+            ||
+            query('.inner.cfix > .title')               // seiga
+            ||
+            query('.title_text');                       // shunga
+        },
 
-        get comment ()
-          self.in.manga && query('.description > .full')
-          ||
-          query('.inner.cfix > .discription')         // seiga
-          ||
-          query('.illust_user_exp'),                  // shunga
+        get comment () {
+          return self.in.manga && query('.description > .full')
+            ||
+            query('.inner.cfix > .discription')         // seiga
+            ||
+            query('.illust_user_exp');                  // shunga
+        },
 
-        get avatar ()
-          !self.in.manga && query('.illust_user_icon > a > img'),
+        get avatar () {
+          return !self.in.manga && query('.illust_user_icon > a > img');
+        },
 
-        get userName ()
-          self.in.manga && query('.author_name')
-          ||
-          query('.user_name > strong')                // seiga
-          ||
-          query('.illust_user_name > a > strong'),    // shunga
+        get userName () {
+          return self.in.manga && query('.author_name')
+            ||
+            query('.user_name > strong')                // seiga
+            ||
+            query('.illust_user_name > a > strong');    // shunga
+        },
 
-        get memberLink ()
-          self.in.manga && null
-          ||
-          query('.user_link > a')                     // seiga
-          ||
-          query('.illust_user_name > a'),             // shunga
+        get memberLink () {
+          return self.in.manga && null
+            ||
+            query('.user_link > a')                     // seiga
+            ||
+            query('.illust_user_name > a');             // shunga
+        },
 
-        get tags ()
-          query('.illust_tag.cfix.static')            // seiga
-          ||
-          query('#tag_block'),                        // shunga & manga
+        get tags () {
+          return query('.illust_tag.cfix.static')      // seiga
+            ||
+            query('#tag_block');                        // shunga & manga
+        },
 
-        get illustType ()
-          query('.illust_type > a'),
+        get illustType () {
+          return query('.illust_type > a');
+        },
 
-        get flvPlayer ()
-          self.in.manga && query('#main > #player'),
+        get flvPlayer () {
+          return self.in.manga && query('#main > #player');
+        },
 
         // require for AnkBase
 
-        get autoPagerizeTarget()
-          query('.illust_list')           // ○○さんのｲﾗｽﾄ
-          ||
-          query('.my_contents .list'),    // イラスト定点観測
+        get autoPagerizeTarget() {
+          return query('.illust_list')               // ○○さんのｲﾗｽﾄ
+            ||
+            query('.my_contents .list');              // イラスト定点観測
+        },
 
-        get downloadedDisplayParent ()
-          self.in.manga && query('.title')
-          ||
-          query('.other_info')                        // seiga
-          ||
-          query('.exp_header > .info'),
+        get downloadedDisplayParent () {
+          return self.in.manga && query('.title')
+            ||
+            query('.other_info')                        // seiga
+            ||
+            query('.exp_header > .info');
+        },
 
         // require for AnkViewer
 
@@ -121,13 +140,15 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           return e && e.length > 0 && e[0];
         },
 
-        get wrapper ()
-          query('#main'),
+        get wrapper () {
+          return query('#main');
+        },
 
-        get mediumImage ()
-          self.in.manga && self.elements.illust.images[0]
-          ||
-          query('#illust_link'),
+        get mediumImage () {
+          return self.in.manga && self.elements.illust.images[0]
+            ||
+            query('#illust_link');
+        },
 
 /* future use.
         get openComment ()
@@ -144,37 +165,45 @@ Components.utils.import("resource://gre/modules/Task.jsm");
             });
 
           return ads;
-        },
+        }
       };
 
       let mypage = {
-        get fantasyDisplay ()
-          null, // under construction
+        get fantasyDisplay () {
+          return null; // under construction
+        },
 
-        get fantasyDisplayNext ()
-          null, // under construction
+        get fantasyDisplayNext () {
+          return null; // under construction
+        }
       };
  
       return {
         illust: illust,
         mypage: mypage,
-        get doc () self.curdoc,
+        get doc () {
+          return self.curdoc;
+        }
       };
     })(); // }}}
 
     self.info = (function () { // {{{
       let illust = {
-        get pageUrl ()
-          self.elements.doc.location.href,
+        get pageUrl () {
+          return self.elements.doc.location.href;
+        },
 
-        get id ()
-          self.getIllustId(),
+        get id () {
+          return self.getIllustId();
+        },
 
-        get dateTime ()
-          AnkUtils.decodeDateTimeText(self.elements.illust.datetime.textContent),
+        get dateTime () {
+          return AnkUtils.decodeDateTimeText(self.elements.illust.datetime.textContent);
+        },
 
-        get size ()
-          null,
+        get size () {
+          return null;
+        },
 
         get tags () {
           let elem = self.elements.illust.tags;
@@ -182,32 +211,36 @@ Components.utils.import("resource://gre/modules/Task.jsm");
             return [];
 
           let tags = AnkUtils.A(elem.querySelectorAll('.tag'))
-            .map(function (e) AnkUtils.trim(e.textContent))
-            .filter(function (s) s && s.length);
+            .map(e => AnkUtils.trim(e.textContent))
+            .filter(s => s && s.length);
           return tags;
         },
 
         get shortTags () {
           let limit = AnkBase.Prefs.get('shortTagsMaxLength', 8);
-          return self.info.illust.tags.filter(function (it) (it.length <= limit));
+          return self.info.illust.tags.filter(it => it.length <= limit);
         },
 
-        get tools ()
-          null,
+        get tools () {
+          return null;
+        },
 
-        get width ()
-          0,
+        get width () {
+          return 0;
+        },
 
-        get height ()
-          0,
+        get height () {
+          return 0;
+        },
 
         get server () {
           if (!self.elements.illust.flvPlayer)
             return self.info.path.image.images[0].match(/^https?:\/\/([^\/\.]+)\./i)[1];
         },
 
-        get referer ()
-          self.info.path.referer || self.info.illust.pageUrl,
+        get referer () {
+          return self.info.path.referer || self.info.illust.pageUrl;
+        },
 
         get title () {
           if (self.in.manga) {
@@ -230,11 +263,13 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           return e && !!e.href.match(/\/shunga\//);
         },
 
-        get mangaPages ()
-          self.info.path.image.images.length,
+        get mangaPages () {
+          return self.info.path.image.images.length;
+        },
 
-        get worksData ()
-          null,
+        get worksData () {
+          return null;
+        }
       };
 
       let member = {
@@ -249,30 +284,36 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           }
         },
 
-        get pixivId ()
-          member.id,
+        get pixivId () {
+          return member.id;
+        },
 
-        get name ()
-          AnkUtils.trim(self.elements.illust.userName.textContent),
+        get name () {
+          return AnkUtils.trim(self.elements.illust.userName.textContent);
+        },
 
-        get memoizedName ()
-          null,
+        get memoizedName () {
+          return null;
+        }
       };
 
       let path = {
-        get initDir ()
-          AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
+        get initDir () {
+          return AnkBase.Prefs.get('initialDirectory.' + self.SITE_NAME);
+        },
 
         get ext () {
           if (!self.elements.illust.flvPlayer)
             return AnkUtils.getFileExtension(path.image.images.length > 0 && path.image.images[0]);
         },
 
-        get mangaIndexPage ()
-          null,
+        get mangaIndexPage () {
+          return null;
+        },
 
-        get image ()
-          self._image,
+        get image () {
+          return self._image;
+        },
 
         referer: null
       };
@@ -285,7 +326,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
     })(); // }}}
 
   };
-
 
   AnkPixivModule.prototype = {
 
@@ -360,8 +400,9 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         }
 
         let context = new AnkContext(self);
-        AnkBase.addDownload(context, useDialog, debug);
-      }).then(null).catch(function (e) AnkUtils.dumpError(e,true));
+        let ev = AnkBase.createDownloadEvent(context, useDialog, debug);
+        window.dispatchEvent(ev);
+      }).then(null).catch(e => AnkUtils.dumpError(e,true));
     },
 
     /*
@@ -408,29 +449,30 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         if (self._image && self._image.images.length > 0)
           return self._image;
 
-        function setSelectedImage (image) {
+        function setSelectedImage(image) {
           self._image = image;
           return image;
         }
 
         // マンガの大サイズ画像はないらしい
         if (self.in.manga) {
-          let images = AnkUtils.A(self.elements.illust.images).filter(function (e) !!e.getAttribute('data-original')).map(function (e) e.getAttribute('data-original'));
+          let images = AnkUtils.A(self.elements.illust.images).filter(e => !!e.getAttribute('data-original')).map(e => e.getAttribute('data-original'));
           if (images.length == 0)
             return null;
 
-          return setSelectedImage({ images:images, facing:null });
+          return setSelectedImage({images: images, facing: null});
         }
 
         let status = yield AnkUtils.remoteFileExistsAsync(self.elements.illust.mediumImage.href, self.curdoc.location.href);
-        if (!status || !status.type.match(/^image\//)) {
-          let href = status.url;
-          referer = href;
-          let html = yield AnkUtils.httpGETAsync(href);
+        if (status) {
+          if (status.type.match(/^image\//))
+            return setSelectedImage({images: [status.url], facing: null});
+
+          let html = yield AnkUtils.httpGETAsync(status.url, status.referer);
           let doc = AnkUtils.createHTMLDocument(html);
           let src = doc.querySelector('.illust_view_big > img').getAttribute('src');
-          href = href.replace(/^(https?:\/\/.+?)(?:\/.*)$/,"$1")+src;
-          return setSelectedImage({ images:[href], facing:null });
+          let href = status.url.replace(/^(https?:\/\/.+?)(?:\/.*)$/, "$1") + src;
+          return setSelectedImage({images: [href], facing: null});
         }
       });
     },
@@ -482,7 +524,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
                   self.viewer.openViewer();
                 if (useClickDownload)
                   AnkBase.downloadCurrentImageAuto(self);
-              }).then(null).catch(function (e) AnkUtils.dumpError(e,true));
+              }).then(null).catch(e => AnkUtils.dumpError(e,true));
 
               e.preventDefault();
               e.stopPropagation();
@@ -505,7 +547,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
             if (e)
               e.addEventListener(
                 'click',
-                function () AnkBase.downloadCurrentImageAuto(self),
+                () => AnkBase.downloadCurrentImageAuto(self),
                 true
               );
           });
@@ -543,8 +585,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         return true;
       };
 
-      let self = this;
-      let doc = this.curdoc;
+      var self = this;
+      var doc = this.curdoc;
 
       // install now
       return AnkBase.delayFunctionInstaller(proc, 500, 20, self.SITE_NAME, '');
@@ -580,7 +622,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
               setTimeout(
                 function() {
                   AnkUtils.A(a) .
-                    forEach(function (node) self.markDownloaded(node, true));
+                    forEach(node => self.markDownloaded(node, true));
                 },
                 500     // ボックスの高さが確定するまでマーキングを遅延させる。値は適当
               );
@@ -604,17 +646,17 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         return true;
       };
 
-      let self = this;
-      let doc = this.curdoc;
+      var self = this;
+      var doc = this.curdoc;
 
       // install now
       AnkBase.delayFunctionInstaller(autoPagerize, 500, 20, self.SITE_NAME, 'autoPagerize');
       AnkBase.delayFunctionInstaller(delayMarking, 500, 20, self.SITE_NAME, 'delayMarking');
-    }, // }}}
+    } // }}}
 
   };
 
   // --------
-  global["exports"] = AnkPixivModule;
+  global["SiteModule"] = AnkPixivModule;
 
 })(this);

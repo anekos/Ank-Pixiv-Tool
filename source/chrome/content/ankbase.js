@@ -1,5 +1,6 @@
 
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Preferences.jsm");
 Components.utils.import("resource://gre/modules/osfile.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
@@ -26,8 +27,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
     })(),
 
     Modules: (function () {
-
-      console.log(this);
       const LOAD_MODULES = {
         STORAGE: 'ankstorage.js',
         SITELIST: 'anksitelist.js'
@@ -38,7 +37,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           console.log('MODULE LOAD: ' + m);
           let scope = {};
           Services.scriptloader.loadSubScript('chrome://ankpixiv/content/' + m, scope, 'UTF-8');
-          return scope.exports;
+          return scope;
         }
         catch (e) {
           Components.utils.reportError(e);
@@ -49,8 +48,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         Storage: (function () {
           if (LOAD_MODULES.STORAGE) {
             let m = loadScript(LOAD_MODULES.STORAGE);
-            if (m)
-              return m;
+            if (m && m.StorageModule)
+              return m.StorageModule;
           }
         })(),
 
@@ -58,11 +57,12 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           var sites = [];
           if (LOAD_MODULES.SITELIST) {
             let m = loadScript(LOAD_MODULES.SITELIST);
-            if (m) {
-              m.SITES.forEach(function (smn) {
+            if (m && m.SiteModuleList) {
+              m.SiteModuleList.SITES.forEach(function (smn) {
                 let sm = loadScript(smn);
-                if (sm)
-                  sites.push(sm);
+                if (sm && sm.SiteModule) {
+                  sites.push(sm.SiteModule);
+                }
               });
             }
           }
@@ -298,7 +298,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
               return doc.AnkPixivModule;
             }
 
-            // サイトモジュールが外から見えないパターン
+            // 外から見えないパターン
             ++AnkBase.ankpixivid;
             doc._ankpixivid = AnkBase.ankpixivid.toString();
             let m = new module(doc);
@@ -326,6 +326,9 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       return sets;
     },
 
+    /**
+     * サイトモジュールが有効設定になっているかどうか
+     */
     isModuleEnabled: function (modid) {
       return AnkBase.Prefs.get('useSiteModule.'+modid, true);
     },
@@ -877,7 +880,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       return download;
     },
 
-    addDownload: function (context, useDialog, debug) {
+    createDownloadEvent: function (context, useDialog, debug) {
       let ev = document.createEvent('Event');
       ev.initEvent('ankDownload', true, false);
       ev.__download = {
@@ -890,7 +893,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         limit: undefined,               // キューから追い出される時刻
         result: undefined               // ダウンロード結果
       };
-      window.dispatchEvent(ev);
+      return ev;
     },
 
     removeDownload: function (download, result) {
@@ -1286,13 +1289,14 @@ Components.utils.import("resource://gre/modules/Task.jsm");
             return '.png';
           if (header.match(/^GIF8/))
             return '.gif';
-          if (header.match(/^\x00\x00\x00\x1Cftyp/))
+          if (header.match(/^\x00\x00/) && header.match(/ftyp/))
             return '.mp4';
+          if (header.match(/\x1A\x45\xDF\xA3/))
+            return '.webm';
           if (header.match(/^PK\x03\x04/))
             return '.zip';
           if (header.match(/JFIF|^\xFF\xD8/))
             return '.jpg';
-          return;
         })();
         if (!ext)
           throw new Error('fixFileExt: failed for unknown file type.');
@@ -1768,6 +1772,12 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         }
       }
 
+      if (AnkBase.Storage) {
+        // 初期化済み
+        return;
+      }
+
+      // 試験的モジュールは捨てる
       AnkBase.Modules.Sites = AnkBase.Modules.Sites.filter(function (m) {
         if (!AnkBase.Prefs.get('useExperimentalModules', false) && m.prototype.EXPERIMENTAL) {
           AnkUtils.dump('skip experimental module: '+m.prototype.SITE_NAME+', '+m.prototype.SERVICE_ID);
@@ -1883,7 +1893,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         }
       } else {
         let open = function (left) {
-          let tab = AnkBase.AllPrefs.get('extensions.tabmix.opentabfor.bookmarks', false);
+          let tab = Preferences.get('extensions.tabmix.opentabfor.bookmarks', false);
           if (!!left ^ !!tab)
             AnkUtils.loadURI(curmod.URL);
           else
@@ -1895,6 +1905,16 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         }
       }
     }, // }}}
+
+    onContextMenu: function (ev) {
+      let curmod = AnkBase.currentModule();
+      if (!curmod)
+        return;
+
+      let useDialog = AnkBase.Prefs.get('showSaveDialog', true);
+      let confirmDownloaded = AnkBase.Prefs.get('confirmExistingDownload');
+      return AnkBase.downloadCurrentImage(curmod, useDialog, confirmDownloaded);
+    },
 
     /********************************************************************************
     * 外部向け
@@ -1921,10 +1941,24 @@ Components.utils.import("resource://gre/modules/Task.jsm");
     }
   };
 
-  //
-  //AnkBase.loadModules();
-
   // --------
-  global["AnkBase"] = AnkBase;
+  global["AnkBase"] = {
+    Prefs: AnkBase.Prefs,
+    Locale: AnkBase.Locale,
+    FIT: AnkBase.FIT,
+
+    onInit: AnkBase.onInit,
+    onDownloadButtonClick: AnkBase.onDownloadButtonClick,
+    onContextMenu: AnkBase.onContextMenu,
+    getModuleSettings: AnkBase.getModuleSettings,
+
+    delayFunctionInstaller: AnkBase.delayFunctionInstaller,
+    markDownloaded: AnkBase.markDownloaded,
+    insertDownloadedDisplayById: AnkBase.insertDownloadedDisplayById,
+    downloadCurrentImageAuto: AnkBase.downloadCurrentImageAuto,
+    createDownloadEvent: AnkBase.createDownloadEvent,
+
+    expose: AnkBase.expose
+  };
 
 })(this);

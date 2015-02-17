@@ -519,7 +519,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         }
 
         let context = new AnkContext(self);
-        AnkBase.addDownload(context, useDialog, debug);
+        let ev = AnkBase.createDownloadEvent(context, useDialog, debug);
+        window.dispatchEvent(ev);
       }).then(null).catch(e => AnkUtils.dumpError(e,true));
     },
 
@@ -1000,6 +1001,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
   };
 
   // --------
-  global["exports"] = AnkPixivModule;
+  global["SiteModule"] = AnkPixivModule;
 
 })(this);

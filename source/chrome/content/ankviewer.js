@@ -1,7 +1,7 @@
 
 Components.utils.import("resource://gre/modules/Task.jsm");
 
-AnkViewer = function (module) {
+var AnkViewer = function (module) {
 
   if (!module)
     return null;
@@ -23,8 +23,9 @@ AnkViewer = function (module) {
 
   // エレメントの作成
   let createElement = function (tagName, id) {
-    function IDPrefix (id)
-      ('ank-pixiv-large-viewer-' + id)
+    function IDPrefix (id) {
+      return ('ank-pixiv-large-viewer-' + id);
+    }
 
     let elem = doc.createElement(tagName);
     if (id)
@@ -108,11 +109,11 @@ AnkViewer = function (module) {
       buttonOpacity = 0;
     }
 
-    let buttonOpacity = getMaxPanelOpacity();
+    var buttonOpacity = getMaxPanelOpacity();
     fadeOutTimer = setInterval(fadeOutTimerHandler, 100);
   };
 
-  let fadeOutTimer;
+  var fadeOutTimer;
 
   // 画像のサイズを変更する
   let autoResize = function (ev) {
@@ -217,7 +218,7 @@ AnkViewer = function (module) {
     },200);
   };
 
-  let qresize;
+  var qresize;
 
   // Fitボタンを押したらFit Modeを変更する
   let rotateFitMode = function() {
@@ -314,7 +315,7 @@ AnkViewer = function (module) {
       }
 
       body.style.backgroundImage = 'none';
-      bigImg.style.display = fpImg.style.display = 'none';  // 最初の１枚は描画が完了するまで表示しない 
+      bigImg.style.display = fpImg.style.display = 'none';  // 最初の１枚は描画が完了するまで表示しない
       loadBigImage(currentMangaPage);
       viewer.style.display = '';
       if (wrapper) {
@@ -336,7 +337,7 @@ AnkViewer = function (module) {
       updateButtons();
     }
 
-    let wrapperTopMargin;
+    var wrapperTopMargin;
 
     if (bigMode) {
       hide();
@@ -360,7 +361,7 @@ AnkViewer = function (module) {
           }
           show();
           bigMode = !bigMode;
-        }).then(null).catch(function (e) AnkUtils.dumpError(e,true));
+        }).then(null).catch(e => AnkUtils.dumpError(e,true));
       }
       else {
         show();
@@ -395,7 +396,7 @@ AnkViewer = function (module) {
     }
   };
 
-  let updateButtons = function () {
+  var updateButtons = function () {
     (pageSelector.value = currentMangaPage);
   };
 
@@ -417,43 +418,42 @@ AnkViewer = function (module) {
   ********************************************************************************/
 
   // closure {{{
-  let doc = module.elements.doc;
-  let win = doc.defaultView;
-  let body = module.elements.illust.body;
-  let wrapper = module.elements.illust.wrapper;
-  let medImg = module.elements.illust.mediumImage;
-  let openComment = module.elements.illust.openComment; 
-  let openCaption = module.elements.illust.openCaption; 
-  let ads = module.elements.illust.ads;
-  let bgImage = win.getComputedStyle(doc.body, '').backgroundImage;
+  var doc = module.elements.doc;
+  var win = doc.defaultView;
+  var body = module.elements.illust.body;
+  var wrapper = module.elements.illust.wrapper;
+  var openComment = module.elements.illust.openComment;
+  var openCaption = module.elements.illust.openCaption;
+  var ads = module.elements.illust.ads;
+  var bgImage = win.getComputedStyle(doc.body, '').backgroundImage;
 
-  let images = null;
-  let facing = null;
-  let totalMangaPages = 0;
-  let currentMangaPage = 0;
-  let fitMode = AnkBase.Prefs.get('largeImageSize', AnkBase.FIT.NONE);
-  let bigMode = false;
-  let pos = {};
-  let openpos = {};
-  let scrollbarSize = AnkUtils.scrollbarSize;
-  let loadings = 0;
+  var images = null;
+  var facing = null;
+  var totalMangaPages = 0;
+  var currentMangaPage = 0;
+  var fitMode = AnkBase.Prefs.get('largeImageSize', AnkBase.FIT.NONE);
+  var bigMode = false;
+  var pos = {};
+  var openpos = {};
+  var scrollbarSize = AnkUtils.scrollbarSize;
+  var loadings = 0;
   // }}}
 
   /********************************************************************************
   * コンポーネントの生成
   ********************************************************************************/
 
-  let viewer = createElement('div', 'panel');
-  let bigImg = createElement('img', 'image');
-  let fpImg = createElement('img', 'image');
-  let imgContainer = createElement('div', 'image-container');
-  let imgPanel = createElement('div', 'image-panel');
-  let buttonPanel = createElement('div', 'button-panel');
-  let prevButton = createElement('button', 'previous-button');
-  let nextButton = createElement('button', 'next-button');
-  let resizeButton = createElement('button', 'resize-button');
-  let closeButton = createElement('button', 'close-button');
-  let pageSelector = createElement('select', 'page-selector');
+  var viewer = createElement('div', 'panel');
+  var bigImg = createElement('img', 'image');
+  var fpImg = createElement('img', 'image');
+  var imgContainer = createElement('div', 'image-container');
+  var imgPanel = createElement('div', 'image-panel');
+  var buttonPanel = createElement('div', 'button-panel');
+  var prevButton = createElement('button', 'previous-button');
+  var nextButton = createElement('button', 'next-button');
+  var resizeButton = createElement('button', 'resize-button');
+  var closeButton = createElement('button', 'close-button');
+  var pageSelector = createElement('select', 'page-selector');
 
   viewer.setAttribute('style', 'top: 0px; left: 0px; width: 100%; height: 100%; text-align: center; display: none; -moz-opacity: 1; padding: 0px; bottom: 0px');
   prevButton.innerHTML = '<<';
@@ -466,7 +466,7 @@ AnkViewer = function (module) {
   imgContainer.setAttribute('style', 'margin: auto');
   imgPanel.setAttribute('style', 'margin: 0px');
 
-  [prevButton, nextButton, resizeButton, closeButton].forEach(function (button) {
+  [ prevButton, nextButton, resizeButton, closeButton ].forEach(function (button) {
     button.setAttribute('class', 'submit_btn');
     button.setAttribute('style', 'text-align: center;');
   });
@@ -506,17 +506,19 @@ AnkViewer = function (module) {
   ********************************************************************************/
 
   // 左右のimgに同じ操作を行う
-  function imgCtrl (func)
-    AnkUtils.A(imgPanel.querySelectorAll('#ank-pixiv-large-viewer-image')).forEach(function (e) func(e))
+  function imgCtrl (func) {
+    AnkUtils.A(imgPanel.querySelectorAll('#ank-pixiv-large-viewer-image')).forEach(func);
+  }
+
 
   // 画像を読み込んだら表示サイズの調整を行う
-  imgCtrl(function (e) e.addEventListener('load', autoResize, true));
+  imgCtrl(e => e.addEventListener('load', autoResize, true));
 
   // 画像の読み込みに失敗した
-  imgCtrl(function (e) e.addEventListener('error', loadError, true));
+  imgCtrl(e => e.addEventListener('error', loadError, true));
 
   // 大画像をクリックしたら、状態に応じてページを進めたり閉じたりする
-  imgCtrl(function (e) e.addEventListener('click', noMoreEvent(clickedBigImg), false));
+  imgCtrl(e => e.addEventListener('click', noMoreEvent(clickedBigImg), false));
 
   // ボタンパネルの出し入れ
   buttonPanel.addEventListener('mouseover', showButtons, false);
@@ -524,8 +526,8 @@ AnkViewer = function (module) {
 
   // ページの進む戻る
   let turnNextPage = AnkBase.Prefs.get('swapArrowButton', false) ? -1 : 1;
-  prevButton.addEventListener('click', noMoreEvent(function () goNextPage(-turnNextPage, true)), false);
-  nextButton.addEventListener('click', noMoreEvent(function () goNextPage(turnNextPage, true)), false);
+  prevButton.addEventListener('click', noMoreEvent(() => goNextPage(-turnNextPage, true)), false);
+  nextButton.addEventListener('click', noMoreEvent(() => goNextPage(turnNextPage, true)), false);
 
   // リサイズ方法を変更する
   resizeButton.addEventListener('click', noMoreEvent(rotateFitMode), false);
@@ -534,10 +536,10 @@ AnkViewer = function (module) {
   closeButton.addEventListener('click', noMoreEvent(changeImageSize), false);
 
   // ページを番号で選択
-  pageSelector.addEventListener('change', noMoreEvent(function () goPage(parseInt(pageSelector.value, 10))), true);
+  pageSelector.addEventListener('change', noMoreEvent(() => goPage(parseInt(pageSelector.value, 10))), true);
 
   // セレクタをクリックしても何も実行させない
-  pageSelector.addEventListener('click', noMoreEvent(function () void 0), false);
+  pageSelector.addEventListener('click', noMoreEvent(() => void 0), false);
 
   // 大画像以外の場所をクリックしたら閉じる
   doc.addEventListener(
@@ -555,19 +557,19 @@ AnkViewer = function (module) {
   // 画像の読込中エフェクト
   if (AnkBase.Prefs.get('useLoadProgress', true) && MutationObserver) {
     let loadingFunc = function () {
-      imgCtrl(function (e) e.style.setProperty('opacity', '0.5', 'important'));
+      imgCtrl(e => e.style.setProperty('opacity', '0.5', 'important'));
     };
 
     let loadedFunc = function () {
       if (--loadings <= 0)
-        imgCtrl(function (e) e.style.setProperty('opacity', '1', 'important'));
+        imgCtrl(e => e.style.setProperty('opacity', '1', 'important'));
     };
 
     // 画像ロード中は半透明にする
-    imgCtrl(function (e) new MutationObserver(loadingFunc).observe(e, {attributes: true, attributeFilter: ['src']}));
+    imgCtrl(e => new MutationObserver(loadingFunc).observe(e, {attributes: true, attributeFilter: ['src']}));
 
     // 画像ロード完了後に半透明を解除
-    imgCtrl(function (e) e.addEventListener('load', loadedFunc, false));
+    imgCtrl(e => e.addEventListener('load', loadedFunc, false));
   }
 
   /********************************************************************************

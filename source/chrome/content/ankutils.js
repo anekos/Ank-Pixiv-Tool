@@ -181,6 +181,12 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
       return conv.ConvertToUnicode(s);
     }, // }}}
 
+    dumpObject: function (obj) {
+      if (obj)
+        for (let p in obj)
+          console.log('* '+p+' = '+obj[p]);
+   },
+
     errorToString: function (error) { // {{{
       try {
        return "[" + error.name + "]\n" +

@@ -22,6 +22,6 @@
   })();
 
   // --------
-  global["exports"] = SiteModuleList;
+  global["SiteModuleList"] = SiteModuleList;
 
 })(this);
