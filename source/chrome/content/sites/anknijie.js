@@ -34,14 +34,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         return self.info.illust.pageUrl.match(/^https?:\/\/nijie\.info\/view\.php\?id=/);
       }, // }}}
 
-      get myPage () {
-        return false;  // under construction
-      },
-
-      get myIllust () {
-        return false;  // under construction
-      },
-
       // 外から使ってはいけない
 
       get doujinPage () {
@@ -148,19 +140,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         }
       };
 
-      let mypage = {
-        get fantasyDisplay () {
-          return null; // under construction
-        },
-
-        get fantasyDisplayNext () {
-          return null; // under construction
-        }
-      };
- 
       return {
         illust: illust,
-        mypage: mypage,
         get doc () {
           return self.curdoc;
         }
@@ -364,7 +345,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         }
 
         let context = new AnkContext(self);
-        AnkBase.addDownload(context, useDialog, debug);
+        let ev = AnkBase.createDownloadEvent(context, useDialog, debug);
+        window.dispatchEvent(ev);
       }).then(null).catch(e => AnkUtils.dumpError(e,true));
     },
 

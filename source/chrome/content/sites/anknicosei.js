@@ -34,15 +34,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         return self.in.manga
           ||
           self.info.illust.pageUrl.match(/seiga\.nicovideo\.jp\/seiga\/im/);
-      }, // }}}
-
-      get myPage () {
-        return false;
-      },  // under construction
-
-      get myIllust () {
-        return false;
-      }  // under construction
+      } // }}}
     }; // }}}
 
     self.elements = (function () { // {{{
@@ -168,19 +160,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         }
       };
 
-      let mypage = {
-        get fantasyDisplay () {
-          return null; // under construction
-        },
-
-        get fantasyDisplayNext () {
-          return null; // under construction
-        }
-      };
- 
       return {
         illust: illust,
-        mypage: mypage,
         get doc () {
           return self.curdoc;
         }

@@ -264,10 +264,18 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
       let curdoc = doc || AnkBase.currentDoc;
       let curmod = null;
+      let ankpixivid = (function () {
+        try {
+          return curdoc._ankpixivid;
+        }
+        catch (e) {
+          //
+        }
+      })();
       for (let p in AnkBase.SiteModuleInstances) {
         try {
-          if (curdoc._ankpixivid === AnkBase.SiteModuleInstances[p].curdoc._ankpixivid)
-            curmod = AnkBase.SiteModuleInstances[curdoc._ankpixivid];
+          if (AnkBase.SiteModuleInstances[p].curdoc._ankpixivid === ankpixivid)
+            curmod = AnkBase.SiteModuleInstances[ankpixivid];
         }
         catch (e) {
           delete AnkBase.SiteModuleInstances[p];

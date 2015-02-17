@@ -48,17 +48,13 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         return self.in.medium;
       }, // }}}
 
-      get myPage () { // {{{
-        return (self.info.illust.pageUrl == 'http://www.pixiv.net/mypage.php');
-      }, // }}}
+      /*
+       * 以下はモジュールローカル部品
+       */
 
       get myIllust () { // {{{
         return !self.elements.illust.avatar;
       }, // }}}
-
-      /*
-       * 以下はモジュールローカル部品
-       */
 
       // elementsを使っているが確定後にしか使わないのでOK
       get feed () { // {{{
@@ -266,19 +262,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
       };
 
-      let mypage = {
-        get fantasyDisplay () {
-          return query('#' + self.ID_FANTASY_DISPLAY);
-        },
-
-        get fantasyDisplayNext () {
-          return query('#contents > div > div.area_pixivmobile');
-        }
-      };
-
       return {
         illust: illust,
-        mypage: mypage,
         get doc () {
           return self.curdoc;
         }

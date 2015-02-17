@@ -273,7 +273,7 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
         throw new Error(msg);
       }
 
-      if (!self.Prefs.get('warnWrongDatetimeFormat', true))
+      if (self.Prefs.get('warnWrongDatetimeFormat', true))
         window.alert(msg);
 
       return self.getDecodedDateTime(new Date(), true);

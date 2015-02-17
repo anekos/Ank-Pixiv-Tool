@@ -35,14 +35,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           self.in.gallery;        // ポップアップ中
       }, // }}}
 
-      get myPage () {
-        return false;  // under construction
-      },
-
-      get myIllust () {
-        return false;  // under construction
-      },
-
       /*
        * 以下はモジュールローカル部品
        */
@@ -233,19 +225,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         }
       };
 
-      let mypage = {
-        get fantasyDisplay () {
-          return null; // under construction
-        },
-
-        get fantasyDisplayNext () {
-          return null; // under construction
-        }
-      };
- 
       return {
         illust: illust,
-        mypage: mypage,
         get doc () {
           return self.curdoc;
         }

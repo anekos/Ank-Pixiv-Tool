@@ -22,46 +22,50 @@ Components.utils.import("resource://gre/modules/Task.jsm");
     ********************************************************************************/
 
     self.in = { // {{{
-      get manga () // {{{
-        false, // }}}
+      get manga () { // {{{
+        return false;
+      }, // }}}
 
-      get medium () // {{{
-        self.in.illustPage, // }}}
+      get medium () { // {{{
+        return self.in.illustPage;
+      }, // }}}
 
-      get illustPage () // {{{
-        self.info.illust.pageUrl.match(/^https?:\/\/img\.ly\/[^/]+?(?:\?|$)/), // }}}
-
-      get myPage ()
-        false,  // under construction
-
-      get myIllust ()
-        false,  // under construction
+      get illustPage () { // {{{
+        return self.info.illust.pageUrl.match(/^https?:\/\/img\.ly\/[^/]+?(?:\?|$)/);
+      } // }}}
     }; // }}}
 
     self.elements = (function () { // {{{
-      function query (q)
-        self.elements.doc.querySelector(q)
+      function query (q) {
+        return self.elements.doc.querySelector(q);
+      }
 
-      function queryAll (q)
-        self.elements.doc.querySelectorAll(q)
+      function queryAll (q) {
+        return self.elements.doc.querySelectorAll(q);
+      }
 
       let illust =  {
-        get largeLink ()
-          query('#button-fullview > a'),
+        get largeLink () {
+          return query('#button-fullview > a');
+        },
 
-        get date ()
-          query('#image-date > strong'),
+        get date () {
+          return query('#image-date > strong');
+        },
 
-        get title ()
-          query('#image-description'),
+        get title () {
+          return query('#image-description');
+        },
 
-        get memberLink ()
-          query('.name > a'),
+        get memberLink () {
+          return query('.name > a');
+        },
 
         // require for AnkBase
 
-        get downloadedDisplayParent ()
-          query('#profile'),
+        get downloadedDisplayParent () {
+          return query('#profile');
+        },
 
         // require for AnkViewer
 
@@ -70,106 +74,122 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           return e && e.length > 0 && e[0];
         },
 
-        get wrapper ()
-          query('#content'),
+        get wrapper () {
+          return query('#content');
+        },
 
-        get mediumImage ()
-          query('#the-image'),
+        get mediumImage () {
+          return query('#the-image');
+        },
 
         get ads () {
           let header = query('#header');
 
           return ([]).concat(header);
-        },
+        }
       };
 
-      let mypage = {
-        get fantasyDisplay ()
-          null, // under construction
-
-        get fantasyDisplayNext ()
-          null, // under construction
-      };
- 
       return {
         illust: illust,
-        mypage: mypage,
-        get doc () self.curdoc
+        get doc () {
+          return self.curdoc;
+        }
       };
     })(); // }}}
 
     self.info = (function () { // {{{
       let illust = {
-        get pageUrl ()
-          self.elements.doc.location.href,
+        get pageUrl () {
+          return self.elements.doc.location.href;
+        },
 
-        get id ()
-          self.getIllustId(),
+        get id () {
+          return self.getIllustId();
+        },
 
-        get dateTime ()
-          AnkUtils.decodeDateTimeText(self.elements.illust.date.textContent),
+        get dateTime () {
+          return AnkUtils.decodeDateTimeText(self.elements.illust.date.textContent);
+        },
 
-        get size ()
-          null,
+        get size () {
+          return null;
+        },
 
-        get tags ()
-          [],
+        get tags () {
+          return [];
+        },
 
-        get shortTags ()
-          [],
+        get shortTags () {
+          return [];
+        },
 
-        get tools ()
-          null,
+        get tools () {
+          return null;
+        },
 
-        get width ()
-          0,
+        get width () {
+          return 0;
+        },
 
-        get height ()
-          0,
+        get height () {
+          return 0;
+        },
 
-        get server ()
-          null,
+        get server () {
+          return null;
+        },
 
-        get referer ()
-          self.elements.illust.largeLink.href,
+        get referer () {
+          return self.elements.illust.largeLink.href;
+        },
 
-        get title ()
-          AnkUtils.trim(self.elements.illust.title.textContent),
+        get title () {
+          return AnkUtils.trim(self.elements.illust.title.textContent);
+        },
 
-        get comment ()
-          illust.title,
+        get comment () {
+          return illust.title;
+        },
 
-        get R18 ()
-          false,
-
+        get R18 () {
+          return false;
+        }
       };
 
       let member = {
-        get id ()
-          self.elements.illust.memberLink.href.match(/^https?:\/\/img\.ly\/images\/([^/]+?)(?:\?|$)/)[1],
+        get id () {
+          return self.elements.illust.memberLink.href.match(/^https?:\/\/img\.ly\/images\/([^/]+?)(?:\?|$)/)[1];
+        },
 
-        get pixivId ()
-          member.id,
+        get pixivId () {
+          return member.id;
+        },
 
-        get name ()
-          AnkUtils.trim(self.info.member.id),
+        get name () {
+          return AnkUtils.trim(self.info.member.id);
+        },
 
-        get memoizedName ()
-          null,
+        get memoizedName () {
+          return null;
+        }
       };
 
       let path = {
-        get initDir ()
-          AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
+        get initDir () {
+          return AnkBase.Prefs.get('initialDirectory.' + self.SITE_NAME);
+        },
 
-        get ext ()
-          AnkUtils.getFileExtension(path.image.images.length > 0 && path.image.images[0]),
+        get ext () {
+          return AnkUtils.getFileExtension(path.image.images.length > 0 && path.image.images[0]);
+        },
 
-        get mangaIndexPage ()
-          null,
+        get mangaIndexPage () {
+          return null;
+        },
 
-        get image ()
-          self._image,
+        get image () {
+          return self._image;
+        }
       };
 
       return {
@@ -178,8 +198,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         path: path
       };
     })(); // }}}
-
-    self.downloadable = true;
 
   };
 
@@ -255,8 +273,9 @@ Components.utils.import("resource://gre/modules/Task.jsm");
          }
 
          let context = new AnkContext(self);
-         AnkBase.addDownload(context, useDialog, debug);
-       }).then(null).catch(function (e) AnkUtils.dumpError(e,true));
+         let ev = AnkBase.createDownloadEvent(context, useDialog, debug);
+         window.dispatchEvent(ev);
+       }).then(null).catch(e =>qAnkUtils.dumpError(e,true));
      },
 
      /*
@@ -347,7 +366,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
                   self.viewer.openViewer();
                 if (useClickDownload)
                   AnkBase.downloadCurrentImageAuto(self);
-              }).then(null).catch(function (e) AnkUtils.dumpError(e,true));
+              }).then(null).catch(e => AnkUtils.dumpError(e,true));
 
               if (useCapture) {
                 e.preventDefault();
@@ -375,8 +394,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         return true;
       };
 
-      let self = this;
-      let doc = this.curdoc;
+      var self = this;
+      var doc = this.curdoc;
 
       // install now
       return AnkBase.delayFunctionInstaller(proc, 500, 20, self.SITE_NAME, '');
@@ -400,16 +419,16 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         return true;
       };
 
-      let self = this;
-      let doc = this.curdoc;
+      var self = this;
+      var doc = this.curdoc;
 
       // install now
       return AnkBase.delayFunctionInstaller(delayMarking, 1000, 20, self.SITE_NAME, 'delayMarking');  // おそい:interval=1000
-    }, // }}}
+    } // }}}
 
   };
 
   // --------
-  global["exports"] = AnkPixivModule;
+  global["SiteModule"] = AnkPixivModule;
 
 })(this);

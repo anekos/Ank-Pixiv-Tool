@@ -22,71 +22,81 @@ Components.utils.import("resource://gre/modules/Task.jsm");
     ********************************************************************************/
 
     self.in = { // {{{
-      get manga () // {{{
-        (self.info.illust.mangaPages > 1), // }}}
+      get manga () { // {{{
+        return (self.info.illust.mangaPages > 1);
+      }, // }}}
 
-      get medium () // {{{
-        self.in.illustPage, // }}}
+      get medium () { // {{{
+        return self.in.illustPage;
+      }, // }}}
 
-      get illustPage () // {{{
-        self.info.illust.pageUrl.match(/^https?:\/\/www\.tinami\.com\/view\//), // }}}
-
-      get myPage ()
-        false,  // under construction
-
-      get myIllust ()
-        false,  // under construction
+      get illustPage () { // {{{
+        return self.info.illust.pageUrl.match(/^https?:\/\/www\.tinami\.com\/view\//);
+      } // }}}
     }; // }}}
 
     self.elements = (function () { // {{{
-      function query (q)
-        self.elements.doc.querySelector(q)
+      function query (q) {
+        return self.elements.doc.querySelector(q);
+      }
 
-      function queryAll (q)
-        self.elements.doc.querySelectorAll(q)
+      function queryAll (q) {
+        return self.elements.doc.querySelectorAll(q);
+      }
 
       let illust =  {
         get images () {
           let e = query('.captify')
           if (e)
             return [e];
-          return queryAll('.viewbody > * > img');
+          return queryAll('.viewbody img');
         },
 
-        get datetime ()
-          query('.view_info'),
+        get datetime () {
+          return query('.view_info');
+        },
 
-        get title ()
-          query('.viewdata > h1 > span'),
+        get title () {
+          return query('.viewdata > h1 > span');
+        },
 
-        get comment ()
-          query('.description'),
+        get comment () {
+          return query('.description');
+        },
 
-        get userName ()
-          query('.prof > p > a > strong'),
+        get userName () {
+          return query('.prof > p > a > strong');
+        },
 
-        get memberLink ()
-          query('.prof > p > a'),
+        get memberLink () {
+          return query('.prof > p > a');
+        },
 
-        get tags ()
-          queryAll('.tag > span'),
+        get tags () {
+          return queryAll('.tag > span');
+        },
 
-        get typeImages ()
-          queryAll('.viewdata > p > img'),
+        get typeImages () {
+          return queryAll('.viewdata > p > img');
+        },
 
-        get postParams ()
-          queryAll('#open_original_content > input'),
+        get postParams () {
+          return queryAll('#open_original_content > input');
+        },
 
-        get nextLink()
-          query('.mvnext > a'),
+        get nextLink() {
+          return query('.mvnext > a');
+        },
 
-        get prevLink()
-          query('.mvprev > a'),
+        get prevLink() {
+          return query('.mvprev > a');
+        },
 
         // require for AnkBase
 
-        get downloadedDisplayParent ()
-          query('.description'),
+        get downloadedDisplayParent () {
+          return query('.description');
+        },
 
         // require for AnkViewer
 
@@ -96,121 +106,140 @@ Components.utils.import("resource://gre/modules/Task.jsm");
             return e.length > 0 && e[0];
         },
 
-        get wrapper ()
-          query('#container'),
+        get wrapper () {
+          return query('#container');
+        },
 
-        get mediumImage ()
-          illust.images[0],
+        get mediumImage () {
+          return illust.images[0];
+        },
 
-        get imageOverlay ()
-          query('.viewbody'), 
+        get imageOverlay () {
+          return query('.viewbody');
+        },
 
-        get largeForm ()
-          query('#open_original_content'),
+        get largeForm () {
+          return query('#open_original_content');
+        },
 
-        get openCaption ()
-          query('#show_all'),
+        get openCaption () {
+          return query('#show_all');
+        },
 
         get ads () {
           let header = query('#header');
           let controller = query('#controller');
 
           return ([]).concat(header, controller);
-        },
+        }
       };
 
-      let mypage = {
-        get fantasyDisplay ()
-          null, // under construction
-
-        get fantasyDisplayNext ()
-          null, // under construction
-      };
- 
       return {
         illust: illust,
-        mypage: mypage,
-        get doc () self.curdoc
+        get doc () {
+          return self.curdoc;
+        }
       };
     })(); // }}}
 
     self.info = (function () { // {{{
       let illust = {
-        get pageUrl ()
-          self.elements.doc.location.href,
+        get pageUrl () {
+          return self.elements.doc.location.href;
+        },
 
-        get id ()
-          self.getIllustId(),
+        get id () {
+          return self.getIllustId();
+        },
 
-        get dateTime ()
-          AnkUtils.decodeDateTimeText(self.elements.illust.datetime.textContent),
+        get dateTime () {
+          return AnkUtils.decodeDateTimeText(self.elements.illust.datetime.textContent);
+        },
 
-        get size ()
-          null,
+        get size () {
+          return null;
+        },
 
-        get tags ()
-          AnkUtils.A(self.elements.illust.tags).filter(function (e) AnkUtils.trim(e.textContent)),
+        get tags () {
+          return AnkUtils.A(self.elements.illust.tags).filter(e => AnkUtils.trim(e.textContent));
+        },
 
         get shortTags () {
           let limit = AnkBase.Prefs.get('shortTagsMaxLength', 8);
-          return self.info.illust.tags.filter(function (it) (it.length <= limit));
+          return self.info.illust.tags.filter(it => (it.length <= limit));
         },
 
-        get tools ()
-          null,
+        get tools () {
+          return null;
+        },
 
-        get width ()
-          0,
+        get width () {
+          return 0;
+        },
 
-        get height ()
-          0,
+        get height () {
+          return 0;
+        },
 
-        get server ()
-          null,
+        get server () {
+          return null;
+        },
 
-        get referer ()
-          self.info.illust.pageUrl,
+        get referer () {
+          return self.info.illust.pageUrl;
+        },
 
-        get title ()
-          AnkUtils.trim(self.elements.illust.title.textContent),
+        get title () {
+          return AnkUtils.trim(self.elements.illust.title.textContent);
+        },
 
-        get comment ()
-          AnkUtils.trim(self.elements.illust.comment.textContent),
+        get comment () {
+          return AnkUtils.trim(self.elements.illust.comment.textContent);
+        },
 
-        get R18 ()
-          false,
+        get R18 () {
+          return false;
+        },
 
-        get mangaPages ()
-          self.info.path.image.images.length,
-
+        get mangaPages () {
+          return self.info.path.image.images.length;
+        }
       };
 
       let member = {
-        get id ()
-          self.elements.illust.memberLink.href.match(/\/profile\/(.+)(?:\?|$)/)[1],
+        get id () {
+          return self.elements.illust.memberLink.href.match(/\/profile\/(.+)(?:\?|$)/)[1];
+        },
 
-        get pixivId ()
-          member.id,
+        get pixivId () {
+          return member.id;
+        },
 
-        get name ()
-          AnkUtils.trim(self.elements.illust.userName.textContent),
+        get name () {
+          return AnkUtils.trim(self.elements.illust.userName.textContent);
+        },
 
-        get memoizedName ()
-          null,
+        get memoizedName () {
+          return null;
+        }
       };
 
       let path = {
-        get initDir ()
-          AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
+        get initDir () {
+          return AnkBase.Prefs.get('initialDirectory.' + self.SITE_NAME);
+        },
 
-        get ext ()
-          AnkUtils.getFileExtension(path.image.images.length > 0 && path.image.images[0]),
+        get ext () {
+          return AnkUtils.getFileExtension(path.image.images.length > 0 && path.image.images[0]);
+        },
 
-        get mangaIndexPage ()
-          null,
+        get mangaIndexPage () {
+          return null;
+        },
 
-        get image ()
-          self._image,
+        get image () {
+          return self._image;
+        }
       };
 
       return {
@@ -294,8 +323,9 @@ Components.utils.import("resource://gre/modules/Task.jsm");
          }
 
          let context = new AnkContext(self);
-         AnkBase.addDownload(context, useDialog, debug);
-       }).then(null).catch(function (e) AnkUtils.dumpError(e,true));
+         let ev = AnkBase.createDownloadEvent(context, useDialog, debug);
+         window.dispatchEvent(ev);
+       }).then(null).catch(e => AnkUtils.dumpError(e,true));
      },
 
      /*
@@ -347,12 +377,12 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
          // マンガ
          if (!self.elements.illust.largeForm) {
-           m = AnkUtils.A(self.elements.illust.images).map(function (e) e.src);
+           m = AnkUtils.A(self.elements.illust.images).map(e => e.src);
          }
          else {
            // イラスト
            let params = AnkUtils.A(self.elements.illust.postParams).
-                          map(function (e) (e.getAttribute('name')+'='+e.getAttribute('value'))).
+                          map(e => (e.getAttribute('name')+'='+e.getAttribute('value'))).
                             join('&');
            let html = yield AnkUtils.httpGETAsync(self.info.illust.pageUrl, self.info.illust.pageUrl, params);
            let doc = AnkUtils.createHTMLDocument(html);
@@ -360,8 +390,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
              return null;
 
            m = Array.slice(doc.querySelectorAll('img')).
-                 filter(function (e) e.src.match(/^https?:\/\/img\.tinami\.com\/illust\d*\/img\//)).
-                   map(function (e) e.src);
+                 filter(e => e.src.match(/^https?:\/\/img\.tinami\.com\/illust\d*\/img\//)).
+                   map(e => e.src);
          }
 
          return setSelectedImage({ images: m, facing: null });
@@ -411,7 +441,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
                   self.viewer.openViewer();
                 if (useClickDownload)
                   AnkBase.downloadCurrentImageAuto(self);
-              }).then(null).catch(function (e) AnkUtils.dumpError(e,true));
+              }).then(null).catch(e => AnkUtils.dumpError(e,true));
 
               if (useCapture) {
                 e.preventDefault();
@@ -438,13 +468,13 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
         // 続きを表示
         if (AnkBase.Prefs.get('openCaption', false) && openCaption)
-          setTimeout(function () openCaption.click(), 1000);
+          setTimeout(() => openCaption.click(), 1000);
 
         return true;
       };
 
-      let self = this;
-      let doc = this.curdoc;
+      var self = this;
+      var doc = this.curdoc;
 
       // install now
       return AnkBase.delayFunctionInstaller(proc, 500, 40, self.SITE_NAME, '');
@@ -468,16 +498,16 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         return true;
       };
 
-      let self = this;
-      let doc = this.curdoc;
+      var self = this;
+      var doc = this.curdoc;
 
       // install now
-      return AnkBase.delayFunctionInstaller(this, proc, 500, 20, self.SITE_NAME, 'delayMarking');
-    }, // }}}
+      return AnkBase.delayFunctionInstaller(delayMarking, 500, 20, self.SITE_NAME, 'delayMarking');
+    } // }}}
 
   };
 
    // --------
-   global["exports"] = AnkPixivModule;
+   global["SiteModule"] = AnkPixivModule;
 
  })(this);

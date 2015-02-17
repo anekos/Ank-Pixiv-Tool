@@ -22,38 +22,38 @@ Components.utils.import("resource://gre/modules/Task.jsm");
     ********************************************************************************/
 
     self.in = { // {{{
-      get manga () // {{{
-        (!!self.elements.illust.slideshowFrame || !!self.elements.illust.photoFrame), // }}}
+      get manga () { // {{{
+        return (!!self.elements.illust.slideshowFrame || !!self.elements.illust.photoFrame);
+      }, // }}}
 
-      get medium () // {{{
-        self.in.illustPage, // }}}
+      get medium () { // {{{
+        return self.in.illustPage;
+      }, // }}}
 
-      get illustPage () // {{{
-        self.info.illust.pageUrl.match(/^https?:\/\/[^/]+?\.tumblr\.com\/post\//) &&
-        (!!self.elements.illust.mediumImage || !!self.elements.illust.photoFrame), // }}}
+      get illustPage () { // {{{
+        return self.info.illust.pageUrl.match(/^https?:\/\/[^/]+?\.tumblr\.com\/post\//) &&
+          (!!self.elements.illust.mediumImage || !!self.elements.illust.photoFrame);
+      }, // }}}
 
-      get myPage ()
-        false,  // under construction
-
-      get myIllust ()
-        false,  // under construction
-
-      get listPage ()
-        self.info.illust.pageUrl.match(/\/archive$/),
-
+      get listPage () {
+        return self.info.illust.pageUrl.match(/\/archive$/);
+      }
     }; // }}}
 
     self.elements = (function () { // {{{
-      function query (q)
-        self.elements.doc.querySelector(q);
+      function query (q) {
+        return self.elements.doc.querySelector(q);
+      }
 
-      function queryAll (q)
-        self.elements.doc.querySelectorAll(q);
+      function queryAll (q) {
+        return self.elements.doc.querySelectorAll(q);
+      }
 
       // 画像の面積を返す
       // XXX 過度に長細いものなどは、1 とかにするほうがいいかも…
-      function getImageSize (e)
-        ((e.offsetHeight || 1) * (e.offsetWidth || 1));
+      function getImageSize (e) {
+        return ((e.offsetHeight || 1) * (e.offsetWidth || 1));
+      }
 
       function getLargestImage () {
         let maxSize = 0, maxElement = null;
@@ -74,40 +74,47 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       }
 
       let illust =  {
-        get date ()
-          query('.date > a')     ||
-          query('.date')         ||
-          query('.postmeta > a') ||
-          query('.post-date a')  ||
-          query('.post-date'),
+        get date () {
+          return query('.date > a') ||
+            query('.date') ||
+            query('.postmeta > a') ||
+            query('.post-date a') ||
+            query('.post-date');
+        },
 
 
-        get title ()
-          query('.copy > p') ||
-          query('.caption > p') ||
-          query('.post > p+p') ||
-          query('.photo > p+p'),
+        get title () {
+          return query('.copy > p') ||
+            query('.caption > p') ||
+            query('.post > p+p') ||
+            query('.photo > p+p');
+        },
 
-        get userName ()
-          query('.footer-content > h5') ||
-          query('#header > h1 > a'),
+        get userName () {
+          return query('.footer-content > h5') ||
+            query('#header > h1 > a');
+        },
 
         get memberLink () {
           let e = query('#header > * > .profile-image');
           return e && e.parentNode;
         },
 
-        get photoFrame ()
-          query('iframe.photoset'),
+        get photoFrame () {
+          return query('iframe.photoset');
+        },
 
-        get photoImage ()
-          illust.photoFrame && illust.photoFrame.contentDocument.querySelector('.photoset_row img'),
+        get photoImage () {
+          return illust.photoFrame && illust.photoFrame.contentDocument.querySelector('.photoset_row img');
+        },
 
-        get photoSet ()
-          illust.photoFrame && illust.photoFrame.contentDocument.querySelectorAll('.photoset_row img'),
+        get photoSet () {
+          return illust.photoFrame && illust.photoFrame.contentDocument.querySelectorAll('.photoset_row img');
+        },
 
-        get slideshowFrame ()
-          query('.type-photoset'),
+        get slideshowFrame () {
+          return query('.type-photoset');
+        },
 
         get slideshowImage () {
           let e = illust.slideshowFrame;
@@ -125,10 +132,11 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
         // require for AnkBase
 
-        get downloadedDisplayParent ()
-          query('.caption > p') ||
-          query('.panel .post-date a') ||
-          query('.post-panel .date a'),
+        get downloadedDisplayParent () {
+          return query('.caption > p') ||
+            query('.panel .post-date a') ||
+            query('.post-panel .date a');
+        },
 
         // require for AnkViewer
 
@@ -137,16 +145,20 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           return e && e.length > 0 && e[0];
         },
 
-        get wrapper ()
-          query('.container.section') ||
-          query('#newDay') ||
-          query('#page') ||
-          query('body'),
+        get wrapper () {
+          return query('.container.section') ||
+            query('#newDay') ||
+            query('#page') ||
+            query('body');
+        },
 
-        get mediumImage ()
-          illust.slideshowFrame ? illust.slideshowImage : 
-              illust.photoFrame ? illust.photoImage :
-                                  getLargestImage(query('.post'), query('.photo')),
+        get mediumImage () {
+          if (illust.slideshowFrame)
+            return illust.slideshowImage;
+          if (illust.photoFrame)
+            return illust.photoImage;
+          return getLargestImage(query('.post'), query('.photo'));
+        },
 
         get ads () {
           const Ads = [
@@ -158,111 +170,120 @@ Components.utils.import("resource://gre/modules/Task.jsm");
                        ];
 
           let a = [];
-          Ads.forEach(function (q) AnkUtils.A(queryAll(q)).forEach(function (e) a.push(e)));
+          Ads.forEach(q => AnkUtils.A(queryAll(q)).forEach(e => a.push(e)));
           return a;
-        },
+        }
       };
 
-      let mypage = {
-        get fantasyDisplay ()
-          null, // under construction
-
-        get fantasyDisplayNext ()
-          null, // under construction
-      };
- 
       return {
         illust: illust,
-        mypage: mypage,
-        get doc () self.curdoc
+        get doc () {
+          return self.curdoc;
+        }
       };
     })(); // }}}
 
     self.info = (function () { // {{{
       let illust = {
-        get pageUrl ()
-          self.elements.doc.location.href,
+        get pageUrl () {
+          return self.elements.doc.location.href;
+        },
 
-        get id ()
-          self.getIllustId(),
+        get id () {
+          return self.getIllustId();
+        },
 
         get dateTime () {
-          let dt = [];
-          [self.elements.illust.title, self.elements.illust.date].forEach(function (e) {
-            if (e)
-              dt.push(e.textContent);
-          });
+          let dt = [ self.elements.illust.title, self.elements.illust.date ].filter(e => !!e).map(e => e.textContent);
           dt.push('cannot find datetime');
           return AnkUtils.decodeDateTimeText(dt);
         },
 
-        get size ()
-          null,
+        get size () {
+          return null;
+        },
 
-        get tags ()
-          [],
+        get tags () {
+          return [];
+        },
 
         get shortTags () {
           let limit = AnkBase.Prefs.get('shortTagsMaxLength', 8);
-          return self.info.illust.tags.filter(function (it) (it.length <= limit));
+          return self.info.illust.tags.filter(it => (it.length <= limit));
         },
 
-        get tools ()
-          null,
+        get tools () {
+          return null;
+        },
 
-        get width ()
-          0,
+        get width () {
+          return 0;
+        },
 
-        get height ()
-          0,
+        get height () {
+          return 0;
+        },
 
-        get server ()
-          null,
+        get server () {
+          return null;
+        },
 
-        get referer ()
-          self.info.illust.pageUrl,
+        get referer () {
+          return self.info.illust.pageUrl;
+        },
 
         get title () {
           let e = self.elements.illust.title;
           return e && AnkUtils.trim(e.textContent) || '';
         },
 
-        get comment ()
-          illust.title,
+        get comment () {
+          return illust.title;
+        },
 
-        get R18 ()
-          !!self.info.illust.pageUrl.match(/\.tumblr\.com\/post\/[^/]+?\/[^/]*r-?18/),
+        get R18 () {
+          return !!self.info.illust.pageUrl.match(/\.tumblr\.com\/post\/[^/]+?\/[^/]*r-?18/);
+        },
 
-        get mangaPages ()
-          self.info.path.image.images.length,
+        get mangaPages () {
+          return self.info.path.image.images.length;
+        }
       };
 
       let member = {
-        get id ()
-          self.info.illust.pageUrl.match(/^https?:\/\/([^/]+?)\.tumblr\.com\/post\//)[1],
+        get id () {
+          return self.info.illust.pageUrl.match(/^https?:\/\/([^/]+?)\.tumblr\.com\/post\//)[1];
+        },
 
-        get pixivId ()
-          member.id,
+        get pixivId () {
+          return member.id;
+        },
 
-        get name ()
-          AnkUtils.trim(self.elements.illust.userName ? self.elements.illust.userName.textContent : self.info.member.id),
+        get name () {
+          return AnkUtils.trim(self.elements.illust.userName ? self.elements.illust.userName.textContent : self.info.member.id);
+        },
 
-        get memoizedName ()
-          null,
+        get memoizedName () {
+          return null;
+        }
       };
 
       let path = {
-        get initDir ()
-          AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
+        get initDir () {
+          return AnkBase.Prefs.get('initialDirectory.' + self.SITE_NAME);
+        },
 
-        get ext ()
-          AnkUtils.getFileExtension(path.image.images.length > 0 && path.image.images[0]),
+        get ext () {
+          return AnkUtils.getFileExtension(path.image.images.length > 0 && path.image.images[0]);
+        },
 
-        get mangaIndexPage ()
-          null,
+        get mangaIndexPage () {
+          return null;
+        },
 
-        get image ()
-          self._image,
+        get image () {
+          return self._image;
+        }
       };
 
       return {
@@ -348,8 +369,9 @@ Components.utils.import("resource://gre/modules/Task.jsm");
          }
 
          let context = new AnkContext(self);
-         AnkBase.addDownload(context, useDialog, debug);
-       }).then(null).catch(function (e) AnkUtils.dumpError(e,true));
+         let ev = AnkBase.createDownloadEvent(context, useDialog, debug);
+         window.dispatchEvent(ev);
+       }).then(null).catch(e => AnkUtils.dumpError(e,true));
      },
 
      /*
@@ -396,14 +418,12 @@ Components.utils.import("resource://gre/modules/Task.jsm");
            return image;
          }
 
-         let m = [];
-
          if (self.elements.illust.slideshowFrame) {
-           AnkUtils.A(self.elements.illust.slideshowSet).forEach(function (e) m.push(e.src));
+           let m = AnkUtils.A(self.elements.illust.slideshowSet).map(e => e.src);
            return setSelectedImage({ images: m, facing: null });
          }
          else if (self.elements.illust.photoFrame) {
-           AnkUtils.A(self.elements.illust.photoSet).forEach(function (e) m.push(e.src));
+           let m = AnkUtils.A(self.elements.illust.photoSet).map(e => e.src);
            return setSelectedImage({ images: m, facing: null });
          }
 
@@ -453,7 +473,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
                   self.viewer.openViewer();
                 if (useClickDownload)
                   AnkBase.downloadCurrentImageAuto(self);
-              }).then(null).catch(function (e) AnkUtils.dumpError(e,true));
+              }).then(null).catch(e =>  AnkUtils.dumpError(e,true));
 
               if (useCapture) {
                 e.preventDefault();
@@ -481,8 +501,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         return true;
       };
 
-      let self = this;
-      let doc = this.curdoc;
+      var self = this;
+      var doc = this.curdoc;
 
       return AnkBase.delayFunctionInstaller(proc, 500, 20, self.SITE_NAME, '');
     }, // }}}
@@ -500,14 +520,13 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
         // 伸びるおすすめリストに追随する
         new MutationObserver(function (o) {
-          o.forEach(function (e) self.markDownloaded(e.target, true));
+          o.forEach(e => self.markDownloaded(e.target, true));
         }).observe(archive, {childList: true});
 
         return true;
       };
 
       let delayMarking = function () {
-        var doc = self.elements.doc;
         var body = doc.getElementsByTagName('body');
 
         if (!((body && body.length>0) && doc.readyState === 'complete')) {
@@ -520,16 +539,16 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         return true;
       };
 
-      let self = this;
-      let doc = this.curdoc;
+      var self = this;
+      var doc = this.curdoc;
 
       AnkBase.delayFunctionInstaller(followExpansion, 500, 30, self.SITE_NAME, 'followExpansion');
       return AnkBase.delayFunctionInstaller(delayMarking, 500, 30, self.SITE_NAME, 'delayMarking');
-    }, // }}}
+    } // }}}
 
   };
 
   // --------
-  global["exports"] = AnkPixivModule;
+  global["SiteModule"] = AnkPixivModule;
 
 })(this);
