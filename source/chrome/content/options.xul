@@ -32,7 +32,7 @@
       }
 
       function pushToken (elem) {
-        let token = elem.selectedItem.label
+        let token = elem.selectedItem.label;
         let box = currentFilenameElement;
         let pref = document.getElementById(box.getAttribute('preference'));
         let now = box.value;

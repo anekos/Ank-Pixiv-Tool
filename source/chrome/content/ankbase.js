@@ -1041,7 +1041,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         download.limit = download.start + AnkBase.DOWNLOAD_RETRY.INTERVAL * download.context.info.path.image.images.length;
         AnkBase.updateToolbarText();
 
-        AnkBase.insertOrMarkToAllTabs(d.context.SERVICE_ID, d.context.info.illust.id, function (curmod, dw) {
+        AnkBase.insertOrMarkToAllTabs(download.context.SERVICE_ID, download.context.info.illust.id, function (curmod, dw) {
           // 「ダウンロード中」
           if (dw)
             AnkBase.insertDownloadedDisplay(curmod.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADING);

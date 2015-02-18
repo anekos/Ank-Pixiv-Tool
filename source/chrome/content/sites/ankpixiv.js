@@ -864,9 +864,9 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           createDebugMessageArea();
 
         // 中画像クリック
-        let useViewer = !self.in.ugoira && AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true);
-        let useClickDownload = AnkBase.Prefs.get('downloadWhenClickMiddle', false);
-        let useOriginalSize = useViewer        && AnkBase.Prefs.get('viewOriginalSize', false) ||
+        var useViewer = !self.in.ugoira && AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true);
+        var useClickDownload = AnkBase.Prefs.get('downloadWhenClickMiddle', false);
+        var useOriginalSize = useViewer        && AnkBase.Prefs.get('viewOriginalSize', false) ||
                               useClickDownload && AnkBase.Prefs.get('downloadOriginalSize', false);
         if (useViewer || useClickDownload)
           addMiddleClickEventListener();
