@@ -268,9 +268,11 @@ Components.utils.import("resource://gre/modules/Task.jsm");
     },
 
     currentModule: function (doc) {
+      let curdoc = doc || AnkBase.currentDoc;
+
       if (AnkBase.Prefs.get('installSiteModuleToDocument')) {
         try {
-          return AnkBase.currentDoc.AnkPixivModule;
+          return curdoc.AnkPixivModule;
         }
         catch (e) {
           Components.utils.reportError(e);
@@ -280,7 +282,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
       AnkUtils.dump('MODULE INSTANCES: num=' + Object.keys(AnkBase.SiteModuleInstances).length);
 
-      let curdoc = doc || AnkBase.currentDoc;
       let curmod = null;
       let ankpixivid = (function () {
         try {
@@ -871,11 +872,11 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         }
 
         // ダウンロード用のコンテキストの収集(contextの取得に時間がかかる場合があるのでダウンロードマークを表示しておく)
-        let curmod = AnkBase.currentModule();
-        if (curmod) {
-          if (dw.illust_id == curmod.getIllustId())
-            AnkBase.insertDownloadedDisplay(module.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.INITIALIZE);
-        }
+        AnkBase.insertOrMarkToAllTabs(dw.service_id, dw.illust_id, function (curmod, dw) {
+          // 「情報取得中」
+          if (dw)
+            AnkBase.insertDownloadedDisplay(curmod.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.INITIALIZE);
+        });
 
         module.downloadCurrentImage(useDialog, debug);
       }).then(null).catch(e => AnkUtils.dumpError(e, true));
@@ -962,12 +963,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
               let c = z.context;
 
-              // たまたま開いているタブがダウンロードを始めるのとイラストページだったならマーキング処理
-              let curmod = AnkBase.currentModule();
-              if (curmod) {
-                if (c.info.illust.id == curmod.getIllustId())
-                  AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.TIMEOUT);
-              }
               AnkBase.downloading.images -= c.info.path.image.images.length;
               AnkBase.updateToolbarText();
 
@@ -981,19 +976,25 @@ Components.utils.import("resource://gre/modules/Task.jsm");
                 desc;
 
               AnkUtils.dump(msg);
+
+              AnkBase.insertOrMarkToAllTabs(c.SERVICE_ID, c.info.illust.id, function (curmod, dw) {
+                // 「ダウンロードタイムアウト」
+                if (dw)
+                  AnkBase.insertDownloadedDisplay(curmod.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.TIMEOUT);
+              });
             }
           });
         } else if (typeof d.start === 'undefined') {
           // add download
+          let c = d.context;
+
           AnkBase.downloading.pages.push(d);
-          AnkBase.downloading.images += d.context.info.path.image.images.length;
+          AnkBase.downloading.images += c.info.path.image.images.length;
           AnkBase.updateToolbarText();
 
-          // たまたま開いているタブがダウンロードを始めるのと同じサイトだったならマーキング処理
-          let curmod = AnkBase.currentModule();
-          if (curmod && curmod.SERVICE_ID === d.context.SERVICE_ID) {
-            curmod.markDownloaded(d.context.info.illust.id,true);
-          }
+          AnkBase.insertOrMarkToAllTabs(c.SERVICE_ID, c.info.illust.id, function (curmod, dw) {
+            curmod.markDownloaded(c.info.illust.id, true);
+          });
         } else {
           // remove download
           if (AnkBase.findDownload(d, true)) {
@@ -1005,21 +1006,18 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           let c = d.context;
           let rdisp = d.result;
           let r18 = (rdisp === AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED) ? c.info.illust.R18 : false;
-          let curmod = AnkBase.currentModule();
-          if (curmod) {
-            if (c.info.illust.id == curmod.getIllustId())
-              AnkBase.insertDownloadedDisplay(c.elements.illust.downloadedDisplayParent, r18, rdisp);
-          }
-
-          // 動作確認用
-          if (AnkBase.Prefs.get('showDownloadedFilename', false)) {
-            try {
-              let e = c.elements.illust.downloadedFilenameArea;
-              if (e)
-                e.innerHTML = '['+c.info.path.image.images.length+'] ' + c.info.path.image.images[0];
+          AnkBase.insertOrMarkToAllTabs(c.SERVICE_ID, c.info.illust.id, function (curmod, dw) {
+            if (dw) {
+              // 「ダウンロード済み」
+              AnkBase.insertDownloadedDisplay(curmod.elements.illust.downloadedDisplayParent, r18, rdisp);
+              // 動作確認用
+              if (AnkBase.Prefs.get('showDownloadedFilename', false)) {
+                let e = curmod.elements.illust.downloadedFilenameArea;
+                if (e)
+                  e.innerHTML = '[' + c.info.path.image.images.length + '] ' + c.info.path.image.images[0];
+              }
             }
-            catch (e) {}
-          }
+          });
         }
 
         let queued = AnkBase.livingDownloads;
@@ -1042,11 +1040,12 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         download.start = new Date().getTime();
         download.limit = download.start + AnkBase.DOWNLOAD_RETRY.INTERVAL * download.context.info.path.image.images.length;
         AnkBase.updateToolbarText();
-        let curmod = AnkBase.currentModule();
-        if (curmod) {
-          if (download.context.info.illust.id == curmod.getIllustId())
-            AnkBase.insertDownloadedDisplay(download.context.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADING);
-        }
+
+        AnkBase.insertOrMarkToAllTabs(d.context.SERVICE_ID, d.context.info.illust.id, function (curmod, dw) {
+          // 「ダウンロード中」
+          if (dw)
+            AnkBase.insertDownloadedDisplay(curmod.elements.illust.downloadedDisplayParent, false, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADING);
+        });
 
         AnkBase.downloadExecuter(download);
 
@@ -1281,9 +1280,9 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED);
 
           // たまたま開いているタブがダウンロードが完了したのと同じサイトだったならマーキング処理
-          let curmod = AnkBase.currentModule();
-          if (curmod && curmod.SERVICE_ID === service_id)
-            curmod.markDownloaded(illust_id,true);
+          AnkBase.insertOrMarkToAllTabs(service_id, illust_id, function (curmod, dw) {
+            curmod.markDownloaded(illust_id, true);
+          });
         }
       }).then(null).catch(function (e) { AnkUtils.dumpError(e); onError(e); });
     }, // }}}
@@ -1560,6 +1559,29 @@ Components.utils.import("resource://gre/modules/Task.jsm");
     * マーキング
     ********************************************************************************/
 
+    /**
+     * マーキングが必要そうなタブに対してcallbackを実行する
+     */
+    insertOrMarkToAllTabs: function (service_id, illust_id, callback) {
+      var num = window.gBrowser.browsers.length;
+      for (var i = 0; i < num; i++) {
+        var b = window.gBrowser.getBrowserAtIndex(i);
+        try {
+          let curmod = AnkBase.currentModule(b.contentDocument);
+          if (curmod && curmod.SERVICE_ID === service_id) {
+            let dw = curmod.isDownloadable();
+            if (callback)
+              callback(curmod, dw && dw.illust_id === illust_id);
+          }
+        } catch (e) {
+          AnkUtils.dumpError(e);
+        }
+      }
+    },
+
+    /**
+     *
+     */
     markDownloaded: function(IsIllust, Targets, overlay, module, node, force, ignorePref) { // {{{
 
       if (!AnkBase.Prefs.get('markDownloaded', false) && !ignorePref)

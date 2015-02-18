@@ -18,16 +18,6 @@
       };
     })();
 
-    self.elements = (function () {
-      return {
-        illust: {
-          downloadedDisplayParent: module.elements.illust.downloadedDisplayParent,
-
-          downloadedFilenameArea: module.elements.illust.downloadedFilenameArea
-        }
-      };
-    })();
-
     self.info = (function () {
       return {
         illust: {
