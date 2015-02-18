@@ -205,7 +205,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           return query('.ank-pixiv-downloaded-filename-text');
         },
 
-        // require for AnkViewer
+        // require for AnkBase.Viewer
 
         get body () {
           let e = queryAll('body');
@@ -503,7 +503,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           return;
         }
 
-        let context = new AnkContext(self);
+        let context = new AnkBase.Context(self);
         let ev = AnkBase.createDownloadEvent(context, useDialog, debug);
         window.dispatchEvent(ev);
       }).then(null).catch(e => AnkUtils.dumpError(e,true));
@@ -811,11 +811,11 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
         let addMiddleClickEventListener = function () {
           if (useViewer)
-            self.viewer = new AnkViewer(self);
+            self.viewer = new AnkBase.Viewer(self);
 
           let useCapture = !self.in.ugoira && useViewer;
 
-          // FIXME AnkViewer無効時に、中クリックして、Pixivのデフォルト動作で大画像を見ると、ダウンロードマークが消える
+          // FIXME AnkBase.Viewer無効時に、中クリックして、Pixivのデフォルト動作で大画像を見ると、ダウンロードマークが消える
           // FIXME imgOvrの方になった場合は、medImgより広い領域がクリック可能となるが、jQuery.on('click')を無効化できないため止む無し
           (largeLink || imgOvr).addEventListener(
             'click',
@@ -893,8 +893,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         return true;
       }; // }}}
 
-      let self = this;
-      let doc = this.curdoc;
+      var self = this;
+      var doc = this.curdoc;
 
       // install now
       return AnkBase.delayFunctionInstaller(proc, 500, 20, self.SITE_NAME, '');
@@ -970,8 +970,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         return true;
       };
 
-      let self = this;
-      let doc = this.curdoc;
+      var self = this;
+      var doc = this.curdoc;
 
       // install now
       if (AnkBase.Prefs.get('markDownloaded', false)) {

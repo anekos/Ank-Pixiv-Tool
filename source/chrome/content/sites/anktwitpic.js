@@ -85,7 +85,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           return query('#infobar-right');
         },
 
-        // require for AnkViewer
+        // require for AnkBase.Viewer
 
         get body () {
           let e = queryAll('body');
@@ -299,7 +299,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
            return;
          }
 
-         let context = new AnkContext(self);
+         let context = new AnkBase.Context(self);
          let ev = AnkBase.createDownloadEvent(context, useDialog, debug);
          window.dispatchEvent(ev);
        }).then(null).catch(e => AnkUtils.dumpError(e,true));
@@ -374,7 +374,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
         let addMiddleClickEventListener = function () {
           if (useViewer)
-            self.viewer = new AnkViewer(self);
+            self.viewer = new AnkBase.Viewer(self);
 
           let useCapture = useViewer;
 

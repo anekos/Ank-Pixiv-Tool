@@ -29,13 +29,15 @@ Components.utils.import("resource://gre/modules/Task.jsm");
     Modules: (function () {
       const LOAD_MODULES = {
         STORAGE: 'ankstorage.js',
+        VIEWER: 'ankviewer.js',
+        CONTEXT: 'ankcontext.js',
         SITELIST: 'anksitelist.js'
       };
 
-      function loadScript(m) {
+      function loadScript(m, obj) {
         try {
           console.log('MODULE LOAD: ' + m);
-          let scope = {};
+          let scope = obj || {};
           Services.scriptloader.loadSubScript('chrome://ankpixiv/content/' + m, scope, 'UTF-8');
           return scope;
         }
@@ -50,6 +52,22 @@ Components.utils.import("resource://gre/modules/Task.jsm");
             let m = loadScript(LOAD_MODULES.STORAGE);
             if (m && m.StorageModule)
               return m.StorageModule;
+          }
+        })(),
+
+        Viewer : (function () {
+          if (LOAD_MODULES.VIEWER) {
+            let m = loadScript(LOAD_MODULES.VIEWER);
+            if (m && m.AnkViewer)
+              return m.AnkViewer;
+          }
+        })(),
+
+        Context : (function () {
+          if (LOAD_MODULES.CONTEXT) {
+            let m = loadScript(LOAD_MODULES.CONTEXT);
+            if (m && m.AnkContext)
+              return m.AnkContext;
           }
         })(),
 
@@ -1954,6 +1972,9 @@ Components.utils.import("resource://gre/modules/Task.jsm");
     Prefs: AnkBase.Prefs,
     Locale: AnkBase.Locale,
     FIT: AnkBase.FIT,
+
+    Viewer: AnkBase.Modules.Viewer,
+    Context: AnkBase.Modules.Context,
 
     onInit: AnkBase.onInit,
     onDownloadButtonClick: AnkBase.onDownloadButtonClick,

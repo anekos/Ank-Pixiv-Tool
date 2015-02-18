@@ -7,8 +7,6 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankutils.js" />
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankviewer.js" />
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankcontext.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankinterface.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankbase.js" />
 
