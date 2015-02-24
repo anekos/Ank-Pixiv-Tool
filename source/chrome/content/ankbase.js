@@ -760,7 +760,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         //localdir.exists() || localdir.create(localdir.DIRECTORY_TYPE, 0755);
 
         for (let index=0; index<urls.length && index<MAX_FILE ; index++) {
-          let ref = referer.replace(/(mode=manga_big)(&page=)\d+(.*)$/,"$1$3$2"+index);  // Pixivマンガオリジナルサイズの場合は画像ごとにrefererが異なる
+          let ref = referer && Array.isArray(referer) && referer.length > index ? referer[index] : referer;
           let url = urls[index];
           let file = localdir.clone();
           let m = url.match(/(\.\w+)(?:$|\?)/);
@@ -770,7 +770,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           file.initWithPath(p.path);
           file.append(p.name);
 
-          let status = yield AnkBase.downloadToRetryable(file, url, referer, AnkBase.DOWNLOAD_RETRY.MAX_TIMES);
+          let status = yield AnkBase.downloadToRetryable(file, url, ref, AnkBase.DOWNLOAD_RETRY.MAX_TIMES);
           if (status != 200) {
             AnkUtils.dump('Delete invalid file. => ' + file.path);
             yield OS.File.remove(file.path).then(null).catch(e => AnkUtils.dump('Failed to delete invalid file. => ' + e));
@@ -798,7 +798,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
      */
     downloadSingleImage: function (file, url, referer, download) { // {{{
       return Task.spawn(function* () {
-        let status = yield AnkBase.downloadToRetryable(file, url, referer, AnkBase.DOWNLOAD_RETRY.MAX_TIMES);
+        let ref = referer && Array.isArray(referer) && referer.length > index ? referer[index] : referer;
+        let status = yield AnkBase.downloadToRetryable(file, url, ref, AnkBase.DOWNLOAD_RETRY.MAX_TIMES);
         if (status != 200) {
           AnkUtils.dump('Delete invalid file. => ' + file.path);
           yield OS.File.remove(file.path).then(null).catch(e => AnkUtils.dump('Failed to delete invalid file. => ' + e));
@@ -1074,7 +1075,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       let destFiles;
       let illust_id     = context.info.illust.id;
       let ext           = context.info.path.ext;
-      let ref           = context.info.illust.referer;
       let member_id     = context.info.member.id;
       let member_name   = context.info.member.name || member_id;
       let pixiv_id      = context.info.member.pixivId;
@@ -1089,6 +1089,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       let site_name     = getSiteName(context);
       let images        = context.info.path.image.images;
       let facing        = context.info.path.image.facing;
+      let ref           = context.info.path.image.referer || context.info.illust.referer;
       let pageUrl       = context.info.illust.pageUrl;
       let prefInitDir   = context.info.path.initDir || AnkBase.Prefs.get('initialDirectory') || AnkUtils.findHomeDir();
 

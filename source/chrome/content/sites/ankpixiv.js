@@ -599,11 +599,13 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           }
         }
 
+        let referer = self.info.illust.pageUrl;
+
         // うごイラ
         if (self.in.ugoira) {
           let src = self.info.path.ugokuIllustFullscreenSrc || self.info.path.ugokuIllustSrc;
           if (src)
-            return setSelectedImage({ original: { images: [ src ], facing: null } });
+            return setSelectedImage({ original: { images: [ src ], facing: null, referer: referer } });
 
           return null;
         }
@@ -612,7 +614,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         if (!self.in.manga) {
           let src = self.elements.illust.bigImage && self.elements.illust.bigImage.getAttribute('data-src');
           if (src)
-            return setSelectedImage({ original: { images: [ src ], facing: null } });
+            return setSelectedImage({ original: { images: [ src ], facing: null, referer: referer } });
 
           // Bパターンに続く
         }
@@ -636,13 +638,15 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           if (!self.in.manga) {
             let src = doc.querySelector('img').src;
             if (src)
-              return setSelectedImage({ original: { images: [ src ], facing: null } });
+              return setSelectedImage({ original: { images: [ src ], facing: null, referer: indexPage } });
             return null;
           }
 
           // ブック or マンガ
           let thumb = [];
           let orig = [];
+          let thumbref = [];
+          let origref = [];
           let fp = [];
           if (doc.documentElement.classList.contains('_book-viewer')) {
             // ブック
@@ -652,6 +656,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
               a[i-1] = a[i];
               a[i] = tmp;
             }
+            thumbref = indexPage;
+            origref = indexPage;
 
             let ltr = doc.documentElement.classList.contains('ltr');
             AnkUtils.A(doc.querySelectorAll('script')).forEach(function (e) {
@@ -689,6 +695,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
                 return true;
               thumb.push(v.getAttribute('data-src'));
             });
+            thumbref = indexPage;
 
             if (mangaOriginalSizeCheck) {
               // オリジナル画像
@@ -697,12 +704,17 @@ Components.utils.import("resource://gre/modules/Task.jsm");
               const reMaster = /^(https?:\/\/[^/]+).*?\/img-master\/(.+?)_master\d+(\.\w+)$/;
               const replaceMaster = '$1/img-original/$2$3';
 
+              // 個々の画像用に存在するページ
+              origref = (function () {
+                let uri = Services.io.newURI(indexPage, null, null);
+                let base = uri.scheme+'://'+uri.host;
+                return AnkUtils.A(doc.querySelectorAll('.manga > .item-container > a')).map(a => base + a.getAttribute('href'));
+              })();
+
               let a = AnkUtils.A(doc.querySelectorAll('.manga > .item-container > a'));
               for (let i=0; i<a.length && i<thumb.length; i++) {
-                let href = indexPage;
-                href = href.replace(/^(https?:\/\/.+?)(?:\/.*)$/,"$1")+a[i].href;
-                AnkUtils.dump('ORIGINAL IMAGE PAGE: '+href+', '+indexPage);
-                let html = yield AnkUtils.httpGETAsync(href, indexPage);
+                AnkUtils.dump('ORIGINAL IMAGE PAGE: '+origref[i]+', '+indexPage);
+                let html = yield AnkUtils.httpGETAsync(origref[i], indexPage);
                 let doc = AnkUtils.createHTMLDocument(html);
 
                 // サーバエラーのトラップ
@@ -719,6 +731,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
                     orig = thumb.map(v => v);
                   }
                   else if (thumb[0].replace(reMaster, replaceMaster).replace(/\.\w+$/, '') == src.replace(/(\.\w+)$/, '')) {
+                    // FIXME
                     let replaceExt = RegExp.$1;
                     AnkUtils.dump('MANGA IMAGE: master mode ... '+thumb[0]+' -> '+thumb[0].replace(reMaster, replaceMaster).replace(/\.\w+$/, replaceExt));
                     orig = thumb.map(v => v.replace(reMaster, replaceMaster).replace(/\.\w+$/, replaceExt));
@@ -751,8 +764,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
             }
 
             return setSelectedImage({
-              thumbnail:{ images: thumb, facing: fp },
-              original: { images: orig,  facing: fp }
+              thumbnail:{ images: thumb, facing: fp, referer: thumbref },
+              original: { images: orig,  facing: fp, referer: origref }
             });
           }
 
