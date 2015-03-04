@@ -470,7 +470,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
       //
 
-      let galleryShown;
+      var galleryShown = false;
 
       inits();
 

@@ -4,9 +4,7 @@
 
 (function (global) {
 
-  let AnkPixiv = {};
-
-  AnkPixiv.prototype = {
+  let AnkPixiv = {
     /*
      * ダウンロード
      */
