@@ -151,6 +151,10 @@ Components.utils.import("resource://gre/modules/Task.jsm");
             query('.r-18g');
         },
 
+        get thumbnail () {
+          return query('.bookmark_modal_thumbnail');
+        },
+
         get feedLink () {
           return query('.tab-feed');
         },
@@ -329,6 +333,15 @@ Components.utils.import("resource://gre/modules/Task.jsm");
             let m = a[0].match(/^https?:\/\/([^\/\.]+)\./i);
             if (m)
               return m[1];
+          }
+        },
+
+        get updated () {
+          let e = self.elements.illust.thumbnail;
+          let thumbnail = e && e.getAttribute('data-src');
+          if (thumbnail) {
+            let m = thumbnail.match(/\/(\d{4})\/(\d{2})\/(\d{2})\/(\d{2})\/(\d{2})\/(\d{2})\//);
+            return m && m[1]+m[2]+m[3]+m[4]+m[5]+m[6];
           }
         },
 
@@ -558,8 +571,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         }
       }
 
-      let self = this;
-      let doc = this.curdoc;
+      var self = this;
+      var doc = this.curdoc;
 
       return proc(pt);
     }, // }}}
@@ -893,7 +906,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           self.elements.illust.downloadedDisplayParent,
           self.info.illust.R18,
           self.info.illust.id,
-          self.SERVICE_ID
+          self.SERVICE_ID,
+          self.info.illust.updated
         );
 
         // イメレスにマーキング

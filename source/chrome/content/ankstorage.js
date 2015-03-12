@@ -186,6 +186,11 @@ Components.utils.import("resource://gre/modules/FileUtils.jsm");
           let indexName = self.indexName(q.table,q.columns);
           qa.push({ query:'drop index if exists '+indexName });
         }
+        else if (q.type == 'addColumn') {
+          for (let key in q.columns) {
+            qa.push({query: 'alter table ' + q.table + ' add column ' + key + ' ' + q.columns[key]});
+          }
+        }
         else if (q.type == 'update') {
           let values = {};
           let fps = [];

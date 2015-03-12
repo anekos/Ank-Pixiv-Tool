@@ -94,7 +94,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
      ********************************************************************************/
 
     DB_DEF: {
-      VERSION: 7,
+      VERSION: 8,
 
       TABLES: {
         histories: {
@@ -105,6 +105,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           tags: { type:"string" },
           server: { type:"string" },
           datetime: { type:"datetime" },
+          updated: { type:"string" },
           saved: { type:"boolean" },
           filename: { type:"string" },
           version: { type:"integer" },
@@ -208,6 +209,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
       DOWNLOADED:   'downloaded',
       USED:         'used',
+      UPDATED:      'updated',
       INITIALIZE:   'initialize',
       DOWNLOADING:  'downloading',
       FAILED:       'downloadFailed',
@@ -1082,6 +1084,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       let tags          = context.info.illust.tags;
       let title         = context.info.illust.title;
       let comment       = context.info.illust.comment;
+      let updated       = context.info.illust.updated;
       let metaText      = context.metaText;
       let filenames     = [];
       let shortTags     = context.info.illust.shortTags;
@@ -1258,6 +1261,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
                 server:     context.info.illust.server,
                 saved:      true,
                 datetime:   AnkUtils.toSQLDateTimeString(savedDateTime),
+                updated:    updated,
                 comment:    comment,
                 version:    AnkBase.DB_DEF.VERSION,
                 service_id: service_id,
@@ -1367,7 +1371,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
     getIllustExistsQuery: function (illust_id, service_id, id) {
       const cond = 'illust_id = :illust_id and service_id = :service_id';
-      return [ { id:(typeof id !== 'undefined' ? id:-1), table:'histories', cond:cond, values:{ illust_id:illust_id, service_id:service_id } } ];
+      const opts = 'order by updated desc';
+      return [ { id:(typeof id !== 'undefined' ? id:-1), table:'histories', cond:cond, values:{ illust_id:illust_id, service_id:service_id }, opts:opts } ];
     },
 
     getMemberExistsQuery: function (member_id, service_id, id) {
@@ -1447,7 +1452,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
     updateDatabaseVersion: function () { // {{{
       return Task.spawn(function* () {
-        // version 6->7
+        // version 6->7->8
         let ver = parseInt(AnkBase.DB_DEF.VERSION,10);
         let uver = yield AnkBase.Storage.getDatabaseVersion();
         if (uver >= ver) {
@@ -1465,6 +1470,9 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         qa.push({ type:'dropIndex', table:'members',   columns:['id'] });
         qa.push({ type:'update', table:'histories', set:set, cond:cond, values:null });
         qa.push({ type:'update', table:'members',   set:set, cond:cond, values:null });
+
+        qa.push({ type:'addColumn', table:'histories', columns:{updated:"string"} })
+
         qa.push({ type:'SchemaVersion', SchemaVersion:ver });
 
         yield AnkBase.Storage.update(AnkBase.Storage.getUpdateSQLs(qa));
@@ -1778,17 +1786,18 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         appendTo.appendChild(div);
     }, // }}}
 
-    insertDownloadedDisplayById: function (appendTo, R18, illust_id, service_id) { // {{{
+    insertDownloadedDisplayById: function (appendTo, R18, illust_id, service_id, updated) { // {{{
       if (!appendTo)
         return;
 
       Task.spawn(function () {
         let row = yield AnkBase.Storage.exists(AnkBase.getIllustExistsQuery(illust_id, service_id));
         if (row) {
+          let latest = row.getResultByName('updated');
           AnkBase.insertDownloadedDisplay(
             appendTo,
             R18,
-            AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED
+            (!updated || !latest || updated <= latest) ? AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED : AnkBase.DOWNLOAD_DISPLAY.UPDATED
           );
         } else if (AnkBase.isDownloading(illust_id, service_id)) { // {{{
           AnkBase.insertDownloadedDisplay(

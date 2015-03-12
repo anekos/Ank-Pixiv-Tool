@@ -29,6 +29,8 @@
 
           dateTime: module.info.illust.dateTime,
 
+          updated: module.info.illust.updated,
+
           size: module.info.illust.size,
 
           tags: module.info.illust.tags,
