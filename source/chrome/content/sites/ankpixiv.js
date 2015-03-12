@@ -542,11 +542,20 @@ Components.utils.import("resource://gre/modules/Task.jsm");
                         ['.hotimage > a.work', 1],                // タグページ（週間ベスト）
                         ['.image-item > a:nth-child(1)', 1],      // タグページ（全期間＆新着）
                         ['.sibling-items > .after > a', 1],       // 前の作品
-                        ['.sibling-items > .before > a', 1],      // 次の作品
+                        ['.sibling-items > .before > a', 1]       // 次の作品
                       ];
 
       return AnkBase.markDownloaded(IsIllust, Targets, false, this, node, force, ignorePref);
     }, // }}}
+
+    getUpdated : function (box) {
+      let e = box && box.querySelector('img._thumbnail');
+      let thumbnail = e && e.src;
+      if (thumbnail) {
+        let m = thumbnail.match(/\/(\d{4})\/(\d{2})\/(\d{2})\/(\d{2})\/(\d{2})\/(\d{2})\//);
+        return m && m[1]+m[2]+m[3]+m[4]+m[5]+m[6];
+      }
+    },
 
     /*
      * 評価する

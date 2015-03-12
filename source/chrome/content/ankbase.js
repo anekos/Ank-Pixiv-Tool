@@ -141,6 +141,12 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         background-position: bottom !important;
         background-color: pink !important;
       }
+      .ank-pixiv-tool-updated {
+        background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAFElEQVR42mNkYPjPAANMDEgANwcAMdMBB4vf9eEAAAAASUVORK5CYII=") !important;
+        background-repeat: repeat-x !important;
+        background-position: bottom !important;
+        background-color: paleturquoise !important;
+      }
       .ank-pixiv-tool-downloaded-overlay {
         background-image: url("chrome://ankpixiv/content/downloaded.png");
         background-color: transparent !important;
@@ -218,6 +224,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
     DOWNLOAD_MARK: {
       DOWNLOADED:          'ank-pixiv-tool-downloaded',
+      UPDATED:             'ank-pixiv-tool-updated',
       DOWNLOADED_OVERLAY:  'ank-pixiv-tool-downloaded-overlay',
       DOWNLOADING:         'ank-pixiv-tool-downloading',
       DOWNLOADING_OVERLAY: 'ank-pixiv-tool-downloading-overlay'
@@ -1608,7 +1615,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
       module.marked = true;
 
-      let boxies = [];
       let checked = [];
       Targets.forEach(function ([selector, nTrackback, targetClass]) {
         AnkUtils.A(target.node.querySelectorAll(selector)) .
@@ -1648,13 +1654,21 @@ Components.utils.import("resource://gre/modules/Task.jsm");
     markBoxNode: function (box, illust_id, module, overlay) { // {{{
 
       Task.spawn(function () {
-        let row = yield AnkBase.Storage.exists(AnkBase.getIllustExistsQuery(illust_id, module.SERVICE_ID, -1));
+        let row = yield AnkBase.Storage.exists(AnkBase.getIllustExistsQuery(illust_id, module.SERVICE_ID));
 
         //AnkUtils.dump('markBoxNode: '+illust_id+', '+!!row);
 
         if (overlay === false) {
           // 従来形式
-          let cnDownloaded  = AnkBase.DOWNLOAD_MARK.DOWNLOADED;
+          let cnDownloaded  = (function () {
+            if (!!row && module.getUpdated !== undefined) {
+              let latest = row.getResultByName('updated');
+              let updated = module.getUpdated(box);
+              if (!!updated && !!latest && updated > latest)
+                return AnkBase.DOWNLOAD_MARK.UPDATED;
+            }
+            return AnkBase.DOWNLOAD_MARK.DOWNLOADED;
+          })();
           let cnDownloading = AnkBase.DOWNLOAD_MARK.DOWNLOADING;
 
           // XXX for "can't access dead object".
