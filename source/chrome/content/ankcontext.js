@@ -33,15 +33,15 @@
 
           size: module.info.illust.size,
 
-          tags: module.info.illust.tags,
+          tags: module.info.illust.tags || [],
 
-          shortTags: module.info.illust.shortTags,
+          shortTags: module.info.illust.shortTags || [],
 
           tools: module.info.illust.tools,
 
-          width: module.info.illust.width,
+          width: module.info.illust.width || 0,
 
-          height: module.info.illust.height,
+          height: module.info.illust.height || 0,
 
           server: module.info.illust.server,
 

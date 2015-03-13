@@ -338,11 +338,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
         get updated () {
           let e = self.elements.illust.thumbnail;
-          let thumbnail = e && e.getAttribute('data-src');
-          if (thumbnail) {
-            let m = thumbnail.match(/\/(\d{4})\/(\d{2})\/(\d{2})\/(\d{2})\/(\d{2})\/(\d{2})\//);
-            return m && m[1]+m[2]+m[3]+m[4]+m[5]+m[6];
-          }
+          return self.decodeUpdated(e && e.getAttribute('data-src'));
         },
 
         get referer () {
@@ -458,7 +454,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
     SITE_NAME:  'Pixiv',
 
     /********************************************************************************
-     * 
+     *
      ********************************************************************************/
 
     /**
@@ -526,7 +522,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
      * ダウンロード済みイラストにマーカーを付ける
      *    node:     対象のノード (AutoPagerize などで追加されたノードのみに追加するためにあるよ)
      *    force:    追加済みであっても、強制的にマークする
-     */ 
+     */
     markDownloaded: function (node, force, ignorePref) { // {{{
       const IsIllust = /&illust_id=(\d+)/;
       const Targets = [
@@ -548,13 +544,16 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       return AnkBase.markDownloaded(IsIllust, Targets, false, this, node, force, ignorePref);
     }, // }}}
 
-    getUpdated : function (box) {
-      let e = box && box.querySelector('img._thumbnail');
-      let thumbnail = e && e.src;
-      if (thumbnail) {
-        let m = thumbnail.match(/\/(\d{4})\/(\d{2})\/(\d{2})\/(\d{2})\/(\d{2})\/(\d{2})\//);
-        return m && m[1]+m[2]+m[3]+m[4]+m[5]+m[6];
-      }
+    getUpdated: function (box) {
+      let e = box && box.querySelector('img');
+      return this.decodeUpdated(e && e.src);
+    },
+
+    decodeUpdated: function (s) {
+      if (!s)
+        return;
+      let m = s.match(/\/(\d{4})\/(\d{2})\/(\d{2})\/(\d{2})\/(\d{2})\/(\d{2})\//);
+      return m && m[1]+m[2]+m[3]+m[4]+m[5]+m[6];
     },
 
     /*
@@ -587,7 +586,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
     }, // }}}
 
     /********************************************************************************
-     * 
+     *
      ********************************************************************************/
 
     /**
@@ -678,18 +677,20 @@ Components.utils.import("resource://gre/modules/Task.jsm");
               a[i-1] = a[i];
               a[i] = tmp;
             }
-            thumbref = indexPage;
-            origref = indexPage;
 
             let ltr = doc.documentElement.classList.contains('ltr');
             AnkUtils.A(doc.querySelectorAll('script')).forEach(function (e) {
               let mt = e.text.match(/pixiv\.context\.images\[\d+\]\s*=\s*\"(.+?)\"/);
-              if (mt)
+              if (mt) {
                 thumb.push(mt[1].replace(/\\(.)/g, '$1'));
+              }
               let mo = e.text.match(/pixiv\.context\.originalImages\[\d+\]\s*=\s*\"(.+?)\"/);
-              if (mo)
+              if (mo) {
                 orig.push(mo[1].replace(/\\(.)/g, '$1'));
+              }
             });
+            thumbref = indexPage;
+            origref = indexPage;
 
             for (var i=0; i<thumb.length; i++) {
               let p = i+1;
@@ -698,7 +699,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
               }
               else {
                 let oddp = p%2;
-                fp.push((p - oddp) / 2 + 1)
+                fp.push((p - oddp) / 2 + 1);
 
                 // 見開きの向きに合わせて画像の順番を入れ替える
                 if (ltr && oddp) {
@@ -733,8 +734,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
                 return AnkUtils.A(doc.querySelectorAll('.manga > .item-container > a')).map(a => base + a.getAttribute('href'));
               })();
 
-              let a = AnkUtils.A(doc.querySelectorAll('.manga > .item-container > a'));
-              for (let i=0; i<a.length && i<thumb.length; i++) {
+              for (let i = 0; i < origref.length && i < thumb.length; i++) {
                 AnkUtils.dump('ORIGINAL IMAGE PAGE: '+origref[i]+', '+indexPage);
                 let html = yield AnkUtils.httpGETAsync(origref[i], indexPage);
                 let doc = AnkUtils.createHTMLDocument(html);
@@ -758,7 +758,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
                     AnkUtils.dump('MANGA IMAGE: master mode ... '+thumb[0]+' -> '+thumb[0].replace(reMaster, replaceMaster).replace(/\.\w+$/, replaceExt));
                     orig = thumb.map(v => v.replace(reMaster, replaceMaster).replace(/\.\w+$/, replaceExt));
                   }
-                  else if (thumb[0].replace(reBig, replaceBig) ==  src) {
+                  else if (thumb[0].replace(reBig, replaceBig) == src) {
                     AnkUtils.dump('MANGA IMAGE: big mode ... '+thumb[0]+' -> '+thumb[0].replace(reBig, replaceBig));
                     orig = thumb.map(v => v.replace(reBig, replaceBig));
                   }
@@ -821,7 +821,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           return false;   // リトライしてほしい
         } // }}}
 
-        let createDebugMessageArea = function() {
+        let createDebugMessageArea = function () {
           let e = self.elements.illust.uiLayoutWest;
           if (e) {
             {
@@ -842,7 +842,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
               e.insertBefore(div, e.querySelector('.profile-unit+*'));
             }
           }
-        }
+        };
 
         let addMiddleClickEventListener = function () {
           if (useViewer)
@@ -979,8 +979,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
             else {
               [
                 '._image-items > li',              // フォロー新着作品＆○○さんの作品一覧
-                '.ranking-items > .ranking-item',  // ランキング
-              ] .
+                '.ranking-items > .ranking-item'  // ランキング
+              ].
                 some(function (q) {
                   let n = e.target.querySelectorAll(q);
                   return n && n.length > 0 && !!(a = AnkUtils.A(n));

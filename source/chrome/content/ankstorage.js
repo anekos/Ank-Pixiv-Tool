@@ -188,7 +188,7 @@ Components.utils.import("resource://gre/modules/FileUtils.jsm");
         }
         else if (q.type == 'addColumn') {
           for (let key in q.columns) {
-            qa.push({query: 'alter table ' + q.table + ' add column ' + key + ' ' + q.columns[key]});
+            qa.push({query: 'alter table ' + q.table + ' add column ' + key + ' ' + q.columns[key].type});
           }
         }
         else if (q.type == 'update') {

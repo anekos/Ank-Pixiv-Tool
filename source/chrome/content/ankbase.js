@@ -807,7 +807,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
      */
     downloadSingleImage: function (file, url, referer, download) { // {{{
       return Task.spawn(function* () {
-        let ref = referer && Array.isArray(referer) && referer.length > index ? referer[index] : referer;
+        let ref = referer && Array.isArray(referer) && referer.length > 0 ? referer[0] : referer;
         let status = yield AnkBase.downloadToRetryable(file, url, ref, AnkBase.DOWNLOAD_RETRY.MAX_TIMES);
         if (status != 200) {
           AnkUtils.dump('Delete invalid file. => ' + file.path);
@@ -871,7 +871,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
       Task.spawn(function () {
         // ダウンロード済みかの確認
-        let row = yield AnkBase.Storage.exists(AnkBase.getIllustExistsQuery(dw.illust_id, dw.service_id));
+        let row = yield AnkBase.isDownloaded(dw.illust_id, dw.service_id);
         if (row) {
           if (confirmDownloaded) {
             if (!window.confirm(AnkBase.Locale.get('downloadExistingImage')))
@@ -890,6 +890,10 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
         module.downloadCurrentImage(useDialog, debug);
       }).then(null).catch(e => AnkUtils.dumpError(e, true));
+    },
+
+    isDownloaded: function (illust_id, service_id) {
+      return AnkBase.Storage.exists(AnkBase.getIllustExistsQuery(illust_id, service_id));
     },
 
     /*
@@ -1378,7 +1382,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
     getIllustExistsQuery: function (illust_id, service_id, id) {
       const cond = 'illust_id = :illust_id and service_id = :service_id';
-      const opts = 'order by updated desc';
+      const opts = 'order by datetime desc';
       return [ { id:(typeof id !== 'undefined' ? id:-1), table:'histories', cond:cond, values:{ illust_id:illust_id, service_id:service_id }, opts:opts } ];
     },
 
@@ -1478,7 +1482,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         qa.push({ type:'update', table:'histories', set:set, cond:cond, values:null });
         qa.push({ type:'update', table:'members',   set:set, cond:cond, values:null });
 
-        qa.push({ type:'addColumn', table:'histories', columns:{updated:"string"} })
+        qa.push({ type:'addColumn', table:'histories', columns:{ updated:{type:"string"} } })
 
         qa.push({ type:'SchemaVersion', SchemaVersion:ver });
 
@@ -1664,7 +1668,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
             if (!!row && module.getUpdated !== undefined) {
               let latest = row.getResultByName('updated');
               let updated = module.getUpdated(box);
-              if (!!updated && !!latest && updated > latest)
+              if (!!updated && !!latest && updated != latest)
                 return AnkBase.DOWNLOAD_MARK.UPDATED;
             }
             return AnkBase.DOWNLOAD_MARK.DOWNLOADED;
@@ -1811,7 +1815,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           AnkBase.insertDownloadedDisplay(
             appendTo,
             R18,
-            (!updated || !latest || updated <= latest) ? AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED : AnkBase.DOWNLOAD_DISPLAY.UPDATED
+            (!!updated && !!latest && updated != latest) ? AnkBase.DOWNLOAD_DISPLAY.UPDATED : AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED
           );
         } else if (AnkBase.isDownloading(illust_id, service_id)) { // {{{
           AnkBase.insertDownloadedDisplay(
@@ -2029,6 +2033,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
     delayFunctionInstaller: AnkBase.delayFunctionInstaller,
     markDownloaded: AnkBase.markDownloaded,
+    markDownloadedBoxies: AnkBase.markDownloadedBoxies,
     insertDownloadedDisplayById: AnkBase.insertDownloadedDisplayById,
     downloadCurrentImageAuto: AnkBase.downloadCurrentImageAuto,
     createDownloadEvent: AnkBase.createDownloadEvent,
