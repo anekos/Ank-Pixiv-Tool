@@ -552,8 +552,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
     decodeUpdated: function (s) {
       if (!s)
         return;
-      let m = s.match(/\/(\d{4})\/(\d{2})\/(\d{2})\/(\d{2})\/(\d{2})\/(\d{2})\//);
-      return m && m[1]+m[2]+m[3]+m[4]+m[5]+m[6];
+      let m = s.match(/\/(\d{4})\/(\d{2})\/(\d{2})\/(\d{2})\/(\d{2})\/\d{2}\//);
+      return m && m[1]+m[2]+m[3]+m[4]+m[5];
     },
 
     /*
@@ -657,9 +657,9 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
           // 単ページイラスト(Bパターン)
           if (!self.in.manga) {
-            let src = doc.querySelector('img').src;
-            if (src)
-              return setSelectedImage({ original: { images: [ src ], facing: null, referer: indexPage } });
+            let img = doc.querySelector('img');
+            if (img)
+              return setSelectedImage({ original: { images: [ img.src ], facing: null, referer: indexPage } });
             return null;
           }
 

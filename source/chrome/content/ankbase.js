@@ -1665,10 +1665,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         if (overlay === false) {
           // 従来形式
           let cnDownloaded  = (function () {
-            if (!!row && module.getUpdated !== undefined) {
-              let latest = row.getResultByName('updated');
-              let updated = module.getUpdated(box);
-              if (!!updated && !!latest && updated != latest)
+            if (module.getUpdated !== undefined) {
+              if (AnkBase.isUpdated(row, module.getUpdated(box)))
                 return AnkBase.DOWNLOAD_MARK.UPDATED;
             }
             return AnkBase.DOWNLOAD_MARK.DOWNLOADED;
@@ -1811,11 +1809,10 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       Task.spawn(function () {
         let row = yield AnkBase.Storage.exists(AnkBase.getIllustExistsQuery(illust_id, service_id));
         if (row) {
-          let latest = row.getResultByName('updated');
           AnkBase.insertDownloadedDisplay(
             appendTo,
             R18,
-            (!!updated && !!latest && updated != latest) ? AnkBase.DOWNLOAD_DISPLAY.UPDATED : AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED
+            AnkBase.isUpdated(row, updated) ? AnkBase.DOWNLOAD_DISPLAY.UPDATED : AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED
           );
         } else if (AnkBase.isDownloading(illust_id, service_id)) { // {{{
           AnkBase.insertDownloadedDisplay(
@@ -1832,6 +1829,23 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         } // }}}
       }).then(null).catch(e => AnkUtils.dumpError(e));
     }, // }}}
+
+    isUpdated: function (row, updated) {
+      if (!row || !updated)
+        return;
+
+      let latest = row.getResultByName('updated');
+      if (latest)
+        return latest != updated;
+
+      if (!AnkBase.Prefs.get('useDatetimeForUpdatedCheck',false) && updated.match(/^20\d{10}$/))
+        return;
+
+      let datetime = row.getResultByName('datetime');
+      let m = datetime && datetime.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/);
+      let saved = m && m[1]+m[2]+m[3]+m[4]+m[5];
+      return saved && saved < updated;
+    },
 
     /********************************************************************************
     * イベント
@@ -2033,7 +2047,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
     delayFunctionInstaller: AnkBase.delayFunctionInstaller,
     markDownloaded: AnkBase.markDownloaded,
-    markDownloadedBoxies: AnkBase.markDownloadedBoxies,
     insertDownloadedDisplayById: AnkBase.insertDownloadedDisplayById,
     downloadCurrentImageAuto: AnkBase.downloadCurrentImageAuto,
     createDownloadEvent: AnkBase.createDownloadEvent,
