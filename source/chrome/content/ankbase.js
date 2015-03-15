@@ -1091,7 +1091,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       let member_id     = context.info.member.id;
       let member_name   = context.info.member.name || member_id;
       let pixiv_id      = context.info.member.pixivId;
-      let memoized_name = member_name;
+      let memoized_name = null;
       let tags          = context.info.illust.tags;
       let title         = context.info.illust.title;
       let comment       = context.info.illust.comment;
@@ -1128,16 +1128,17 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           AnkUtils.openTab(pageUrl);
 
         AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.FAILED);
-      };
+      }
 
       Task.spawn(function () {
         // FIXME memoized_nameの取得をここに移したため、meta.txtにmemoized_nameが記録されないようになってしまった
         // FIXME membersに重複エントリができる可能性がある。(重複削除してから)unique制約をつけるか、１トランザクション中にselect→insertするか等
         let row = yield AnkBase.Storage.exists(AnkBase.getMemberExistsQuery(download.context.info.member.id,download.context.SERVICE_ID));
         if (row) {
-          download.context.info.member.memoizedName = row.getResultByName('name');
+          memoized_name = download.context.info.member.memoizedName = row.getResultByName('name');
         }
         else {
+          memoized_name = download.context.info.member.memoizedName = member_name;
           if (AnkBase.Prefs.get('saveHistory', true)) {
             let set = { id:member_id, name: member_name, pixiv_id:pixiv_id, version:AnkBase.DB_DEF.VERSION, service_id:service_id };
             let qa = [];
