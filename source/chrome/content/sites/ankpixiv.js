@@ -169,10 +169,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           return query('.works_display ._ugoku-illust-player-container');
         },
 
-        get ugoiraFullscreenLink () {
-          return query('.works_display ._ugoku-illust-player-container .full-screen');
-        },
-
         get feedList() {
           return query('#stacc_timeline')
             ||
@@ -417,13 +413,22 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         },
 
         get ugokuIllustSrc () {
-          let ugoku = self.elements.doc.defaultView.wrappedJSObject.pixiv.context.ugokuIllustData;
-          return ugoku && ugoku.src;
-        },
+          let context = self.elements.doc.defaultView.wrappedJSObject.pixiv.context;
+          if (!context)
+            return;
 
-        get ugokuIllustFullscreenSrc () {
-          let ugoku = self.elements.doc.defaultView.wrappedJSObject.pixiv.context.ugokuIllustFullscreenData;
-          return ugoku && ugoku.src;
+          let illustSize = context.illustSize;
+          let dataSzie = context.ugokuIllustData && context.ugokuIllustData.size;
+
+          let dataSrc = context.ugokuIllustData && context.ugokuIllustData.src;
+          let fullDataSrc = context.ugokuIllustFullscreenData && context.ugokuIllustFullscreenData.src;
+
+          // サイズ情報が見つからなければフルスクリーン用を選択
+          if (!illustSize || !dataSzie)
+            return fullDataSrc || dataSrc;
+
+          // 投稿サイズと通常zipのサイズが同じなら通常zipを選択
+          return (illustSize[0] == dataSzie[0] && illustSize[1] == dataSzie[1]) && dataSrc || fullDataSrc;
         },
 
         // ダウンロード時のみの利用なので downloadOriginalSize のチェックだけでよい
@@ -624,7 +629,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
         // うごイラ
         if (self.in.ugoira) {
-          let src = self.info.path.ugokuIllustFullscreenSrc || self.info.path.ugokuIllustSrc;
+          let src = self.info.path.ugokuIllustSrc;
           if (src)
             return setSelectedImage({ original: { images: [ src ], facing: null, referer: referer } });
 

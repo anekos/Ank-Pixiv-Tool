@@ -754,30 +754,36 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
     /*
      * downloadMultipleFiles
-     *    localdir:       出力先ディレクトリ nsilocalFile
+     *    localdir:       出力先ディレクトリ(マンガ) or ファイル(イラスト) nsilocalFile
      *    urls:           URLリスト
      *    referer:        リファラ
      *    fp:             見開きページ情報
      *    download:       ダウンロードキューエントリー
      * 複数のファイルをダウンロードする
      */
-    downloadMultipleFiles: function (localdir, urls, fp, referer, download) { // {{{
+    downloadImages: function (localdir, urls, fp, referer, download) { // {{{
       return Task.spawn(function* () {
+
         const MAX_FILE = 1000;
 
-        // XXX ディレクトリは勝手にできるっぽい
-        //localdir.exists() || localdir.create(localdir.DIRECTORY_TYPE, 0755);
-
         for (let index=0; index<urls.length && index<MAX_FILE ; index++) {
-          let ref = referer && Array.isArray(referer) && referer.length > index ? referer[index] : referer;
           let url = urls[index];
-          let file = localdir.clone();
-          let m = url.match(/(\.\w+)(?:$|\?)/);
-          let fileExt = (m && m[1]) || '.jpg';
+          let file = (function () {
+            if (urls.length == 1)
+              return localdir;
 
-          let p = AnkBase.setMangaPageNumber(file.path, fileExt, index+1, fp ? fp[index] : undefined);
-          file.initWithPath(p.path);
-          file.append(p.name);
+            let file = localdir.clone();
+            let m = url.match(/(\.\w+)(?:$|\?)/);
+            let fileExt = (m && m[1]) || '.jpg';
+
+            let p = AnkBase.setMangaPageNumber(file.path, fileExt, index + 1, fp ? fp[index] : undefined);
+            file.initWithPath(p.path);
+            file.append(p.name);
+
+            return file;
+          })();
+
+          let ref = referer && Array.isArray(referer) && referer.length > index ? referer[index] : referer;
 
           let status = yield AnkBase.downloadToRetryable(file, url, ref, AnkBase.DOWNLOAD_RETRY.MAX_TIMES);
           if (status != 200) {
@@ -792,34 +798,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           // ファイルの拡張子の修正
           yield AnkBase.fixFileExt(file);
         }
-
-        return 200;
-      });
-    }, // }}}
-
-    /*
-     * downloadSingleImage
-     *    file:           nsIFile
-     *    url:            URL
-     *    referer:        リファラ
-     *    download:       ダウンロードキューエントリー
-     * 一枚絵のファイルをダウンロードする
-     */
-    downloadSingleImage: function (file, url, referer, download) { // {{{
-      return Task.spawn(function* () {
-        let ref = referer && Array.isArray(referer) && referer.length > 0 ? referer[0] : referer;
-        let status = yield AnkBase.downloadToRetryable(file, url, ref, AnkBase.DOWNLOAD_RETRY.MAX_TIMES);
-        if (status != 200) {
-          AnkUtils.dump('Delete invalid file. => ' + file.path);
-          yield OS.File.remove(file.path).then(null).catch(e => AnkUtils.dump('Failed to delete invalid file. => ' + e));
-          return status;
-        }
-
-        ++download.downloaded;
-        AnkBase.updateToolbarText();
-
-        // ファイルの拡張子の修正
-        yield AnkBase.fixFileExt(file);
 
         return 200;
       });
@@ -1017,6 +995,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
             AnkBase.updateToolbarText();
           }
 
+          let h = d.history;
           let c = d.context;
           let rdisp = d.result;
           let r18 = (rdisp === AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED) ? c.info.illust.R18 : false;
@@ -1028,7 +1007,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
               if (AnkBase.Prefs.get('showDownloadedFilename', false)) {
                 let e = curmod.elements.illust.downloadedFilenameArea;
                 if (e)
-                  e.innerHTML = '[' + c.info.path.image.images.length + '] ' + c.info.path.image.images[0];
+                  e.textContent = '['+ c.info.path.image.images.length + ' pic]\n' + c.info.path.image.images[0] +'\n' + h.local_path;
               }
             }
           });
@@ -1102,6 +1081,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       let service_id    = context.SERVICE_ID;
       let site_name     = getSiteName(context);
       let images        = context.info.path.image.images;
+      let isFile        = images.length == 1;
       let facing        = context.info.path.image.facing;
       let ref           = context.info.path.image.referer || context.info.illust.referer;
       let pageUrl       = context.info.illust.pageUrl;
@@ -1154,7 +1134,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           if (f.match(/#page-number#.*?\//))
             return;                                 // ファイル名以外でのページ番号指定は不可
 
-          if (!context.in.manga) {
+          if (isFile) {
             f = f.replace(/\s*#page-number#/, '');  // イラスト形式ならページ番号は不要
             f = f.replace(/\/\s*$/, '');            // 終端はファイル名
           }
@@ -1227,15 +1207,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         })();
 
         // XXX 前方で宣言済み
-        destFiles = yield AnkBase.getSaveFilePath(prefInitDir, filenames, ext, useDialog, !context.in.manga, images.length, facing ? facing[facing.length-1] : undefined);
+        destFiles = yield AnkBase.getSaveFilePath(prefInitDir, filenames, ext, useDialog, isFile, images.length, facing ? facing[facing.length-1] : undefined);
         if (!destFiles) {
-          AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.FAILED);
-          return;
-        }
-
-        if (context.in.manga && !destFiles.image.path.match(/#page-number#/)) {
-          // マンガ形式のダウンロード時に #page-number# の指定がない場合はエラーに
-          window.alert(AnkBase.Locale.get('invalidPageNumberToken'));
           AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.FAILED);
           return;
         }
@@ -1243,48 +1216,41 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         AnkBase.clearMarkedFlags();
 
         // ダウンロード実行
-        let statusResult;
-        if (context.in.manga) {
-          statusResult = yield AnkBase.downloadMultipleFiles(destFiles.image, images, facing, ref, download);
-        }
-        else {
-          statusResult = yield AnkBase.downloadSingleImage(destFiles.image, images[0], ref, download);
-        }
-
+        let statusResult = yield AnkBase.downloadImages(destFiles.image, images, facing, ref, download);
         if (statusResult != 200) {
           // ダウンロード失敗
-          onError(statusResult)
+          onError(statusResult);
+          return;
         }
-        else {
-          // ダウンロード成功
-          let caption = AnkBase.Locale.get('finishedDownload');
-          let text = filenames[0];
-          let local_path = destFiles.image.path;
-          let relPath = prefInitDir ? AnkUtils.getRelativePath(local_path, prefInitDir)
-                                    : AnkUtils.extractFilename(local_path);
 
-          if (AnkBase.Prefs.get('saveHistory', true)) {
-            yield Task.spawn(function () {
-              let set = {
-                member_id:  member_id,
-                illust_id:  illust_id,
-                title:      title,
-                tags:       AnkUtils.join(tags, ' '),
-                server:     context.info.illust.server,
-                saved:      true,
-                datetime:   AnkUtils.toSQLDateTimeString(savedDateTime),
-                updated:    updated,
-                comment:    comment,
-                version:    AnkBase.DB_DEF.VERSION,
-                service_id: service_id,
-                local_path: local_path,
-                filename:   relPath
-              };
-              let qa = [];
-              qa.push({ type:'insert', table:'histories', set:set });
-              yield AnkBase.Storage.update(AnkBase.Storage.getUpdateSQLs(qa));
-            }).then(null).catch(e => AnkUtils.dumpError(e,true));
-          }
+        // ダウンロード成功
+        let caption = AnkBase.Locale.get('finishedDownload');
+        let text = filenames[0];
+        let local_path = destFiles.image.path;
+        let relPath = prefInitDir ? AnkUtils.getRelativePath(local_path, prefInitDir)
+                                  : AnkUtils.extractFilename(local_path);
+
+        if (AnkBase.Prefs.get('saveHistory', true)) {
+          download.history = {
+            member_id:  member_id,
+            illust_id:  illust_id,
+            title:      title,
+            tags:       AnkUtils.join(tags, ' '),
+            server:     context.info.illust.server,
+            saved:      true,
+            datetime:   AnkUtils.toSQLDateTimeString(savedDateTime),
+            updated:    updated,
+            comment:    comment,
+            version:    AnkBase.DB_DEF.VERSION,
+            service_id: service_id,
+            local_path: local_path,
+            filename:   relPath
+          };
+          yield Task.spawn(function () {
+            let qa = [];
+            qa.push({ type:'insert', table:'histories', set:download.history });
+            yield AnkBase.Storage.update(AnkBase.Storage.getUpdateSQLs(qa));
+          }).then(null).catch(e => AnkUtils.dumpError(e,true));
 
           if (AnkBase.Prefs.get('saveMeta', true))
             AnkBase.saveTextFile(destFiles.meta, metaText);
@@ -1297,7 +1263,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED);
 
           // たまたま開いているタブがダウンロードが完了したのと同じサイトだったならマーキング処理
-          AnkBase.insertOrMarkToAllTabs(service_id, illust_id, function (curmod, dw) {
+          AnkBase.insertOrMarkToAllTabs(service_id, illust_id, function (curmod) {
             curmod.markDownloaded(illust_id, true);
           });
         }
