@@ -20,18 +20,18 @@
 <!ENTITY downloadOriginalSize "下載原始尺寸的漫畫圖片。">
 <!ENTITY tab.download "下載">
 <!ENTITY tab.filename "檔名">
-<!ENTITY tab.viewer "Viewer">
+<!ENTITY tab.viewer "秀圖">
 <!ENTITY tab.miscellaneous "雜項">
 <!ENTITY fitLargeImageInWindowSize "縮放圖片至視窗大小。">
 <!ENTITY dontResizeIfSmall "若圖片比視窗小，就不要重設尺寸。">
-<!ENTITY dontHidePanel "Don't hide button panel.">
-<!ENTITY maxPanelOpacity "Maximum button panel opacity.">
-<!ENTITY minPanelOpacity "Minimum button panel opacity.">
-<!ENTITY panelSize "Button panel size.">
-<!ENTITY swapArrowButton "Swap the arrow button functions.">
-<!ENTITY useFacingView "Display facing pages as single image.">
-<!ENTITY useLoadProgress "Show progress, while loading image.">
-<!ENTITY viewOriginalSize "Display original size manga.">
+<!ENTITY dontHidePanel "不要隱藏圖片操作按鈕">
+<!ENTITY maxPanelOpacity "圖片操作按鈕的不透明度上限">
+<!ENTITY minPanelOpacity "圖片操作按鈕的不透明度下限">
+<!ENTITY panelSize "圖片操作按鈕的尺寸縮放倍數">
+<!ENTITY swapArrowButton "逆轉箭頭按鈕的前進後退方向">
+<!ENTITY useFacingView "用單面圖片顯示電子書形式下的對開頁（取消勾選時為一次顯示一頁）">
+<!ENTITY useLoadProgress "讀取圖片時，顯示反白特效。">
+<!ENTITY viewOriginalSize "漫畫圖片顯示為大尺寸原始圖">
 <!ENTITY openComment "自動展開回應欄">
-<!ENTITY openCaption "Automatically open the long caption.">
-<!ENTITY allowThirdPartyCookie "Allow ThirdParty Cookie.">
+<!ENTITY openCaption "自動展開超長的圖片說明文">
+<!ENTITY allowThirdPartyCookie "允許第三方網站的 Cookie 資料">
