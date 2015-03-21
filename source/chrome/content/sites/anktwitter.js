@@ -187,7 +187,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         // require for AnkBase
 
         get downloadedDisplayParent () {
-          return queryEitherGorT('.stream-item-header', '.tweet-actions');
+          return queryEitherGorT('.stream-item-header', '.client-and-actions');
         },
 
         get downloadedFilenameArea () {
@@ -388,7 +388,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
       this._functionsInstalled = true;
 
-      let inits = function () {
+      var inits = function () {
         if (self.in.medium) {
           self.installMediumPageFunctions();
         }
@@ -399,11 +399,11 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
       // Illust/List共通のFunction
 
-      let self = this;
-      let doc = this.curdoc;
+      var self = this;
+      var doc = this.curdoc;
 
       // ページ移動
-      let contentChange = function () {
+      var contentChange = function () {
         let content = doc.querySelector('div.route-profile, div.route-permalink, div.route-home, div#doc');
         if (!(content && doc.readyState === 'complete')) {
           return false;   // リトライしてほしい
@@ -419,23 +419,15 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       };
 
       // ギャラリーオープン
-      let galleryOpen = function () {
+      var galleryOpen = function () {
         let body = doc.querySelector('body');
         if (!(body && doc.readyState === 'complete')) {
           return false;   // リトライしてほしい
         }
 
-        new MutationObserver(function (o) {
-          o.forEach(function (e) {
-            let en = e.target.classList.contains('gallery-enabled');
-            if (!galleryShown && en) {
-              AnkUtils.dump('rise galleryOpen: '+doc.location.href);
-              galleryShown = true;
-            }
-            else if (galleryShown && !en) {
-              galleryShown = false;
-            }
-          });
+        new MutationObserver(function () {
+          let body = doc.querySelector('body');
+          AnkUtils.dump('rise galleryOpen: shown='+(body && body.classList.contains('gallery-enabled')));
           self._image = null;  // 入れ替わりがあるので、ここでリセット
         }).observe(body, {attributes: true});
 
@@ -444,25 +436,31 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
       // ギャラリー移動
       let galleryChanged = function () {
-        let media = doc.querySelector('.Gallery-media');
+        let media = doc.querySelector('.GalleryTweet');
         if (!(media && doc.readyState === 'complete')) {
           return false;   // リトライしてほしい
         }
 
         // FIXME 移動後に、移動前のギャラリーの処理結果で表示が上書きされてしまう
         new MutationObserver(function () {
-          if (galleryShown) {
-            AnkUtils.dump('rise galleryChanged: '+doc.location.href);
-            self._image = null;  // 入れ替わりがあるので、ここでリセット
-          }
-          /*
-          AnkBase.insertDownloadedDisplayById(
-            self.elements.illust.downloadedDisplayParent,
-            self.info.illust.R18,
-            self.info.illust.id,
-            self.SERVICE_ID
-          );
-          */
+          AnkUtils.dump('rise galleryChanged');
+          self._image = null;  // 入れ替わりがあるので、ここでリセット
+
+          if (timeoutId)
+            clearTimeout(timeoutId);
+
+          timeoutId = setTimeout(function () {
+            let parent = media.querySelector('.content > .stream-item-header');
+            if (!parent)
+              return;
+
+            AnkBase.insertDownloadedDisplayById(
+              parent,
+              self.info.illust.R18,
+              self.info.illust.id,
+              self.SERVICE_ID
+            );
+          }, 100);
         }).observe(media, {childList: true});
 
         return true;
@@ -470,7 +468,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
       //
 
-      var galleryShown = false;
+      var timeoutId = null;
 
       inits();
 
@@ -730,6 +728,9 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         }
 
         function createDebugMessageArea() {
+          if (doc.querySelector('.ank-pixiv-downloaded-filename'))
+            return;
+
           let e = doc.querySelector('.client-and-actions');
           if (e) {
             {
@@ -779,7 +780,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         let useViewer = AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+self.SITE_NAME, true);
         let useClickDownload = AnkBase.Prefs.get('downloadWhenClickMiddle', false);
         if (medImg && (useViewer || useClickDownload))
-          addMiddleClickEventListener()
+          addMiddleClickEventListener();
 
         // 保存済み表示（ギャラリー）
         AnkBase.insertDownloadedDisplayById(
