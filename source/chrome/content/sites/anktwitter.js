@@ -600,7 +600,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           let doc = AnkUtils.createHTMLDocument(html);
           if (!doc)
             return null;
-          let o = Array.slice(doc.querySelectorAll('.cards-media-container div.multi-photo')).
+          let o = Array.slice(doc.querySelectorAll('.permalink-footer > .cards-media-container .multi-photo')).
                     map(s => s.getAttribute('data-url'));
           let m = self._convertImageUrls(o);
           if (m.length > 1)
