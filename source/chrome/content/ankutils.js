@@ -287,14 +287,15 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
         if (!m)
           return;
 
-        let d = new Date();
-        d.setFullYear(parseInt(m[3]));
-        d.setMonth(parseInt(m[4])-1);
-        d.setDate(parseInt(m[5]));
-        d.setHours(parseInt(m[1]));
-        d.setMinutes(parseInt(m[2]));
-
-        return d;
+        return new Date(
+          parseInt(m[3]),
+          parseInt(m[4])-1,
+          parseInt(m[5]),
+          parseInt(m[1]),
+          parseInt(m[2]),
+          0,
+          0
+        );
       }
 
       // 年/月/日 時:分
@@ -303,14 +304,15 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
         if (!m)
           return;
 
-        let d = new Date();
-        d.setFullYear(parseInt(m[1]));
-        d.setMonth(parseInt(m[2])-1);
-        d.setDate(parseInt(m[3]));
-        d.setHours(m[4] ? parseInt(m[4]) : 0);
-        d.setMinutes(m[5] ? parseInt(m[5]) : 0);
-
-        return d;
+        return new Date(
+          parseInt(m[1]),
+          parseInt(m[2])-1,
+          parseInt(m[3]),
+          m[4] ? parseInt(m[4]) : 0,
+          m[5] ? parseInt(m[5]) : 0,
+          0,
+          0
+        );
       }
 
       // 月日,年
@@ -319,14 +321,15 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
         if (!m)
           return;
 
-        let d = new Date();
-        d.setFullYear(parseInt(m[3]));
-        d.setMonth(parseInt(m[1])-1);
-        d.setDate(parseInt(m[2]));
-        d.setHours(0);
-        d.setMinutes(0);
-
-        return d;
+        return new Date(
+          parseInt(m[3]),
+          parseInt(m[1])-1,
+          parseInt(m[2]),
+          0,
+          0,
+          0,
+          0
+        );
       }
 
       // 相対表記
@@ -646,7 +649,7 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
        let xhr = new XMLHttpRequest();
        xhr.open((post ? 'POST' : 'GET'), url, true);
        try {
-         xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = self.Prefs.get('allowThirdPartyCookie', true);
+          xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = self.Prefs.get('allowThirdPartyCookie');
        } catch(ex) {
          /* unsupported by this version of FF */
        }
