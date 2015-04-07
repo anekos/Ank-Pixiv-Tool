@@ -94,7 +94,8 @@ Components.utils.import("resource://gre/modules/Task.jsm");
      ********************************************************************************/
 
     DB_DEF: {
-      VERSION: 8,
+      // TODO 8は欠番、7の次は9で
+      VERSION: 7,
 
       TABLES: {
         histories: {
@@ -105,7 +106,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           tags: { type:"string" },
           server: { type:"string" },
           datetime: { type:"datetime" },
-          updated: { type:"string" },
           saved: { type:"boolean" },
           filename: { type:"string" },
           version: { type:"integer" },
@@ -1239,7 +1239,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
             server:     context.info.illust.server,
             saved:      true,
             datetime:   AnkUtils.toSQLDateTimeString(savedDateTime),
-            updated:    updated,
             comment:    comment,
             version:    AnkBase.DB_DEF.VERSION,
             service_id: service_id,
@@ -1448,8 +1447,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         qa.push({ type:'dropIndex', table:'members',   columns:['id'] });
         qa.push({ type:'update', table:'histories', set:set, cond:cond, values:null });
         qa.push({ type:'update', table:'members',   set:set, cond:cond, values:null });
-
-        qa.push({ type:'addColumn', table:'histories', columns:{ updated:{type:"string"} } })
 
         qa.push({ type:'SchemaVersion', SchemaVersion:ver });
 
@@ -1801,13 +1798,10 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       if (!row || !updated)
         return;
 
-      let latest = row.getResultByName('updated');
-      if (latest)
-        return latest != updated;
-
       if (!AnkBase.Prefs.get('useDatetimeForUpdatedCheck',false) && updated.match(/^20\d{10}$/))
         return;
 
+      // FIXME localtime->JST変換を入れる
       let datetime = row.getResultByName('datetime');
       let m = datetime && datetime.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/);
       let saved = m && m[1]+m[2]+m[3]+m[4]+m[5];
