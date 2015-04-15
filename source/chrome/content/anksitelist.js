@@ -5,6 +5,7 @@
 
   var SiteModuleList = (function () {
     const SITES = [
+      'sites/ankdeviantart.js',
       'sites/ankimgly.js',
       'sites/anknicosei.js',
       'sites/anknijie.js',
