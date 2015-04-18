@@ -266,10 +266,8 @@ try {
           AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext () {
-          if (!self.elements.illust.flvPlayer) {
-            let m = path.image.images[0].match(/(\.\w+)(?:$|\?)/);
-            return (m && m[1]) || '.jpg';
-          }
+          if (!self.elements.illust.flvPlayer)
+            return AnkUtils.getFileExtension(path.image.images.length > 0 && path.image.images[0]);
         },
 
         get mangaIndexPage ()

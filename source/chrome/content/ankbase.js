@@ -232,7 +232,6 @@ try {
      */
     showFilePickerWithMeta: function (prefInitDir, basename, ext, isFile) { // {{{
       const PGNM_KEY = AnkUtils.SYS_SLASH+AnkBase.FILENAME_KEY.PAGE_NUMBER;
-      let image;
       let defaultFilename;
       let index = basename.indexOf(PGNM_KEY);
       if (!isFile && basename.length == index + PGNM_KEY.length) {
@@ -739,8 +738,10 @@ try {
           return false;
 
         // 画像の情報がない
-        if (context.info.path.image.images.length == 0)
+        if (context.info.path.image.images.length == 0) {
+          window.alert(AnkBase.Locale('cannotFindImages'));
           return false;
+        }
 
         if (typeof useDialog === 'undefined')
           useDialog = AnkBase.Prefs.get('showSaveDialog', true);
@@ -999,9 +1000,8 @@ try {
         }
 
         function fixPageNumberToken (path) {
-          let f = AnkUtils.replaceFileSeparatorToDEFAULT(path);  // パスの区切り文字をいったん'/'に統一
 
-          f = f.replace(/\/\s*$/, '');              // 終端はファイル名
+          let f = path.replace(/\/\s*$/, '');              // 終端はファイル名
 
           if (f.match(/#page-number#.*?\//))
             return;                                 // ファイル名以外でのページ番号指定は不可
@@ -1015,13 +1015,15 @@ try {
               f += '/#page-number#';                // ページ番号指定がないものには強制
           }
 
-          f = AnkUtils.replaceFileSeparatorToSYS(f);      // Windowsの場合は区切り文字を'\'にする
-
           return f;
         }
 
-        let defaultFilename = fixPageNumberToken(AnkBase.Prefs.get('defaultFilename', '').trim() || '?member-name? - ?title?/#page-number#');
-        let alternateFilename = fixPageNumberToken(AnkBase.Prefs.get('alternateFilename', '').trim() || '?member-name? - ?title? - (?illust-id?)/#page-number#');
+        let defaultFilename = AnkBase.Prefs.get('defaultFilename', '').trim() || '?member-name? - ?title?/#page-number#';
+        let alternateFilename = AnkBase.Prefs.get('alternateFilename', '').trim() || '?member-name? - ?title? - (?illust-id?)/#page-number#';
+
+        // パスの区切り文字をいったん'/'に統一
+        defaultFilename = fixPageNumberToken(AnkUtils.replaceFileSeparatorToDEFAULT(defaultFilename));
+        alternateFilename = fixPageNumberToken(AnkUtils.replaceFileSeparatorToDEFAULT(alternateFilename));
 
         if (!defaultFilename || !alternateFilename) {
           window.alert(AnkBase.Locale('invalidPageNumberToken'));
@@ -1065,12 +1067,15 @@ try {
               throw e;
             }
           });
+
           function repl (s) {
             ps.forEach(function ([re, val]) (s = s.replace(re, val).trim()));
-            return s;
+            return s.replace(/\s+(\/[^/]+)$/, '$1');
           }
-          filenames.push(repl(defaultFilename));
-          filenames.push(repl(alternateFilename));
+
+          // Windowsの場合は区切り文字を'\'にする
+          filenames.push(AnkUtils.replaceFileSeparatorToSYS(repl(defaultFilename)));
+          filenames.push(AnkUtils.replaceFileSeparatorToSYS(repl(alternateFilename)));
 
           if (debug) {
             let tokens = [
@@ -1351,8 +1356,11 @@ try {
       if (header.match(/^GIF8/))
         return '.gif';
 
-      if (header.match(/^\x00\x00\x00\x1Cftyp/))
+      if (header.match(/^\x00\x00/) && header.match(/ftyp/))
         return '.mp4';
+
+      if (header.match(/\x1A\x45\xDF\xA3/))
+        return '.webm';
 
       if (header.match(/^PK\x03\x04/))
         return '.zip';
@@ -1541,19 +1549,30 @@ try {
         AnkUtils.dump('update database. version '+uver+' -> '+ver);
       }
 
-      // version 6
+      // version 6->7
       try {
-        let srvid = 'PXV';
-
-        AnkBase.Storage.dropIndexes('histories',['illust_id']);
-        AnkBase.Storage.dropIndexes('members',['id']);
-
-        let set = 'service_id = \'' + srvid + '\', version = '+ver;
-        let cond = 'service_id is null';
-        AnkBase.Storage.update('histories', set, cond);
-        AnkBase.Storage.update('members', set, cond);
-
-        AnkBase.Storage.setUserVersion(ver);
+        let start = new Date().getTime();
+        setTimeout(function () {
+          function updateServiceIdSQL(tableName) {
+            return 'update '+tableName+' set service_id = \'PXV\', version = '+ver+' where service_id is null;';
+          }
+          AnkBase.Storage.updateAsync(
+            [
+              AnkBase.Storage.createIndexSQL('histories', ['illust_id', 'service_id']),
+              AnkBase.Storage.createIndexSQL('histories', ['filename']),
+              AnkBase.Storage.createIndexSQL('members', ['id', 'service_id']),
+              AnkBase.Storage.dropIndexSQL('histories',['illust_id']),
+              AnkBase.Storage.dropIndexSQL('members',['id']),
+              updateServiceIdSQL('histories'),
+              updateServiceIdSQL('members'),
+            ],
+            function (r) {
+              AnkUtils.dump('update database: '+(r?'done.':'fail.')+' ('+(new Date().getTime() - start)+' msec)');
+              if (r) {
+                AnkBase.Storage.setUserVersion(ver);
+              }
+            });
+          }, 0);
       } catch (e) {
         AnkUtils.dumpError(e);
       }
@@ -1917,17 +1936,12 @@ try {
               service_id: "string",
             }
           },
-          {
-            index: {
-              histories: ['illust_id,service_id','filename'],
-              members: ['id,service_id']
-            }
-          }
+          null
         );
       } // }}}
 
       initStorage();
-      AnkBase.updateDatabase();
+        AnkBase.updateDatabase();
       AnkBase.registerSheet();
       window.addEventListener('ankDownload', AnkBase.downloadHandler, true);
       window.addEventListener('pageshow', AnkBase.onPageshow, true);
@@ -2018,18 +2032,23 @@ try {
     onDownloadButtonClick: function (event) { // {{{
       event.stopPropagation();
       event.preventDefault();
+
+      let button = (typeof event.button == 'undefined') ? 0 : event.button;
+      if (button == 2) {
+        AnkBase.openPrefWindow();
+        return;
+      }
+
       let curmod = AnkBase.SupportedModule;
       if (!curmod)
         return;
       if (!curmod.downloadable)
         return;
       let useDialog = AnkBase.Prefs.get('showSaveDialog', true);
-      let button = (typeof event.button == 'undefined') ? 0 : event.button;
       if (curmod.in.illustPage) {
         switch(button) {
           case 0: AnkBase.downloadCurrentImage(curmod, useDialog); break;
           case 1: AnkBase.downloadCurrentImage(curmod, !useDialog); break;
-          case 2: AnkBase.openPrefWindow(); break;
         }
       } else {
         let open = function (left) {
@@ -2042,7 +2061,6 @@ try {
         switch(button) {
           case 0: open(true); break;
           case 1: open(false); break;
-          case 2: AnkBase.openPrefWindow(); break;
         }
       }
     }, // }}}

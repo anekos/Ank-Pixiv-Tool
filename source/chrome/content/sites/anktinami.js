@@ -193,7 +193,7 @@ try {
           AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext ()
-          (self.info.path.image.images[0].match(/(\.\w+)(?:$|\?)/)[1].toLowerCase() || '.jpg'),
+          AnkUtils.getFileExtension(path.image.images.length > 0 && path.image.images[0]),
 
         get mangaIndexPage ()
           null,

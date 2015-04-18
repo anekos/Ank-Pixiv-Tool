@@ -115,7 +115,7 @@ try {
           query('#main'),
 
         get mediumImage ()
-          query('#gallery  > #gallery_open > a > img') ||      // "投稿イラスト"ページ
+          query('#gallery  > #gallery_open > #img_filter > a > img') ||      // "投稿イラスト"ページ
           query('.image > .dojin_gallery > img'),       // "同人"ページ
 
         get ads () {
@@ -226,8 +226,7 @@ try {
           AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext ()
-          let (m = path.image.images[0].match(/(\.\w+)(?:$|\?)/))
-            m && m[1] || '.jpg',
+          AnkUtils.getFileExtension(path.image.images.length > 0 && path.image.images[0]),
 
         get mangaIndexPage ()
           null,

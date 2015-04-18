@@ -1,0 +1,34 @@
+<?xml version="1.0" ?>
+
+<project name="Ank-Pixiv-Tool" default="dist">
+	<property name="src.dir" value="source" />
+	<property name="dist.dir" value="dist" />
+	<property name="app.name" value="ank_pixiv_tool" />
+	<property name="app.id" value="${app.name}" /> <!-- extension id like: xxx@xxx.com -->
+	<property name="ff.dir" value="D:\Program Files (x86)\Mozilla Firefox" />
+
+	<condition property="ff.present">
+		<and>
+			<isset property="ff.dir" />
+			<available file="${ff.dir}" type="dir" />
+		</and>
+	</condition>
+	
+	<target name="dist">
+		<zip destfile="${dist.dir}/${app.name}.xpi">
+			<fileset dir="${src.dir}">
+				<include name="chrome/**" />
+				<include name="chrome.manifest" />
+				<include name="install.rdf" />
+				<include name="defaults/**" />
+				<exclude name="**/.*" />
+				<exclude name="**/CVS/**" />
+			</fileset>
+		</zip>
+	</target>
+	
+	<target name="clean">
+		<delete dir="${dist.dir}" />
+	</target>
+
+</project>

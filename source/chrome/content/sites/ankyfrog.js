@@ -167,7 +167,7 @@ try {
           AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext ()
-          '.jpg',   // 読み込んでみないとわからないのでとりあえずjpgで
+          AnkUtils.getFileExtension(),  // 読み込んでみないとわからないのでとりあえずjpgで
 
         get mangaIndexPage ()
           null,

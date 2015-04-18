@@ -169,7 +169,7 @@ try {
         // require for AnkBase
 
         get downloadedDisplayParent ()
-          query('.work-info .meta'),
+          query('.score'),
 
         get downloadedFilenameArea ()
           query('.ank-pixiv-downloaded-filename-text'),
@@ -185,6 +185,8 @@ try {
 
         get mediumImage () {
           return (
+            query('.works_display > ._layout-thumbnail > img')
+            ||
             query('.works_display > a > div > img')
             ||
             query('.works_display > * > a > div > img')
@@ -192,6 +194,12 @@ try {
             query('.works_display canvas')
           );
         },
+
+        get bigImage ()
+          query('.original-image'),
+
+        get imageOverlay ()
+          query('.works_display ._layout-thumbnail'), 
 
         get openCaption ()
           query('.ui-expander-container > .ui-expander-target > .expand'),
@@ -206,7 +214,9 @@ try {
                        '.header',
                        '._header',
                        '#toolbar-items',        // toolbar
+                       '._toolmenu',            // 閲覧履歴ボタン
                        '#gm_ldrize',            // ldrize
+                       '#header-banner',
                        ];
 
           let a = [];
@@ -331,8 +341,7 @@ try {
           AnkBase.Prefs.get('initialDirectory.'+self.SITE_NAME),
 
         get ext ()
-          let (m = path.image.images[0].match(/(\.\w+)(?:$|\?)/))
-            m && m[1] || '.jpg',
+          AnkUtils.getFileExtension(path.image.images.length > 0 && path.image.images[0]),
 
         get mangaIndexPage ()
           let (e = self.elements.illust.largeLink)
@@ -371,6 +380,14 @@ try {
             };
           }
           else {
+            if (!self.in.manga && self.elements.illust.bigImage && self.elements.illust.bigImage.getAttribute('data-src')) {
+              // イラスト
+              return {
+                images: [ self.elements.illust.bigImage.getAttribute('data-src') ],
+                facing: null,
+              }
+            }
+
             try {
               let indexPage = path.mangaIndexPage;
               let html = AnkUtils.httpGET(indexPage, self.info.illust.pageUrl);
@@ -474,15 +491,17 @@ try {
                         }
                       });
   
-                    for (var i=1; i<=im.length; i++) {
-                      if (i == 1) {
-                        fp.push(i);
+                    for (var i=0; i<im.length; i++) {
+                      let p = i+1;
+                      if (p == 1) {
+                        fp.push(p);
                       }
                       else {
-                        fp.push((i - i%2) / 2 + 1)
+                        let oddp = p%2;
+                        fp.push((p - oddp) / 2 + 1)
 
                         // 見開きの向きに合わせて画像の順番を入れ替える
-                        if (ltr && i % 2 == 0 && i < im.length-1) {
+                        if (ltr && oddp) {
                           let tmp = im[i-1];
                           im[i-1] = im[i];
                           im[i] = tmp;
@@ -548,6 +567,8 @@ try {
         var largeLink = mod.elements.illust.largeLink;
         var openCaption = mod.elements.illust.openCaption;
         var userTags = mod.elements.illust.userTags;
+        var imgOvr = mod.elements.illust.imageOverlay;
+        var jq = doc.defaultView.wrappedJSObject.jQuery
 
         // 完全に読み込まれていないっぽいときは、遅延する
         if (!(body && medImg && wrapper && userTags)) { // {{{
@@ -578,9 +599,11 @@ try {
           }
         }
 
+        // FIXME AnkViewer無効時に、中クリックして、Pixivのデフォルト動作で大画像を見ると、ダウンロードマークが消える
         // 中画像クリック時に保存する
         if (AnkBase.Prefs.get('downloadWhenClickMiddle')) { // {{{
-          largeLink.addEventListener(
+          let e = imgOvr || largeLink;
+          e.addEventListener(
             'click',
             function () AnkBase.downloadCurrentImageAuto(mod),
             true
@@ -590,6 +613,12 @@ try {
         // 大画像関係
         if (!mod.in.ugoira) {
           if (AnkBase.Prefs.get('largeOnMiddle', true) && AnkBase.Prefs.get('largeOnMiddle.'+mod.SITE_NAME, true)) {
+            if (imgOvr && jq) {
+              // FIXME 多分このunbindがbindの後になる場合がある。setTimeoutでもう一回実行しているのは場当たり的な対応
+              jq(imgOvr).unbind('click');
+              setTimeout(function () jq(imgOvr).unbind('click'), 1000);
+            }
+
             new AnkViewer(
               mod,
               function () mod.info.path._getImage(AnkBase.Prefs.get('viewOriginalSize', false))
