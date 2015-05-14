@@ -32,13 +32,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
       get illustPage () { // {{{
         return self.info.illust.pageUrl.match(/^https?:\/\/(?:[^/]+\.)deviantart\.com\/art\//);
-      }, // }}}
-
-      // 外から使ってはいけない
-
-      get doujinPage () {
-        return !!self.elements.illust.doujinHeader;  // under construction
-      }
+      } // }}}
     }; // }}}
 
     self.elements = (function () { // {{{
@@ -483,7 +477,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           );
         };
 
-        // FIXME I have no idea to do.
+        // FIXME I have no idea.
         let addRatingEventListener = function () {
           /*
           [
@@ -504,7 +498,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         if (useViewer || useClickDownload)
           addMiddleClickEventListener();
 
-        // レイティング("抜いた","いいね")によるダウンロード
+        // レイティングによるダウンロード
         if (AnkBase.Prefs.get('downloadWhenRate', false))
           addRatingEventListener();
 

@@ -133,10 +133,14 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         },
 
         get ads () {
-          let header1 = query('#header-Container');
-          let header2 = query('#top');
+          const ads = [
+            '#header-Container',
+            '#top',
+            '#twttrHubFrameSecure',
+            '#twttrHubFrame'
+          ];
 
-          return ([]).concat(header1, header2);
+          return ads.map(q => query(q)).filter(e => !!e);
         }
       };
 

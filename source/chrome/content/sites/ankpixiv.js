@@ -242,18 +242,19 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
         get ads () {
           const Ads = [
-                       'object',
-                       'iframe',
-                       '.ui-search',
-                       'form.search2',          // 検索欄も広告扱いしちゃうぞ
-                       '#global-header',        // ヘッダ
-                       '.header',
-                       '._header',
-                       '#toolbar-items',        // toolbar
-                       '._toolmenu',            // 閲覧履歴ボタン
-                       '#gm_ldrize',            // ldrize
-                       '#header-banner'
-                       ];
+            'object',
+            'iframe',
+            '.ui-search',
+            'form.search2',          // 検索欄も広告扱いしちゃうぞ
+            '#global-header',        // ヘッダ
+            '.header',
+            '._header',
+            '#toolbar-items',        // toolbar
+            '._toolmenu',            // 閲覧履歴ボタン
+            '#gm_ldrize',            // ldrize
+            '#header-banner',
+            '.multi-ads-area'
+          ];
 
           let a = [];
           Ads.forEach(q => AnkUtils.A(queryAll(q)).forEach(e => a.push(e)));

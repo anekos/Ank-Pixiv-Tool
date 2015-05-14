@@ -25,16 +25,16 @@
 <!ENTITY tab.miscellaneous "Verschiedenes">
 <!ENTITY fitLargeImageInWindowSize "Große Bilder an Fenstergröße anpassen">
 <!ENTITY dontResizeIfSmall "Kleine Bilder nicht an Fenstergröße anpassen">
-<!ENTITY dontHidePanel "Don't hide button panel.">
-<!ENTITY maxPanelOpacity "Maximum button panel opacity.">
-<!ENTITY minPanelOpacity "Minimum button panel opacity.">
-<!ENTITY panelSize "Button panel size.">
-<!ENTITY swapArrowButton "Swap the arrow button functions.">
-<!ENTITY useFacingView "Display facing pages as single image.">
-<!ENTITY useLoadProgress "Show progress, while loading image.">
-<!ENTITY viewOriginalSize "Display original size manga.">
-<!ENTITY openComment "Kommentarfeld automatisch öffnen">
-<!ENTITY openCaption "Automatically open the long caption.">
-<!ENTITY allowThirdPartyCookie "Allow ThirdParty Cookie.">
+<!ENTITY dontHidePanel "Schaltflächenleiste nicht ausblenden">
+<!ENTITY maxPanelOpacity "Höchster Transparenzwert für die Schaltflächenleiste">
+<!ENTITY minPanelOpacity "Kleinster Transparenzwert für die Schaltflächenleiste">
+<!ENTITY panelSize "Größe der Schaltflächenleiste">
+<!ENTITY swapArrowButton "Pfeiltasten-Funktionen vertauschen">
+<!ENTITY useFacingView "Doppelseiten als Einzelbild anzeigen">
+<!ENTITY useLoadProgress "Fortschrittsanzeige während Bild lädt">
+<!ENTITY viewOriginalSize "Manga in Originalgröße anzeigen">
+<!ENTITY openComment "Kommentarfeld automatisch erweitern">
+<!ENTITY openCaption "Lange Bildunterschriften automatisch erweitern">
+<!ENTITY allowThirdPartyCookie "Cookies von Drittanbietern akzeptieren">
 <!ENTITY ignoreWrongDatetimeFormat "Use the current date, when cannot confirm the illust date.">
 <!ENTITY warnWrongDatetimeFormat "Don't show &quot;unsupported datetime format&quot; warnings.">
