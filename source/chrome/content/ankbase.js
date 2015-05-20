@@ -352,6 +352,11 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       let sets = [];
       for (let i=0; i<AnkBase.Modules.Sites.length; i++) {
         let module = AnkBase.Modules.Sites[i];
+        if (!AnkBase.Prefs.get('useExperimentalModules', false) && module.prototype.EXPERIMENTAL) {
+          // skip experimental module
+          continue;
+        }
+
         sets.push({
           name:         module.prototype.SITE_NAME,
           id:           module.prototype.SERVICE_ID,
