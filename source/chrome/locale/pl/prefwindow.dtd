@@ -21,6 +21,7 @@
 <!ENTITY tab.download "Pobierz">
 <!ENTITY tab.filename "Nazwa pliku">
 <!ENTITY tab.viewer "Przeglądarka">
+<!ENTITY tab.sitemodules "Supported Sites">
 <!ENTITY tab.miscellaneous "Różne">
 <!ENTITY fitLargeImageInWindowSize "Dopasuj duże obrazki do wymiaru okna">
 <!ENTITY dontResizeIfSmall "Nie zmieniaj rozmiaru, jeśli obrazek jest  mniejszy niż okno">
@@ -35,3 +36,5 @@
 <!ENTITY openComment "Otwieraj automatycznie pole komentarza">
 <!ENTITY openCaption "Otwieraj automatycznie opis zdarzeń">
 <!ENTITY allowThirdPartyCookie "Akceptuj ciasteczka z innych witryn">
+<!ENTITY ignoreWrongDatetimeFormat "Use the current date, when cannot confirm the illust date.">
+<!ENTITY warnWrongDatetimeFormat "Don't show &quot;unsupported datetime format&quot; warnings.">

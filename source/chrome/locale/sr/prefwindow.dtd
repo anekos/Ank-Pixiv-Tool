@@ -21,6 +21,7 @@
 <!ENTITY tab.download "Преузми">
 <!ENTITY tab.filename "Назив датотеке">
 <!ENTITY tab.viewer "Viewer">
+<!ENTITY tab.sitemodules "Supported Sites">
 <!ENTITY tab.miscellaneous "Разно">
 <!ENTITY fitLargeImageInWindowSize "Уклопи велике слике тако да стану у прозор.">
 <!ENTITY dontResizeIfSmall "Не мењај величину илустрације ако је мања од прозора.">
@@ -35,3 +36,5 @@
 <!ENTITY openComment "Аутоматски отвори оквир за коментаре">
 <!ENTITY openCaption "Automatically open the long caption.">
 <!ENTITY allowThirdPartyCookie "Allow ThirdParty Cookie.">
+<!ENTITY ignoreWrongDatetimeFormat "Use the current date, when cannot confirm the illust date.">
+<!ENTITY warnWrongDatetimeFormat "Don't show &quot;unsupported datetime format&quot; warnings.">

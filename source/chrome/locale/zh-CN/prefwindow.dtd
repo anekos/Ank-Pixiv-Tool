@@ -21,6 +21,7 @@
 <!ENTITY tab.download "下载">
 <!ENTITY tab.filename "文件名">
 <!ENTITY tab.viewer "查看器">
+<!ENTITY tab.sitemodules "Supported Sites">
 <!ENTITY tab.miscellaneous "其他">
 <!ENTITY fitLargeImageInWindowSize "在窗口大小适应大图。">
 <!ENTITY dontResizeIfSmall "插图小于窗口时不调整尺寸。">
@@ -35,3 +36,5 @@
 <!ENTITY openComment "自动打开评论框。">
 <!ENTITY openCaption "自动打开长标题。">
 <!ENTITY allowThirdPartyCookie "运行第三方 Cookie。">
+<!ENTITY ignoreWrongDatetimeFormat "Use the current date, when cannot confirm the illust date.">
+<!ENTITY warnWrongDatetimeFormat "Don't show &quot;unsupported datetime format&quot; warnings.">

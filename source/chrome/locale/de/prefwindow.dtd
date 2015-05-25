@@ -21,6 +21,7 @@
 <!ENTITY tab.download "Download">
 <!ENTITY tab.filename "Dateiname">
 <!ENTITY tab.viewer "Viewer">
+<!ENTITY tab.sitemodules "Supported Sites">
 <!ENTITY tab.miscellaneous "Verschiedenes">
 <!ENTITY fitLargeImageInWindowSize "Große Bilder an Fenstergröße anpassen">
 <!ENTITY dontResizeIfSmall "Kleine Bilder nicht an Fenstergröße anpassen">
@@ -35,3 +36,5 @@
 <!ENTITY openComment "Kommentarfeld automatisch erweitern">
 <!ENTITY openCaption "Lange Bildunterschriften automatisch erweitern">
 <!ENTITY allowThirdPartyCookie "Cookies von Drittanbietern akzeptieren">
+<!ENTITY ignoreWrongDatetimeFormat "Use the current date, when cannot confirm the illust date.">
+<!ENTITY warnWrongDatetimeFormat "Don't show &quot;unsupported datetime format&quot; warnings.">

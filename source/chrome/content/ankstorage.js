@@ -1,330 +1,237 @@
 
-try {
+Components.utils.import("resource://gre/modules/Task.jsm");
+Components.utils.import("resource://gre/modules/Sqlite.jsm");
+Components.utils.import("resource://gre/modules/FileUtils.jsm");
 
+(function (global) {
 
-  AnkStorage = function (filename, tables, options) { // {{{
-    this.filename = filename;
-    this.tables = {};
+  let AnkStorage = function (filename, tables, options, debug) { // {{{
+
+    this.dbpath = filename;
+    this.tables = tables;
     this.options = options || {};
-
-    for (let key in tables) {
-      this.tables[key] = new AnkTable(key, tables[key]);
-    }
+    this.debug = debug;
 
     let file;
 
     if (~filename.indexOf(AnkUtils.SYS_SLASH)) {
       file = AnkUtils.makeLocalFile(filename);
     } else {
-      file = Components.classes["@mozilla.org/file/directory_service;1"].
-               getService(Components.interfaces.nsIProperties).
-               get("ProfD", Components.interfaces.nsIFile);
-      file.append(filename);
+      file = FileUtils.getDir("ProfD", [filename]);
     }
 
-    let storageService = Components.classes["@mozilla.org/storage/service;1"].
-                           getService(Components.interfaces.mozIStorageService);
-    this.database = storageService.openDatabase(file);
+    this.dbpath = file.path;
 
-    this.createTables();
+    this.conn = null;
 
     return this;
   }; // }}}
 
-  /*
-   * statementToObject
-   *    stmt:
-   * statement を JS のオブジェクトに変換する
-   */
-  AnkStorage.statementToObject = function (stmt) { // {{{
-    let res = {}, cl = stmt.columnCount;
-    for (let i = 0; i < cl; i++) {
-      let val;
-      switch (stmt.getTypeOfIndex(i)) {
-        case stmt.VALUE_TYPE_NULL:    val = null;                  break;
-        case stmt.VALUE_TYPE_INTEGER: val = stmt.getInt32(i);      break;
-        case stmt.VALUE_TYPE_FLOAT:   val = stmt.getDouble(i);     break;
-        case stmt.VALUE_TYPE_TEXT:    val = stmt.getUTF8String(i); break;
-      }
-      res[stmt.getColumnName(i)] = val;
-    }
-    return res;
-  }; // }}}
 
   AnkStorage.prototype = {
 
-    /*
-     * createStatement
-     * 自動的に finalize してくれるラッパー
-     */
-    createStatement: function (query, block) { // {{{
-      let stmt = this.database.createStatement(query);
-      try {
-        var res = block(stmt);
-      } finally {
-        stmt.finalize && stmt.finalize();
+    openDatabase: function (callback) {
+      let self = this;
+      return Task.spawn(function* () {
+        self.conn = yield Sqlite.openConnection({ path:self.dbpath });
+        if (self.conn) {
+          callback();
+          return true;
+        }
+      });
+    },
+
+    closeDatabase: function () {
+      let self = this;
+      if (self.conn) {
+        self.conn.close().then(function () { this.conn=null }).catch(function (e) { AnkUtils.dumpError(e) });
       }
-      return res;
-    }, // }}}
+    },
 
-    /*
-     * JSオブジェクトを挿入
+    /**
+     * 更新系トランザクション
      */
-    insert: function (table, values) { // {{{
-      if ('string' == typeof table)
-        table = this.tables[table];
+    update: function (qa) {
+      if (!qa || qa.length == 0)
+        return;
 
-      let ns = [], vs = [], ps = [], vi = 0;
-      for (let fieldName in values) {
-        ns.push(fieldName);
-        (function (idx, type, value) {
-          vs.push(function (stmt) {
-            switch (type) {
-              case 'string':   return stmt.bindUTF8StringParameter(idx, value);
-              case 'text':     return stmt.bindUTF8StringParameter(idx, value);
-              case 'integer':  return stmt.bindInt32Parameter(idx, value);
-              case 'boolean':  return stmt.bindInt32Parameter(idx, value);
-              case 'datetime': return stmt.bindUTF8StringParameter(idx, value);
-              default:         return stmt.bindNullParameter(idx);
+      let self = this;
+      return Task.spawn(function* () {
+        return yield self.conn.executeTransaction(function* () {
+          for (let i=0; i<qa.length; i++) {
+            if ('query' in qa[i]) {
+              if (self.debug)
+                AnkUtils.dump('executeSQLs: '+(i+1)+', '+qa[i].query);
+              yield self.conn.execute(qa[i].query, qa[i].values);
             }
-          });
-        })(vi, table.fields[fieldName], values[fieldName]);
-        ps.push('?' + (++vi));
-      }
-
-      let q = 'insert into ' + table.name + ' (' + AnkUtils.join(ns) + ') values(' + AnkUtils.join(ps) + ');'
-      this.createStatement(q, function (stmt) {
-        try {
-          for (let i = 0; i < vs.length; i++) {
-            try {
-              (vs[i])(stmt);
-            } catch (e) {
-              AnkUtils.dumpError(e);
-              AnkUtils.dump(["vs[" + i + "] dumped",
-                             "type: " + (typeof vs[i]),
-                             "value:" + vs[i]]);
-              if (AnkUtils.DEBUG)
-                AnkUtils.simplePopupAlert('エラー発生', e);
+            else if ('SchemaVersion' in qa[i]) {
+              if (self.debug)
+                AnkUtils.dump('executeSQLs: '+(i+1)+', SchemaVersion = '+qa[i].SchemaVersion);
+              yield self.conn.setSchemaVersion(qa[i].SchemaVersion);
             }
           }
-          return stmt.executeStep();
-        } finally {
-          stmt.reset();
-        }
+
+          return true;
+        });
       });
-    }, // }}}
+    },
+
+    /**
+     * 参照系トランザクション
+     */
+    select: function (qa, callback, onRow) {
+      if (!qa || qa.length == 0)
+        return;
+
+      let self = this;
+      return Task.spawn(function* () {
+        return yield self.conn.executeTransaction(function* () {
+          for (let i=0; i<qa.length; i++) {
+            let query = 'select * from '+qa[i].table+(qa[i].cond ? ' where '+qa[i].cond : '')+(qa[i].opts ? ' '+qa[i].opts : '');
+            if (self.debug)
+              AnkUtils.dump('select: '+(i+1)+', '+query);
+            let rows = yield self.conn.execute(query, qa[i].values, onRow);
+            if (!callback)
+              return rows && rows.length > 0 && rows[0];
+
+            callback(qa[i].id, rows);
+          }
+
+          return true;
+        });
+      });
+    },
+
+    /**
+     * 参照系トランザクション（存在確認）
+     */
+    exists: function (qa, callback) {
+      let self = this;
+      for (let i=0; i<qa.length; i++)
+        qa[i].opts = (qa[i].opts ? qa[i].opts+' ':'')+' limit 1';
+
+      if (!callback)
+        return self.select(qa);
+
+      return self.select(qa, function (id, rows) {
+        if (callback)
+          callback(id, rows && rows.length > 0 && rows[0]);
+      });
+    },
 
     /*
-     * block を指定しない場合は、必ず、result.reset すること。
+     * 
      */
-    find: function (tableName, conditions, block) { // {{{
-      let q = 'select rowid, * from ' + tableName + (conditions ? ' where ' + conditions : '');
-      return this.createStatement(q, function (stmt) {
-        return (typeof block == 'function') ? block(stmt) : stmt;
-      });
-    }, // }}}
 
-    select: function () this.find.apply(this, arguments),
-
-    oselect: function (tableName, conditions, block) { // {{{
-      return this.select(tableName, conditions, function (stmt) {
-        let r;
-        if (typeof block == 'function') {
-          while (stmt.executeStep())
-            r = block(AnkStorage.statementToObject(stmt));
-        } else {
-          r = [];
-          while (stmt.executeStep())
-            r.push(AnkStorage.statementToObject(stmt));
-        }
-        return r;
-      });
-    }, // }}}
-
-    update: function (tableName, values, conditions) { // {{{
-      let set;
-      if (typeof values == 'string') {
-        set = values;
-      } else {
-        let keys = [it for (it in values)];
-        // TODO
-      }
-      let q = 'update ' + tableName + ' set ' + set + (conditions ? ' where ' + conditions : '');
-      return this.database.executeSimpleSQL(q);
-    }, // }}}
-
-    exists: function (tableName, conditions, block) { // {{{
-      let _block = function (stmt) {
-        if (typeof block == 'function')
-          block(stmt);
-        let result = !!(stmt.executeStep());
-        stmt.reset();
-        return result;
-      };
-      return this.find(tableName, conditions, _block);
-    }, // }}}
-
-    createTables: function () { // {{{
+    /**
+     * データベースの作成
+     */
+    createDatabase: function () { // {{{
+      let qa = [];
       //データベースのテーブルを作成
       for (let tableName in this.tables) {
-        this.createTable(this.tables[tableName]);
+        qa.push({ type:'createTable', table:tableName, fields:this.tables[tableName] });;
+      }
+      if (this.options.unique) {
+        for (let tableName in this.options.unique) {
+          let columns = this.options.unique[tableName];
+          qa.push({ type:'createUnique', table:tableName, columns:columns });
+        }
       }
       if (this.options.index) {
         for (let tableName in this.options.index) {
-          this.createIndexes(tableName, this.options.index[tableName]);
-        }
-      }
-    }, // }}}
-
-    updateAsync: function (sqlList, callback) { // {{{
-      let self = this;
-      let st = sqlList.map(function (v) self.database.createAsyncStatement(v));
-      let handler = {
-        handleResult: function (aResultSet) {
-        },
-        handleError: function (aError) {
-          AnkUtils.dump('updateAsync(error): '+aError.message);
-        },
-        handleCompletion: function (aReason) {
-          if (callback)
-            callback(aReason == Components.interfaces.mozIStorageStatementCallback.REASON_FINISHED);
-        }
-      };
-
-      self.database.executeAsync(st, st.length, handler);
-    }, // }}}
-
-    createTable: function (table) { // {{{
-      if (this.database.tableExists(table.name))
-        return this.updateTable(table);
-
-      let fs = [];
-      for (let fieldName in table.fields) {
-        fs.push(fieldName + ' ' +
-                table.fields[fieldName] + ' ' +
-                (table.constraints[fieldName] || ''))
-      }
-
-      return this.database.createTable(table.name, AnkUtils.join(fs));
-    }, // }}}
-
-    tableInfo: function (tableName) { // {{{
-      let storageWrapper = AnkUtils.ccci("@mozilla.org/storage/statement-wrapper;1",
-                                         Components.interfaces.mozIStorageStatementWrapper);
-      let q = 'pragma table_info (' + tableName + ')';
-      // statement wrappers have been deprecated | Nathan's Blog
-      // https://blog.mozilla.org/nfroyd/2012/05/14/statement-wrappers-have-been-deprecated/
-      if (storageWrapper) {
-        return this.createStatement(q, function (stmt) {
-          storageWrapper.initialize(stmt);
-          let result = {};
-          while (storageWrapper.step()) {
-            result[storageWrapper.row["name"]] = {type: storageWrapper.row["type"]};
+          let columns = this.options.index[tableName];
+          for (let i in columns) {
+            qa.push({ type:'createIndex', table:tableName, columns:columns[i] });
           }
-          return result;
-        });
-      } else {
-        return this.createStatement(q, function (stmt) {
-          let result = {};
-          while (stmt.step()) {
-            result[stmt.row["name"]] = {type: stmt.row["type"]};
-          }
-          return result;
-        });
-      }
-    }, // }}}
-
-    updateTable: function (table) { // {{{
-      try {
-        let etable = this.tableInfo(table.name);
-        for (let fieldName in table.fields) {
-          if (etable[fieldName])
-            continue;
-          let q = "alter table " + table.name + ' add column ' + fieldName + ' ' + table.fields[fieldName];
-          this.database.executeSimpleSQL(q);
         }
-      } catch(e) {
-        AnkUtils.dumpError(e);
       }
+
+      return this.update(this.getUpdateSQLs(qa));
     }, // }}}
 
-    createIndexSQL: function(tableName, columns) {
-      let columnName = columns.join(',');
-      return 'create index if not exists ' + this.indexName(tableName, columnName) + ' on ' + tableName + '(' + columnName + ');'
-    },
-
-    dropIndexSQL: function(tableName, columns) {
-      let columnName = columns.join(',');
-      return 'drop index if exists ' + this.indexName(tableName, columnName) + ';'
-    },
-
-    createIndexes: function(tableName, columns) {
+    /**
+     * データベースバージョンの取得
+     */
+    getDatabaseVersion: function () {
       let self = this;
-      columns.forEach(function (columnName) {
-        let indexName = self.indexName(tableName, columnName);
-        if (!self.database.indexExists(indexName))
-          self.database.executeSimpleSQL('create index ' + indexName + ' on ' + tableName + '(' + columnName + ');');
-      })
+      return Task.spawn(function* () {
+        return yield self.conn.getSchemaVersion();
+      });
     },
 
-    dropIndexes: function(tableName, columns) {
+    /*
+     * 
+     */
+
+    getUpdateSQLs: function (options) {
       let self = this;
-      columns.forEach(function (columnName) {
-        let indexName = self.indexName(tableName, columnName);
-        if (self.database.indexExists(indexName))
-          self.database.executeSimpleSQL('drop index ' + indexName + ';');
-      })
+      let qa = [];
+      options.forEach(function (q) {
+        if (q.type == 'createTable') {
+          let fs = [];
+          for (let fieldName in q.fields)
+            fs.push(fieldName + ' ' + q.fields[fieldName].type + (q.fields[fieldName].constraint ? ' '+q.fields[fieldName].constraint : ''));
+          qa.push({ query:'create table if not exists '+q.table+' ('+fs.join()+')' });
+        }
+        else if (q.type == 'createUnique') {
+          let indexName = self.uniqueName(q.table,q.columns);
+          qa.push({ query:'create unique index if not exists ' + indexName + ' on ' + q.table + ' (' + q.columns.join() + ')' });
+        }
+        else if (q.type == 'createIndex') {
+          let indexName = self.indexName(q.table,q.columns);
+          qa.push({ query:'create index if not exists ' + indexName + ' on ' + q.table + ' (' + q.columns.join() + ')' });
+        }
+        else if (q.type == 'dropIndex') {
+          let indexName = self.indexName(q.table,q.columns);
+          qa.push({ query:'drop index if exists '+indexName });
+        }
+        else if (q.type == 'addColumn') {
+          for (let key in q.columns) {
+            qa.push({query: 'alter table ' + q.table + ' add column ' + key + ' ' + q.columns[key].type});
+          }
+        }
+        else if (q.type == 'update') {
+          let values = {};
+          let fps = [];
+          for (fieldName in q.set) {
+            fps.push(fieldName+' = :'+fieldName);
+            values[fieldName] = q.set[fieldName];
+          }
+          for (fieldName in q.values) {
+            values[fieldName] = q.values[fieldName];
+          }
+          qa.push({ query:'update '+q.table+' set '+fps.join()+' where '+q.cond, values:values });
+        }
+        else if (q.type == 'insert') {
+          let values = {};
+          let fs = [];
+          let ps = [];
+          for (fieldName in q.set) {
+            fs.push(fieldName);
+            ps.push(':'+fieldName);
+            values[fieldName] = q.set[fieldName];
+          }
+          qa.push({ query:'insert into '+q.table+' ('+fs.join()+') values ('+ps.join()+')', values:values });
+        }
+        else if (q.type == 'SchemaVersion') {
+          qa.push({ SchemaVersion:q.SchemaVersion });
+        }
+      });
+      return qa;
     },
 
-    indexName: function (tableName, columnName) { // {{{
-      return tableName + '_index_' + columnName.replace(/,/,'_');
+    indexName: function (tableName, columnNames) { // {{{
+      return tableName + '_index_' + columnNames.join('_');
     }, // }}}
 
-    delete: function (table, conditions) { // {{{
-      let q = 'delete from ' + table + (conditions ? ' where ' + conditions : '');
-      return this.database.executeSimpleSQL(q);
-    }, // }}}
+    uniqueName: function (tableName, columnNames) { // {{{
+      return tableName + '_unique_' + columnNames.join('_');
+    } // }}}
 
-    execute: function (query, block) { // {{{
-      let stmt = this.createStatement(query, function (stmt) {
-        return (typeof block == 'function') ? block(stmt) : stmt;
-      });
-    }, // }}}
-
-    count: function (tableName, conditions) { // {{{
-      let query = 'select count(*) from ' + tableName + (conditions ? ' where ' + conditions : '');
-      return this.createStatement(query, function (stmt) {
-        return stmt.executeStep() && stmt.getInt32(0);
-      });
-    }, // }}}
-
-    setUserVersion: function (version) { // {{{
-      let query = 'pragma user_version = '+version;
-      return this.database.executeSimpleSQL(query);
-    }, // }}}
-
-    getUserVersion: function () { // {{{
-      let query = 'pragma user_version';
-      return this.createStatement(query, function (stmt) {
-        return stmt.executeStep() && stmt.getInt32(0);
-      });
-    }, // }}}
   };
 
+  // --------
+  global["StorageModule"] = AnkStorage;
 
-  AnkTable = function (name, fields, constraints) { // {{{
-    this.name = name;
-    this.constraints = constraints || fields.constraints || {};
-    delete fields.constraints;
-    this.fields = fields;
-    return this;
-  }; // }}}
-
-
-} catch (error) {
- dump("[" + error.name + "]\n" +
-      "  message: " + error.message + "\n" +
-      "  filename: " + error.fileName + "\n" +
-      "  linenumber: " + error.lineNumber + "\n" +
-      "  stack: " + error.stack + "\n");
-}
+})(this);

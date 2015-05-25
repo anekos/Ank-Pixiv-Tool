@@ -1,7 +1,12 @@
 
-try {
+Components.utils.import("resource://gre/modules/Preferences.jsm");
+Components.utils.import("resource://gre/modules/Promise.jsm");
+Components.utils.import("resource://gre/modules/Task.jsm");
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
-  AnkUtils = {
+(function(global) {
+
+  var AnkUtils = {
 
     SYS_SLASH: (function () { // {{{
       try {
@@ -15,9 +20,9 @@ try {
       }
     })(), // }}}
 
-    get currentDocument () // {{{
-      window.content.document, // }}}
-
+    get currentDocument () { // {{{
+      window.content.document;
+    }, // }}}
 
     /********************************************************************************
     * 文字列関数
@@ -31,7 +36,7 @@ try {
               .replace(/&quot;/g, '"')
               .replace(/&lt;/g, '<')
               .replace(/&gt;/g, '>')
-              .replace(/&#(\d+);/g, function (_, n) String.fromCharCode(parseInt(n, 10)));
+              .replace(/&#(\d+);/g, function (_, n) { return String.fromCharCode(parseInt(n, 10)) });
     }, // }}}
 
     /*
@@ -56,14 +61,15 @@ try {
      *    filepath
      */
     extractFilename: function (filepath) { // {{{
+      let self = this;
       try {
-        return AnkUtils.makeLocalFile(filepath).leafName;
+        return self.makeLocalFile(filepath).leafName;
       } catch (e) {
-        AnkUtils.dumpError(e, true);
+        self.dumpError(e, true);
         try {
           return filepath.match(/[\\\/]([^\\\/]+)$/)[1] || filepath;
         } catch (e) {
-          AnkUtils.dumpError(e, true);
+          self.dumpError(e, true);
           return filepath;
         }
       }
@@ -74,7 +80,8 @@ try {
      * ファイル区切り文字をシステムに合わせる
      */
     replaceFileSeparatorToSYS: function (f) {
-      return f.replace(/[\\\/]+/g, AnkUtils.SYS_SLASH);
+      let self = this;
+      return f.replace(/[\\\/]+/g, self.SYS_SLASH);
     },
 
     /*
@@ -127,26 +134,28 @@ try {
     }, // }}}
 
     zeroPad: function(s, n) { // {{{
+      let self = this;
       return s.toString().replace(new RegExp('^(.{0,'+(n-1)+'})$'),
-                                  function(s) { return AnkUtils.zeroPad('0'+s, n); });
+                                  function(s) { return self.zeroPad('0'+s, n); });
     }, // }}}
 
     toSQLDateTimeString: function (datetime) { // {{{
+      let self = this;
       if (!datetime)
         datetime = new Date();
-      let $ = this;
-      let dy = AnkUtils.zeroPad(datetime.getFullYear(),      4);
-      let dm = AnkUtils.zeroPad(datetime.getMonth() + 1,     2);
-      let dd = AnkUtils.zeroPad(datetime.getDate(),          2);
-      let th = AnkUtils.zeroPad(datetime.getHours(),         2);
-      let tm = AnkUtils.zeroPad(datetime.getMinutes(),       2);
-      let ts = AnkUtils.zeroPad(datetime.getSeconds(),       2);
-      let ms = AnkUtils.zeroPad(datetime.getMilliseconds(),  3);
+      let dy = self.zeroPad(datetime.getFullYear(),      4);
+      let dm = self.zeroPad(datetime.getMonth() + 1,     2);
+      let dd = self.zeroPad(datetime.getDate(),          2);
+      let th = self.zeroPad(datetime.getHours(),         2);
+      let tm = self.zeroPad(datetime.getMinutes(),       2);
+      let ts = self.zeroPad(datetime.getSeconds(),       2);
+      let ms = self.zeroPad(datetime.getMilliseconds(),  3);
       return dy + '-' + dm + '-' + dd + ' ' + th + ':' + tm + ':' + ts + '.' + ms;
     }, // }}}
 
     getLocale: function (path) { // {{{
-      const STR_BUNDLE_SVC = AnkUtils.ccgs('@mozilla.org/intl/stringbundle;1',
+      let self = this;
+      const STR_BUNDLE_SVC = self.ccgs('@mozilla.org/intl/stringbundle;1',
                                            Components.interfaces.nsIStringBundleService);
       let stringBundle = STR_BUNDLE_SVC.createBundle(path);
       return function (key, replacements) {
@@ -163,13 +172,20 @@ try {
     }, // }}}
 
     fromUTF8Octets: function (s) { // {{{
-      let conv = AnkUtils.ccgs(
+      let self = this;
+      let conv = self.ccgs(
         '@mozilla.org/intl/scriptableunicodeconverter',
         Components.interfaces.nsIScriptableUnicodeConverter
       );
       conv.charset = 'UTF-8';
       return conv.ConvertToUnicode(s);
     }, // }}}
+
+    dumpObject: function (obj) {
+      if (obj)
+        for (let p in obj)
+          console.log('* '+p+' = '+obj[p]);
+   },
 
     errorToString: function (error) { // {{{
       try {
@@ -179,26 +195,34 @@ try {
               "  linenumber: " + error.lineNumber + "\n" +
               "  stack: " + error.stack + "\n";
       } catch (e) {
-        return error.toString();
+        return e.toString();
       }
     }, // }}}
 
     dumpError: function (error, doAlert, added) { // {{{
+      let self = this;
       let msg = "\n<<ANK<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
-      msg += this.errorToString(error) ;
+      msg += self.errorToString(error) ;
       msg += (added ? added+"\n" : '');
       msg += ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
 
       dump(msg);
       Application.console.log(msg);
-      if (doAlert)
-        window.alert(msg);
+
+      try {
+        if (doAlert)
+          window.alert(msg);
+      }
+      catch (e) {
+        Components.utils.reportError(e);
+      }
 
       return msg;
     }, // }}}
 
     dump: function () { // {{{
-      if (!AnkUtils.DEBUG)
+      let self = this;
+      if (!self.Prefs.get('debugMode'))
         return;
 
       let msg = "";
@@ -224,18 +248,19 @@ try {
     }, // }}}
 
     decodeDateTimeText: function (datetime) { // {{{
+      let self = this;
       let d;
       let dtext;
       if ( Array.isArray(datetime) ) {
         datetime.some(function (v) {
           dtext = v;
-          d = AnkUtils._decodeDateTimeText(dtext);
+          d = self._decodeDateTimeText(dtext);
           return d;
         });
       }
       else {
         dtext = datetime;
-        d = AnkUtils._decodeDateTimeText(dtext);
+        d = self._decodeDateTimeText(dtext);
       }
 
       if (d) {
@@ -244,32 +269,33 @@ try {
 
       // TODO 日時解析失敗時に、自動で現在日時で代替するのか、それとも他の処理を行うのかは、要検討課題
       let msg = 'unsupported datetime format = \''+dtext+'\'';
-      AnkUtils.dump(msg);
-
-      if (!AnkBase.Prefs.get('warnWrongDatetimeFormat', false)) {
-        // (暫定)呼び出し元でnull pointer exceptionを起こさせて処理を中断させる
-        return;
+      if (!self.Prefs.get('ignoreWrongDatetimeFormat', false)) {
+        throw new Error(msg);
       }
 
-      window.alert(msg);
-      return AnkUtils.getDecodedDateTime(new Date(), true);
+      if (self.Prefs.get('warnWrongDatetimeFormat', true))
+        window.alert(msg);
+
+      return self.getDecodedDateTime(new Date(), true);
     }, // }}}
 
     _decodeDateTimeText: function (dtext) { // {{{
+      let self = this;
       // 時分 - 年月日
       function calc0 () {
         let m = dtext.match(/^(\d{1,2})\s*[\u6642:\-]\s*(\d{1,2})(?:\s*\D{1,2}\s*)(\d{4})\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})/);
         if (!m)
           return;
 
-        d = new Date();
-        d.setFullYear(parseInt(m[3]));
-        d.setMonth(parseInt(m[4])-1);
-        d.setDate(parseInt(m[5]));
-        d.setHours(parseInt(m[1]));
-        d.setMinutes(parseInt(m[2]));
-
-        return d;
+        return new Date(
+          parseInt(m[3]),
+          parseInt(m[4])-1,
+          parseInt(m[5]),
+          parseInt(m[1]),
+          parseInt(m[2]),
+          0,
+          0
+        );
       }
 
       // 年/月/日 時:分
@@ -278,14 +304,15 @@ try {
         if (!m)
           return;
 
-        d = new Date();
-        d.setFullYear(parseInt(m[1]));
-        d.setMonth(parseInt(m[2])-1);
-        d.setDate(parseInt(m[3]));
-        d.setHours(m[4] ? parseInt(m[4]) : 0);
-        d.setMinutes(m[5] ? parseInt(m[5]) : 0);
-
-        return d;
+        return new Date(
+          parseInt(m[1]),
+          parseInt(m[2])-1,
+          parseInt(m[3]),
+          m[4] ? parseInt(m[4]) : 0,
+          m[5] ? parseInt(m[5]) : 0,
+          0,
+          0
+        );
       }
 
       // 月日,年
@@ -294,14 +321,15 @@ try {
         if (!m)
           return;
 
-        d = new Date();
-        d.setFullYear(parseInt(m[3]));
-        d.setMonth(parseInt(m[1])-1);
-        d.setDate(parseInt(m[2]));
-        d.setHours(0);
-        d.setMinutes(0);
-
-        return d;
+        return new Date(
+          parseInt(m[3]),
+          parseInt(m[1])-1,
+          parseInt(m[2]),
+          0,
+          0,
+          0,
+          0
+        );
       }
 
       // 相対表記
@@ -310,9 +338,9 @@ try {
         if (!m)
           return;
 
-        let diff = 0;         // 'less than a minute ago', etc.
+         // 'less than a minute ago', etc.
         let d = m[1].match(/an?/) ? 1 : m[1];
-        diff = 60 * 1000 * (
+        let diff = 60 * 1000 * (
           m[2] === 'year'  ? d*1440*365 :
           m[2] === 'month' ? d*1440*31 :
           m[2] === 'day'   ? d*1440 :
@@ -340,17 +368,18 @@ try {
         return;
       }
 
-      return AnkUtils.getDecodedDateTime(dd, false);
+      return self.getDecodedDateTime(dd, false);
     }, // }}}
 
     getDecodedDateTime: function (dd, fault) { // {{{
+      let self = this;
       return {
-        year: AnkUtils.zeroPad(dd.getFullYear(), 4),
-        month: AnkUtils.zeroPad(dd.getMonth()+1, 2),
-        day: AnkUtils.zeroPad(dd.getDate(), 2),
-        hour: AnkUtils.zeroPad(dd.getHours(), 2),
-        minute: AnkUtils.zeroPad(dd.getMinutes(), 2),
-        fault: fault,
+        year: self.zeroPad(dd.getFullYear(), 4),
+        month: self.zeroPad(dd.getMonth()+1, 2),
+        day: self.zeroPad(dd.getDate(), 2),
+        hour: self.zeroPad(dd.getHours(), 2),
+        minute: self.zeroPad(dd.getMinutes(), 2),
+        fault: fault
       };
     }, // }}}
 
@@ -358,20 +387,25 @@ try {
     * 配列
     ********************************************************************************/
 
-    A: function (v) Array.slice(v),
-    IA: function (v) Iterator(Array.slice(v)),
+    A: function (v) {
+      return Array.slice(v);
+    },
 
+    IA: function (v) {
+      return Iterator(Array.slice(v));
+    },
 
     /********************************************************************************
     * 色々
     ********************************************************************************/
 
     popupAlert: function (iconPath, title, text, buttonEnabled, a, b) { // {{{
+      let self = this;
       try {
         if (navigator.platform.toLowerCase().indexOf('win') < 0)
           iconPath = '';
 
-        const ALERT_SVC = AnkUtils.ccgs("@mozilla.org/alerts-service;1",
+        const ALERT_SVC = self.ccgs("@mozilla.org/alerts-service;1",
                                         Components.interfaces.nsIAlertsService);
         return ALERT_SVC.showAlertNotification.apply(ALERT_SVC, arguments);
       } catch (e) {
@@ -380,7 +414,8 @@ try {
     }, // }}}
 
     simplePopupAlert: function (title, text) { // {{{
-      return this.popupAlert("", title, text, false, null, null);
+      let self = this;
+      return self.popupAlert("", title, text, false, null, null);
     }, // }}}
 
     openTab: function (url, ref) { // {{{
@@ -409,11 +444,14 @@ try {
       }
     }, // }}}
 
-    registerSheet: let (registered = {}) function (style, domains) { // {{{
-      const IOS = AnkUtils.ccgs('@mozilla.org/network/io-service;1', Ci.nsIIOService);
-      const StyleSheetService = AnkUtils.ccgs('@mozilla.org/content/style-sheet-service;1', Ci.nsIStyleSheetService);
+    registeredDomains: {},
 
-      let domainlist = domains.map(function (v) 'domain("'+v+'")').join(',');
+    registerSheet:  function (style, domains) { // {{{
+      let self = this;
+      const IOS = self.ccgs('@mozilla.org/network/io-service;1', Ci.nsIIOService);
+      const StyleSheetService = self.ccgs('@mozilla.org/content/style-sheet-service;1', Ci.nsIStyleSheetService);
+
+      let domainlist = domains.map(function (v) { return 'domain("'+v+'")';}).join(',');
 
       let CSS = [
         '@namespace url(http://www.w3.org/1999/xhtml);',
@@ -424,19 +462,21 @@ try {
 
       let uri = IOS.newURI('data:text/css,' + window.encodeURIComponent(CSS), null, null);
 
-      if (registered[domainlist])
-        StyleSheetService.unregisterSheet(registered[domainlist], StyleSheetService.USER_SHEET);
+      if (self.registeredDomains[domainlist])
+        StyleSheetService.unregisterSheet(self.registeredDomains[domainlist], StyleSheetService.USER_SHEET);
 
-      registered[domainlist] = uri;
+      self.registeredDomains[domainlist] = uri;
       StyleSheetService.loadAndRegisterSheet(uri, StyleSheetService.USER_SHEET);
     }, // }}}
 
     // teramako Thanks! http://twitter.com/teramako/status/6926877707
-    getRelativePath:  function (target, base) { // {{{
-      return AnkUtils.fromUTF8Octets(AnkUtils.makeLocalFile(target).getRelativeDescriptor(AnkUtils.makeLocalFile(base)));
+    getRelativePath: function (target, base) { // {{{
+      let self = this;
+      return self.fromUTF8Octets(self.makeLocalFile(target).getRelativeDescriptor(self.makeLocalFile(base)));
     }, // }}}
 
     get scrollbarSize () { // {{{
+      let self = this;
       let doc = content.document;
       let div = doc.createElement('div');
       let s = div.style;
@@ -447,10 +487,10 @@ try {
       doc.body.appendChild(div);
       let result = {
           width: 100 - div.clientWidth,
-          height: 100 - div.clientHeight,
+          height: 100 - div.clientHeight
       };
       doc.body.removeChild(div);
-      AnkUtils.__defineGetter__('scrollbarSize', function () result);
+      self.__defineGetter__('scrollbarSize', function () { return result });
       return result;
     }, // }}}
 
@@ -465,11 +505,57 @@ try {
      *    url:          チェックする
      *    callback:     function (exists) 存在していれば exists が真
      */
-   remoteFileExists: function (url, callback, redirect_loop) { // {{{
+   remoteFileExistsAsync: function (url,referer) { // {{{
+     let self = this;
+     function promise (url) {
+       return new Promise(function (resolve, reject) {
+         let ios = self.ccgs("@mozilla.org/network/io-service;1", Components.interfaces.nsIIOService);
+         let ch = ios.newChannel(url, null, null).QueryInterface(Components.interfaces.nsIHttpChannel);;
+         ch.requestMethod = "HEAD";
+         ch.redirectionLimit = 0;
+         if (referer)
+           ch.referrer = NetUtil.newURI(referer);
+         ch.asyncOpen({
+           onStartRequest: function(aRequest,aContext) { },
+           onDataAvailable: function (aRequest,aContext,aInputStream,aOffset,aCount) { },
+           onStopRequest: function(aRequest,aContext,aStatusCode) {
+             if (ch.responseStatus == 200) {
+               resolve({ status:ch.responseStatus, url:url, referer:referer, type:ch.contentType });
+             }
+             else if (ch.responseStatus == 302) {
+               let redirect_to = ch.getResponseHeader('Location');
+               self.dump('redirect: from='+url+' to='+redirect_to);
+               resolve({ status:ch.responseStatus, url:redirect_to });
+             }
+             else {
+               reject();
+             }
+           }
+         }, null);
+       });
+     }
 
      const REDIRECT_LOOP_MAX = 2;
 
-     let ios = AnkUtils.ccgs("@mozilla.org/network/io-service;1", Components.interfaces.nsIIOService);
+     return Task.spawn(function* () {
+       for (let redirect_loop=0; redirect_loop < REDIRECT_LOOP_MAX; redirect_loop++) {
+         let status = yield promise(url,referer);
+         if (status.status == 302) {
+           referer = url;
+           url = status.url;
+         }
+         else
+           return status;
+       }
+     });
+   }, // }}}
+
+   remoteFileExists: function (url, callback, redirect_loop) { // {{{
+     let self = this;
+
+     const REDIRECT_LOOP_MAX = 2;
+
+     let ios = self.ccgs("@mozilla.org/network/io-service;1", Components.interfaces.nsIIOService);
      let ch = ios.newChannel(url, null, null).QueryInterface(Components.interfaces.nsIHttpChannel);;
      ch.requestMethod = "HEAD";
      ch.redirectionLimit = 0;
@@ -479,8 +565,8 @@ try {
 
      if (ch.responseStatus == 302) {
        let redirect_to = ch.getResponseHeader('Location');
-       AnkUtils.dump('redirect: from='+url+' to='+redirect_to);
-       return redirect_loop > REDIRECT_LOOP_MAX ? null : AnkUtils.remoteFileExists(redirect_to, callback, ++redirect_loop);
+       self.dump('redirect: from='+url+' to='+redirect_to);
+       return redirect_loop > REDIRECT_LOOP_MAX ? null : self.remoteFileExists(redirect_to, callback, ++redirect_loop);
      }
 
      return ch.requestSucceeded && [ch.responseStatus, url, ch.getResponseHeader('Content-Type')];
@@ -494,11 +580,12 @@ try {
      *    callback:     function (exists) 存在していれば exists が真
      */
    remoteFileExistsRetryable: function (url, maxTimes, callback) { // {{{
+     let self = this;
      function rfe (callback) {
         let xhr = new XMLHttpRequest();
         xhr.open('HEAD', url, true);
         try {
-          xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = AnkBase.Prefs.get('allowThirdPartyCookie', true);
+          xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = self.Prefs.get('allowThirdPartyCookie', true);
         } catch(ex) {
           /* unsupported by this version of FF */
         }
@@ -511,7 +598,7 @@ try {
 
       function call () {
         rfe(function (statusCode) {
-          AnkUtils.dump(statusCode);
+          self.dump(statusCode);
           if (statusCode == 200) {
             return callback(true);
           }
@@ -530,12 +617,13 @@ try {
    }, // }}}
 
    httpGET: function (url,referer,params) { // {{{
+     let self = this;
      let post = !!params;
      let text = null;
      let xhr = new XMLHttpRequest();
      xhr.open((post ? 'POST' : 'GET'), url, false);
      try {
-       xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = AnkBase.Prefs.get('allowThirdPartyCookie', true);
+       xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = self.Prefs.get('allowThirdPartyCookie', true);
      } catch(ex) {
        /* unsupported by this version of FF */
      }
@@ -551,6 +639,36 @@ try {
      xhr.send(post ? params : null);
 
      return text;
+   }, // }}}
+
+   httpGETAsync: function (url,referer,params) { // {{{
+     let self = this;
+     return new Promise(function (resolve, reject) {
+       let post = !!params;
+       let text = null;
+       let xhr = new XMLHttpRequest();
+       xhr.open((post ? 'POST' : 'GET'), url, true);
+       try {
+          xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).forceAllowThirdPartyCookie = self.Prefs.get('allowThirdPartyCookie');
+       } catch(ex) {
+         /* unsupported by this version of FF */
+       }
+       xhr.onload = function () {
+         if (xhr.status == 200) {
+           resolve(xhr.responseText);
+         } else {
+           reject(new Error(xhr.statusText));
+         }
+       };
+       xhr.error = function () {
+         reject(new Error(xhr.statusText));
+       };
+       if (post)
+         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+       if (referer)
+         xhr.setRequestHeader('Referer', referer);
+       xhr.send(post ? params : null);
+     });
    }, // }}}
 
     /********************************************************************************
@@ -591,31 +709,25 @@ try {
       return file;
     }, // }}}
 
+    getErrorMessage: function (e) {
+      if (e) {
+        if (e instanceof OS.File.Error)
+          return e.operation;
+        if (e instanceof Error)
+          return e.message;
+      }
+      return e;
+    },
 
     /********************************************************************************
     * DOM関数
     ********************************************************************************/
 
-    /*
-     * createHTMLDocument
-     * http://nanto.asablo.jp/blog/2009/10/29/4660197
-     */
     createHTMLDocument: function (source) { // {{{
-      let wcnt = window.content;
-      let doc = wcnt.document.implementation.createDocument(
-        'http://www.w3.org/1999/xhtml',
-        'html',
-        wcnt.document.implementation.createDocumentType(
-          'html',
-          '-//W3C//DTD HTML 4.01//EN',
-          'http://www.w3.org/TR/html4/strict.dtd'
-        )
-      );
-      let range = wcnt.document.createRange();
-      range.selectNodeContents(wcnt.document.documentElement);
-      let content = doc.adoptNode(range.createContextualFragment(source));
-      doc.documentElement.appendChild(content);
-      return doc;
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(source , "text/html");
+      if(doc.getElementsByTagName("parsererror").length == 0)
+        return doc;
     }, // }}}
 
     /*
@@ -623,9 +735,11 @@ try {
      *    xpath:
      *    return: node
      */
-    findNodeByXPath: function (xpath, _doc) // {{{
-      let (doc = _doc || this.currentDocument)
-        doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue, // }}}
+    findNodeByXPath: function (xpath, _doc) { // {{{
+      let self = this;
+      let doc = _doc || self.currentDocument;
+      return doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    }, // }}}
 
     /*
      * findNodesByXPath
@@ -633,9 +747,9 @@ try {
      *    return: nodes
      */
     findNodesByXPath: function (xpath, array, _doc) { // {{{
-      let nodes =
-        let (doc = _doc || this.currentDocument)
-          doc.evaluate(xpath, doc, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+      let self = this;
+      let doc = _doc || self.currentDocument;
+      let nodes = doc.evaluate(xpath, doc, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
       if (!array)
         return nodes;
       let elem, result = [];
@@ -645,7 +759,8 @@ try {
     }, // }}}
 
     createTempFile: function (name) { // {{{
-      let ds = AnkUtils.ccgs("@mozilla.org/file/directory_service;1", Ci.nsIProperties);
+      let self = this;
+      let ds = self.ccgs("@mozilla.org/file/directory_service;1", Ci.nsIProperties);
       let file = ds.get("TmpD", Ci.nsIFile);
       file.append('ankpixivtool-' + name);
       file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
@@ -653,7 +768,8 @@ try {
     }, // }}}
 
     findHomeDir: function () { // {{{
-      let ds = AnkUtils.ccgs("@mozilla.org/file/directory_service;1", Ci.nsIProperties);
+      let self = this;
+      let ds = self.ccgs("@mozilla.org/file/directory_service;1", Ci.nsIProperties);
       let file;
       [ 'Pict',     // Windows
         'XDGPict',  // Un*x
@@ -663,7 +779,7 @@ try {
           try {
             return !!(file = ds.get(k, Ci.nsIFile));
           } catch (e) {
-            AnkUtils.dump('unsupported name of directory: '+k);
+            self.dump('unsupported name of directory: '+k);
           }
         });
       return file ? file.path : null;
@@ -716,103 +832,61 @@ try {
       anchor.href = url;
       return anchor;
     }, // }}}
-  };
 
-
-  /********************************************************************************
-    設定用
-  ********************************************************************************/
-
-  AnkPref = function (prefix) { // {{{
-    if (prefix) {
-      this.prefix = prefix + (prefix.match(/\.$/) ? '' : '.');
-    } else {
-      this.prefix = "";
-    }
-    return this;
-  }; // }}}
-
-  AnkPref.prototype = {
-    /*
-     * prefs
-     *    nsIPrefBranch
+    /**
+     *
      */
-    prefs: Components.classes["@mozilla.org/preferences-service;1"]. // {{{
-             getService(Components.interfaces.nsIPrefBranch), // }}}
+    Prefs: (function () {
 
-    /*
-     * get
-     *    name:   項目名
-     *    def:    デフォルト値
-     *    return: 項目の値
-     * 設定値を取得
-     */
-    get: function (name, def) { // {{{
-      try {
-        name = this.prefix + name;
-        let type = this.prefs.getPrefType(name);
-        const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
-        switch (type) {
-          case nsIPrefBranch.PREF_STRING:
-            try {
-              return this.prefs.getComplexValue(name, Components.interfaces.nsISupportsString).data;
-            }
-            catch (e) {
-              return this.prefs.getCharPref(name);
-            }
-            break;
-          case nsIPrefBranch.PREF_INT:
-            return this.prefs.getIntPref(name);
-          case nsIPrefBranch.PREF_BOOL:
-            return this.prefs.getBoolPref(name);
-          default:
-            return def;
+      let prefix = '';
+
+      return {
+        set prefix (p) {
+          if (p) {
+            prefix = p + (p.match(/\.$/) ? '' : '.');
+          } else {
+            prefix = '';
+          }
+        },
+
+        get: function (name, def) {
+          return Preferences.get(prefix + name, def);
+        },
+
+        set: function (name, value) {
+          Preferences.set(prefix + name, value);
         }
-      } catch (e) {
-        return def;
-      }
-    }, // }}}
+      };
+    })(),
 
-    /*
-     * set
-     *    name:   項目名
-     *    value:  設定する値
-     *    type:   型(省略可)
-     *    return: ?
+    /**
+     *
      */
-    set: function (name, value, type) { // {{{
-      name = this.prefix + name;
-      switch (type || typeof value) {
-        case 'string':
-          let str = AnkUtils.ccci('@mozilla.org/supports-string;1', Components.interfaces.nsISupportsString);
-          str.data = value;
-          return this.prefs.setComplexValue(name, Components.interfaces.nsISupportsString, str);
-        case 'boolean':
-          return this.prefs.setBoolPref(name, value);
-        case 'number':
-          return this.prefs.setIntPref(name, value);
-        default:
-          alert('unknown pref type');
-      }
-    }, // }}}
+    Locale: (function () {
+      let strings;
+
+      return {
+        set properties (s) {
+          strings = Services.strings.createBundle(s);
+        },
+
+        get: function (key, replacements) {
+          try {
+            if (!replacements) {
+              return strings.GetStringFromName(key);
+            } else {
+              return strings.formatStringFromName(key, replacements, replacements.length);
+            }
+          }
+          catch (e) {
+            return key;
+          }
+        }
+      };
+    })()
   };
 
+  // --------
+  global["AnkUtils"] = AnkUtils;
 
-  /********************************************************************************
-    設定用
-  ********************************************************************************/
-
-  /* デバッグの設定を読み取る */
-  { // {{{
-    let pref = new AnkPref('extensions.ankutils');
-    AnkUtils.DEBUG = pref.get('debugMode', false);
-  } // }}}
-
-
-} catch (error) {
- dump("[" + error.name + "]\n" +
-      "  message: " + error.message + "\n" +
-      "  filename: " + error.fileName + "\n" +
-      "  linenumber: " + error.lineNumber + "\n" +
-      "  stack: " + error.stack + "\n");
-}
+})(this);

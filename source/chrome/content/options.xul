@@ -12,6 +12,7 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             onload="return onLoad()"
             ondialogaccept="return onSave()"
+            ondialogcancel="return onCancel()"
             xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankutils.js" />
@@ -31,38 +32,68 @@
       }
 
       function pushToken (elem) {
-        let token = elem.selectedItem.label
+        let token = elem.selectedItem.label;
         let box = currentFilenameElement;
         let pref = document.getElementById(box.getAttribute('preference'));
         let now = box.value;
-        let [ap, bp] = [box.selectionStart, box.selectionEnd];
-        let [as, bs] = [now.slice(0, ap), now.slice(bp, now.length)];
-        box.value = as + token + bs;
+        let [xp, yp] = [box.selectionStart, box.selectionEnd];
+        let [xs, ys] = [now.slice(0, xp), now.slice(yp, now.length)];
+        box.value = xs + token + ys;
         pref.value = box.value;
-        let (p = ap + token.length)
-          box.setSelectionRange(p, p);
+        let zp = xp + token.length;
+        box.setSelectionRange(zp, zp);
         box.focus();
       }
 
       function onLoad () {
         document.getElementById('confirm-existing-when-auto').disabled =
           !AnkBase.Prefs.get('confirmExistingDownload');
+        this.setSiteModules();
         return true;
       }
-      function onSave (event) {
-        // check for nonexistent path
+
+      function setSiteModules () {
+        let siteModules = AnkBase.getModuleSettings();
+        if (!siteModules)
+          return;
+
+        let prefs = document.querySelector('preferences');
+        let box = document.getElementById('site-module-table');
+        if (!prefs || !box)
+          return;
+
+        siteModules.forEach(function (sm) {
+          let prefid = 'ankpixiv-use-module-id-'+sm.id;
+
+          let row = document.createElement('row');
+
+          let item1 = document.createElement('checkbox');
+          item1.setAttribute('preference', prefid);
+          item1.setAttribute('label', sm.name+(sm.experimental ? ' (experimental)':''));
+          row.appendChild(item1);
+
+          box.appendChild(row);
+
+          let pref = document.createElement('preference');
+          pref.setAttribute('id', prefid);
+          pref.setAttribute('name', 'extensions.ankpixiv.useSiteModule.'+sm.id);
+          pref.setAttribute('type', 'bool');
+          prefs.appendChild(pref);
+        });
+      }
+
+      function onSave () {
         try {
-          let path = document.getElementById('initial-directory').value;
-          if (path) {
-            let initdir = AnkUtils.ccci("@mozilla.org/file/local;1", Components.interfaces.nsILocalFile);
-            initdir.initWithPath(path);
-            if (!initdir.exists())
-              throw 'Initial directory does not exist';
-          }
+          // removed: check for nonexistent path
         } catch (e) {
-          if (!confirm(AnkBase.Locale('notifyNonexistentDirectory')))
-            return false;
+          AnkUtils.dumpError(e);
         }
+        return true;
+      }
+
+      function onCancel () {
+        if (document.documentElement.instantApply)
+          return this.onSave();
         return true;
       }
 
@@ -103,6 +134,8 @@
         <preference id="open-comment" name="extensions.ankpixiv.openComment" type="bool" />
         <preference id="open-caption" name="extensions.ankpixiv.openCaption" type="bool" />
         <preference id="allow-thirdparty-cookie" name="extensions.ankpixiv.allowThirdPartyCookie" type="bool" />
+        <preference id="ignore-wrong-datetime-format" name="extensions.ankpixiv.ignoreWrongDatetimeFormat" type="bool" />
+        <preference id="warn-wrong-datetime-format" name="extensions.ankpixiv.warnWrongDatetimeFormat" type="bool" inverted="true"/>
       </preferences>
 
       <tabbox>
@@ -111,6 +144,7 @@
           <tab label="&tab.filename;" />
           <tab label="&tab.viewer;" />
           <tab label="&tab.miscellaneous;" />
+          <tab label="&tab.sitemodules;" />
         </tabs>
         <tabpanels>
           <tabpanel>
@@ -194,6 +228,8 @@
                   </listbox>
                  </hbox>
               </groupbox>
+              <checkbox preference="ignore-wrong-datetime-format" label="&ignoreWrongDatetimeFormat;" />
+              <checkbox preference="warn-wrong-datetime-format" label="&warnWrongDatetimeFormat;" />
             </vbox>
           </tabpanel>
           <tabpanel>
@@ -273,6 +309,12 @@
               <checkbox preference="allow-thirdparty-cookie" label="&allowThirdPartyCookie;" />
             </vbox>
           </tabpanel>
+          <tabpanel>
+            <grid>
+              <rows id="site-module-table">
+              </rows>
+            </grid>
+          </tabpanel>
         </tabpanels>
       </tabbox>
     </prefpane>
@@ -281,7 +323,7 @@
         let menupopup = document.getElementById('large-image-size-menupopup');
         for (let [k, v] in Iterator(AnkBase.FIT)) {
           let menuitem = document.createElement('menuitem');
-          menuitem.setAttribute('label', AnkBase.Locale('largeImageSize.' + k));
+          menuitem.setAttribute('label', AnkBase.Locale.get('largeImageSize.' + k));
           menuitem.setAttribute('value', v);
           menupopup.appendChild(menuitem);
         }

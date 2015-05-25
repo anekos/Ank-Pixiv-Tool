@@ -21,6 +21,7 @@
 <!ENTITY tab.download "Downloaden">
 <!ENTITY tab.filename "Bestandsnaam">
 <!ENTITY tab.viewer "Weergave">
+<!ENTITY tab.sitemodules "Supported Sites">
 <!ENTITY tab.miscellaneous "Diversen">
 <!ENTITY fitLargeImageInWindowSize "Grote afbeeldingen aan venster aanpassen.">
 <!ENTITY dontResizeIfSmall "Grootte niet aanpassen als afbeelding kleiner dan venster is.">
@@ -35,3 +36,5 @@
 <!ENTITY openComment "Automatisch de reacties openen.">
 <!ENTITY openCaption "Automatisch lange titel openen.">
 <!ENTITY allowThirdPartyCookie "Cookies van derden toestaan.">
+<!ENTITY ignoreWrongDatetimeFormat "Use the current date, when cannot confirm the illust date.">
+<!ENTITY warnWrongDatetimeFormat "Don't show &quot;unsupported datetime format&quot; warnings.">

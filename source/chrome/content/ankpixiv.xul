@@ -7,26 +7,8 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankutils.js" />
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankstorage.js" />
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankviewer.js" />
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/ankcontext.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankinterface.js" />
   <script type="application/x-javascript" src="chrome://ankpixiv/content/ankbase.js" />
-<!-- サイト別.jsの登録はここから -->
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/ankimgly.js" />
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anknicosei.js" />
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anknijie.js" />
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/ankpixiv.js" />
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktinami.js" />
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktumblr.js" />
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktwipple.js" />
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktwitpic.js" />
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/anktwitter.js" />
-  <script type="application/x-javascript" src="chrome://ankpixiv/content/sites/ankyfrog.js" />
-<!-- サイト別.jsの登録はここまで -->
-  <script type="application/x-javascript"><![CDATA[
-    AnkBase.onInit();
-  ]]></script>
 
   <stringbundleset id="ankpixiv-bundle-set">
     <stringbundle id="ankpixiv-string-bundle" src="chrome://ankpixiv/locale/ankpixiv.properties" />
@@ -42,7 +24,7 @@
                    tooltiptext="&iconLabel;" onclick="AnkBase.onDownloadButtonClick(event)"
                    class="toolbarbutton-1">
      <hbox>
-       <image id="ankpixiv-toolbar-button-image" />
+       <image id="ankpixiv-toolbar-button-image" notready="true" lost="true" />
        <label id="ankpixiv-toolbar-button-text" value="" collapsed="true" />
      </hbox>
     </toolbarbutton>
@@ -53,6 +35,9 @@
               oncommand="AnkBase.onContextMenu(event);" />
   </popup>
 
+  <script type="application/x-javascript"><![CDATA[
+    AnkBase.onInit();
+  ]]></script>
 
 </overlay>
 

@@ -21,6 +21,7 @@
 <!ENTITY tab.download "下載">
 <!ENTITY tab.filename "檔名">
 <!ENTITY tab.viewer "秀圖">
+<!ENTITY tab.sitemodules "Supported Sites">
 <!ENTITY tab.miscellaneous "雜項">
 <!ENTITY fitLargeImageInWindowSize "縮放圖片至視窗大小。">
 <!ENTITY dontResizeIfSmall "若圖片比視窗小，就不要重設尺寸。">
@@ -35,3 +36,5 @@
 <!ENTITY openComment "自動展開回應欄">
 <!ENTITY openCaption "自動展開超長的圖片說明文">
 <!ENTITY allowThirdPartyCookie "允許第三方網站的 Cookie 資料">
+<!ENTITY ignoreWrongDatetimeFormat "Use the current date, when cannot confirm the illust date.">
+<!ENTITY warnWrongDatetimeFormat "Don't show &quot;unsupported datetime format&quot; warnings.">

@@ -21,6 +21,7 @@
 <!ENTITY tab.download "Nerladdning">
 <!ENTITY tab.filename "Filnamn">
 <!ENTITY tab.viewer "Viewer">
+<!ENTITY tab.sitemodules "Supported Sites">
 <!ENTITY tab.miscellaneous "Övrigt">
 <!ENTITY fitLargeImageInWindowSize "Anpassa stora bilder till fönsterstorleken.">
 <!ENTITY dontResizeIfSmall "Ändra inte storlek om bilden är mindre än fönstret.">
@@ -35,3 +36,5 @@
 <!ENTITY openComment "Öppna kommenteringsrutan automatiskt.">
 <!ENTITY openCaption "Automatically open the long caption.">
 <!ENTITY allowThirdPartyCookie "Allow ThirdParty Cookie.">
+<!ENTITY ignoreWrongDatetimeFormat "Use the current date, when cannot confirm the illust date.">
+<!ENTITY warnWrongDatetimeFormat "Don't show &quot;unsupported datetime format&quot; warnings.">

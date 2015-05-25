@@ -21,6 +21,7 @@
 <!ENTITY tab.download "ダウンロード">
 <!ENTITY tab.filename "ファイル名">
 <!ENTITY tab.viewer "ビュアー">
+<!ENTITY tab.sitemodules "対応サイト">
 <!ENTITY tab.miscellaneous "その他">
 <!ENTITY fitLargeImageInWindowSize "大サイズ画像をウィンドウサイズにあわせる">
 <!ENTITY dontResizeIfSmall "ウィンドウより小さいときはリサイズしない">
@@ -35,3 +36,5 @@
 <!ENTITY openComment "コメント欄を自動で開く">
 <!ENTITY openCaption "キャプションの続きを自動で開く">
 <!ENTITY allowThirdPartyCookie "サードパーティーCookieを保存する">
+<!ENTITY ignoreWrongDatetimeFormat "投稿日時を確認できない時に、現在日時で代替する">
+<!ENTITY warnWrongDatetimeFormat "現在日時で代替した時でも、警告を表示しない">
