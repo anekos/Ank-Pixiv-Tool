@@ -109,7 +109,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
         get animatedGifThumbnail () {
           let e = illust.tweet;
-          return e && e.querySelector('.js-media-container > img.animated-gif-thumbnail');
+          return e && (e.querySelector('.js-media-container > img.animated-gif-thumbnail') || e.querySelector('.js-media-container > video.animated-gif'));
         },
 
         get videoFrame () {
