@@ -157,7 +157,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         },
 
         get userName () {
-          return queryEitherGorT('.simple-tweet', '.user-actions');
+          return queryEitherGorT('.tweet', '.user-actions');
         },
 
         get memberLink () {

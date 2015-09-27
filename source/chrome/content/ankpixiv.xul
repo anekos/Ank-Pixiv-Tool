@@ -24,7 +24,7 @@
                    tooltiptext="&iconLabel;" onclick="AnkBase.onDownloadButtonClick(event)"
                    class="toolbarbutton-1">
      <hbox>
-       <image id="ankpixiv-toolbar-button-image" notready="true" lost="true" />
+       <image id="ankpixiv-toolbar-button-image" notready="" lost="true" />
        <label id="ankpixiv-toolbar-button-text" value="" collapsed="true" />
      </hbox>
     </toolbarbutton>

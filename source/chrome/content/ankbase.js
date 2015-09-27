@@ -741,7 +741,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           AnkUtils.dump('DL => ' + file.path);
           AnkUtils.dump('downloadTo: ' + url + ', ' + referer);
 
-          yield AnkBase.makeDir(file.parent.path, { ignoreExisting:true, unixMode:0755 });
+          yield AnkBase.makeDir(file.parent.path, { ignoreExisting:true, unixMode:0o755 });
 
           status = yield AnkBase.downloadTo(file, url, referer);
           if (status == 200)
@@ -818,7 +818,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       Task.spawn(function () {
         AnkUtils.dump('SAVE => ' + file.path);
 
-        yield AnkBase.makeDir(file.parent.path, { ignoreExisting:true, unixMode:0755 });
+        yield AnkBase.makeDir(file.parent.path, { ignoreExisting:true, unixMode:0o755 });
 
         let encoder = new TextEncoder();
         let array = encoder.encode(text);
@@ -1864,9 +1864,11 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           window.addEventListener('pageshow', AnkBase.onFocus, true);
           window.addEventListener('focus', AnkBase.onFocus, true);
           setInterval(e => AnkBase.cleanupDownload(), AnkBase.DOWNLOAD_THREAD.CLEANUP_INTERVAL);
-          AnkBase.changeToolbarIconReady.call(AnkBase, true, AnkBase.TOOLBAR_BUTTON.IMAGE);
         }
-      }).then(null).catch(e => AnkUtils.dumpError(e, true));
+      }).then(null).catch(function (e)  {
+        AnkUtils.dumpError(e, true);
+        AnkBase.changeToolbarIconReady.call(AnkBase, false, AnkBase.TOOLBAR_BUTTON.IMAGE);
+      });
 
     }, // }}}
 
