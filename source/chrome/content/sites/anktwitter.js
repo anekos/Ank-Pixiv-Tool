@@ -80,7 +80,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         if (f) {
           var name = f.getAttribute('data-card2-name');
           for (var i = 0; i < arguments.length; i++) {
-            console.log(name, arguments[i], (name === arguments[i]));
             if (name === arguments[i]) {
               return e;
             }
