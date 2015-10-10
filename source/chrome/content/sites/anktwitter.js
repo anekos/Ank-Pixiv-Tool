@@ -74,16 +74,37 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           return illust.tweet.querySelector(tQuery);
       }
 
+      function getCard2Frame () {
+        var e = illust.tweet && illust.tweet.querySelector('.card2 > div > iframe');
+        var f = e && AnkUtils.trackbackParentNode(e, 2);
+        if (f) {
+          var name = f.getAttribute('data-card2-name');
+          for (var i = 0; i < arguments.length; i++) {
+            console.log(name, arguments[i], (name === arguments[i]));
+            if (name === arguments[i]) {
+              return e;
+            }
+          }
+        }
+      }
+
       let illust =  {
         // 外部画像連携
         get photoFrame () {
-          let e = illust.tweet && illust.tweet.querySelector('.card2 > div > iframe');
-          return (e && AnkUtils.trackbackParentNode(e, 2).getAttribute('data-card2-name') === 'photo') ? e : null; 
+          return getCard2Frame('photo', 'summary_large_image');
         },
 
         get photoImage () {
-          let e = illust.photoFrame;
-          return e && e.contentDocument.querySelector('.u-block');
+          var e = illust.photoFrame;
+          if (e) {
+            var name = e.getAttribute('data-card2-name');
+            if (name === 'photo') {
+              return e.contentDocument.querySelector('.u-block');
+            }
+            else {
+              return e.contentDocument.querySelector('div.tcu-imageWrapper > img');
+            }
+          }
         },
 
         // 自前画像(twimg)
@@ -113,11 +134,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         },
 
         get videoFrame () {
-          let e = illust.tweet && illust.tweet.querySelector('.card2 > div > iframe');
-          let f = e && AnkUtils.trackbackParentNode(e, 2);
-          let n = f && f.getAttribute('data-card2-name');
-          if ( n === '__entity_video' || n === 'player')
-            return e;
+          return getCard2Frame('__entity_video', 'player');
         },
 
         get videoContent () {
