@@ -44,9 +44,9 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       }, // }}}
 
       get illustTweet() {
-        return self.elements.illust.mediumImage    ||  // イラスト
-          self.elements.illust.animatedGifThumbnail ||  // GIF
-          self.elements.illust.photoFrame;              // 外部画像連携
+        return self.elements.illust.mediumImage ||  // イラスト
+          self.elements.illust.animatedGif      ||  // GIF
+          self.elements.illust.photoFrame;          // 外部画像連携
       },
 
       get videoTweet() {
@@ -75,13 +75,30 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       }
 
       function getCard2Frame () {
-        var e = illust.tweet && illust.tweet.querySelector('.card2 > div > iframe');
-        var f = e && AnkUtils.trackbackParentNode(e, 2);
-        if (f) {
-          var name = f.getAttribute('data-card2-name');
+        var x = (function (t) {
+          if (t) {
+            var e = t.querySelector('.card2 > div > iframe');
+            if (e) {
+              return {
+                e: e,
+                f: AnkUtils.trackbackParentNode(e, 2)
+              }
+            }
+
+            e = t.querySelector('.card2 > div > div > iframe');
+            if (e) {
+              return {
+                e: e,
+                f: AnkUtils.trackbackParentNode(e, 3)
+              }
+            }
+          }
+        })(illust.tweet);
+        if (x) {
+          var name = x.f.getAttribute('data-card2-name');
           for (var i = 0; i < arguments.length; i++) {
             if (name === arguments[i]) {
-              return e;
+              return x.e;
             }
           }
         }
@@ -109,27 +126,22 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         // 自前画像(twimg)
         get mediaContainer () {
           let e = illust.tweet;
-          return e && e.querySelector('.cards-media-container');
+          return e && e.querySelector('.cards-media-container, .js-expansion-container .js-old-media-container');
         },
 
         get mediaImage () {
           let e = illust.mediaContainer;
-          return e && e.querySelector('div.multi-photo img, a.media img');
+          return e && e.querySelector('div.multi-photo img, a.media img, .js-old-photo img');
         },
 
         get mediaSet () {
           let e = illust.mediaContainer;
-          return e && e.querySelectorAll('div.multi-photo, a.media');
+          return e && e.querySelectorAll('div.multi-photo, a.media, .js-old-photo');
         },
 
         get animatedGif () {
           let e = illust.tweet;
-          return e && e.querySelector('.js-media-container > video.animated-gif > source');
-        },
-
-        get animatedGifThumbnail () {
-          let e = illust.tweet;
-          return e && (e.querySelector('.js-media-container > img.animated-gif-thumbnail') || e.querySelector('.js-media-container > video.animated-gif'));
+          return e && e.querySelector('.js-media-container > video.animated-gif > source, .OldMedia-videoContainer > video.animated-gif > source');
         },
 
         get videoFrame () {
@@ -221,7 +233,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           if (self.in.gallery)
             return illust.gallery.querySelector('img.media-image');
           if (illust.tweet)
-            return illust.mediaImage || illust.animatedGifThumbnail || illust.photoImage;
+            return illust.mediaImage || illust.animatedGif || illust.photoImage;
         },
 
         get wrapper () {
@@ -651,10 +663,10 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       }
 
       let e =
-        self.in.gallery                           ? self.elements.illust.mediumImage :
-        self.elements.illust.photoFrame           ? self.elements.illust.photoImage :
-        self.elements.illust.animatedGifThumbnail ? self.elements.illust.animatedGif :
-                                                    self.elements.illust.mediaSet;
+        self.in.gallery                  ? self.elements.illust.mediumImage :
+        self.elements.illust.photoFrame  ? self.elements.illust.photoImage :
+        self.elements.illust.animatedGif ? self.elements.illust.animatedGif :
+                                           self.elements.illust.mediaSet;
       if (!e)
         return null;
 
@@ -662,12 +674,12 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       if (e instanceof NodeList) {
         // multi photo
         AnkUtils.A(e).forEach(function (s) {
-          o.push(s.getAttribute('data-url'));
+          o.push(s.getAttribute('data-url') || s.getAttribute('data-image-url'));
         });
       }
       else {
         // photo or animatedGif
-        o.push(self.elements.illust.animatedGifThumbnail ? e.getAttribute('video-src') : e.src);
+        o.push(self.elements.illust.animatedGif ? e.getAttribute('video-src') : e.src);
       }
 
       let m = self._convertImageUrls(o);
