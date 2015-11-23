@@ -1255,22 +1255,22 @@ Components.utils.import("resource://gre/modules/Task.jsm");
             qa.push({ type:'insert', table:'histories', set:download.history });
             yield AnkBase.Storage.update(AnkBase.Storage.getUpdateSQLs(qa));
           }).then(null).catch(e => AnkUtils.dumpError(e,true));
-
-          if (AnkBase.Prefs.get('saveMeta', true))
-            AnkBase.saveTextFile(destFiles.meta, metaText);
-
-          if (AnkBase.Prefs.get('showCompletePopup', true))
-            AnkBase.popupAlert(caption, text);
-
-          AnkUtils.dump('download completed: '+images.length+' pics in '+(new Date().getTime() - start)+' msec');
-
-          AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED);
-
-          // たまたま開いているタブがダウンロードが完了したのと同じサイトだったならマーキング処理
-          AnkBase.insertOrMarkToAllTabs(service_id, illust_id, function (curmod) {
-            curmod.markDownloaded(illust_id, true);
-          });
         }
+
+        if (AnkBase.Prefs.get('saveMeta', true))
+          AnkBase.saveTextFile(destFiles.meta, metaText);
+
+        if (AnkBase.Prefs.get('showCompletePopup', true))
+          AnkBase.popupAlert(caption, text);
+
+        AnkUtils.dump('download completed: '+images.length+' pics in '+(new Date().getTime() - start)+' msec');
+
+        AnkBase.removeDownload(download, AnkBase.DOWNLOAD_DISPLAY.DOWNLOADED);
+
+        // たまたま開いているタブがダウンロードが完了したのと同じサイトだったならマーキング処理
+        AnkBase.insertOrMarkToAllTabs(service_id, illust_id, function (curmod) {
+          curmod.markDownloaded(illust_id, true);
+        });
       }).then(null).catch(function (e) { AnkUtils.dumpError(e); onError(e); });
     }, // }}}
 
