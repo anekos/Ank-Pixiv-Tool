@@ -126,22 +126,22 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         // 自前画像(twimg)
         get mediaContainer () {
           let e = illust.tweet;
-          return e && e.querySelector('.cards-media-container, .js-expansion-container .js-old-media-container');
+          return e && e.querySelector('.js-expansion-container .js-adaptive-media-container');
         },
 
         get mediaImage () {
           let e = illust.mediaContainer;
-          return e && e.querySelector('div.multi-photo img, a.media img, .js-old-photo img');
+          return e && e.querySelector('.js-adaptive-photo img');
         },
 
         get mediaSet () {
           let e = illust.mediaContainer;
-          return e && e.querySelectorAll('div.multi-photo, a.media, .js-old-photo');
+          return e && e.querySelectorAll('.js-adaptive-photo');
         },
 
         get animatedGif () {
           let e = illust.tweet;
-          return e && e.querySelector('.js-media-container > video.animated-gif > source, .OldMedia-videoContainer > video.animated-gif > source');
+          return e && e.querySelector('.AdaptiveMedia-videoContainer > video.animated-gif > source');
         },
 
         get videoFrame () {
@@ -197,7 +197,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         },
 
         get tweet () {
-          return query('.permalink-tweet');
+          return query('.opened-tweet.permalink-tweet');
         },
 
         get gallery () {
@@ -759,7 +759,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           if (doc.querySelector('.ank-pixiv-downloaded-filename'))
             return;
 
-          let e = doc.querySelector('.client-and-actions');
+          let e = doc.querySelector('.opened-tweet.permalink-tweet .client-and-actions');
           if (e) {
             {
               let div = doc.createElement('div');
