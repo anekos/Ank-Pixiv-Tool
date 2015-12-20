@@ -44,9 +44,9 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       }, // }}}
 
       get illustTweet() {
-        return self.elements.illust.mediumImage    ||  // イラスト
-          self.elements.illust.animatedGifThumbnail ||  // GIF
-          self.elements.illust.photoFrame;              // 外部画像連携
+        return self.elements.illust.mediumImage ||  // イラスト
+          self.elements.illust.animatedGif      ||  // GIF
+          self.elements.illust.photoFrame;          // 外部画像連携
       },
 
       get videoTweet() {
@@ -74,50 +74,78 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           return illust.tweet.querySelector(tQuery);
       }
 
+      function getCard2Frame () {
+        var x = (function (t) {
+          if (t) {
+            var e = t.querySelector('.card2 > div > iframe');
+            if (e) {
+              return {
+                e: e,
+                f: AnkUtils.trackbackParentNode(e, 2)
+              }
+            }
+
+            e = t.querySelector('.card2 > div > div > iframe');
+            if (e) {
+              return {
+                e: e,
+                f: AnkUtils.trackbackParentNode(e, 3)
+              }
+            }
+          }
+        })(illust.tweet);
+        if (x) {
+          var name = x.f.getAttribute('data-card2-name');
+          for (var i = 0; i < arguments.length; i++) {
+            if (name === arguments[i]) {
+              return x.e;
+            }
+          }
+        }
+      }
+
       let illust =  {
         // 外部画像連携
         get photoFrame () {
-          let e = illust.tweet && illust.tweet.querySelector('.card2 > div > iframe');
-          return (e && AnkUtils.trackbackParentNode(e, 2).getAttribute('data-card2-name') === 'photo') ? e : null; 
+          return getCard2Frame('photo', 'summary_large_image');
         },
 
         get photoImage () {
-          let e = illust.photoFrame;
-          return e && e.contentDocument.querySelector('.u-block');
+          var e = illust.photoFrame;
+          if (e) {
+            var name = e.getAttribute('data-card2-name');
+            if (name === 'photo') {
+              return e.contentDocument.querySelector('.u-block');
+            }
+            else {
+              return e.contentDocument.querySelector('div.tcu-imageWrapper > img');
+            }
+          }
         },
 
         // 自前画像(twimg)
         get mediaContainer () {
           let e = illust.tweet;
-          return e && e.querySelector('.cards-media-container');
+          return e && e.querySelector('.js-expansion-container .js-adaptive-media-container');
         },
 
         get mediaImage () {
           let e = illust.mediaContainer;
-          return e && e.querySelector('div.multi-photo img, a.media img');
+          return e && e.querySelector('.js-adaptive-photo img');
         },
 
         get mediaSet () {
           let e = illust.mediaContainer;
-          return e && e.querySelectorAll('div.multi-photo, a.media');
+          return e && e.querySelectorAll('.js-adaptive-photo');
         },
 
         get animatedGif () {
           let e = illust.tweet;
-          return e && e.querySelector('.js-media-container > video.animated-gif > source');
-        },
-
-        get animatedGifThumbnail () {
-          let e = illust.tweet;
-          return e && e.querySelector('.js-media-container > img.animated-gif-thumbnail');
+          return e && e.querySelector('.AdaptiveMedia-videoContainer > video.animated-gif > source');
         },
 
         get videoFrame () {
-          let e = illust.tweet && illust.tweet.querySelector('.card2 > div > iframe');
-          let f = e && AnkUtils.trackbackParentNode(e, 2);
-          let n = f && f.getAttribute('data-card2-name');
-          if ( n === '__entity_video' || n === 'player')
-            return e;
+          return getCard2Frame('__entity_video', 'player');
         },
 
         get videoContent () {
@@ -157,7 +185,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         },
 
         get userName () {
-          return queryEitherGorT('.simple-tweet', '.user-actions');
+          return queryEitherGorT('.tweet', '.user-actions');
         },
 
         get memberLink () {
@@ -169,7 +197,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         },
 
         get tweet () {
-          return query('.permalink-tweet');
+          return query('.opened-tweet.permalink-tweet');
         },
 
         get gallery () {
@@ -205,7 +233,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           if (self.in.gallery)
             return illust.gallery.querySelector('img.media-image');
           if (illust.tweet)
-            return illust.mediaImage || illust.animatedGifThumbnail || illust.photoImage;
+            return illust.mediaImage || illust.animatedGif || illust.photoImage;
         },
 
         get wrapper () {
@@ -635,10 +663,10 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       }
 
       let e =
-        self.in.gallery                           ? self.elements.illust.mediumImage :
-        self.elements.illust.photoFrame           ? self.elements.illust.photoImage :
-        self.elements.illust.animatedGifThumbnail ? self.elements.illust.animatedGif :
-                                                    self.elements.illust.mediaSet;
+        self.in.gallery                  ? self.elements.illust.mediumImage :
+        self.elements.illust.photoFrame  ? self.elements.illust.photoImage :
+        self.elements.illust.animatedGif ? self.elements.illust.animatedGif :
+                                           self.elements.illust.mediaSet;
       if (!e)
         return null;
 
@@ -646,12 +674,12 @@ Components.utils.import("resource://gre/modules/Task.jsm");
       if (e instanceof NodeList) {
         // multi photo
         AnkUtils.A(e).forEach(function (s) {
-          o.push(s.getAttribute('data-url'));
+          o.push(s.getAttribute('data-url') || s.getAttribute('data-image-url'));
         });
       }
       else {
         // photo or animatedGif
-        o.push(self.elements.illust.animatedGifThumbnail ? e.getAttribute('video-src') : e.src);
+        o.push(self.elements.illust.animatedGif ? e.getAttribute('video-src') : e.src);
       }
 
       let m = self._convertImageUrls(o);
@@ -731,7 +759,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           if (doc.querySelector('.ank-pixiv-downloaded-filename'))
             return;
 
-          let e = doc.querySelector('.client-and-actions');
+          let e = doc.querySelector('.opened-tweet.permalink-tweet .client-and-actions');
           if (e) {
             {
               let div = doc.createElement('div');

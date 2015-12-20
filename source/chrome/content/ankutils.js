@@ -207,7 +207,7 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
       msg += ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
 
       dump(msg);
-      Application.console.log(msg);
+      Services.console.logStringMessage(msg);
 
       try {
         if (doAlert)
@@ -236,14 +236,14 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
         msg += ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
       }
       dump(msg);
-      Application.console.log(msg);
+      Services.console.logStringMessage(msg);
       return msg;
     }, // }}}
 
     time:  function (func, self, args) { // {{{
       let [a, r, b] = [new Date(), func.apply(self, args || []), new Date()];
       let msg = 'time: ' + ((b.getTime() - a.getTime()) / 1000) + 'msec';
-      Application.console.log(msg);
+      Services.console.logStringMessage(msg);
       return msg;
     }, // }}}
 
