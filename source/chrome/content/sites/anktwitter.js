@@ -169,7 +169,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         },
 
         get datetime () {
-          return queryEitherGorT('.tweet-timestamp', 'span.metadata > span');
+          return queryEitherGorT('._timestamp', '._timestamp');
         },
 
         get title () {
@@ -277,8 +277,22 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         },
         
         get dateTime () {
-          let v = self.elements.illust.datetime.title;
-          return AnkUtils.decodeDateTimeText(v ? v : self.elements.illust.datetime.textContent);
+          let t = self.elements.illust.datetime && self.elements.illust.datetime.getAttribute('data-time');
+          if (t && /^\d+$/.test(t)) {
+            let d = AnkUtils.getDecodedDateTime(new Date(parseInt(t)*1000));
+            return d;
+          }
+
+          let ms = self.elements.illust.datetime && self.elements.illust.datetime.getAttribute('data-time-ms');
+          if (ms && /^\d+$/.test(ms)) {
+            let d = AnkUtils.getDecodedDateTime(new Date(parseInt(ms)));
+            return d;
+          }
+
+          let v = self.elements.illust.datetime && (self.elements.illust.datetime.title || self.elements.illust.datetime.textContent);
+          if (v) {
+            return AnkUtils.decodeDateTimeText(v);
+          }
         },
 
         get size () {

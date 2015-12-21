@@ -763,7 +763,7 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
       let ds = self.ccgs("@mozilla.org/file/directory_service;1", Ci.nsIProperties);
       let file = ds.get("TmpD", Ci.nsIFile);
       file.append('ankpixivtool-' + name);
-      file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+      file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
       return file;
     }, // }}}
 
