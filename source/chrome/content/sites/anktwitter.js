@@ -169,6 +169,10 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         },
 
         get datetime () {
+          return queryEitherGorT('.tweet-timestamp', 'span.metadata > span');
+        },
+
+        get timestamp () {
           return queryEitherGorT('._timestamp', '._timestamp');
         },
 
@@ -277,22 +281,20 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         },
         
         get dateTime () {
-          let t = self.elements.illust.datetime && self.elements.illust.datetime.getAttribute('data-time');
+          let t = self.elements.illust.timestamp && self.elements.illust.timestamp.getAttribute('data-time');
           if (t && /^\d+$/.test(t)) {
             let d = AnkUtils.getDecodedDateTime(new Date(parseInt(t)*1000));
             return d;
           }
 
-          let ms = self.elements.illust.datetime && self.elements.illust.datetime.getAttribute('data-time-ms');
+          let ms = self.elements.illust.timestamp && self.elements.illust.timestamp.getAttribute('data-time-ms');
           if (ms && /^\d+$/.test(ms)) {
             let d = AnkUtils.getDecodedDateTime(new Date(parseInt(ms)));
             return d;
           }
 
-          let v = self.elements.illust.datetime && (self.elements.illust.datetime.title || self.elements.illust.datetime.textContent);
-          if (v) {
-            return AnkUtils.decodeDateTimeText(v);
-          }
+          let v = self.elements.illust.datetime.title;
+          return AnkUtils.decodeDateTimeText(v ? v : self.elements.illust.datetime.textContent);
         },
 
         get size () {
