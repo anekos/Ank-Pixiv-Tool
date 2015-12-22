@@ -36,7 +36,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
       function loadScript(m, obj) {
         try {
-          console.log('MODULE LOAD: ' + m);
+          AnkUtils.logStringMessage('MODULE LOAD: ' + m);
           let scope = obj || {};
           Services.scriptloader.loadSubScript('chrome://ankpixiv/content/' + m, scope, 'UTF-8');
           return scope;

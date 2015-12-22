@@ -7,6 +7,7 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 (function(global) {
 
   var AnkUtils = {
+    DEBUG: false,
 
     SYS_SLASH: (function () { // {{{
       try {
@@ -181,7 +182,18 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
       return conv.ConvertToUnicode(s);
     }, // }}}
 
+    logStringMessage: function (msg) {
+      if (!AnkUtils.DEBUG)
+        return;
+
+      Services.console.logStringMessage(msg);
+      dump(msg);
+    },
+
     dumpObject: function (obj) {
+      if (!AnkUtils.DEBUG)
+        return;
+
       if (obj)
         for (let p in obj)
           console.log('* '+p+' = '+obj[p]);
@@ -206,8 +218,7 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
       msg += (added ? added+"\n" : '');
       msg += ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
 
-      dump(msg);
-      Services.console.logStringMessage(msg);
+      AnkUtils.logStringMessage(msg);
 
       try {
         if (doAlert)
@@ -235,15 +246,14 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
         }
         msg += ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
       }
-      dump(msg);
-      Services.console.logStringMessage(msg);
+      AnkUtils.logStringMessage(msg);
       return msg;
     }, // }}}
 
     time:  function (func, self, args) { // {{{
       let [a, r, b] = [new Date(), func.apply(self, args || []), new Date()];
       let msg = 'time: ' + ((b.getTime() - a.getTime()) / 1000) + 'msec';
-      Services.console.logStringMessage(msg);
+      AnkUtils.logStringMessage(msg);
       return msg;
     }, // }}}
 
