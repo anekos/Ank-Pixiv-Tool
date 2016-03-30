@@ -1,0 +1,54 @@
+.inputbox {
+    padding: .5em;
+    margin-bottom: 1em;
+}
+.groupbox {
+    padding: .25em;
+    margin-bottom: 1em;
+}
+.groupbox > div {
+    margin-bottom: .5em;
+}
+.grouptitle {
+    font-size: 150%;
+    text-decoration: underline;
+}
+.itembox {
+    margin: .5em;
+    padding: .2em;
+}
+.listbox {
+    width: 16em;
+    overflow: hidden;
+}
+.selectbox {
+    width: 32em;
+}
+.button {
+    font-size: 1.5em;
+    min-width: 6em;
+}
+.item.hidden {
+    display: none;
+}
+.item.deprecated {
+    display: none;
+}
+.item.disabled {
+    display: none;
+}
+#siteListContainer {
+    border-collapse: collapse;
+}
+#siteListContainer th {
+    background-color: #eee;
+}
+#siteListContainer th, #siteListContainer td {
+    border: 1px solid #b9b9b9;
+}
+#siteListContainer thead > tr > td, #siteListContainer tbody > tr > td {
+    width: 12em;
+}
+#siteListContainer .cbInTbl {
+    text-align: center;
+}

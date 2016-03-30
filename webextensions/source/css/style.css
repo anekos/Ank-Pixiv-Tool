@@ -1,0 +1,226 @@
+
+.ank-pixiv-downloading {
+    background: repeat-x bottom lime url("chrome-extension://__MSG_@@extension_id__/images/bg-downloading.png") !important;
+}
+
+.ank-pixiv-downloaded {
+    background: repeat-x bottom pink url("chrome-extension://__MSG_@@extension_id__/images/bg-downloaded.png") !important;
+}
+
+.ank-pixiv-updated {
+    background: repeat-x bottom paleturquoise url("chrome-extension://__MSG_@@extension_id__/images/bg-updated.png") !important;
+}
+
+.ank-pixiv-downloaded-overlay {
+    background-image: url("chrome-extension://__MSG_@@extension_id__/images/downloaded.png");
+    background-color: transparent !important;
+    border-radius: 4px 4px 4px 4px !important;
+    box-shadow: 2px 2px 2px #000 !important;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+}
+
+.ank-pixiv-downloading-overlay {
+    background-image: url("chrome-extension://__MSG_@@extension_id__/images/downloading.png");
+    background-color: transparent !important;
+    border-radius: 4px 4px 4px 4px !important;
+    box-shadow: 2px 2px 2px #000 !important;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+}
+
+#ank-pixiv-downloaded-display {
+    color: red;
+    font-weight: bold;
+    font-size: small;
+}
+
+#ank-pixiv-downloaded-display.slidein {
+    animation-timing-function: ease;
+    animation-duration: 10s;
+    animation-name: slidein;
+    animation-iteration-count: infinite !important;
+    animation-direction: alternate;
+}
+
+#ank-pixiv-downloaded-display.shake {
+    animation-timing-function: linear;
+    animation-duration: 5s;
+    animation-name: shake;
+    animation-iteration-count: infinite !important;
+    animation-direction: normal;
+}
+
+#ank-pixiv-downloaded-display.done:after {
+    content: "__MSG_msg_downloaded__";
+}
+
+#ank-pixiv-downloaded-display.R18:after {
+    content: "__MSG_msg_downloaded_used__";
+}
+
+#ank-pixiv-downloaded-display.updated:after {
+    content: "__MSG_msg_downloaded_updated__";
+}
+
+#ank-pixiv-downloaded-display.wait:after {
+    content: "__MSG_msg_download_wait__";
+}
+
+#ank-pixiv-downloaded-display.run:after {
+    content: "__MSG_msg_download_run__";
+}
+
+#ank-pixiv-downloaded-display.failed:after {
+    content: "__MSG_msg_download_failed__";
+}
+
+#ank-pixiv-downloaded-display.timeout:after {
+    content: "__MSG_msg_download_timeout__";
+}
+
+
+@keyframes slidein {
+    from {
+        transform: rotateY(0deg);
+    }
+    to {
+        transform: rotateY(360deg);
+    }
+}
+
+@keyframes shake {
+    0%, 10.0%, 14.5%, 100% {
+        transform: translateX(0);
+    }
+    10.5%, 11.5%, 12.5%, 13.5% {
+        transform: translateX(-10px);
+    }
+    11.0%, 12.0%, 13.0%, 14.0% {
+        transform: translateX(10px);
+    }
+}
+
+.ank-pixiv-viewer-enabled, .ank-pixiv-viewer-enabled > body {
+    overflow: hidden;
+}
+
+.ank-pixiv-viewer-enabled > body {
+    position: fixed !important;
+    width: 100%;
+}
+
+#ank-pixiv-viewer-panel {
+    position: fixed;
+    z-index: 9999;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    background-color: gray;
+}
+
+#ank-pixiv-viewer-image-panel {
+    margin: 0;
+    overflow: auto;
+    width: 100vw;
+    height: 100vh;
+}
+
+#ank-pixiv-viewer-image-container {
+    margin: 0;
+}
+
+#ank-pixiv-viewer-image-panel .ank-pixiv-viewer-show_image {
+    margin: 0;
+    background-color: white;
+}
+
+
+#ank-pixiv-viewer-panel.fit_in_height #ank-pixiv-viewer-image-container {
+    display: flex;
+    justify-content: center;
+    height: 100%;
+}
+
+#ank-pixiv-viewer-panel.fit_in_height #ank-pixiv-viewer-image-container > * {
+    height: 100%;
+}
+
+
+#ank-pixiv-viewer-panel.fit_in_width #ank-pixiv-viewer-image-container {
+    width: 100%;
+}
+
+#ank-pixiv-viewer-panel.fit_in_width #ank-pixiv-viewer-image-container > * {
+    width: 100%;
+    height: auto;
+}
+
+
+#ank-pixiv-viewer-image-fp.none {
+    display: none;
+}
+
+#ank-pixiv-viewer-panel.facing.fit_in_width #ank-pixiv-viewer-image-container > * {
+    width: 50%;
+}
+
+
+#ank-pixiv-viewer-button-panel {
+    position: fixed !important;
+    width: 100%;
+    bottom: 1.5em;
+    text-align: center;
+    opacity: 1;
+}
+
+#ank-pixiv-viewer-button-panel > * {
+    margin-left: .2em;
+    margin-right: .2em;
+    font-size: 1.5em;
+}
+
+#ank-pixiv-viewer-button-panel .ank-pixiv-viewer-submit_button {
+    text-align: center;
+    width: 8em;
+}
+
+#ank-pixiv-viewer-button-panel .ank-pixiv-viewer-item_selector {
+    width: auto;
+}
+
+#ank-pixiv-viewer-button-panel.single-image > .for-multi {
+    display: none;
+}
+
+#ank-pixiv-viewer-prev-button:after {
+    content: "<<";
+}
+
+#ank-pixiv-viewer-next-button:after {
+    content: ">>";
+}
+
+#ank-pixiv-viewer-close-button:after {
+    content: "\0000D7";
+}
+
+#ank-pixiv-viewer-panel #ank-pixiv-viewer-resize-button:after {
+    content: "No FIT";
+}
+
+#ank-pixiv-viewer-panel.fit_in_height #ank-pixiv-viewer-resize-button:after {
+    content: "FIT in Height";
+}
+
+#ank-pixiv-viewer-panel.fit_in_width #ank-pixiv-viewer-resize-button:after {
+    content: "FIT in Width";
+}

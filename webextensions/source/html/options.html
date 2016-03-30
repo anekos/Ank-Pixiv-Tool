@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Ank Pixiv Tool</title>
+    <link href="../css/options.css" rel="stylesheet"/>
+</head>
+<body>
+
+<div class="inputbox">
+    <div id="group_download" class="groupbox">
+        <div data-i18n="group_download" class="grouptitle"></div>
+        <div class="item">
+            <input type="checkbox" id="downloadWhenRate">
+            <select id="downloadRate" title="">
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+            </select>
+            <span data-i18n="downloadWhenRate"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="downloadWhenClickMiddle">
+            <span data-i18n="downloadWhenClickMiddle"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="downloadOriginalSize">
+            <span data-i18n="downloadOriginalSize"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="unpackUgoiraZip">
+            <span data-i18n="unpackUgoiraZip"></span>
+        </div>
+        <div class="item hidden">
+            <input type="checkbox" id="downloadNovelSource">
+            <span data-i18n="downloadNovelSource"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="saveMeta">
+            <span data-i18n="saveMeta"></span>
+        </div>
+        <div class="item hidden">
+            <input type="checkbox" id="saveMetaWithPath">
+            <span data-i18n="saveMetaWithPath"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="saveHistory">
+            <span data-i18n="saveHistory"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="saveIllustInfo">
+            <span data-i18n="saveIllustInfo"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="showSaveDialog">
+            <span data-i18n="showSaveDialog"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="confirmExistingDownload">
+            <span data-i18n="confirmExistingDownload"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="confirmExistingDownloadWhenAuto">
+            <span data-i18n="confirmExistingDownloadWhenAuto"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="overwriteExistingDownload">
+            <span data-i18n="overwriteExistingDownload"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="showIllustRemains">
+            <span data-i18n="showIllustRemains"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="showImageRemains">
+            <span data-i18n="showImageRemains"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="showCompletePopup">
+            <span data-i18n="showCompletePopup"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="cleanDownloadBar">
+            <span data-i18n="cleanDownloadBar"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="displayDownloaded">
+            <span data-i18n="displayDownloaded"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="markDownloaded">
+            <span data-i18n="markDownloaded"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="markUpdated">
+            <span data-i18n="markUpdated"></span>
+        </div>
+        <div class="item hidden">
+            <input type="checkbox" id="forceCheckMangaImagesAll">
+            <span data-i18n="forceCheckMangaImagesAll"></span>
+        </div>
+    </div>
+
+    <div id="group_filename" class="groupbox">
+        <div data-i18n="group_filename" class="grouptitle"></div>
+        <div class="item deprecated">
+            <div data-i18n="initialDirectory"></div>
+            <input type="text" size="48" id="initialDirectory">
+            <button data-i18n="browse">Browse</button>
+        </div>
+        <div class="item">
+            <div data-i18n="defaultFilename"></div>
+            <input type="text" size="80" id="defaultFilename">
+        </div>
+        <div class="item deprecated">
+            <div data-i18n="alternateFilename"></div>
+            <input type="text" size="80" id="alternateFilename">
+        </div>
+        <div class="item">
+            <div id="filenameTags" class="itembox">
+                <select size="9" class="listbox" title="">
+                    <option value="?title?">?title?</option>
+                    <option value="?member-id?">?member-id?</option>
+                    <option value="?member-name?">?member-name?</option>
+                    <option value="?memoized-name?">?memoized-name?</option>
+                    <option value="?tags?">?tags?</option>
+                    <option value="?short-tags?">?short-tags?</option>
+                    <option value="?tools?">?tools?</option>
+                    <option value="?pixiv-id?">?pixiv-id?</option>
+                    <option value="?site-name?">?site-name?</option>
+                </select>
+                <select size="9" class="listbox" title="">
+                    <option value="?illust-id?">?illust-id?</option>
+                    <option value="?illust-year?">?illust-year?</option>
+                    <option value="?illust-year2?">?illust-year2?</option>
+                    <option value="?illust-month?">?illust-month?</option>
+                    <option value="?illust-day?">?illust-day?</option>
+                    <option value="?illust-hour?">?illust-hour?</option>
+                    <option value="?illust-minute?">?illust-minute?</option>
+                </select>
+                <select size="9" class="listbox" title="">
+                    <option value="?saved-year?">?saved-year?</option>
+                    <option value="?saved-year2?">?saved-year2?</option>
+                    <option value="?saved-month?">?saved-month?</option>
+                    <option value="?saved-day?">?saved-day?</option>
+                    <option value="?saved-hour?">?saved-hour?</option>
+                    <option value="?saved-minute?">?saved-minute?</option>
+                </select>
+            </div>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="mangaImagesSaveToFolder">
+            <span data-i18n="mangaImagesSaveToFolder"></span>
+        </div>
+        <div class="item hidden">
+            <input type="checkbox" id="mangaImagesSaveToZip">
+            <span data-i18n="mangaImagesSaveToZip"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="ignoreWrongDatetimeFormat">
+            <span data-i18n="ignoreWrongDatetimeFormat"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="warnWrongDatetimeFormat">
+            <span data-i18n="warnWrongDatetimeFormat"></span>
+        </div>
+    </div>
+
+    <div id="group_viewer" class="groupbox">
+        <div data-i18n="group_viewer" class="grouptitle"></div>
+        <div class="item">
+            <input type="checkbox" id="largeOnMiddle">
+            <span data-i18n="largeOnMiddle"></span>
+        </div>
+        <div class="item">
+            <span data-i18n="largeImageSize"></span>
+            <select id="largeImageSize" class="selectbox" title="">
+                <option value="0" data-i18n="fitInWindowSize">0</option>
+                <option value="1" data-i18n="fitInWindowHeight">1</option>
+                <option value="2" data-i18n="fitInWindowWidth">2</option>
+                <option value="3" data-i18n="noFit">3</option>
+            </select>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="dontResizeIfSmall">
+            <span data-i18n="dontResizeIfSmall"></span>
+        </div>
+        <div class="item">
+            <select id="maxPanelOpacity">
+                <option value="100">100%</option>
+                <option value="90">90%</option>
+                <option value="80">80%</option>
+                <option value="70">70%</option>
+                <option value="60">60%</option>
+                <option value="50">50%</option>
+                <option value="40">40%</option>
+                <option value="30">30%</option>
+                <option value="20">20%</option>
+                <option value="10">10%</option>
+            </select>
+            <span data-i18n="maxPanelOpacity"></span>
+        </div>
+        <div class="item">
+            <select id="minPanelOpacity">
+                <option value="100">100%</option>
+                <option value="90">90%</option>
+                <option value="80">80%</option>
+                <option value="70">70%</option>
+                <option value="60">60%</option>
+                <option value="50">50%</option>
+                <option value="40">40%</option>
+                <option value="30">30%</option>
+                <option value="20">20%</option>
+                <option value="10">10%</option>
+                <option value="0">0%</option>
+            </select>
+            <span data-i18n="minPanelOpacity"></span>
+        </div>
+        <div class="item">
+            <select id="panelSize">
+                <option value="-2">x0.50</option>
+                <option value="-1">x0.75</option>
+                <option value="0">x1</option>
+                <option value="1">x1.25</option>
+                <option value="2">x1.50</option>
+                <option value="3">x1.75</option>
+                <option value="4">x2</option>
+                <option value="5">x2.25</option>
+                <option value="6">x2.50</option>
+                <option value="7">x2.75</option>
+                <option value="8">x3</option>
+            </select>
+            <span data-i18n="panelSize"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="loopPage">
+            <span data-i18n="loopPage"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="swapArrowButton">
+            <span data-i18n="swapArrowButton"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="useFacingView">
+            <span data-i18n="useFacingView"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="useLoadProgress">
+            <span data-i18n="useLoadProgress"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="useImagePrefetch">
+            <span data-i18n="useImagePrefetch"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="viewOriginalSize">
+            <span data-i18n="viewOriginalSize"></span>
+        </div>
+    </div>
+
+    <div id="group_misc" class="groupbox">
+        <div data-i18n="group_misc" class="grouptitle"></div>
+        <div class="item">
+            <input type="checkbox" id="openComment">
+            <span data-i18n="openComment"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="openCaption">
+            <span data-i18n="openCaption"></span>
+        </div>
+        <div class="item">
+            <input type="checkbox" id="allowThirdPartyCookie">
+            <span data-i18n="allowThirdPartyCookie"></span>
+        </div>
+        <div class="item hidden">
+            <select id="logLevel">
+                <option value="0">ALL</option>
+                <option value="1">&gt;=DEBUG</option>
+                <option value="2">&gt;=INFO</option>
+                <option value="3">&gt;=ERROR</option>
+                <option value="4">OFF</option>
+            </select>
+            <span data-i18n="logLevel"></span>
+        </div>
+
+    </div>
+
+    <div id="group_sites" class="groupbox">
+        <div data-i18n="group_sites" class="grouptitle"></div>
+        <div class="item hidden">
+            <input type="checkbox" id="useExperimentalModule">
+            <span data-i18n="useExperimentalModule"></span>
+        </div>
+        <table id="siteListContainer" class="item">
+            <thead>
+            <tr>
+                <th data-i18n="siteList_Enabled"></th>
+                <th data-i18n="siteList_Name"></th>
+                <th data-i18n="siteList_Folder"></th>
+                <th data-i18n="siteList_AutoDownload"></th>
+                <th data-i18n="siteList_Viewer"></th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="groupbox">
+    <span class="item disabled">
+        <button id="exportHistory" data-i18n="exportHistory" class="button">Apply</button>
+    </span>
+    <span class="item disabled">
+        <button id="importHistory" data-i18n="importHistory" class="button">Reset</button>
+    </span>
+</div>
+
+<div class="groupbox">
+    <span class="item">
+        <button id="apply" data-i18n="apply" class="button">Apply</button>
+    </span>
+    <span class="item disabled">
+        <button id="reset" data-i18n="reset" class="button">Reset</button>
+    </span>
+</div>
+
+<script src="../js/utils.js"></script>
+<script src="../js/prefs.js"></script>
+<script src="../js/options.js"></script>
+</body>
+</html>
