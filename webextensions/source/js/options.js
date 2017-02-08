@@ -81,7 +81,7 @@
 
   // 初期値の設定
   let setOptionValues = function () {
-    spawn(function* () {
+      (async () => {
       AnkPrefs.getKeys().forEach(function (key) {
         var e = document.querySelector('#'+key);
         if (!e) {
@@ -105,7 +105,7 @@
           }
         }
       });
-    });
+    })();
   };
 
   // 保存
@@ -139,17 +139,52 @@
     });
   };
 
+  // ファイル名タグをファイル名ボックスにプッシュする
+  let addFilenameTagPushEvent = function () {
+    let pushToken = function pushToken (e) {
+      if (e.target.tagName.toLowerCase() !== 'option') {
+        return;
+      }
+
+      let token = e.target.value;
+      let box = currentFilenameElement;
+      let now = box.value;
+      let [xp, yp] = [box.selectionStart, box.selectionEnd];
+      let [xs, ys] = [now.slice(0, xp), now.slice(yp, now.length)];
+      box.value = xs + token + ys;
+      let zp = xp + token.length;
+      box.setSelectionRange(zp, zp);
+      box.focus();
+    };
+
+    let currentFilenameElement = null;
+
+    ['defaultFilename', 'alternateFilename'].forEach((e) => {
+      let box = document.getElementById(e);
+      if (box) {
+        box.addEventListener('focus', () => {
+          currentFilenameElement = box;
+        });
+      }
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll('#filenameTags select'), (e) => {
+      e.addEventListener('click', (e) => pushToken(e));
+    });
+  };
+
   //
 
   let prefs = null;
 
-  spawn(function* () {
-    prefs = yield AnkPrefs.get();
+    (async () => {
+    prefs = await AnkPrefs.get();
 
     setLabels();
     setList();
     setOptionValues();
     addSaveEvent();
-  });
+    addFilenameTagPushEvent();
+  })();
 
 }

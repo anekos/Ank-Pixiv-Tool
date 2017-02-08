@@ -4,31 +4,6 @@
 
 {
 
-  // すぽーん
-  var spawn = spawn || function (generatorFunc) {
-      function continuer(verb, arg) {
-        var result;
-        try {
-          result = generator[verb](arg);
-        } catch (err) {
-          return Promise.reject(err);
-        }
-        if (result.done) {
-          // chainでつなげたーい
-          return Promise.resolve(result.value);
-          //return result.value;
-        } else {
-          return Promise.resolve(result.value).then(onFulfilled, onRejected);
-        }
-      }
-      var generator = generatorFunc();
-      var onFulfilled = continuer.bind(continuer, "next");
-      var onRejected = continuer.bind(continuer, "throw");
-      return onFulfilled();
-    };
-
-  //
-
   var AnkUtils = {};
 
   //
@@ -42,9 +17,9 @@
   //
 
   AnkUtils.delayFunctionInstaller = function (options) {
-    return spawn(function* () {
+    return (async () => {
       for (let retry=1; retry<=options.retry.max; retry++) {
-        let r = options.prom ? yield options.prom() : options.func();
+        let r = options.prom ? await options.prom() : options.func();
         if (r) {
           AnkUtils.Logger.debug('installed: '+(options.label || ''));
           return;
@@ -52,12 +27,12 @@
 
         if (retry <= options.retry.max) {
           AnkUtils.Logger.debug('wait for retry: '+retry+'/'+options.retry.max+' : '+options.label);
-          yield AnkUtils.sleep(options.retry.wait);
+          await AnkUtils.sleep(options.retry.wait);
         }
       }
 
       return Promise.reject(new Error('retry over: '+options.label));
-    });
+    })();
   };
 
   //
@@ -377,18 +352,18 @@
           if (xhr.status == 200) {
             resolve(options.responseType && options.responseType !== 'text' ? xhr.response : xhr.responseText);
           } else {
-            reject(new Error(xhr.statusText));
+            reject(new Error(xhr.statusText+" ("+xhr.status+") : "+options.url));
           }
         };
 
         xhr.error = function () {
-          reject(new Error(xhr.statusText));
+          reject(new Error(xhr.statusText+" ("+xhr.status+") : "+options.url));
         };
 
         if (options.timeout !== undefined) {
           xhr.timeout = options.timeout;
           xhr.ontimeout = function () {
-            reject(new Error(xhr.statusText));
+            reject(new Error(xhr.statusText+" ("+xhr.status+") : "+options.url));
           };
         }
 
@@ -413,14 +388,17 @@
     // backgroundでリクエストヘッダの書き換え
     if (chrome.runtime.getBackgroundPage) {
       chrome.runtime.getBackgroundPage(function(background) {
-        if (background !== window) {
+        if (background !== null && background !== window) {
+          // FIXME firefoxでは background = null になるっぽいが…？
           return;
         }
 
+
+        // Firefoxではヘッダ文字列が小文字に統一されるようだ
         chrome.webRequest.onBeforeSendHeaders.addListener(function (details) {
           let xIdx = null;
           details.requestHeaders.forEach(function (h, i) {
-            if (h.name.startsWith(EXCHANGE_PREFIX)) {
+            if (h.name.toLowerCase().startsWith(EXCHANGE_PREFIX.toLowerCase())) {
               h.name = h.name.slice(EXCHANGE_PREFIX.length);
               xIdx = xIdx || {};
               xIdx[h.name] = i;
@@ -527,7 +505,7 @@
       };
 
       // ダウンロードの終了待ち
-      chrome.downloads.onChanged.addListener(function (delta) {
+      chrome.downloads.onChanged.addListener((delta) => {
         if (!self.ids.hasOwnProperty(delta.id)) {
           return;
         }
@@ -535,7 +513,7 @@
         let obj = self.ids[delta.id];
         let callback = obj.callback;
 
-        let id = (function () {
+        let id = (() => {
           if (delta.error && delta.error.current !== 'USER_CANCELED') {
             callback({filename: obj.filename || delta.filename, error: new Error(delta.error.current)});
             return delta.id;
@@ -551,53 +529,66 @@
 
         if (self.ids.hasOwnProperty(id)) {
           delete self.ids[id];
+
+          // リソースの解放
+          if (obj.objUrl) {
+            URL.revokeObjectURL(obj.objUrl);
+          }
+
           if (self.opts.cleanDownloadBar) {
             // 終了したら(正常・異常関係なく)ダウンロードバーから消す
-            chrome.downloads.erase({'id': id}, function () {});
+            chrome.downloads.erase({'id': id}, () => {});
           }
         }
       });
     };
 
     Download.prototype.saveAs = function (blob, filename, options) {
+      let self = this;
+
       function _saveAs (data, filename, callback) {
-        let objUrl = null;
-        return new Promise(function (resolve, reject) {
-          objUrl = typeof blob !== 'string' && URL.createObjectURL(blob);
+        let objUrl = typeof data !== 'string' && URL.createObjectURL(data);
+        return new Promise((resolve, reject) => {
           // FIXME 設定＞ダウンロード前に各ファイルの保存場所を確認する が有効だと saveAs:false でもダイアログが出てしまう > https://code.google.com/p/chromium/issues/detail?id=417112
+          // FIXME firefoxではファイル保存が失敗する。browser.downloads.downloadで置き換えないと駄目？
           chrome.downloads.download({
-            url: objUrl || blob,
+            url: objUrl || data,
             filename: filename,
             saveAs: false,
             conflictAction: 'overwrite'
-          }, function (id) {
+          }, (id) => {
             if (id === undefined) {
               return reject(chrome.runtime.lastError);
             }
-
-            self.ids[id] = {
-              filename: filename,
-              callback: callback
-            };
-            return resolve();
+            else {
+              return resolve(id);
+            }
           });
-        }).catch(function (e) {
-          callback({filename: filename, error: e});
-        }).then(function () {
+        }).then((id) => {
+          self.ids[id] = {
+            filename: filename,
+            callback: callback,
+            objUrl: objUrl
+          };
+        }).catch((e) => {
+          // リソースの解放
           if (objUrl) {
             URL.revokeObjectURL(objUrl);
           }
+
+          callback({
+            filename: filename,
+            error: e
+          });
         });
       }
-
-      let self = this;
 
       if (options && options.hasOwnProperty('cleanDownloadBar')) {
         self.opts.cleanDownloadBar = options.cleanDownloadBar;
       }
 
-      return new Promise(function (resolve) {
-        _saveAs(blob, filename, o => resolve(o));
+      return new Promise((resolve) => {
+        return _saveAs(blob, filename, (o) => resolve(o));
       });
     };
 

@@ -54,13 +54,13 @@
 
     // キャッシュ済みでなく、ソースがblobやdataURLでない場合はリモートアクセスする
     let imageDataRequest = function (cp) {
-      return spawn(function* () {
+      return (async () => {
         if (!cp) {
           return;
         }
 
         if (!cp.blob && /^https?:\/\//.test(cp.src)) {
-          let blob = yield AnkUtils.Remote.get({
+          let blob = await AnkUtils.Remote.get({
             url: cp.src,
             timeout: prefs.xhrTimeout,
             responseType: 'blob'
@@ -71,7 +71,7 @@
         }
 
         return cp;
-      });
+      })();
     };
 
     // 指定のページを表示
@@ -102,7 +102,7 @@
 
       let pn = currentPage;  // 実行時点のページ番号
       let cd = cache[currentPage];
-      return Promise.all([imageDataRequest(cd[0]), imageDataRequest(cd[1])]).then(r => {
+      return Promise.all([imageDataRequest(cd[0]), imageDataRequest(cd[1])]).then((r) => {
         if (pn != currentPage) {
           // ロード中に別のページに移ってしまっていたのでキャンセル
           return;
@@ -120,7 +120,7 @@
         if (r[0]) {
           viewer.bigImg.setAttribute('src', r[0].blob || r[0].src);
         }
-      }).catch(e => AnkUtils.Logger.error(e));
+      }).catch((e) => AnkUtils.Logger.error(e));
     };
 
     //
@@ -227,7 +227,7 @@
           o.value = i;
           viewer.pageSelector.appendChild(o);
         }
-        viewer.pageSelector.addEventListener('change', noMoreEvent(e => showPage({pageNo:e.target.value}), false));
+        viewer.pageSelector.addEventListener('change', noMoreEvent((e) => showPage({pageNo:e.target.value}), false));
         viewer.pageSelector.addEventListener('click', noMoreEvent(() => void 0), true);
         viewer.prevButton.addEventListener('click', noMoreEvent(() => showPage({prevPage:true})), true);
         viewer.nextButton.addEventListener('click', noMoreEvent(() => showPage({nextPage:true})), true);
@@ -260,13 +260,13 @@
       showPage({pageNo:0}).then(() => {
         if (prefs.useImagePrefetch) {
           // 先行読み込み
-          spawn(function* () {
+            (async () => {
             for (let n=0; n < totalPages; n++) {
               let c = cache[(n+1) % totalPages];  // P.1は処理済みのはずなので、P.2から始める
               for (let i=0; i<c.length; i++) {
                 let cp = c[i];
                 if (!cp.blob) {
-                  let blob = yield AnkUtils.Remote.get({
+                  let blob = await AnkUtils.Remote.get({
                     url: cp.src,
                     timeout: prefs.xhrTimeout,
                     responseType: 'blob'
@@ -277,7 +277,7 @@
                 }
               }
             }
-          });
+          })();
         }
       });
     };

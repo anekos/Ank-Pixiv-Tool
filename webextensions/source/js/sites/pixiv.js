@@ -3,32 +3,13 @@
 {
 
   let AnkPixiv = function () {
-    AbsSite.apply(this, arguments);
+    AnkSite.apply(this, arguments);
 
     let self = this;
 
     self.SITE_ID = 'PXV';
 
     self.curContext = null;
-
-    self.ContextMode = (function () {
-      let m = 0;
-
-      return {
-        isIllust: function () {
-          return m == 1;
-        },
-        isNovel: function () {
-          return m == 2;
-        },
-        setIllust: function () {
-          m = 1;
-        },
-        setNovel: function () {
-          m = 2;
-        }
-      };
-    })();
 
     // focusイベント発生時に実行する機能のON・OFF
     self.onFocusUsage = {
@@ -37,7 +18,7 @@
     };
   };
 
-  AnkPixiv.prototype = Object.create(AbsSite.prototype, {
+  AnkPixiv.prototype = Object.create(AnkSite.prototype, {
     constructor: {
       value: AnkPixiv,
       enumerable: false
@@ -85,20 +66,6 @@
           get img () {
             return query('.works_display > ._ugoku-illust-player-container canvas');
           }
-        }
-      },
-      novel: {
-        get cover () {
-          return Array.prototype.map.call(queryAll('.area_inside > a'), e => /(?:\?|&)mode=cover/.test(e.href) && e).filter(e => !!e)[0];
-        },
-        get nowLoading () {
-          return query('.novel-loading');
-        },
-        get nowLoadingImage () {
-          return query('.novelimage');
-        },
-        get pages () {
-          return queryAll('.novel-page');
         }
       },
       mngIdx: {
@@ -150,7 +117,7 @@
             return query('.profile-unit > .user-link');
           },
           get feedLink () {
-            return Array.prototype.filter.call(queryAll('.tabs > li > a'), a => /\/stacc\//.test(a.href))[0];
+            return Array.prototype.filter.call(queryAll('.tabs > li > a'), (a) => /\/stacc\//.test(a.href))[0];
           }
         }
       },
@@ -199,7 +166,7 @@
         let posted = self.getPosted(() => AnkUtils.decodeDateTimeText(elm.info.illust.datetime.textContent));
         let info = {
           url: elm.doc.location.href,
-          id: self.getId(elm.doc.location.href),
+          id: self.getIllustId(elm.doc.location.href),
           title: AnkUtils.trim(elm.info.illust.title.textContent),
           posted: !posted.fault && posted.timestamp,
           postedYMD: !posted.fault && posted.ymd,
@@ -214,7 +181,7 @@
             }
             return sz;
           })(elm.info.illust.size.textContent),
-          tags: Array.prototype.map.call(elm.info.illust.tags, e => AnkUtils.trim(e.textContent)),
+          tags: Array.prototype.map.call(elm.info.illust.tags, (e) => AnkUtils.trim(e.textContent)),
           tools: elm.info.illust.tools && AnkUtils.trim(elm.info.illust.tools.textContent),
           caption: elm.info.illust.caption && AnkUtils.trim(elm.info.illust.caption.innerText),
           R18: !!elm.info.illust.R18
@@ -262,209 +229,208 @@
     let self = this;
     let context = null;
 
-    if (self.ContextMode.isIllust()) {
-      let getPath = function () {
-        function getMedPath () {
-          return Promise.resolve({
-            original: [{src:elm.illust.med.bigImg.getAttribute('data-src'), referrer:elm.doc.location.href}]
+    let getPath = function () {
+      function getMedPath () {
+        return Promise.resolve({
+          original: [{src:elm.illust.med.bigImg.getAttribute('data-src'), referrer:elm.doc.location.href}]
+        });
+      }
+
+      function getMngPath () {
+        return (async () => {
+          // マンガインデックスページを参照して画像URLリストを取得する
+          let indexPage = elm.illust.mng.largeLink.href;
+          let referrer = elm.doc.location.href;
+          AnkUtils.Logger.debug('MANGA INDEX PAGE: '+indexPage+', '+referrer);
+
+          let html = await AnkUtils.Remote.get({
+            url: indexPage,
+            headers: [{name:'Referer', value:referrer}],
+            timeout: self.prefs.xhrTimeout
           });
-        }
+          let docIdx = AnkUtils.createHTMLDocument(html);
+          let elmIdx = self.getElements(docIdx);
 
-        function getMngPath () {
-          return spawn(function* () {
-            // マンガインデックスページを参照して画像URLリストを取得する
-            let indexPage = elm.illust.mng.largeLink.href;
-            let referrer = elm.doc.location.href;
-            AnkUtils.Logger.debug('MANGA INDEX PAGE: '+indexPage+', '+referrer);
+          // サーバエラーのトラップ
+          if (!docIdx || elmIdx.mngIdx.errorMessage) {
+            return Promise.reject(new Error(AnkUtils.Locale.getMessage('msg_serverError')));
+          }
 
-            let html = yield AnkUtils.Remote.get({
-              url: indexPage,
-              headers: [{name:'Referer', value:referrer}],
-              timeout: self.prefs.xhrTimeout
-            });
-            let docIdx = AnkUtils.createHTMLDocument(html);
-            let elmIdx = self.getElements(docIdx);
-
-            // サーバエラーのトラップ
-            if (!docIdx || elmIdx.mngIdx.errorMessage) {
-              return Promise.reject(new Error(AnkUtils.Locale.getMessage('msg_serverError')));
-            }
-
-            // マンガ形式だけど単ページイラストの場合
-            if (/(?:\?|&)mode=big(?:&|$)/.test(indexPage)) {
-              let img = docIdx.querySelector('img');
-              if (img) {
-                return {
-                  original: [{src:img.src, referrer:referrer}]
-                };
-              }
-            }
-
-            // ブック or マンガ
-            let thumb = [];
-            let orig = [];
-            let thumbRef = [];
-            let origRef = [];
-            let facing = [];
-            if (docIdx.documentElement.classList.contains('_book-viewer')) {
-              // ブック
-              // pixivの構成変更で、ページ単位で設定できていた見開き表示が、作品単位でしか設定できなくなったようだ
-
-              const RE_THUMB = /pixiv\.context\.images\[\d+]\s*=\s*"(.+?)"/;
-              const RE_ORIG = /pixiv\.context\.originalImages\[\d+]\s*=\s*"(.+?)"/;
-
-              Array.prototype.forEach.call(elmIdx.mngIdx.scripts, function (e) {
-                let mt = RE_THUMB.exec(e.text);
-                if (mt) {
-                  thumb.push(mt[1].replace(/\\(.)/g, '$1'));
-                }
-                let mo = RE_ORIG.exec(e.text);
-                if (mo) {
-                  orig.push(mo[1].replace(/\\(.)/g, '$1'));
-                }
-              });
-
-              let ltr = docIdx.documentElement.classList.contains('ltr');
-
-              thumbRef = indexPage;
-              origRef = indexPage;
-
-              let swap = function (a, i) {
-                let tmp = a[i-1];
-                a[i-1] = a[i];
-                a[i] = tmp;
+          // マンガ形式だけど単ページイラストの場合
+          if (/(?:\?|&)mode=big(?:&|$)/.test(indexPage)) {
+            let img = docIdx.querySelector('img');
+            if (img) {
+              return {
+                original: [{src:img.src, referrer:referrer}]
               };
+            }
+          }
 
-              for (let i=0; i<thumb.length; i++) {
-                let p = i+1;
-                if (p == 1) {
-                  facing.push(p);
-                }
-                else {
-                  let odd = p % 2;
-                  facing.push((p - odd) / 2 + 1);
+          // ブック or マンガ
+          let thumb = [];
+          let orig = [];
+          let thumbRef = [];
+          let origRef = [];
+          let facing = [];
+          if (docIdx.documentElement.classList.contains('_book-viewer')) {
+            // ブック
+            // pixivの構成変更で、ページ単位で設定できていた見開き表示が、作品単位でしか設定できなくなったようだ
 
-                  // 見開きの向きに合わせて画像の順番を入れ替える
-                  if (ltr && odd) {
-                    swap(thumb, i);
-                    swap(orig, i);
-                  }
-                }
+            const RE_THUMB = /pixiv\.context\.images\[\d+]\s*=\s*"(.+?)"/;
+            const RE_ORIG = /pixiv\.context\.originalImages\[\d+]\s*=\s*"(.+?)"/;
+
+            Array.prototype.forEach.call(elmIdx.mngIdx.scripts, function (e) {
+              let mt = RE_THUMB.exec(e.text);
+              if (mt) {
+                thumb.push(mt[1].replace(/\\(.)/g, '$1'));
               }
-            }
-            else {
-              // マンガ
-              const MAX_PAGE = 1000;
-
-              Array.prototype.some.call(elmIdx.mngIdx.images, function (v, i) {
-                if (i > MAX_PAGE) {
-                  return true;
-                }
-                thumb.push(v.getAttribute('data-src'));
-              });
-              thumbRef = indexPage;
-
-              if (self.prefs.viewOriginalSize) {
-                // オリジナル画像
-                const RE_BIG = /(_p\d+)\./;
-                const REPLACE_BIG = '_big$1.';
-                const RE_MASTER = /^(https?:\/\/[^/]+).*?\/img-master\/(.+?)_master\d+(\.\w+)$/;
-                const REPLACE_MASTER = '$1/img-original/$2$3';
-
-                // 個々の画像用に存在するページ
-                origRef = (function () {
-                  let url = document.getElementsByTagName('a')[0];
-                  let base = url.protocol+'//'+url.host;
-                  return Array.prototype.map.call(elmIdx.mngIdx.largeLinks, a => base + a.getAttribute('href'));
-                })();
-
-                for (let i = 0; i < origRef.length && i < thumb.length; i++) {
-                  AnkUtils.Logger.debug('ORIGINAL IMAGE PAGE: '+origRef[i]+', '+indexPage);
-                  let html = yield AnkUtils.Remote.get({
-                    url: origRef[i],
-                    headers: [{name:'Referer', value:indexPage}],
-                    timeout: self.prefs.xhrTimeout
-                  });
-                  let docBig = AnkUtils.createHTMLDocument(html);
-                  let elmBig = self.getElements(docBig);
-
-                  // サーバエラーのトラップ
-                  if (!docBig || elmBig.mngIdx.errorMessage) {
-                    return Promise.reject(new Error(AnkUtils.Locale.getMessage('msg_serverError')));
-                  }
-
-                  let src = docBig.querySelector('img').src;
-
-                  if (!self.prefs.forceCheckMangaImagesAll) {
-                    // 最初の一枚以外は拡張子チェックを行わないモード
-                    if (thumb[0] == src) {
-                      AnkUtils.Logger.debug('MANGA IMAGE: plane mode');
-                      orig = thumb;
-                    }
-                    else if (thumb[0].replace(RE_MASTER, REPLACE_MASTER).replace(/\.\w+$/, '') == src.replace(/\.\w+$/, '')) {
-                      let replaceExt = /(\.\w+)$/.exec(src)[1];
-                      AnkUtils.Logger.debug('MANGA IMAGE: master mode ... '+thumb[0]+' -> '+thumb[0].replace(RE_MASTER, REPLACE_MASTER).replace(/\.\w+$/, replaceExt));
-                      orig = thumb.map(v => v.replace(RE_MASTER, REPLACE_MASTER).replace(/\.\w+$/, replaceExt));
-                    }
-                    else if (thumb[0].replace(RE_BIG, REPLACE_BIG) == src) {
-                      AnkUtils.Logger.debug('MANGA IMAGE: big mode ... '+thumb[0]+' -> '+thumb[0].replace(RE_BIG, REPLACE_BIG));
-                      orig = thumb.map(v => v.replace(RE_BIG, REPLACE_BIG));
-                    }
-                    else {
-                      AnkUtils.Logger.debug('MANGA IMAGE: UNKNOWN MODE ... '+thumb[0]+' -> '+src);
-                    }
-
-                    break;
-                  }
-
-                  orig.push(src);
-                }
+              let mo = RE_ORIG.exec(e.text);
+              if (mo) {
+                orig.push(mo[1].replace(/\\(.)/g, '$1'));
               }
-            }
-
-            if (thumb.length <= 0) {
-              // FIXME
-              return Promise.reject(new Error('HOGEHOGE'));
-            }
-
-            if (facing.length > 0 && facing[facing.length - 1] < facing.length) {
-              // 見開きがある場合
-              AnkUtils.Logger.debug("Facing Page Check: (thumb) " + thumb.length + ", (orig) "+orig.length+" pics in " + facing[facing.length - 1] + " pages");
-            }
-            else {
-              // 見開きがない場合
-              AnkUtils.Logger.debug("Facing Page Check: (thumb) " + thumb.length + ", (orig) "+orig.length+" pics");
-              facing = null;
-            }
-
-            return (function (path) {
-              thumb.forEach(function (t, i) {
-                let to = { 'src': t, 'referrer': Array.isArray(thumbRef) ? thumbRef[i] : thumbRef};
-                let oo = { 'src': orig[i], 'referrer': Array.isArray(origRef) ? origRef[i] : origRef};
-                if (facing) {
-                  to.facing = oo.facing = facing[i];
-                }
-                path.thumbnail.push(to);
-                path.original.push(oo);
-              });
-
-              return path;
-            })({
-              thumbnail: [],
-              original: []
             });
-          });
-        }
 
-        function getUgoPath () {
-          return spawn(function* () {
-            const genObj = `
+            let ltr = docIdx.documentElement.classList.contains('ltr');
+
+            thumbRef = indexPage;
+            origRef = indexPage;
+
+            let swap = function (a, i) {
+              let tmp = a[i-1];
+              a[i-1] = a[i];
+              a[i] = tmp;
+            };
+
+            for (let i=0; i<thumb.length; i++) {
+              let p = i+1;
+              if (p == 1) {
+                facing.push(p);
+              }
+              else {
+                let odd = p % 2;
+                facing.push((p - odd) / 2 + 1);
+
+                // 見開きの向きに合わせて画像の順番を入れ替える
+                if (ltr && odd) {
+                  swap(thumb, i);
+                  swap(orig, i);
+                }
+              }
+            }
+          }
+          else {
+            // マンガ
+            const MAX_PAGE = 1000;
+
+            Array.prototype.some.call(elmIdx.mngIdx.images, function (v, i) {
+              if (i > MAX_PAGE) {
+                return true;
+              }
+              thumb.push(v.getAttribute('data-src'));
+            });
+            thumbRef = indexPage;
+
+            if (self.prefs.viewOriginalSize) {
+              // オリジナル画像
+              const RE_BIG = /(_p\d+)\./;
+              const REPLACE_BIG = '_big$1.';
+              const RE_MASTER = /^(https?:\/\/[^/]+).*?\/img-master\/(.+?)_master\d+(\.\w+)$/;
+              const REPLACE_MASTER = '$1/img-original/$2$3';
+
+              // 個々の画像用に存在するページ
+              origRef = (function () {
+                let url = document.getElementsByTagName('a')[0];
+                let base = url.protocol+'//'+url.host;
+                return Array.prototype.map.call(elmIdx.mngIdx.largeLinks, (a) => base + a.getAttribute('href'));
+              })();
+
+              for (let i = 0; i < origRef.length && i < thumb.length; i++) {
+                AnkUtils.Logger.debug('ORIGINAL IMAGE PAGE: '+origRef[i]+', '+indexPage);
+                let html = await AnkUtils.Remote.get({
+                  url: origRef[i],
+                  headers: [{name:'Referer', value:indexPage}],
+                  timeout: self.prefs.xhrTimeout
+                });
+                let docBig = AnkUtils.createHTMLDocument(html);
+                let elmBig = self.getElements(docBig);
+
+                // サーバエラーのトラップ
+                if (!docBig || elmBig.mngIdx.errorMessage) {
+                  return Promise.reject(new Error(AnkUtils.Locale.getMessage('msg_serverError')));
+                }
+
+                let src = docBig.querySelector('img').src;
+
+                if (!self.prefs.forceCheckMangaImagesAll) {
+                  // 最初の一枚以外は拡張子チェックを行わないモード
+                  if (thumb[0] == src) {
+                    AnkUtils.Logger.debug('MANGA IMAGE: plane mode');
+                    orig = thumb;
+                  }
+                  else if (thumb[0].replace(RE_MASTER, REPLACE_MASTER).replace(/\.\w+$/, '') == src.replace(/\.\w+$/, '')) {
+                    let replaceExt = /(\.\w+)$/.exec(src)[1];
+                    AnkUtils.Logger.debug('MANGA IMAGE: master mode ... '+thumb[0]+' -> '+thumb[0].replace(RE_MASTER, REPLACE_MASTER).replace(/\.\w+$/, replaceExt));
+                    orig = thumb.map((v) => v.replace(RE_MASTER, REPLACE_MASTER).replace(/\.\w+$/, replaceExt));
+                  }
+                  else if (thumb[0].replace(RE_BIG, REPLACE_BIG) == src) {
+                    AnkUtils.Logger.debug('MANGA IMAGE: big mode ... '+thumb[0]+' -> '+thumb[0].replace(RE_BIG, REPLACE_BIG));
+                    orig = thumb.map((v) => v.replace(RE_BIG, REPLACE_BIG));
+                  }
+                  else {
+                    AnkUtils.Logger.debug('MANGA IMAGE: UNKNOWN MODE ... '+thumb[0]+' -> '+src);
+                  }
+
+                  break;
+                }
+
+                orig.push(src);
+              }
+            }
+          }
+
+          if (thumb.length <= 0) {
+            // FIXME
+            return Promise.reject(new Error('HOGEHOGE'));
+          }
+
+          if (facing.length > 0 && facing[facing.length - 1] < facing.length) {
+            // 見開きがある場合
+            AnkUtils.Logger.debug("Facing Page Check: (thumb) " + thumb.length + ", (orig) "+orig.length+" pics in " + facing[facing.length - 1] + " pages");
+          }
+          else {
+            // 見開きがない場合
+            AnkUtils.Logger.debug("Facing Page Check: (thumb) " + thumb.length + ", (orig) "+orig.length+" pics");
+            facing = null;
+          }
+
+          return (function (path) {
+            thumb.forEach(function (t, i) {
+              let to = { 'src': t, 'referrer': Array.isArray(thumbRef) ? thumbRef[i] : thumbRef};
+              let oo = { 'src': orig[i], 'referrer': Array.isArray(origRef) ? origRef[i] : origRef};
+              if (facing) {
+                to.facing = oo.facing = facing[i];
+              }
+              path.thumbnail.push(to);
+              path.original.push(oo);
+            });
+
+            return path;
+          })({
+            thumbnail: [],
+            original: []
+          });
+        })();
+      }
+
+      function getUgoPath () {
+        return (async () => {
+          const genObj = `
             (function (c) {
               function f (u) {
                 if (u && u.src && u.frames) {
                   return [{
                     src: u.src,
-                    frames: u.frames.map(o => {return {s:o.file, w:o.delay}}),
+                    frames: u.frames.map((o) => {return {s:o.file, w:o.delay}}),
                     referrer: document.location.href
                   }];
                 }
@@ -476,466 +442,45 @@
               }
             })(pixiv.context)`;
 
-            let id = 'ank-pixiv-script-ugoinfo';
-            let name = 'AnkPixiv.UgoInfo';
-
-            return yield AnkUtils.PageScript.exec(elm.doc, id, name, genObj);
-          });
-        }
-
-        //
-
-        if (elm.illust.med.img) {
-          return getMedPath();
-        }
-        if (elm.illust.mng.img) {
-          return getMngPath();
-        }
-        if (elm.illust.ugo.img) {
-          return getUgoPath();
-        }
-
-        return Promise.resolve();
-      };
-
-      return Promise.all([getPath(), getIllustInfo(), getMemberInfo()])
-        .then(function (result) {
-          context = {
-            downloadable: !!result[0] && !!result[1] && !!result[2],
-            serviceId: self.SITE_ID,
-            siteName: self.sitePrefs.folder,
-            path: result[0],
-            info: {
-              illust: result[1],
-              member: result[2]
-            }
-          };
-
-          AnkUtils.Logger.debug('CONTEXT: ', context);
-
-          return context;
-        });
-    }
-    else if (self.ContextMode.isNovel()) {
-      let getPath = function () {
-        return spawn(function* () {
-          let getPageId = function (n) {
-            return 'p-'+AnkUtils.zeroPad(n, 4);
-          };
-
-          let getPageName = function (n) {
-            return getPageId(n)+'.xhtml';
-          };
-
-          let createXHTMLElement = function (tagName, id, text, attr) {
-            return AnkUtils.createElementNS("http://www.w3.org/1999/xhtml", tagName, id, text, attr);
-          };
-
-          let createOpfElement = function (tagName, id, text, attr) {
-            return AnkUtils.createElementNS(/^dc:/.test(tagName) ? "http://purl.org/dc/elements/1.1/" : "http://www.idpf.org/2007/opf", tagName, id, text, attr);
-          };
-
-          let createXHTMLDocument = function (o) {
-            let xDocType = null;
-            let xDoc = document.implementation.createDocument('http://www.w3.org/1999/xhtml', 'html', xDocType);
-            xDoc.documentElement.setAttribute('xmlns:epub', 'http://www.idpf.org/2007/ops');
-            xDoc.documentElement.setAttribute('xml:lang', 'ja');
-
-            let xHead = createXHTMLElement('head');
-            xHead.appendChild(createXHTMLElement('meta', null, null, {charset:'UTF-8'}));
-            if (o.title) {
-              xHead.appendChild(createXHTMLElement('title', null, o.title));
-            }
-            if (o.css) {
-              xHead.appendChild(createXHTMLElement('link', null, null, {rel:'stylesheet', type:'text/css', href:o.css}));
-            }
-            if (o.meta) {
-              o.meta.forEach(function (p) {
-                xHead.appendChild(createXHTMLElement('meta', null, null, p));
-              });
-            }
-            xDoc.documentElement.appendChild(xHead);
-
-            let xBody = createXHTMLElement('body');
-
-            xDoc.documentElement.appendChild(xBody);
-
-            return xDoc;
-          };
-
-          let html2xhtml = function (src, root) {
-            function cloneElement (src) {
-              if (src.tagName) {
-                let x = createXHTMLElement(src.tagName.toLocaleLowerCase());
-                if (src.hasAttributes()) {
-                  let attr = src.attributes;
-                  for (let i = 0; i < attr.length; i++) {
-                    let a = attr[i];
-                    x.setAttribute(a.name, a.value);
-                  }
-                }
-                return x;
-              }
-            }
-
-            if (src.hasChildNodes()) {
-              let children = src.childNodes;
-              for (let i = 0; i < children.length; i++) {
-                let c = children[i];
-                let x = cloneElement(c);
-                if (x) {
-                  root.appendChild(html2xhtml(c, x));
-                }
-                else {
-                  root.appendChild(c.cloneNode(true));
-                }
-              }
-              return root;
-            }
-            else {
-              let x = cloneElement(src);
-              if (x) {
-                return x;
-              }
-              else {
-                return src.cloneNode(true);
-              }
-            }
-          };
-
-          let getCoverImage = function () {
-            // TODO _s のカットではなく HTML を取得しに行くべき
-            let src = elm.novel.cover.querySelector('img').src.replace(/_s\./, '.');
-            let ext = AnkUtils.getFileExt(src) || 'jpg';
-            let img = {
-              src: src,
-              referrer: doc.location.href,
-              id: 'i-cover',
-              filename: 'i-cover.'+ext
-            };
-
-            let text = (function () {
-              let xDoc = createXHTMLDocument({
-                title:context.info.illust.title,
-                css:'../style/style.css',
-                meta:[
-                  {name:'viewport', content:'width=device-width,initial-scale=1.0'}
-                ]}
-              );
-
-              xDoc.body.setAttribute('epub:type', 'cover');
-
-              let xDiv = createXHTMLElement('div');
-
-              xDiv.appendChild(createXHTMLElement('img', null, null, {src:'../image/'+img.filename}));
-
-              xDoc.body.appendChild(xDiv);
-
-              return '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html>'+new XMLSerializer().serializeToString(xDoc);
-            })();
-
-            return {
-              img: img,
-              chap: {filename:'p-cover.xhtml', title:'表紙'},
-              text: {text:text, id:'p-cover', filename:'p-cover.xhtml'}
-            };
-          };
-
-          let getChapters = function (d) {
-            return Array.prototype.map.call(d.querySelectorAll('.chapter'), (e, i) => {
-              e.id = 'chap-'+AnkUtils.zeroPad(1+i, 4);
-              return {id:e.id, title:AnkUtils.trim(e.textContent)};
-            });
-          };
-
-          let getArtworks = function (e) {
-            let parent = e.parentNode;
-            let link = e.querySelector('a');
-            let img = link.querySelector('img');
-            let cap = (function (e) {
-              return !!e && e.classList.contains('caption') && e;
-            })(e.nextElementSibling);
-
-            let id = AnkUtils.zeroPad(1+artworkList.length, 4);
-            let src = img.src;
-            let ext = AnkUtils.getFileExt(src) || 'jpg';
-            let info = {
-              illust_id: self.getIllustId(link.href),
-              src: src,
-              referrer: doc.location.href,
-              id: 'i-'+id,
-              filename: 'i-'+id+'.'+ext
-            };
-
-            let newLink = doc.createElement('a');
-            newLink.setAttribute('href', 'http://www.pixiv.net/member_illust.php?mode=medium&illust_id='+info.illust_id);
-
-            let newImg = doc.createElement('img');
-            newImg.setAttribute('id', info.id);
-            newImg.setAttribute('src', '../image/'+info.id+'.jpg');
-            newImg.classList.add('inline-image');
-            newLink.appendChild(newImg);
-
-            parent.replaceChild(newLink, e);
-
-            if (cap) {
-              parent.removeChild(cap);
-            }
-
-            return info;
-          };
-
-          let fixLinks = function (e) {
-            let href = (function (h) {
-              let m = /^.*?\/jump\.php\?(.+)$/.exec(h);
-              if (m) {
-                return decodeURIComponent(m[1]);
-              }
-              m = /^#(\d+)$/.exec(h);
-              if (m) {
-                return '../xhtml/'+getPageName(parseInt(m[1],10));
-              }
-            })(e.getAttribute('href'));
-
-            if (href) {
-              e.setAttribute('href', href);
-            }
-          };
-
-          let getTextContent = function (d) {
-            let xDoc = createXHTMLDocument({title:context.info.illust.title, css:'../style/style.css'});
-            let xDiv = html2xhtml(d, createXHTMLElement('div'));
-            xDoc.body.appendChild(xDiv);
-
-            return '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html>'+new XMLSerializer().serializeToString(xDoc);
-          };
-
-          let getIndexContent = function () {
-            let xDoc = createXHTMLDocument({title:context.info.illust.title, css:'../style/style.css'});
-
-            let xDiv = createXHTMLElement('div');
-
-            let xTitle = createXHTMLElement('p', 'index-title');
-            xTitle.appendChild(createXHTMLElement('a', null, context.info.illust.title, {href:context.info.illust.url}));
-            xDiv.appendChild(xTitle);
-
-            let xMember = createXHTMLElement('p', 'index-creator', '作者：');
-            xMember.appendChild(createXHTMLElement('a', null, context.info.member.name, {href:'http://www.pixiv.net/member.php?id='+context.info.member.id}));
-            xDiv.appendChild(xMember);
-
-            let xPublisher = createXHTMLElement('p', 'index-publisher', '掲載：');
-            xPublisher.appendChild(createXHTMLElement('a', null, 'pixiv', {href:'http://www.pixiv.net/'}));
-            xDiv.appendChild(xPublisher);
-
-            let xUl = createXHTMLElement('ul');
-            chapterList.forEach(function (toc) {
-              let xLi = createXHTMLElement('li');
-              xLi.appendChild(createXHTMLElement('a', null, toc.title, {'href':'../xhtml/'+toc.filename+(toc.id ? '#'+toc.id : '')}));
-              xUl.appendChild(xLi);
-            });
-
-            xDiv.appendChild(xUl);
-
-            xDoc.body.appendChild(xDiv);
-
-            let text = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html>'+new XMLSerializer().serializeToString(xDoc);
-
-            return {
-              chap: {filename:'p-index.xhtml', title:'目次'},
-              text: {text:text, id:'p-index', filename:'p-index.xhtml'}
-            };
-
-          };
-
-          let getTocContent = function () {
-            let xDoc = createXHTMLDocument({title:'Navigation'});
-
-            let xNav = createXHTMLElement('nav', 'toc', null, {'epub:type':'toc'});
-
-            xNav.appendChild(createXHTMLElement('h1', null, context.info.illust.title));
-            let xUl = createXHTMLElement('ul');
-            chapterList.forEach(function (toc) {
-              let xLi = createXHTMLElement('li');
-              xLi.appendChild(createXHTMLElement('a', null, toc.title, {'href':'xhtml/'+toc.filename+(toc.id ? '#'+toc.id : '')}));
-              xUl.appendChild(xLi);
-            });
-
-            xNav.appendChild(xUl);
-
-            xDoc.body.appendChild(xNav);
-
-            return '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html>'+new XMLSerializer().serializeToString(xDoc);
-          };
-
-          let getStandardOpf = function () {
-            let xDocType = null;
-            let xDoc = document.implementation.createDocument('http://www.idpf.org/2007/opf', 'package', xDocType);
-            xDoc.documentElement.setAttribute('version', '3.0');
-            xDoc.documentElement.setAttribute('xml:lang', 'ja');
-            xDoc.documentElement.setAttribute('unique-identifier', 'unique-id');
-            xDoc.documentElement.setAttribute('prefix', 'rendition: http://www.idpf.org/vocab/rendition/#');
-
-            {
-              let xMeta = createOpfElement('metadata', null, null, {'xmlns:dc':'http://purl.org/dc/elements/1.1/'});
-
-              xMeta.appendChild(createOpfElement('dc:title', 'title', context.info.illust.title));
-              xMeta.appendChild(createOpfElement('dc:creator', 'creator01', context.info.member.name));
-              xMeta.appendChild(createOpfElement('meta', null, 'aut', {refines:'#creator01', property:'role', scheme:'marc:relators'}));
-              xMeta.appendChild(createOpfElement('dc:publisher', 'publisher', 'pixiv'));
-              xMeta.appendChild(createOpfElement('dc:language', null, 'ja'));
-              xMeta.appendChild(createOpfElement('dc:identifier', 'unique-id', 'urn:uuid:'+AnkUtils.createUUID()));
-              xMeta.appendChild(createOpfElement('meta', null, new Date(context.info.illust.posted).toISOString(), {property:'dcterms:modified'}));
-
-              xMeta.appendChild(createOpfElement('meta', null, 'reflowable', {property:'rendition:layout'}));
-              xMeta.appendChild(createOpfElement('meta', null, 'auto', {property:'rendition:spread'}));
-              xMeta.appendChild(createOpfElement('meta', null, 'auto', {property:'rendition:orientation'}));
-
-              xDoc.documentElement.appendChild(xMeta);
-            }
-
-            {
-              let xMani = createOpfElement('manifest');
-
-              let nav = textList[0];
-              xMani.appendChild(createOpfElement('item', 'toc', null, {'media-type':'application/xhtml+xml', href:nav.filename, properties:'nav'}));
-              xMani.appendChild(createOpfElement('item', 'style', null, {'media-type':'text/css', href:'style/style.css'}));
-              artworkList.forEach(function (o) {
-                let ext = AnkUtils.getFileExt(o.filename);
-                xMani.appendChild(createOpfElement('item', o.id, null, {'media-type':'image/'+(ext === 'jpg' ? 'jpeg' : ext), href:'image/'+o.filename, properties:o.id === 'i-cover' ? 'cover-image' : undefined}));
-              });
-              textList.forEach(function (o) {
-                if (/^p-/.test(o.id)) {
-                  xMani.appendChild(createOpfElement('item', o.id, null, {'media-type':'application/xhtml+xml', href:'xhtml/'+o.filename}));
-                }
-              });
-
-              xDoc.documentElement.appendChild(xMani);
-            }
-
-            {
-              let xSpine = createOpfElement('spine', null, null, {'page-progression-direction': 'ltr'});
-
-              let nav = textList[0];
-              textList.forEach(function (o) {
-                if (/^p-/.test(o.id)) {
-                  xSpine.appendChild(createOpfElement('itemref', null, null, {idref:o.id, linear:'yes', properties:'page-spread-left'}));
-                }
-              });
-
-              xDoc.documentElement.appendChild(xSpine);
-            }
-
-            return '<?xml version="1.0" encoding="UTF-8"?>'+new XMLSerializer().serializeToString(xDoc);
-          };
-
-          let getNovelSource = function () {
-            return spawn(function* () {
-              let html = yield AnkUtils.Remote.get({
-                url: elm.doc.location.href,
-                timeout: self.prefs.xhrTimeout
-              });
-
-              let doc = AnkUtils.createHTMLDocument(html);
-
-              let e = doc.querySelector('#novel_text');
-
-              return e && e.innerText;
-            });
-          };
-
-          //
-
-          let doc = elm.doc;
-
-          let chapterList = [];
-          let artworkList = [];
-          let textList = [];
-
-          Array.prototype.forEach.call(elm.novel.pages, function (page, pageNo) {
-            let d = page.cloneNode(true);
-            let pageId = getPageId(1+pageNo);
-            let pageName = getPageName(1+pageNo);
-
-            getChapters(d).forEach(e => {
-              e.pageNo = pageNo;
-              e.filename = pageName;
-              chapterList.push(e);
-            });
-
-            Array.prototype.forEach.call(d.querySelectorAll('.image_container'), e => artworkList.push(getArtworks(e)));
-
-            Array.prototype.forEach.call(d.querySelectorAll('a'), e => fixLinks(e));
-
-            textList.push({text:getTextContent(d), id:pageId, filename:pageName});
-          });
-
-          let xIdx = getIndexContent();
-          chapterList.unshift(xIdx.chap);
-          textList.unshift(xIdx.text);
-
-          let xCov = getCoverImage();
-          artworkList.unshift(xCov.img);
-          chapterList.unshift(xCov.chap);
-          textList.unshift(xCov.text);
-
-          let xToc = getTocContent();
-          textList.unshift({text:xToc, id:'toc', filename:'navigation-documents.xhtml'});
-
-          let xOpf = getStandardOpf();
-          textList.unshift({text:xOpf, id:'opf', filename:'standard.opf'});
-
-          textList.push({url:chrome.extension.getURL('misc/epub/mimetype'), id:'fix', filename:'mimetype'});
-          textList.push({url:chrome.extension.getURL('misc/epub/META-INF/container.xml'), id:'fix', filename:'META-INF/container.xml'});
-          textList.push({url:chrome.extension.getURL('misc/epub/item/style/style.css'), id:'fix', filename:'item/style/style.css'});
-
-          if (self.prefs.downloadNovelSource) {
-            // XXX HTMLではなくこちらから生成した方がベターですが
-            let xSrc = yield getNovelSource();
-            textList.push({text:xSrc, id:'src', filename:'source.txt'});
+          let id = 'ank-pixiv-script-ugoinfo';
+          let name = 'AnkPixiv.UgoInfo';
+
+          return await AnkUtils.PageScript.exec(elm.doc, id, name, genObj);
+        })();
+      }
+
+      //
+
+      if (elm.illust.med.img) {
+        return getMedPath();
+      }
+      if (elm.illust.mng.img) {
+        return getMngPath();
+      }
+      if (elm.illust.ugo.img) {
+        return getUgoPath();
+      }
+
+      return Promise.resolve();
+    };
+
+    return Promise.all([getPath(), getIllustInfo(), getMemberInfo()])
+      .then((result) => {
+        context = {
+          downloadable: !!result[0] && !!result[1] && !!result[2],
+          serviceId: self.SITE_ID,
+          siteName: self.sitePrefs.folder,
+          path: result[0],
+          info: {
+            illust: result[1],
+            member: result[2]
           }
+        };
 
-          return {
-            artwork: artworkList,
-            text: textList
-          };
-        });
-      };
+        AnkUtils.Logger.debug('CONTEXT: ', context);
 
-      return Promise.all([getIllustInfo(), getMemberInfo()])
-        .then(function (result) {
-          context = {
-            downloadable: false,
-            serviceId: self.SITE_ID,
-            siteName: self.sitePrefs.folder,
-            path: null,
-            info: {
-              illust: result[0],
-              member: result[1]
-            }
-          };
-
-          if (!result[0] || !result[1]) {
-            return context;
-          }
-
-          if (self.elements.novel.nowLoading || self.elements.novel.nowLoadingImage || !self.elements.novel.cover) {
-            // XXX プレーンテキストからHTMLを組んでいるので完了までの遅延が大きい
-            return context;
-          }
-
-          return getPath().then(function (path) {
-            context.downloadable = !!path && !!result[0] && !!result[1];
-            if (context.downloadable) {
-              context.path = {
-                original: [path]
-              };
-            }
-            return context;
-          });
-        });
-    }
-
-    return Promise.resolve();
+        return context;
+      });
   };
 
   /**
@@ -946,8 +491,8 @@
 
     opt = opt || {};
 
-    spawn(function* () {
-      self.curContext = self.curContext && self.curContext.downloadable ? self.curContext : yield self.getContext(self.elements);
+    (async () => {
+      self.curContext = self.curContext && self.curContext.downloadable ? self.curContext : await self.getContext(self.elements);
       if (!self.curContext) {
         let msg = AnkUtils.Locale.getMessage('msg_notReady');
         AnkUtils.Logger.error(new Error(msg));
@@ -963,15 +508,15 @@
       }
 
       if (opt.autoDownload) {
-        let r = yield self.queryDownloadStatus(self.curContext.info.illust.id);
+        let r = await self.queryDownloadStatus(self.curContext.info.illust.id);
         if (r && r[0]) {
           // ダウンロード済みの場合、自動ダウンロードが発生してもキャンセルする
           return;
         }
       }
 
-      chrome.runtime.sendMessage({'type': 'AnkPixiv.Download.addContext', 'context': self.curContext}, o => AnkUtils.Logger.info(o));
-    });
+      chrome.runtime.sendMessage({'type': 'AnkPixiv.Download.addContext', 'context': self.curContext}, (o) => AnkUtils.Logger.info(o));
+    })();
   };
 
   /**
@@ -980,15 +525,15 @@
   AnkPixiv.prototype.openViewer = function (e) {
     let self = this;
 
-    spawn(function* () {
-      self.curContext = self.curContext && self.curContext.downloadable ? self.curContext : yield self.getContext(self.elements);
+    (async () => {
+      self.curContext = self.curContext && self.curContext.downloadable ? self.curContext : await self.getContext(self.elements);
       if (!self.curContext) {
         AnkUtils.Logger.error(new Error('viewer not ready'));
         return;
       }
 
       self.viewer.open(e);
-    });
+    })();
   };
 
   /**
@@ -1015,29 +560,29 @@
       return;
     }
 
-    return spawn(function* () {
+    return (async () => {
       const genObj = `
-            (function (rating) {
-              if (!pixiv.context.rated && rating && typeof rating.rate === 'number') {
-                rating.apply.call(rating, #PT#);
-                return true;
-              }
-              else {
-                return false;
-              }
-            })(pixiv.rating)`.replace(/#PT#/, pt);
+        (function (rating) {
+          if (!pixiv.context.rated && rating && typeof rating.rate === 'number') {
+            rating.apply.call(rating, #PT#);
+            return true;
+          }
+          else {
+            return false;
+          }
+        })(pixiv.rating)`.replace(/#PT#/, pt);
 
       let id = 'ank-pixiv-script-rating';
       let name = 'AnkPixiv.Rating';
 
-      let success = yield AnkUtils.PageScript.exec(self.elements.doc, id, name, genObj);
+      let success = await AnkUtils.PageScript.exec(self.elements.doc, id, name, genObj);
       if (success) {
         // 自動ダウンロード（評価時）
         if (self.prefs.downloadWhenRate && self.prefs.downloadRate <= pt) {
           self.downloadCurrentImage({autoDownload:true});
         }
       }
-    });
+    })();
   };
 
   /**
@@ -1047,23 +592,6 @@
     if (/\/member_illust\.php\?/.test(loc) && /(?:&|\?)mode=medium(?:&|$)/.test(loc)) {
       return (/(?:&|\?)illust_id=(\d+)(?:&|$)/.exec(loc) || [])[1];
     }
-  };
-
-  /**
-   * イラストIDの取得(小説ページ用)
-   */
-  AnkPixiv.prototype.getNovelId = function (loc) {
-    if (/\/novel\/show\.php\?/.test(loc)) {
-      return (/(?:&|\?)id=(\d+)(?:#|&|$)/.exec(loc) || [])[1];
-    }
-  };
-
-  /**
-   * イラストIDの取得(イラスト・小説ページ共用)
-   */
-  AnkPixiv.prototype.getId = function (loc) {
-    let self = this;
-    return self.getIllustId(loc) || self.getNovelId(loc);
   };
 
   /**
@@ -1086,20 +614,20 @@
 
     self.onFocusUsage.display = true;
 
-    return spawn(function* () {
+    return (async () => {
       let appendTo = self.elements.misc.downloadedDisplayParent;
       if (!appendTo) {
         return;
       }
 
-      self.curContext = self.curContext && self.curContext.info.illust ? self.curContext : yield self.getContext(self.elements);
+      self.curContext = self.curContext && self.curContext.info.illust ? self.curContext : await self.getContext(self.elements);
       if (!self.curContext.info.illust) {
         return;
       }
 
       self.insertDownloadedDisplay(appendTo, {id:self.curContext.info.illust.id, R18:self.curContext.info.illust.R18, update:self.curContext.info.illust.update});
       return true;
-    });
+    })();
   };
 
   /**
@@ -1118,7 +646,6 @@
 
     const targets = [
       { q:'.image-item > .work', n:1 },               // 作品一覧、ブックマーク
-      { q:'.novel-contents > .imgbox > a', n:2 },     // 作品一覧（小説）
       { q:'.rank-detail a._work', n:2 },              // ホーム（ランキング）
       { q:'.ranking-item a._work', n:2 },             // ランキング
       { q:'.worksListOthersImg > ul > li > a', n:1 }, // プロファイル（ブックマーク、イメージレスポンス）
@@ -1136,7 +663,7 @@
     self.insertDownloadedMark(node || self.elements.doc, {
       illust_id: opt.illust_id,
       getId: function (href) {
-        return self.getId(href);
+        return self.getIllustId(href);
       },
       getLastUpdate: function (e) {
         let g = e.querySelector('img');
@@ -1183,14 +710,14 @@
             }
 
             if (self.prefs.largeOnMiddle) {
-              spawn(function* () {
-                self.curContext = self.curContext && self.curContext.path ? self.curContext : yield self.getContext(self.elements);
+                (async () =>{
+                self.curContext = self.curContext && self.curContext.path ? self.curContext : await self.getContext(self.elements);
                 if (!self.curContext) {
                   return;
                 }
 
                 self.viewer.open(self.curContext.path, self.prefs);
-              });
+              })();
             }
 
             if (self.prefs.downloadWhenClickMiddle) {
@@ -1280,7 +807,7 @@
 
         rating.addEventListener('click', () => {
           if (self.prefs.downloadWhenRate && !rated) {
-            rated = Array.prototype.some.call(rating.classList, c => {
+            rated = Array.prototype.some.call(rating.classList, (c) => {
               let m = /^rate-(\d+)$/.exec(c);
               if (m) {
                 if (self.prefs.downloadRate <= parseInt(m[1], 10)) {
@@ -1297,9 +824,6 @@
 
       //
 
-      // ダウンロード可能に
-      self.ContextMode.setIllust();
-
       return Promise.all([
         AnkUtils.delayFunctionInstaller({func:middleClickEventFunc, retry:RETRY_VALUE, label:'middleClickEventFunc'}),
         AnkUtils.delayFunctionInstaller({prom:delayDisplaying, retry:RETRY_VALUE, label:'delayDisplaying'}),
@@ -1307,31 +831,7 @@
         AnkUtils.delayFunctionInstaller({func:openCaption, retry:RETRY_VALUE, label:'openCaption'}),
         AnkUtils.delayFunctionInstaller({func:ratingEventFunc, retry:RETRY_VALUE, label:'ratingEventFunc'})
       ])
-        .catch(e => AnkUtils.Logger.error(e));
-    }
-
-    /**
-     * 小説ページ用機能のインストール
-     */
-    function installNovelPageFunctions () {
-      // 「保存済み」を表示する
-      let delayDisplaying = function () {
-        return self.delayDisplaying();
-      };
-
-      // サムネイルにダウンロード済みマークを表示する
-      let delayMarking = function () {
-        return self.delayMarking();
-      };
-
-      // ダウンロード可能に
-      self.ContextMode.setNovel();
-
-      return Promise.all([
-        AnkUtils.delayFunctionInstaller({prom:delayDisplaying, retry:RETRY_VALUE, label:'delayDisplaying'}),
-        AnkUtils.delayFunctionInstaller({func:delayMarking, retry:RETRY_VALUE, label:'delayMarking'})
-      ])
-        .catch(e => AnkUtils.Logger.error(e));
+        .catch((e) => AnkUtils.Logger.error(e));
     }
 
     /**
@@ -1351,8 +851,8 @@
           return;
         }
 
-        new MutationObserver(o => {
-          o.forEach(e => self.delayMarking(e.target, {force:true}));
+        new MutationObserver((o) => {
+          o.forEach((e) => self.delayMarking(e.target, {force:true}));
         }).observe(elm, {childList: true});
 
         return true;
@@ -1360,8 +860,8 @@
 
       // AutoPagerize/AutoPatchWork が継ぎ足し動作したらダウンロード済みマークを追加する
       let autoPagerize = function () {
-        self.elements.doc.addEventListener('AutoPagerize_DOMNodeInserted', e => self.delayMarking(e.target, {force:true}), false);
-        self.elements.doc.addEventListener('AutoPatchWork.DOMNodeInserted', e => self.delayMarking(e.target, {force:true}), false);
+        self.elements.doc.addEventListener('AutoPagerize_DOMNodeInserted', (e) => self.delayMarking(e.target, {force:true}), false);
+        self.elements.doc.addEventListener('AutoPatchWork.DOMNodeInserted', (e) => self.delayMarking(e.target, {force:true}), false);
         return true;
       };
 
@@ -1370,7 +870,7 @@
           AnkUtils.delayFunctionInstaller({func:followExpansion, retry:RETRY_VALUE, label:'followExpansion'}),
           AnkUtils.delayFunctionInstaller({func:autoPagerize, retry:RETRY_VALUE, label:'autoPagerize'})
         ])
-        .catch(e => AnkUtils.Logger.error(e));
+        .catch((e) => AnkUtils.Logger.error(e));
     }
 
     //
@@ -1386,9 +886,6 @@
 
     if (self.getIllustId(document.location.href)) {
       installMediumPageFunctions();
-    }
-    else if (self.getNovelId(document.location.href)) {
-      installNovelPageFunctions();
     }
     else {
       installListPageFunctions();

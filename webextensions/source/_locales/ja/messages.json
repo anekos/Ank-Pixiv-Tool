@@ -14,7 +14,6 @@
   "options_initialDirectory": { "message": "保存先トップディレクトリ名" },
   "options_downloadOriginalSize": { "message": "オリジナルサイズの画像をダウンロードする" },
   "options_unpackUgoiraZip": { "message": "うごイラをアンパックする" },
-  "options_downloadNovelSource": { "message": "小説の加工前テキストをダウンロードする" },
   "options_saveMeta": { "message": "メタテキストを保存する" },
   "options_saveMetaWithPath": { "message": "メタテキストに画像のURL情報を含める" },
   "options_saveHistory": { "message": "ダウンロード履歴を記録する" },

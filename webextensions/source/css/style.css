@@ -35,6 +35,10 @@
     height: 16px;
 }
 
+.ank-pixiv-updated-overlay {
+
+}
+
 #ank-pixiv-downloaded-display {
     color: red;
     font-weight: bold;

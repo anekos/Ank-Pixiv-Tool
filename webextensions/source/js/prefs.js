@@ -33,8 +33,8 @@
     "markUpdated": true,
     "shortTagsMaxLength": 8,
     "forceCheckMangaImagesAll": false,
-    "defaultFilename": "AnkPixiv/?site-name?/?memoized-name?/?illust-year?-?illust-month?-?illust-day? ?title?",
-    "alternateFilename": "AnkPixiv/?site-name?/?memoized-name?/?illust-year?-?illust-month?-?illust-day? ?title? (?illust-id?)",
+    "defaultFilename": "AnkPixiv/?site-name?/(?member-id?) ?memoized-name?/?illust-year?-?illust-month?-?illust-day? (?illust-id?) ?title?",
+    "alternateFilename": "AnkPixiv/?site-name?/(?member-id?) ?memoized-name?/?illust-year?-?illust-month?-?illust-day? (?illust-id?) ?title?",
     "mangaImagesSaveToFolder": true,
     "mangaImagesSaveToZip": false,
     "ignoreWrongDatetimeFormat": false,
@@ -60,13 +60,13 @@
     "xhrTimeout": 30000,
     "recoverTimer": 60000,
     "openCaptionDelay": 1000,
-    "siteModules": [],
+    "siteModules": []
   };
 
   SITES.forEach(function (s) {
-    var id = s.id;
+    let id = s.id;
     DEFAULTS.siteModules.push(id);
-    for (var k in s.values) {
+    for (let k in s.values) {
       if (s.values.hasOwnProperty(k)) {
         DEFAULTS['siteModule_'+id+'_'+k] = s.values[k];
       }

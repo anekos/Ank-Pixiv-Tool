@@ -17,7 +17,3 @@ Please refer to a license terms of each software.
 
     Apache-2.0 license
     http://www.apache.org/licenses/LICENSE-2.0
-
-## zip.js - https://gildas-lormeau.github.io/zip.js/ ###
-
-    zip.js is an open-source library (BSD license) for zipping and unzipping files.
