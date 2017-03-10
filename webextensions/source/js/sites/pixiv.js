@@ -496,7 +496,7 @@
       if (!self.curContext) {
         let msg = AnkUtils.Locale.getMessage('msg_notReady');
         AnkUtils.Logger.error(new Error(msg));
-        return;
+        return Promise.resolve();
       }
 
       if (!self.curContext.downloadable) {
@@ -504,18 +504,22 @@
         let msg = AnkUtils.Locale.getMessage('msg_cannotFindImages');
         AnkUtils.Logger.error(new Error(msg));
         alert(msg);
-        return;
+        return Promise.resolve();
       }
 
+      let r = await self.queryDownloadStatus(self.curContext.info.illust.id);
       if (opt.autoDownload) {
-        let r = await self.queryDownloadStatus(self.curContext.info.illust.id);
         if (r && r[0]) {
           // ダウンロード済みの場合、自動ダウンロードが発生してもキャンセルする
-          return;
+          return Promise.resolve();
         }
       }
 
-      chrome.runtime.sendMessage({'type': 'AnkPixiv.Download.addContext', 'context': self.curContext}, (o) => AnkUtils.Logger.info(o));
+      //chrome.runtime.sendMessage({'type': 'AnkPixiv.Download.addContext', 'context': self.curContext}, (o) => AnkUtils.Logger.info(o));
+      self.executeDownload({
+        record: r && r[0],
+        context: self.curContext
+      });
     })();
   };
 

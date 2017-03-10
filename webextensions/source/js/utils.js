@@ -47,16 +47,7 @@
 
   //
 
-  AnkUtils.createElement = function (tagName, id, text, attr) {
-    return AnkUtils._createElement(document.createElement(tagName), id, text, attr);
-  };
-
-  //
-  AnkUtils.createElementNS = function (ns, tagName, id, text, attr) {
-    return AnkUtils._createElement(document.createElementNS(ns, tagName), id, text, attr);
-  };
-
-  AnkUtils._createElement = function (e, id, text, attr) {
+  let _createElement = function (e, id, text, attr) {
     if (id) {
       e.id = id;
     }
@@ -71,6 +62,14 @@
       }
     }
     return e;
+  };
+
+  AnkUtils.createElement = function (tagName, id, text, attr) {
+    return _createElement(document.createElement(tagName), id, text, attr);
+  };
+
+  AnkUtils.createElementNS = function (ns, tagName, id, text, attr) {
+    return _createElement(document.createElementNS(ns, tagName), id, text, attr);
   };
 
   //
@@ -373,7 +372,7 @@
 
         if (options.headers) {
           options.headers.forEach(function (h) {
-            let name = EXCHANGE_TARGETS.indexOf(h.name) != -1 ? EXCHANGE_PREFIX+h.name : h.name;
+            let name = EXCHANGE_TARGETS.indexOf(h.name.toLocaleLowerCase()) != -1 ? EXCHANGE_PREFIX+h.name : h.name;
             xhr.setRequestHeader(name, h.value);
           });
         }
@@ -382,8 +381,8 @@
       });
     }
 
-    const EXCHANGE_TARGETS = ['Referer', 'Cookie'];
-    const EXCHANGE_PREFIX = 'X-XXX-';
+    const EXCHANGE_TARGETS = ['referer', 'cookie'];
+    const EXCHANGE_PREFIX = 'x-xxx-';
 
     // backgroundでリクエストヘッダの書き換え
     if (chrome.runtime.getBackgroundPage) {
@@ -393,27 +392,27 @@
           return;
         }
 
-
         // Firefoxではヘッダ文字列が小文字に統一されるようだ
         chrome.webRequest.onBeforeSendHeaders.addListener(function (details) {
           let xIdx = null;
-          details.requestHeaders.forEach(function (h, i) {
-            if (h.name.toLowerCase().startsWith(EXCHANGE_PREFIX.toLowerCase())) {
-              h.name = h.name.slice(EXCHANGE_PREFIX.length);
+          details.requestHeaders.map(function (h, i) {
+            let lowname = h.name.toLocaleLowerCase();
+            if (lowname.startsWith(EXCHANGE_PREFIX)) {
+              h.name = lowname.slice(EXCHANGE_PREFIX.length);
               xIdx = xIdx || {};
               xIdx[h.name] = i;
             }
           });
 
-          if (!xIdx) {
-            return {requestHeaders: details.requestHeaders};
+          if (xIdx) {
+            details.requestHeaders = details.requestHeaders.filter(function (h, i) {
+              return !(xIdx.hasOwnProperty(h.name.toLocaleLowerCase()) && xIdx[h.name] != i);
+            });
           }
 
-          let headers = details.requestHeaders.filter(function (h, i) {
-            return !(xIdx.hasOwnProperty(h.name) && xIdx[h.name] != i);
-          });
-
-          return {requestHeaders: headers};
+          // FIXME FF52.0ではヘッダが書き換えられるが、53.0a2では無視されてしまう
+          // FIXME URLフィルタが <all_urls> なのはちょっと難がある
+          return {requestHeaders: details.requestHeaders};
         }, {
           "urls": [
             "<all_urls>"
@@ -449,7 +448,7 @@
       filename = filename.replace(/[\?]/g, '_');
     }
     filename = filename.replace(/\.+$/, '');
-    return filename.replace(/[:;\*"<>\|#]/g, '_').replace(/[\n\r\t\xa0]/g, ' ').trim();
+    return filename.replace(/[:;\*"<>\|~]/g, '_').replace(/[\n\r\t\xa0]/g, ' ').trim();
   };
 
 
@@ -491,111 +490,6 @@
   AnkUtils.getFileExt = function (filename) {
     return (/\.(\w+?)(?:\?|$)/.exec(filename) || [])[1];
   };
-
-  /**
-   * ダウンロードを実行するクラス
-   */
-  AnkUtils.Download = (function () {
-    let Download = function () {
-      let self = this;
-
-      self.ids = {};
-      self.opts = {
-        cleanDownloadBar: false
-      };
-
-      // ダウンロードの終了待ち
-      chrome.downloads.onChanged.addListener((delta) => {
-        if (!self.ids.hasOwnProperty(delta.id)) {
-          return;
-        }
-
-        let obj = self.ids[delta.id];
-        let callback = obj.callback;
-
-        let id = (() => {
-          if (delta.error && delta.error.current !== 'USER_CANCELED') {
-            callback({filename: obj.filename || delta.filename, error: new Error(delta.error.current)});
-            return delta.id;
-          }
-          if (delta.state && delta.state.current === 'complete') {
-            callback({filename: obj.filename || delta.filename});
-            return delta.id;
-          }
-          if (delta.hasOwnProperty('filename')) {
-            obj.filename = delta.filename.current;
-          }
-        })();
-
-        if (self.ids.hasOwnProperty(id)) {
-          delete self.ids[id];
-
-          // リソースの解放
-          if (obj.objUrl) {
-            URL.revokeObjectURL(obj.objUrl);
-          }
-
-          if (self.opts.cleanDownloadBar) {
-            // 終了したら(正常・異常関係なく)ダウンロードバーから消す
-            chrome.downloads.erase({'id': id}, () => {});
-          }
-        }
-      });
-    };
-
-    Download.prototype.saveAs = function (blob, filename, options) {
-      let self = this;
-
-      function _saveAs (data, filename, callback) {
-        let objUrl = typeof data !== 'string' && URL.createObjectURL(data);
-        return new Promise((resolve, reject) => {
-          // FIXME 設定＞ダウンロード前に各ファイルの保存場所を確認する が有効だと saveAs:false でもダイアログが出てしまう > https://code.google.com/p/chromium/issues/detail?id=417112
-          // FIXME firefoxではファイル保存が失敗する。browser.downloads.downloadで置き換えないと駄目？
-          chrome.downloads.download({
-            url: objUrl || data,
-            filename: filename,
-            saveAs: false,
-            conflictAction: 'overwrite'
-          }, (id) => {
-            if (id === undefined) {
-              return reject(chrome.runtime.lastError);
-            }
-            else {
-              return resolve(id);
-            }
-          });
-        }).then((id) => {
-          self.ids[id] = {
-            filename: filename,
-            callback: callback,
-            objUrl: objUrl
-          };
-        }).catch((e) => {
-          // リソースの解放
-          if (objUrl) {
-            URL.revokeObjectURL(objUrl);
-          }
-
-          callback({
-            filename: filename,
-            error: e
-          });
-        });
-      }
-
-      if (options && options.hasOwnProperty('cleanDownloadBar')) {
-        self.opts.cleanDownloadBar = options.cleanDownloadBar;
-      }
-
-      return new Promise((resolve) => {
-        return _saveAs(blob, filename, (o) => resolve(o));
-      });
-    };
-
-    //
-
-    return Download;
-  })();
 
   /**
    * 環境設定を操作するクラス
