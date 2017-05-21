@@ -424,7 +424,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         else {
           AnkUtils.A(self.elements.illust.gallery.querySelectorAll('a > img')).
             forEach(function (v) {
-              m.push(v.src.replace((m.length == 0 ? /\/main\// : /\/small_light.+?\//),'/'));
+              m.push(v.src.replace((m.length == 0 ? /\/main\// : /\/__rs_l120x120\//),'/'));
             });
         }
 
