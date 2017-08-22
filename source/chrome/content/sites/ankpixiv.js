@@ -122,7 +122,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         },
 
         get avatar () {
-          return query('.profile-unit > a > img.user-image');
+          return query('.profile ._user-icon');
         },
 
         get userName () {
@@ -385,10 +385,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         get pixivId () {
           let e = self.elements.illust.feedLink;
           let m = e && e.href.match(/\/stacc\/([^\?\/]+)/);
-          if (!m) {
-            e = self.elements.illust.avatar;
-            m = e && e.src.match(/\/profile\/([^\/]+)\//);
-          }
           if (m)
             return m[1];
         },
