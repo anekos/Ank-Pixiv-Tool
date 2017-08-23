@@ -126,11 +126,11 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         },
 
         get userName () {
-          return query('.profile-unit > a > .user');
+          return query('.profile .user-name');
         },
 
         get memberLink () {
-          return query('.profile-unit > a.user-link');
+          return query('.profile .user-name');
         },
 
         get userTags () {
