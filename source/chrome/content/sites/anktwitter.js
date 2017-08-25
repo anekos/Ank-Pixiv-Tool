@@ -126,7 +126,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         // 自前画像(twimg)
         get mediaContainer () {
           let e = illust.tweet;
-          return e && e.querySelector('.js-expansion-container .js-adaptive-media-container');
+          return e && e.querySelector('.AdaptiveMedia-container');
         },
 
         get mediaImage () {
@@ -140,28 +140,17 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         },
 
         get animatedGif () {
-          let e = illust.tweet;
-          return e && e.querySelector('.AdaptiveMedia-videoContainer > video.animated-gif > source');
+          return false;
         },
 
         get videoFrame () {
-          return getCard2Frame('__entity_video', 'player');
+          let e = illust.tweet;
+          return e && e.querySelector('.AdaptiveMedia-videoContainer .PlayableMedia--gif .PlayableMedia-player iframe');
         },
 
         get videoContent () {
-          let e = illust.videoFrame.contentDocument;
-          if (e) {
-            let f = e.querySelector('iframe');
-            f = f && f.contentDocument;
-            f = f && f.querySelector('video');
-            if (f)
-              return f;
-
-            let c = e.querySelector('#ExternalIframeContainer');
-            if (c && c.getAttribute('data-player-config')) {
-              return c;
-            }
-          }
+          let e = illust.videoFrame;
+          return e && e.contentDocument.querySelector('video');
         },
 
         get largeLink () {
@@ -201,7 +190,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
         },
 
         get tweet () {
-          return query('.opened-tweet.permalink-tweet');
+          return query('.tweet.permalink-tweet');
         },
 
         get gallery () {
