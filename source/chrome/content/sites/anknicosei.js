@@ -451,7 +451,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
 
           let html = yield AnkUtils.httpGETAsync(status.url, status.referer);
           let doc = AnkUtils.createHTMLDocument(html);
-          let src = doc.querySelector('.illust_view_big > img').getAttribute('src');
+          let src = doc.querySelector('.illust_view_big').getAttribute('data-src');
           let href = status.url.replace(/^(https?:\/\/.+?)(?:\/.*)$/, "$1") + src;
           return setSelectedImage({images: [href], facing: null});
         }
