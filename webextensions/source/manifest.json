@@ -18,28 +18,40 @@
     "default_title": "AnkPixiv"
   },
   "options_ui": {
-   "page": "html/options.html",
+   "page": "html/options_page.html",
     "open_in_tab": true
   },
   "background": {
     "scripts": [
-      "js/vendor/Dexie.min.js", "js/utils.js", "js/prefs.js", "js/background.js"
-    ],
-    "persistent": true
+      "js/vendor/Dexie.min.js", "js/constants.js", "js/prefs.js", "js/logger.js", "js/utils.js", "js/remote.js", "js/background.js"
+    ]
   },
   "content_scripts": [
     {
       "matches": [ "*://www.pixiv.net/*" ],
-      "js": [ "js/utils.js", "js/prefs.js", "js/viewer.js", "js/site.js", "js/sites/pixiv.js" ],
-      "css": [ "css/style.css" ]
+      "js": [ "js/constants.js", "js/prefs.js", "js/logger.js", "js/utils.js", "js/remote.js", "js/viewer.js", "js/site.js", "js/sites/pixiv.js" ],
+      "css": [ "css/style.css" ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [ "*://nijie.info/*" ],
+      "js": [ "js/constants.js", "js/prefs.js", "js/logger.js", "js/utils.js", "js/remote.js", "js/viewer.js", "js/site.js", "js/sites/nijie.js" ],
+      "css": [ "css/style.css" ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [ "*://seiga.nicovideo.jp/*" ],
+      "js": [ "js/constants.js", "js/prefs.js", "js/logger.js", "js/utils.js", "js/remote.js", "js/viewer.js", "js/site.js", "js/sites/nicosei.js" ],
+      "css": [ "css/style.css" ],
+      "run_at": "document_start"
     }
   ],
   "web_accessible_resources": [
     "images/*.png"
   ],
   "permissions": [
-    "http://*/*",
-    "https://*/*",
+    "http://*/",
+    "https://*/",
     "storage",
     "downloads",
     "webRequest",

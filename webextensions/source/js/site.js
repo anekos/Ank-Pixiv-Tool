@@ -11,94 +11,79 @@
       throw new Error("Can't instantiate abstract class!");
     }
 
-    let self = this;
-
-    self.SITE_ID = null;
-    self.prefs = null;
-
-    self.sitePrefs = {
-      get enabled () {
-        return self.prefs['siteModule_'+self.SITE_ID+'_enabled'];
-      },
-      get folder () {
-        return self.prefs['siteModule_'+self.SITE_ID+'_folder'];
-      },
-      get useAutoDownload () {
-        return self.prefs['siteModule_'+self.SITE_ID+'_useAutoDownload'];
-      },
-      get useViewer () {
-        return self.prefs['siteModule_'+self.SITE_ID+'_useViewer'];
-      }
-    };
-
-    self.elements = null;
-    self.download = null;
-    self.viewer = null;
-
-    // markingを行った最終時刻（キューインや保存完了の時刻と比較する）
-    self.marked = 0;
+    this.SITE_ID = null;
+    this.prefs = null;
+    this.sitePrefs = null;
+    this.elements = null;
+    this.download = null;
+    this.marked = 0;        // markingを行った最終時刻（キューインや保存完了の時刻と比較する）
   };
 
   /**
    * 初期化
    */
   AnkSite.prototype.start = function () {
-    let self = this;
 
-    (async () => {
-      self.prefs = await AnkPrefs.get();
-      AnkUtils.Logger.setLevel(self.prefs.logLevel);
+    return (async () => {
+      this.prefs = await AnkPrefs.restore(OPTION_DEFAULT);
 
-      if (!self.sitePrefs.enabled) {
-        AnkUtils.Logger.debug('DISABLED SITE MODULE: '+self.SITE_ID);
-        return Promise.resolve();
+      logger.setLevel(this.prefs.logLevel);
+
+      this.sitePrefs = this.prefs.siteModules[this.SITE_ID];
+      if (!this.sitePrefs) {
+        logger.info('INVALID SITE MODULE:', this.SITE_ID);
+        return Promise.reject(new Error('INVALID SITE MODULE'));
+      }
+      if (!this.sitePrefs.enabled) {
+        logger.info('DISABLED SITE MODULE:', this.SITE_ID);
+        return;
+      }
+      if (this.sitePrefs.experimental && !this.prefs.useExperimentalModule) {
+        logger.info('DISABLED EXPERIMENTAL MODULE:', this.SITE_ID);
+        return;
       }
 
-      self.elements = self.getElements(document);
-      self.viewer = new AnkViewer(document, self.prefs);
+      this.elements = this.getElements(document);
 
-      self.addMessageListener();
-      self.addFocusListener();
-      self.installFunctions();
+      this.initMessageListener();
+      this.initFocusListener();
+      this.installFunctions();
     })();
   };
 
   /**
    * focusイベントリスナーの定義
    */
-  AnkSite.prototype.addFocusListener = function () {
+  AnkSite.prototype.initFocusListener = function () {
     window.addEventListener('focus', () => this.onFocusHandler())
   };
 
   /**
    * メッセージリスナーの定義
    */
-  AnkSite.prototype.addMessageListener = function () {
+  AnkSite.prototype.initMessageListener = function () {
 
-    let self = this;
-
-    function execMessage (message, sender) {
+    let execMessage = (message, sender) => {
       let args = message.type.split('.', 3);
       if (args[1] === 'Download') {
-        return self.downloadCurrentImage(args[2]);
+        return this.downloadCurrentImage();
       }
       if (args[1] === 'Viewer') {
-        return self.openViewer(args[2]);
+        return this.openViewer(args[2] && {'command': args[2]});
       }
       if (args[1] === 'Rate') {
-        return self.setRate(args[2]);
+        return this.setRate(args[2]);
       }
-      if (args[1] === 'Display') {
-        return self.delayDisplaying();
-      }
-
 
       if (!sender) {
         return;
       }
 
-      return;
-    }
+      if (args[1] === 'Display') {
+        this.onFocusHandler();
+        return
+      }
+    };
 
     // web page から
     window.addEventListener('message', (e) => {
@@ -128,221 +113,219 @@
    */
   AnkSite.prototype.executeDownload = function (dw) {
 
-    /**
-     * ファイル名定義を実際のファイル名に変換する
-     */
-    function getFileName(info) {
-      let name = (function (c) {
-        let i = c.info;
-        let ii = i.illust;
-        let im = i.member;
-        let dt = AnkUtils.getDecodedDateTime(new Date(ii.posted || ii.saved));
-        let sv = AnkUtils.getDecodedDateTime(new Date(ii.saved));
+    // ファイル名定義を実際のファイル名に変換する
+    let getFileName = (info) => {
+      let name = ((c) => {
+        let ii = c.info.illust;
+        let im = c.info.member;
+        let pos = AnkUtils.getDecodedDateTime(new Date(ii.posted || ii.saved));
+        let sav = AnkUtils.getDecodedDateTime(new Date(ii.saved));
         return [
-          {re: /\?site-name\?/g, val: c.siteName},
-          {re: /\?illust-id\?/g, val: ii.id},
-          {re: /\?title\?/g, val: ii.title.substring(0, 50)},
-          {re: /\?tags\?/g, val: ii.tags.join(' ')},
-          {re: /\?short-tags\?/g, val: ii.tags.filter(v => v.length <= self.prefs.shortTagsMaxLength).join(' ')},
-          {re: /\?tools\?/g, val: ii.tools},
-          {re: /\?illust-year\?/g, val: dt.year},
-          {re: /\?illust-year2\?/g, val: dt.year.slice(2, 4)},
-          {re: /\?illust-month\?/g, val: dt.month},
-          {re: /\?illust-day\?/g, val: dt.day},
-          {re: /\?illust-hour\?/g, val: dt.hour},
-          {re: /\?illust-minute\?/g, val: dt.minute},
-          {re: /\?saved-year\?/g, val: sv.year},
-          {re: /\?saved-year2\?/g, val: sv.year.slice(2, 4)},
-          {re: /\?saved-month\?/g, val: sv.month},
-          {re: /\?saved-day\?/g, val: sv.day},
-          {re: /\?saved-hour\?/g, val: sv.hour},
-          {re: /\?saved-minute\?/g, val: sv.minute},
-          {re: /\?member-id\?/g, val: im.id},
-          {re: /\?pixiv-id\?/g, val: im.pixivId},
-          {re: /\?member-name\?/g, val: im.name},
-          {re: /\?memor?ized-name\?/g, val: im.memoizedName}
+          {'re': /\?site-name\?/g, 'val': c.siteName},
+          {'re': /\?illust-id\?/g, 'val': ii.id},
+          {'re': /\?title\?/g, 'val': ii.title.substring(0, 50)},
+          {'re': /\?tags\?/g, 'val': ii.tags.join(' ')},
+          {'re': /\?short-tags\?/g, 'val': ii.tags.filter((v) => v.length <= this.prefs.shortTagsMaxLength).join(' ')},
+          {'re': /\?tools\?/g, 'val': ii.tools},
+          {'re': /\?illust-year\?/g, 'val': pos.year},
+          {'re': /\?illust-year2\?/g, 'val': pos.year.slice(2, 4)},
+          {'re': /\?illust-month\?/g, 'val': pos.month},
+          {'re': /\?illust-day\?/g, 'val': pos.day},
+          {'re': /\?illust-hour\?/g, 'val': pos.hour},
+          {'re': /\?illust-minute\?/g, 'val': pos.minute},
+          {'re': /\?saved-year\?/g, 'val': sav.year},
+          {'re': /\?saved-year2\?/g, 'val': sav.year.slice(2, 4)},
+          {'re': /\?saved-month\?/g, 'val': sav.month},
+          {'re': /\?saved-day\?/g, 'val': sav.day},
+          {'re': /\?saved-hour\?/g, 'val': sav.hour},
+          {'re': /\?saved-minute\?/g, 'val': sav.minute},
+          {'re': /\?member-id\?/g, 'val': im.id},
+          {'re': /\?pixiv-id\?/g, 'val': im.pixiv_id},
+          {'re': /\?member-name\?/g, 'val': im.name},
+          {'re': /\?memor?ized-name\?/g, 'val': im.memoized_name}
         ].reduce((s, v) => {
           try {
             // TODO dir//file みたいな感じで File Separator が複数連続していると FILE_NAME_TOO_LONG 例外が発生するので注意。あと .. もNG
             return s.replace(v.re, AnkUtils.fixFilename((v.val || '-')).toString());
           }
           catch (e) {
-            AnkUtils.Logger.debug(v.re + ' is not found');
+            logger.warn(v.re + ' is not found');
           }
           return s;
-        }, self.prefs.defaultFilename);
+        }, this.prefs.defaultFilename);
       })(info.context);
 
-      // 世代情報
-      let age = !self.prefs.overwriteExistingDownload && info.age > 1 ? ' (' + info.age + ')' : '';
-
-      if (info.filename) {
-        return [name + age, info.filename].join(self.prefs.mangaImagesSaveToFolder ? '/' : ' ');
+      if (!this.prefs.overwriteExistingDownload && info.age > 1) {
+        // ２回目の保存からは世代情報を付加（windows風に(1)から）
+        name += ' (' + (info.age-1) + ')';
       }
 
-      if (info.pages == 1) {
-        // 一枚絵（マンガ形式でも一枚ならこちら）
-        return name + age + info.ext;
-      }
-      else {
-        // 複数画像
-        let pn = info.meta ? 'meta' : (info.facingNo ? AnkUtils.zeroPad(info.facingNo, 2) + '_' : '') + AnkUtils.zeroPad(info.pageNo, 2);
-        return [name + age, pn + info.ext].join(self.prefs.mangaImagesSaveToFolder ? '/' : ' ');
-      }
-    }
-
-    //
-
-    let self = this;
-
-    // 「ダウンロード中」表示
-    self.delayDisplaying();
-
-    dw.start = new Date().getTime();
-
-    (async () => {
-
-      //
-      let context = dw.context;
-
-      let saved = AnkUtils.getDecodedDateTime(new Date());
-      context.info.illust.saved = saved.timestamp;
-      context.info.illust.savedYMD = saved.ymd;
-
-      //
-      let info = (function () {
-        if (dw.record) {
-          dw.record.saved.push(dw.record.last_saved);
-          return dw.record;
+      let p = (() => {
+        if (info.pages == 1) {
+          // 一枚絵（マンガ形式でも一枚ならこちら）
+          return name;
         }
 
-        return {
-          service_id: context.serviceId,
-          illust_id: context.info.illust.id,
-          member_id: context.info.member.id,
-          saved: []
-        };
+        // 複数画像
+        if (info.meta) {
+          // 場合のメタデータファイル名は 'meta.json' 固定
+          return [name, 'meta'].join(this.prefs.mangaImagesSaveToFolder ? '/' : ' - ');
+        }
+
+        let pageNo = (info.facingNo ? AnkUtils.zeroPad(info.facingNo, info.pageDigits) + '_' : '') + AnkUtils.zeroPad(info.pageNo, info.pageDigits);
+        return [name, pageNo].join(this.prefs.mangaImagesSaveToFolder ? '/' : ' - ');
       })();
 
-      info.last_saved = context.info.illust.saved;
+      return [p, info.ext].join('.');
+    };
 
-      // サムネ画像かオリジナル画像かの選択
-      let path = !self.prefs.downloadOriginalSize && context.path.thumbnail ? context.path.thumbnail : context.path.original;
+    // 画像URLと保存するファイル名の対を作る
+    let getImgData = (context, path, age) => {
+      let data = path.map((p, i) => {
+        let filename = getFileName({
+          'context': context,
+          'pages': path.length,
+          'pageDigits': Math.floor(Math.log10(path.length)) + 1,
+          'pageNo': i + 1,
+          'facingNo': p.facingNo,
+          'age': age,
+          'ext': AnkUtils.getFileExt(p.src) || 'jpg'
+        });
 
-      // ボタンテキスト初期化
-      // FIXME xxx
-      //self.setButtonText();
+        return {
+          'filename': filename,
+          'url': p.src,
+          'headers': p.referrer && [{'name': 'Referer', 'value': p.referrer}] || []
+        };
+      });
 
-      // 何回目の保存？
-      let age = 1 + info.saved.length;
+      return data;
+    };
 
-      // 既存のユーザか？
-      let member = await self.queryMemberInfo(context.info.member.id, context.info.member.name);
-      context.info.member.memoizedName = member.name;
+    // メタデータの作成
+    let getMetaData = (context, path, age) => {
+      let filename = getFileName({
+        'context': context,
+        'pages': path.length,
+        'age': age,
+        'ext': 'json',
+        'meta': true
+      });
 
-      // メタテキストの生成
-      let metaText = (function () {
-        let meta = {info: context.info};
-        if (self.prefs.saveMetaWithPath) {
-          meta.path = path;
+      let text = (() => {
+        let meta = {
+          'info': context.info,
+        };
+        if (this.prefs.saveMetaWithPath) {
+          meta.info.path = path;
         }
         return JSON.stringify(meta, null, ' ');
       })();
 
-      // 画像ダウンロード　※XHRのエラーに対するリトライは実装しない予定
-      let downloadedFilename = null;
-      for (let i = 0; i < path.length; i++) {
-        let p = path[i];
+      return {
+        'filename': filename,
+        'data': text
+      };
+    };
 
-        // FIXME Firefoxではcontents scriptからbackground scriptへObjectURLを渡せない
-        // TODO 拡張子判定を行わないなら、XHR を使わず直接 download api に投げてしまっても良さそう (Refererの書き換えは必要)
-        let blob = await AnkUtils.Remote.get({
-          url: p.src,
-          headers: [{name: 'Referer', value: p.referrer}],
-          timeout: self.prefs.xhrTimeout,
-          responseType: 'blob'
-        });
+    // 履歴のデータの作成
+    let getHistData = (context, filename, age) => {
+      let data = {
+        'service_id': context.service_id,
+        'illust_id': context.info.illust.id,
+        'member_id': context.info.member.id,
+        'last_saved': context.info.illust.saved,
+        'age': age
+      };
 
-        let aBuffer = await AnkUtils.blobToArrayBuffer(blob.slice(0, 64));
-
-        let ext = AnkUtils.fixFileExt(p.src, aBuffer) || '.jpg';
-
-        let filename = getFileName({
-          context: context,
-          ext: ext,
-          pages: path.length,
-          pageNo: i + 1,
-          facingNo: p.facing,
-          age: age
-        });
-        let objURL = URL.createObjectURL(blob);
-        let result = await self.executeSaveAs({
-          url: objURL,
-          filename: filename
-        });
-
-        downloadedFilename = downloadedFilename || result && result.filename;
-
-        // ボタンテキスト更新
-        // FIXME xxx
-        //self.setButtonText();
+      if (this.prefs.saveHistoryWithDetails) {
+        // 履歴に作品の詳細情報を含める
+        data.detail = {
+          'title': context.info.illust.title,
+          'R18': context.info.illust.R18,
+          'tags': context.info.illust.tags,
+          'filename': filename
+        };
       }
 
-      // メタテキスト保存
-      if (self.prefs.saveMeta) {
-        let filename = getFileName({context: context, ext: '.json', pages: path.length, age: age, meta: true});
-        let objURL = URL.createObjectURL(new Blob([metaText]));
-        await self.executeSaveAs({
-          url: objURL,
-          filename: filename
-        });
+      return data;
+    };
+
+    //
+    let saveAll = (targets, hist_data) => {
+      if (this.prefs.xhrFromBackgroundPage) {
+        // background script側で XHR を使う場合 (Firefox)
+        return this.requestExecuteAddToDownloadQueue(targets, hist_data);
       }
-
-      if (self.prefs.saveHistory) {
-        // 履歴に作品の詳細情報を含めるか？
-        if (self.prefs.saveIllustInfo) {
-          info.title = context.info.illust.title;
-          info.R18 = context.info.illust.R18;
-          info.tags = context.info.illust.tags;
-          info.filename = downloadedFilename;
-        }
-
-        // 履歴保存
-        await self.updateDownloadStatus(info);
+      else {
+        // contents script側で XHR を使う場合
+        // FIXME objurlのcleanupが必要
+        return AnkUtils.downloadTargets(targets, this.requestExecuteSaveObject, this.prefs.xhrTimeout)
+          .then(() => {
+            return this.requestUpdateDownloadStatus(hist_data);
+          });
       }
+    };
 
-      // サイト状況の最終更新時刻（保存完了時）
+    if (dw.status) {
       /*
-      self.lastUpdate.renew(context.serviceId);
+      if (status.busy || !status.failed) {
+        // バックグラウンドにリクエスト済みだから無視
+        return;
+      }
       */
+      if (this.prefs.confirmExistingDownload && dw.status.age >= 1) {
+        let msg = chrome.i18n.getMessage('msg_downloadExistingImage');
+        let result = confirm(msg);
+        if (!result) {
+          return;
+        }
+      }
+      /*
+      if (opts.autoDownload && !status.failed) {
+        // ダウンロード済みorダウンロード中の場合、自動ダウンロードが発生しても無視する
+        return;
+      }
+      */
+    }
 
-      AnkUtils.Logger.debug('COMPLETE: ' + context.info.illust.url + ' ' + path.length + 'pics ' + (new Date().getTime() - dw.start) + 'ms');
+    // サムネ画像かオリジナル画像かの選択
+    let path = this.prefs.downloadOriginalSize && dw.context.path.original || dw.context.path.thumbnail || dw.context.path.original;
 
-    })()
-      .then(() => {
-        // 「ダウンロード済」等表示
-        self.delayDisplaying();
-      })
+    // 保存世代
+    let age = dw.status ? dw.status.age+1 : 1;
+
+    // 保存時刻
+    let saved = AnkUtils.getDecodedDateTime(new Date());
+    dw.start = saved.timestamp;
+    dw.context.info.illust.saved = saved.timestamp;
+    dw.context.info.illust.savedYMD = saved.ymd;
+
+    let targets = getImgData(dw.context, path, age);
+    if (this.prefs.saveMeta) {
+      let meta_data = getMetaData(dw.context, path, age);
+      targets.push(meta_data);
+    }
+
+    let hist_data = getHistData(dw.context, targets[0].filename, age);
+
+    // FIXME 戻り値が滅茶苦茶な状態なので直して！！
+
+    saveAll(targets, hist_data)
       .catch((e) => {
-        dw.failed = true;  // エラー時にwaitさせる
-        AnkUtils.Logger.error(e);
-        alert(e);
+        logger.error('download error:', e);
       });
   };
 
   /**
    * 作品ページに「保存済み」メッセージを表示する
    */
-  AnkSite.prototype.insertDownloadedDisplay = function (appendTo, opt) {
-    let self = this;
-
+  AnkSite.prototype.insertDownloadedDisplay = function (appendTo, opts) {
     (async () => {
-      let r = await self.queryDownloadStatus(opt.id);
-      if (!r || !r[0]) {
-        return Promise.resolve();
+      let status = await this.requestGetDownloadStatus(opts.id);
+      if (!status) {
+        return;
       }
-
-      let info = r[0];
 
       let display = appendTo.querySelector('#ank-pixiv-downloaded-display');
       if (!display) {
@@ -351,191 +334,255 @@
         appendTo.appendChild(display);
       }
 
-      let c = (() => {
-        if (info.failed) {
+      let cls = (() => {
+        if (status.failed) {
           return ['failed'];
         }
-        else if (info.last_saved) {
-          if (self.prefs.markUpdated && opt.update > info.last_saved) {
+        if (status.last_saved) {
+          if (this.prefs.markUpdated && opts.updated > status.last_saved) {
             return ['updated']
           }
 
-          return opt.R18 ? ['R18', self.prefs.downloadedAnimationStyle == 1 ? 'shake' : 'slidein'] : ['done'];
+          if (!opts.R18) {
+            return ['done'];
+          }
+
+          if (!this.prefs.downloadedAnimationStyle) {
+            return ['R18'];
+          }
+
+          return ['R18', this.prefs.downloadedAnimationStyle == 1 ? 'shake' : 'slidein'];
         }
         else {
-          return info.running ? ['run'] : ['wait'];
+          return status.running ? ['run'] : ['wait'];
         }
       })();
 
-      if (!display.classList.contains(c[0])) {
+      // FIXME Unicode characters broken when __MSG_... in css file (https://bugzilla.mozilla.org/show_bug.cgi?id=1389099)
+      if (!display.classList.contains(cls[0])) {
         display.setAttribute('class', '');
-        display.classList.add.apply(display.classList, c);
+        display.classList.add.apply(display.classList, cls);
       }
     })();
   };
 
   /**
    * サムネイルにダウンロード状態を表示する
+   * @param node
+   * @param opts
    */
-  AnkSite.prototype.insertDownloadedMark = function (node, opt) {
-    let self = this;
-
+  AnkSite.prototype.insertDownloadedMark = function (node, opts) {
     (async () => {
-      let lu = await self.queryLastUpdate();
-      if (!opt.force && self.marked > lu) {
+      let siteChanged = await this.requestGetSiteChanged();
+      if (this.marked > siteChanged) {
         // 前回チェック時刻より後にサイトの更新が発生していなければ再度のチェックはしない
-        return Promise.resolve();
+        logger.log('skip mark downloaded');
+        return;
       }
 
-      if (!opt.force) {
-        // 強制チェックならチェック時刻は更新しない
-        self.marked = new Date().getTime();
+      if (!opts.pinpoint) {
+        // 決め打ちのチェックならチェック時刻は更新しない
+        this.marked = new Date().getTime();
       }
 
       let boxes = {};
 
       // チェック対象のサムネイルを抽出する
-      opt.targets.forEach((t) => {
-        Array.prototype.map.call(node.querySelectorAll(t.q), (elm) => {
-          let href = ((tagName) => {
+      opts.targets.forEach((t) => {
+        Array.prototype.map.call(node.querySelectorAll(t.q), (e) => {
+          let url = ((tagName) => {
             if (tagName === 'a') {
-              return elm.href;
+              return e.href;
             }
             if (tagName === 'img') {
-              return elm.src;
+              return e.src;
             }
-          })(elm.tagName.toLowerCase());
+          })(e.tagName.toLowerCase());
 
-          let id = opt.getId(href);
-          if (!id || (opt.illust_id && opt.illust_id != id)) {
+          let illust_id = opts.getId(url);
+          if (!illust_id || (opts.illust_id && opts.illust_id != illust_id)) {
             // IDが見つからないか、ID指定があって一致しない場合
             return;
           }
 
-          let box = AnkUtils.trackbackParentNode(elm, t.n, t.c);
+          let box = AnkUtils.trackbackParentNode(e, t.n, t.c);
           if (!box) {
             return;
           }
 
-          boxes[id] = boxes[id] || [];
-          boxes[id].push({
-            box: box,
-            datetime: self.prefs.markUpdated && opt.getLastUpdate && opt.getLastUpdate(box)
-          });
+          boxes[illust_id] = boxes[illust_id] || [];
+
+          // クエリの結果が重複する場合があるので排除する
+          if (!boxes[illust_id].find((b) => b.box === box)) {
+            boxes[illust_id].push({
+              'box': box,
+              'datetime': this.prefs.markUpdated && (opts.getLastUpdate && opts.getLastUpdate(box))
+            });
+          }
         });
       });
 
-      // ダウンロード状態を調べて反映する
       // FIXME BOXが多すぎるとブラウザが固まる
-      let r = await self.queryDownloadStatus(Object.keys(boxes));
-      if (r) {
-        r.forEach((info) => {
-          boxes[info.illust_id].forEach((e) => {
-            if (info.failed) {
-              return;
+      // ダウンロード状態を調べて反映する
+      let statuses = await this.requestGetDownloadStatus(Object.keys(boxes));
+      if (!statuses) {
+        return;
+      }
+      statuses.forEach((s) => {
+        console.log(s.illust_id, s);
+        boxes[s.illust_id].forEach((e) => {
+          let cls = (() => {
+            // s.failed は見る必要がない
+            if (s.downloading) {
+              return 'ank-pixiv-downloading';
             }
-            if (info.last_saved) {
-              if (self.prefs.markUpdated && e.datetime > info.last_saved) {
-                e.box.classList.add('ank-pixiv-updated' + (opt.overlay ? '-overlay' : ''));
+            if (s.downloading) {
+              return 'ank-pixiv-downloading';
+            }
+            if (s.last_saved) {
+              if (this.prefs.markUpdated && e.datetime > s.last_saved) {
+                return 'ank-pixiv-updated';
               }
-              else {
-                e.box.classList.add('ank-pixiv-downloaded' + (opt.overlay ? '-overlay' : ''));
-              }
+
+              return 'ank-pixiv-downloaded';
+            }
+          })();
+          if (cls && !e.box.classList.contains(cls)) {
+            e.box.classList.remove('ank-pixiv-downloading', 'ank-pixiv-updated', 'ank-pixiv-downloaded');
+            e.box.classList.add(cls);
+            if (!opts.overlay) {
+              e.box.classList.add('ank-pixiv-mark-background');
             }
             else {
-              e.box.classList.add('ank-pixiv-downloading' + (opt.overlay ? '-overlay' : ''));
+              e.box.classList.add('ank-pixiv-mark-overlay');
             }
-          });
+          }
         });
-      }
+      });
     })();
   };
 
   /**
-   * backgroundにユーザ情報を問い合わせる
+   * backgroundにサイトの最終更新時刻を問い合わせる
+   * @returns {Promise}
    */
-  AnkSite.prototype.queryMemberInfo = function (memberId, memberName) {
+  AnkSite.prototype.requestGetSiteChanged = function () {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({
-          type: 'AnkPixiv.Query.memberInfo',
-          data:{
-            serviceId: this.SITE_ID,
-            memberId: memberId,
-            memberName: memberName
+          'type': 'AnkPixiv.Query.getSiteChanged',
+          'data':{
+            'service_id': this.SITE_ID
           }
         },
-        (info) => resolve(info)
+        (result) => resolve(result)
+      );
+    });
+  };
+
+  /**
+   * backgroundにユーザ情報を問い合わせる
+   * @param member_id
+   * @param member_name
+   * @returns {Promise}
+   */
+  AnkSite.prototype.requestGetMemberInfo = function (member_id, member_name) {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage({
+          'type': 'AnkPixiv.Query.getMemberInfo',
+          'data':{
+            'service_id': this.SITE_ID,
+            'member_id': member_id,
+            'member_name': member_name
+          }
+        },
+        (result) => resolve(result)
       );
     });
   };
 
   /**
    * backgroundに作品のダウンロード状態を問い合わせる
+   * @param illust_id
+   * @returns {Promise}
    */
-  AnkSite.prototype.queryDownloadStatus = function (illustId) {
+  AnkSite.prototype.requestGetDownloadStatus = function (illust_id, ignore_cache) {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({
-          type: 'AnkPixiv.Query.downloadStatus',
-          data:{
-            serviceId: this.SITE_ID,
-            illustId: illustId
+          'type': 'AnkPixiv.Query.getDownloadStatus',
+          'data':{
+            'service_id': this.SITE_ID,
+            'illust_id': illust_id,
+            'ignore_cache': ignore_cache
           }
         },
-        (info) => resolve(info)
+        (result) => resolve(result)
       );
     });
   };
 
   /**
-   * backgroundに作品のダウンロード状態の更新を依頼する
+   *
+   * @param info
+   * @returns {Promise}
    */
-  AnkSite.prototype.updateDownloadStatus = function (info) {
+  AnkSite.prototype.requestUpdateDownloadStatus = function (info) {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({
-          type: 'AnkPixiv.Query.updateDownloadStatus',
-          data: {
-            info: info
+          'type': 'AnkPixiv.Query.updateDownloadStatus',
+          'data':{
+            'info': info
           }
         },
-        (info) => resolve(info)
+        (result) => resolve(result)
       );
     });
   };
 
   /**
-   * backgroundに作品のダウンロード状態の更新を依頼する
+   * backgroundにデータのファイルへの保存を依頼する
+   * @param info
+   * @returns {Promise}
    */
-  AnkSite.prototype.executeSaveAs = function (info) {
+  AnkSite.prototype.requestExecuteSaveObject = function (info) {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({
-          type: 'AnkPixiv.Download.saveAs',
-          data: {
-            info: info
+          'type': 'AnkPixiv.Execute.saveObject',
+          'data': {
+            'info': info
           }
         },
-        (info) => {
-          if (info.hasOwnProperty('error')) {
-            return reject(info.error);
+        (result) => {
+          if (result.hasOwnProperty('error')) {
+            return reject(result.error);
           }
 
-          resolve(info.result)
+          resolve(result.result);
         }
       );
     });
   };
 
   /**
-   * backgroundにサイトの最終更新時刻を問い合わせる
+   *
+   * @param info
+   * @returns {Promise}
    */
-  AnkSite.prototype.queryLastUpdate = function () {
-    return new Promise((resolve) => {
+  AnkSite.prototype.requestExecuteAddToDownloadQueue = function (targets, hist_data) {
+    return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({
-          type: 'AnkPixiv.Query.lastUpdate',
-          data:{
-            serviceId: this.SITE_ID
+          'type': 'AnkPixiv.Execute.addToDownloadQueue',
+          'data': {
+            'targets': targets,
+            'hist_data': hist_data
           }
         },
-        (info) => resolve(info)
+        (result) => {
+          if (result && result.hasOwnProperty('error')) {
+            return reject(result.error);
+          }
+
+          resolve(result && result.result);
+        }
       );
     });
   };
@@ -546,32 +593,56 @@
    * @returns {*}
    */
   AnkSite.prototype.getPosted = function (callback) {
-    let self = this;
     let posted = callback();
     if (posted.fault) {
-      if (!self.prefs.ignoreWrongDatetimeFormat) {
+      if (!this.prefs.ignoreWrongDatetimeFormat) {
         // 解析に失敗したので終了
-        let msg = AnkUtils.Locale.getMessage('msg_cannotDecodeDatetime');
+        let msg = chrome.i18n.getMessage('msg_cannotDecodeDatetime');
         alert(msg);
         throw new Error(msg);
       }
-      if (self.prefs.warnWrongDatetimeFormat) {
+      if (this.prefs.warnWrongDatetimeFormat) {
         // 解析失敗の警告
-        alert(AnkUtils.Locale.getMessage('msg_warnWrongDatetime'));
+        alert(chrome.i18n.getMessage('msg_warnWrongDatetime'));
       }
     }
     return posted;
   };
 
+  /**
+   * 機能の遅延インストール
+   * @param opts
+   * @returns {Promise}
+   */
+  AnkSite.prototype.delayFunctionInstaller = function (opts) {
+    return (async () => {
+      for (let retry=1; retry <= opts.retry.max; retry++) {
+        let installed = await opts.func();
+        if (installed) {
+          logger.info('installed:', (opts.label || ''));
+          return;
+        }
+
+        if (retry <= opts.retry.max) {
+          logger.info('wait for retry:', retry, '/', opts.retry.max ,':', opts.label);
+          await AnkUtils.sleep(opts.retry.wait);
+        }
+      }
+
+      return Promise.reject(new Error('retry over:', opts.label));
+    })();
+  };
+
   // 抽象メソッドのようなもの
 
   AnkSite.prototype.getElements = function (doc) {};
-  AnkSite.prototype.downloadCurrentImage = function (opt) {};
-  AnkSite.prototype.openViewer = function (opt) {};
+  AnkSite.prototype.downloadCurrentImage = function (opts) {};
+  AnkSite.prototype.openViewer = function (opts) {};
   AnkSite.prototype.setRate = function (pt) {};
   AnkSite.prototype.onFocusHandler = function () {};
   AnkSite.prototype.installFunctions = function () {};
-  AnkSite.prototype.delayDisplaying = function () {};
+  AnkSite.prototype.displayDownloaded = function () {};
+  AnkSite.prototype.markDownloaded = function () {};
 
 }
 

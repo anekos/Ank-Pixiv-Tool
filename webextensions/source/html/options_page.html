@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Ank Pixiv Tool</title>
-    <link href="../css/options.css" rel="stylesheet"/>
+    <link href="../css/options_page.css" rel="stylesheet"/>
 </head>
 <body>
 
@@ -48,10 +48,10 @@
             <span data-i18n="saveHistory"></span>
         </div>
         <div class="item">
-            <input type="checkbox" id="saveIllustInfo">
-            <span data-i18n="saveIllustInfo"></span>
+            <input type="checkbox" id="saveHistoryWithDetails">
+            <span data-i18n="saveHistoryWithDetails"></span>
         </div>
-        <div class="item">
+        <div class="item deprecated">
             <input type="checkbox" id="showSaveDialog">
             <span data-i18n="showSaveDialog"></span>
         </div>
@@ -79,13 +79,21 @@
             <input type="checkbox" id="showCompletePopup">
             <span data-i18n="showCompletePopup"></span>
         </div>
-        <div class="item">
+        <div class="item hidden">
             <input type="checkbox" id="cleanDownloadBar">
             <span data-i18n="cleanDownloadBar"></span>
         </div>
         <div class="item">
             <input type="checkbox" id="displayDownloaded">
             <span data-i18n="displayDownloaded"></span>
+        </div>
+        <div class="item hidden">
+            <span data-i18n="downloadedAnimationStyle"></span>
+            <select id="downloadedAnimationStyle" class="selectbox" title="">
+                <option value="0" data-i18n="usedAnimeNone">0</option>
+                <option value="1" data-i18n="usedAnimeShake">1</option>
+                <option value="2" data-i18n="usedAnimeSlidein">2</option>
+            </select>
         </div>
         <div class="item">
             <input type="checkbox" id="markDownloaded">
@@ -175,13 +183,13 @@
             <span data-i18n="largeOnMiddle"></span>
         </div>
         <div class="item">
-            <span data-i18n="largeImageSize"></span>
             <select id="largeImageSize" class="selectbox" title="">
                 <option value="0" data-i18n="fitInWindowSize">0</option>
                 <option value="1" data-i18n="fitInWindowHeight">1</option>
                 <option value="2" data-i18n="fitInWindowWidth">2</option>
                 <option value="3" data-i18n="noFit">3</option>
             </select>
+            <span data-i18n="largeImageSize"></span>
         </div>
         <div class="item">
             <input type="checkbox" id="dontResizeIfSmall">
@@ -250,7 +258,7 @@
             <input type="checkbox" id="useLoadProgress">
             <span data-i18n="useLoadProgress"></span>
         </div>
-        <div class="item">
+        <div class="item hidden">
             <input type="checkbox" id="useImagePrefetch">
             <span data-i18n="useImagePrefetch"></span>
         </div>
@@ -270,17 +278,33 @@
             <input type="checkbox" id="openCaption">
             <span data-i18n="openCaption"></span>
         </div>
-        <div class="item">
+        <div class="item deprecated">
             <input type="checkbox" id="allowThirdPartyCookie">
             <span data-i18n="allowThirdPartyCookie"></span>
         </div>
         <div class="item hidden">
+            <input type="checkbox" id="xhrFromBackgroundPage">
+            <span data-i18n="xhrFromBackgoundPage"></span>
+        </div>
+        <div class="item hidden">
+            <input type="number" id="xhrTimeout" min="1000" max="60000" step="1000">
+            <span data-i18n="xhrTimeout"></span>
+        </div>
+        <div class="item hidden">
+            <input type="number" id="downloadTimeout" min="1000" max="300000" step="1000">
+            <span data-i18n="downloadTimeout"></span>
+        </div>
+        <div class="item hidden">
+            <input type="number" id="historyCacheSize" min="100" max="1000" step="100">
+            <span data-i18n="historyCacheSize"></span>
+        </div>
+        <div class="item">
             <select id="logLevel">
-                <option value="0">ALL</option>
                 <option value="1">&gt;=DEBUG</option>
                 <option value="2">&gt;=INFO</option>
-                <option value="3">&gt;=ERROR</option>
-                <option value="4">OFF</option>
+                <option value="3">&gt;=WARN</option>
+                <option value="4">&gt;=ERROR</option>
+                <option value="99">OFF</option>
             </select>
             <span data-i18n="logLevel"></span>
         </div>
@@ -309,25 +333,30 @@
 </div>
 
 <div class="groupbox">
-    <span class="item disabled">
+    <div data-i18n="group_history" class="grouptitle"></div>
+    <div class="item">
+        <button id="importHistoryButton" data-i18n="importHistory" class="button">Apply</button>
+        <input type="file" class="button" id="importHistory" accept=".json" style="display: none;"/>
+        <label for="importHistory" id="importHistoryLabel"/>
+    </div>
+    <div class="item hidden">
         <button id="exportHistory" data-i18n="exportHistory" class="button">Apply</button>
-    </span>
-    <span class="item disabled">
-        <button id="importHistory" data-i18n="importHistory" class="button">Reset</button>
-    </span>
+    </div>
 </div>
 
 <div class="groupbox">
     <span class="item">
-        <button id="apply" data-i18n="apply" class="button">Apply</button>
-    </span>
-    <span class="item disabled">
         <button id="reset" data-i18n="reset" class="button">Reset</button>
+    </span>
+    <span class="item">
+        <button id="apply" data-i18n="apply" class="button">Apply</button>
     </span>
 </div>
 
+<script src="../js/logger.js"></script>
 <script src="../js/utils.js"></script>
+<script src="../js/constants.js"></script>
 <script src="../js/prefs.js"></script>
-<script src="../js/options.js"></script>
+<script src="../js/options_page.js"></script>
 </body>
 </html>

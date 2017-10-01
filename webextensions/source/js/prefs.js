@@ -2,77 +2,74 @@
 
 {
 
-  let SITES = [
-    { id: 'PXV', values: {name: 'pixiv', folder: 'Pixiv', enabled: true, useAutoDownload: true, useViewer: true, experimental: false} },
-    { id: 'TWT', values: {name: 'Twitter', folder: 'Twitter', enabled: true, useAutoDownload: true, useViewer: true, experimental: false} }
-  ];
+  var AnkPrefs = (() => {
 
-  let DEFAULTS = {
-    "showSaveDialog": true,
-    "downloadWhenRate": false,
-    "downloadRate": 10,
-    "downloadWhenClickMiddle": false,
-    "initialDirectory": "AnkPixiv",
-    "downloadOriginalSize": true,
-    "unpackUgoiraZip": false,
-    "downloadNovelSource": false,
-    "saveMeta": true,
-    "saveMetaWithPath": false,
-    "saveHistory": true,
-    "saveIllustInfo": false,
-    "confirmExistingDownload": true,
-    "confirmExistingDownloadWhenAuto": true,
-    "overwriteExistingDownload": false,
-    "showIllustRemains": true,
-    "showImageRemains": true,
-    "showCompletePopup": false,
-    "cleanDownloadBar": true,
-    "displayDownloaded": true,
-    "downloadedAnimationStyle": 1,
-    "markDownloaded": true,
-    "markUpdated": true,
-    "shortTagsMaxLength": 8,
-    "forceCheckMangaImagesAll": false,
-    "defaultFilename": "AnkPixiv/?site-name?/(?member-id?) ?memoized-name?/?illust-year?-?illust-month?-?illust-day? (?illust-id?) ?title?",
-    "alternateFilename": "AnkPixiv/?site-name?/(?member-id?) ?memoized-name?/?illust-year?-?illust-month?-?illust-day? (?illust-id?) ?title?",
-    "mangaImagesSaveToFolder": true,
-    "mangaImagesSaveToZip": false,
-    "ignoreWrongDatetimeFormat": false,
-    "warnWrongDatetimeFormat": true,
-    "largeOnMiddle": true,
-    "largeImageSize": 0,
-    "dontResizeIfSmall": true,
-    "maxPanelOpacity": 100,
-    "minPanelOpacity": 0,
-    "panelSize": 0,
-    "loopPage": false,
-    "swapArrowButton": false,
-    "useFacingView": true,
-    "useLoadProgress": true,
-    "useImagePrefetch": true,
-    "viewOriginalSize": true,
-    "openComment": false,
-    "openCaption": false,
-    "allowThirdPartyCookie": false,
-    "logLevel": 3,
-    "useExperimentalModule": false,
-    "outputEpubLimit": 4,
-    "xhrTimeout": 30000,
-    "recoverTimer": 60000,
-    "openCaptionDelay": 1000,
-    "siteModules": []
-  };
+    //
+    let dec = (items) => {
+      return ((o) => {
+        Object.keys(items).forEach((k) => {
+          if (!k.startsWith('siteModules')) {
+            o[k] = items[k];
+            return;
+          }
 
-  SITES.forEach(function (s) {
-    let id = s.id;
-    DEFAULTS.siteModules.push(id);
-    for (let k in s.values) {
-      if (s.values.hasOwnProperty(k)) {
-        DEFAULTS['siteModule_'+id+'_'+k] = s.values[k];
-      }
-    }
-  });
+          let ka = k.split('-');
+          if (ka.length != 3) {
+            return;
+          }
 
-  var AnkPrefs = new AnkUtils.Preference(DEFAULTS);
+          o.siteModules = o.siteModules || {};
+          o.siteModules[ka[1]] = o.siteModules[ka[1]] || {};
+          o.siteModules[ka[1]][ka[2]] = items[k];
+        });
+        return o;
+      })({});
+    };
+
+    //
+    let enc = (items) => {
+      return ((o) => {
+        Object.keys(items).forEach((k) => {
+          if (k != 'siteModules') {
+            o[k] = items[k];
+            return;
+          }
+
+          Object.keys(items[k]).forEach((siteId) => {
+            Object.keys(items[k][siteId]).forEach((key) => {
+              o[['siteModules', siteId, key].join('-')] = items[k][siteId][key];
+            });
+          });
+        });
+        return o;
+      })({});
+    };
+
+    //
+    let restore = (options_default) => {
+      return new Promise((resolve, reject) => {
+        chrome.storage.local.get(enc(options_default), (items) => {
+          resolve(dec(items));
+        });
+      });
+    };
+
+    let save = (options) => {
+      return new Promise((resolve, reject) => {
+        chrome.storage.local.set(enc(options), () => {
+          resolve();
+        });
+      });
+    };
+
+    //
+    return {
+      restore: restore,
+      save: save,
+      dec: dec,
+      enc: enc
+    };
+
+  })();
 
 }

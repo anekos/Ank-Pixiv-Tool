@@ -52,3 +52,7 @@
 #siteListContainer .cbInTbl {
     text-align: center;
 }
+input[type="number"] {
+    text-align: right;
+    width: 6em;
+}
