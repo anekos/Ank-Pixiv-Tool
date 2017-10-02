@@ -57,19 +57,20 @@
       SITE_MODULE_VALKEYS.forEach((value_key) => {
         let value = sms[site_key][value_key];
         let td = ((t) => {
-          if (t == 'boolean') {
-            return createCheckBox(value_key, site_key, false);
-          }
-          else if (t == 'string') {
-            if (value_key == 'name') {
-              return createLabelBox(value);
+          if (value !== undefined) {
+            if (t == 'boolean') {
+              return createCheckBox(value_key, site_key, false);
             }
-            return createTextBox(value_key, site_key, '');
+            if (t == 'string') {
+              if (value_key == 'name') {
+                return createLabelBox(value);
+              }
+              return createTextBox(value_key, site_key, '');
+            }
           }
-          else {
-            // 無効なアイテム
-            return createLabelBox('');
-          }
+
+          // 無効なアイテム
+          return createLabelBox('');
         })(typeof value);
         box.appendChild(td);
       });

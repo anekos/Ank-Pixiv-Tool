@@ -254,7 +254,7 @@
     //
     let saveAll = (targets, hist_data) => {
       if (this.prefs.xhrFromBackgroundPage) {
-        // background script側で XHR を使う場合 (Firefox)
+        // background script側で XHR を使う場合
         return this.requestExecuteAddToDownloadQueue(targets, hist_data);
       }
       else {
@@ -268,12 +268,11 @@
     };
 
     if (dw.status) {
-      /*
-      if (status.busy || !status.failed) {
-        // バックグラウンドにリクエスト済みだから無視
+      if (dw.autoDownload && (dw.status.last_saved || dw.status.downloading)) {
+        // 中画像クリックなどの自動ダウンロードの場合、ダウンロード済み or ダウンロード中なら無視する
         return;
       }
-      */
+
       if (this.prefs.confirmExistingDownload && dw.status.age >= 1) {
         let msg = chrome.i18n.getMessage('msg_downloadExistingImage');
         let result = confirm(msg);
@@ -281,12 +280,6 @@
           return;
         }
       }
-      /*
-      if (opts.autoDownload && !status.failed) {
-        // ダウンロード済みorダウンロード中の場合、自動ダウンロードが発生しても無視する
-        return;
-      }
-      */
     }
 
     // サムネ画像かオリジナル画像かの選択
@@ -429,7 +422,6 @@
         return;
       }
       statuses.forEach((s) => {
-        console.log(s.illust_id, s);
         boxes[s.illust_id].forEach((e) => {
           let cls = (() => {
             // s.failed は見る必要がない

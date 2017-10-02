@@ -44,6 +44,12 @@
       "js": [ "js/constants.js", "js/prefs.js", "js/logger.js", "js/utils.js", "js/remote.js", "js/viewer.js", "js/site.js", "js/sites/nicosei.js" ],
       "css": [ "css/style.css" ],
       "run_at": "document_start"
+    },
+    {
+      "matches": [ "*://twitter.com/*" ],
+      "js": [ "js/constants.js", "js/prefs.js", "js/logger.js", "js/utils.js", "js/remote.js", "js/viewer.js", "js/site.js", "js/sites/twitter.js" ],
+      "css": [ "css/style.css" ],
+      "run_at": "document_start"
     }
   ],
   "web_accessible_resources": [

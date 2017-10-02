@@ -21,15 +21,9 @@
    */
   let request = (opts, isPost) => {
     return new Promise((resolve, reject) => {
-      let xhr = (() => {
-        try {
-          // FIXME Firefox向けの特殊なコードなので対応を待ちたい
-          return XPCNativeWrapper(new window.wrappedJSObject.XMLHttpRequest());
-        }
-        catch (e) {
-        }
-        return new XMLHttpRequest();
-      })();
+
+      // TODO FFだと302がうまく処理できない？mozSystem = trueで動くが問題がないか要確認
+      let xhr = new XMLHttpRequest({'mozSystem': true});
 
       xhr.open((isPost ? 'POST' : 'GET'), opts.url, true);
 
@@ -40,7 +34,6 @@
       }
 
       xhr.onload = () => {
-        // FIXME FFだと302がうまく処理できない？
         // TODO 206 は発生するか？
         if (xhr.status == 200) {
           if (opts.responseType) {
@@ -56,7 +49,7 @@
         }
       };
 
-      xhr.onerror = () => {
+      xhr.error = () => {
         reject(new Error(xhr.statusText+" ("+xhr.status+") : "+opts.url));
       };
 

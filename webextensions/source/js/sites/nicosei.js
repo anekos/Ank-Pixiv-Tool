@@ -111,7 +111,7 @@
 
   /**
    *
-   * @param dco
+   * @param doc
    * @returns {boolean}
    */
   AnkNicosei.prototype.inIllustPage = function (doc) {
@@ -136,7 +136,6 @@
         'timeout': this.prefs.xhrTimeout
       });
 
-      console.log(111);
       let img = resp.document.querySelector('.illust_view_big');
       if (img) {
         let referrer = resp.responseURL || largePage;
@@ -343,15 +342,15 @@
 
       opts = opts || {};
 
-      this.collectedContext = await this.getContext(this.elements);
-      if (!this.collectedContext) {
+      let context = this.collectedContext = await this.getContext(this.elements);
+      if (!context) {
         // コンテキストが集まらない（ダウンロード可能な状態になっていない）
         let msg = chrome.i18n.getMessage('msg_notReady');
         logger.warn(new Error(msg));
         return;
       }
 
-      if (!this.collectedContext.downloadable) {
+      if (!context.downloadable) {
         // 作品情報が見つからない
         let msg = chrome.i18n.getMessage('msg_cannotFindImages');
         logger.error(new Error(msg));
@@ -359,13 +358,13 @@
         return;
       }
 
-      let status = await this.requestGetDownloadStatus(this.collectedContext.info.illust.id, true);
+      let status = await this.requestGetDownloadStatus(context.info.illust.id, true);
 
-      let member = await this.requestGetMemberInfo(this.collectedContext.info.member.id, this.collectedContext.info.member.name);
-      this.collectedContext.info.member.memoized_name = member.name;
+      let member = await this.requestGetMemberInfo(context.info.member.id, context.info.member.name);
+      context.info.member.memoized_name = member.name;
 
-      //chrome.runtime.sendMessage({'type': 'AnkNicosei.Download.addContext', 'context': this.collectedContext}, (o) => logger.info(o));
-      this.executeDownload({'status': status, 'context': this.collectedContext});
+      //chrome.runtime.sendMessage({'type': 'AnkNicosei.Download.addContext', 'context': context}, (o) => logger.info(o));
+      this.executeDownload({'status': status, 'context': context, 'autoDownload': opts.autoDownload});
     })().catch((e) => logger.error(e));
   };
 
@@ -374,13 +373,13 @@
    */
   AnkNicosei.prototype.openViewer = function (opts) {
     (async () => {
-      this.collectedContext = await this.getContext(this.elements);
-      if (!this.collectedContext) {
+      let context = this.collectedContext = await this.getContext(this.elements);
+      if (!context) {
         logger.error(new Error('viewer not ready'));
         return;
       }
 
-      AnkViewer.open({'doc': this.elements.doc, 'prefs': this.prefs, 'path': this.collectedContext.path});
+      AnkViewer.open({'doc': this.elements.doc, 'prefs': this.prefs, 'path': context.path});
     })();
   };
 
@@ -406,7 +405,6 @@
   AnkNicosei.prototype.installIllustPageFunction = function (RETRY_VALUE) {
     // 中画像クリック関連
     let middleClickEventFunc = () => {
-      // FIXME imgOvrの方になった場合は、medImgより広い領域がクリック可能となるが、ページ側の jQuery.on('click')を無効化できないため止む無し
       let addMiddleClickEventListener = (imgOvr) => {
         let mcHandler = (e) => {
           let useEvent = this.prefs.largeOnMiddle || this.prefs.downloadWhenClickMiddle;

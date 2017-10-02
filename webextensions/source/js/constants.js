@@ -60,6 +60,7 @@ const OPTION_DEFAULT ={
   "siteModules": {
     "PXV":{"enabled": true, "useAutoDownload": true, "useViewer": true, "experimental": false, "name": "Pixiv", "folder": "Pixiv"},
     "NJE":{"enabled": true, "useAutoDownload": true, "useViewer": true, "experimental": false, "name": "Nijie", "folder": "Nijie"},
-    "NCS":{"enabled": true, "useAutoDownload": true, "useViewer": true, "experimental": false, "name": "Nicosei", "folder": "Nicosei"}
+    "NCS":{"enabled": true, "useAutoDownload": true, "useViewer": true, "experimental": false, "name": "Nicosei", "folder": "Nicosei"},
+    "TWT":{"enabled": true, "useAutoDownload": undefined, "useViewer": undefined, "experimental": false, "name": "Twitter", "folder": "Twitter"}
   }
 };

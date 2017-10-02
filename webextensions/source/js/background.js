@@ -157,8 +157,7 @@
     let initMessageListener = () => {
 
       /**
-       * ファイルに保存する（即時）
-       * - background script側でXHRを実行することを想定したもの
+       * ファイルに保存する（即時／単ファイル）
        * @param data
        * @param sender
        * @param sendResponse
@@ -240,6 +239,8 @@
        */
       let opDownloadQueue = (data, sender, sendResponse) => {
 
+        const WAITS_FOR_NEXT = 200;
+
         if (data) {
           // ダウンロード情報の追加を要求された場合
           let q = downloadQueue.find(data.hist_data.service_id, data.hist_data.illust_id);
@@ -261,18 +262,27 @@
 
         let now = new Date().getTime();
         if (f.start) {
+          // ダウンロード中のエントリがある
           if ((f.start + prefs.downloadTimeout) < now) {
-            // TODO タイムアウト監視ループを作って！
             // タイムアウトしたものは管理外にして次に進む
             downloadQueue.drop(f);
             historyCache.setFailed(f.service_id, f.illust_id);
             sendDisplayMessage();
             setButtonText();
-            opDownloadQueue(null, null, sendResponse);
+
+            opDownloadQueue(null, null, null);
           }
 
           return false;
         }
+
+        // ダウンロード処理が長時間続いた場合に刈り取ってもらうための監視
+        f.timerId = setTimeout(() => {
+            logger.log('download timeout has occurred', f.service_id, f.illust_id);
+            opDownloadQueue(null, null, null);
+          },
+          prefs.downloadTimeout + WAITS_FOR_NEXT
+        );
 
         f.start = now;
         logger.log('que sz', downloadQueue.size());
@@ -284,7 +294,6 @@
             logger.log('dwdn', r);
           })
           .catch((e) => {
-            // TODO
             logger.error('dwer', e);
             historyCache.setFailed(f.service_id, f.illust_id);
           })
@@ -295,11 +304,17 @@
               return;
             }
 
+            if (f.timerId) {
+              clearTimeout(f.timerId);
+              f.timerId = 0;
+            }
+
             // 次に進む
             downloadQueue.shift(f);
             sendDisplayMessage();
             setButtonText();
-            opDownloadQueue(null, null, sendResponse);
+
+            setTimeout(() => opDownloadQueue(null, null, null), WAITS_FOR_NEXT);
           });
 
         return false;
@@ -370,8 +385,9 @@
                 return;
               }
 
-              // 履歴キャッシュにヒットした(履歴DBに記録がある)
+              // 履歴キャッシュにヒットした(履歴DBに記録がある or 直前の結果がダウンロード失敗)
               results.push(h);
+              return;
             }
 
             // 履歴キャッシュにnullで仮登録（whereでヒットしないものはeachで拾えないため）
@@ -486,7 +502,7 @@
     };
 
     /**
-     *
+     * タブにダウンロード済み表示の再実行を依頼する
      */
     let sendDisplayMessage = () => {
       chrome.tabs.query(
