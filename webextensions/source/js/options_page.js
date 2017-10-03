@@ -289,12 +289,13 @@
               })
           }
 
-          await AnkUtils.sleep(500); // 終了表示までの猶予
-
           label.textContent = 'completed';
+
+          alert(chrome.i18n.getMessage('msg_importHistoryCompleted'));
         })
         .catch((e) => {
           logger.error(e);
+          alert(chrome.i18n.getMessage('msg_importHistoryError'));
         });
     });
 

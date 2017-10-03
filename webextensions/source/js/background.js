@@ -439,6 +439,32 @@
        * ダウンロード履歴をインポートする
        */
       let queryImportDownloadHistory = (data, sender, sendResponse) => {
+        if (IS_FIREFOX) {
+          db.transaction('rw', db.histories, db.members, () => {
+            if (data.hasOwnProperty('histories')) {
+              data.histories.reduce((p, c) => p.then(() => db.histories.put(c)), Promise.resolve())
+                .then(() => {
+                  logger.log('histories imported:', data.histories.length);
+                });
+            }
+            if (data.hasOwnProperty('members')) {
+              data.members.reduce((p, c) => p.then(() => db.members.put(c)), Promise.resolve())
+                .then(() => {
+                  logger.log('members imported:', data.members.length);
+                });
+            }
+          })          .catch((e) => {
+            logger.error(e);
+            return {'error': e};
+          })
+            .then((r) => {
+              // finally
+              sendResponse(r);
+            });
+
+          return true;
+        }
+
         db.transaction('rw', db.histories, db.members, async () => {
           if (data.hasOwnProperty('histories')) {
             let len = data.histories.length;

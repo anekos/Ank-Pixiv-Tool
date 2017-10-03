@@ -93,6 +93,8 @@
   "msg_notReady": { "message": "準備ができていません" },
   "msg_cannotFindImages": { "message": "画像を見つけられませんでした" },
   "msg_cannotDecodeDatetime": { "message": "投稿日時を取得できなかったので保存できません" },
-  "msg_warnWrongDatetime": { "message": "投稿日時を取得できなかったので、現在日時で代替します" }
+  "msg_warnWrongDatetime": { "message": "投稿日時を取得できなかったので、現在日時で代替します" },
+  "msg_importHistoryCompleted": { "message": "ダウンロード履歴のインポートが完了しました" },
+  "msg_importHistoryError": { "message": "ダウンロード履歴のインポートに失敗しました" }
 }
 
