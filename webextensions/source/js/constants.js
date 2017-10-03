@@ -25,7 +25,7 @@ const OPTION_DEFAULT ={
   "displayDownloaded": true,
   "downloadedAnimationStyle": 1,
   "markDownloaded": true,
-  "markUpdated": true,
+  //"markUpdated": true,
   "shortTagsMaxLength": 8,
   "forceCheckMangaImagesAll": false,
   "defaultFilename": "AnkPixiv/?site-name?/(?member-id?) ?memoized-name?/?illust-year?-?illust-month?-?illust-day? (?illust-id?) ?title?",
@@ -58,9 +58,9 @@ const OPTION_DEFAULT ={
   "openCaptionDelay": 1000,
   "historyCacheSize": 200,
   "siteModules": {
-    "PXV":{"enabled": true, "useAutoDownload": true, "useViewer": true, "experimental": false, "name": "Pixiv", "folder": "Pixiv"},
-    "NJE":{"enabled": true, "useAutoDownload": true, "useViewer": true, "experimental": false, "name": "Nijie", "folder": "Nijie"},
-    "NCS":{"enabled": true, "useAutoDownload": true, "useViewer": true, "experimental": false, "name": "Nicosei", "folder": "Nicosei"},
-    "TWT":{"enabled": true, "useAutoDownload": undefined, "useViewer": undefined, "experimental": false, "name": "Twitter", "folder": "Twitter"}
+    "PXV":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Pixiv", "folder": "Pixiv"},
+    "NJE":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Nijie", "folder": "Nijie"},
+    "NCS":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Nicosei", "folder": "Nicosei"},
+    "TWT":{"enabled": true, "experimental": false, "name": "Twitter", "folder": "Twitter"}
   }
 };

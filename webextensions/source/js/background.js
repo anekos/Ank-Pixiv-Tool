@@ -291,6 +291,9 @@
           saveTargetsAll(f.data, null, resolve);
         })
           .then((r) => {
+            if (r && r.hasOwnProperty('error')) {
+              return Promise.reject(r);
+            }
             logger.log('dwdn', r);
           })
           .catch((e) => {
@@ -711,6 +714,10 @@
       logger.setLevel(prefs.logLevel);
 
       logger.info('START: ANK PIXIV TOOL');
+
+      AnkPrefs.setAutoApply(() => {
+        logger.setLevel(prefs.logLevel);
+      });
 
       db = await initDatabase();
       download = initDownload();

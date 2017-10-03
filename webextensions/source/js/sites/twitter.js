@@ -95,7 +95,7 @@
   AnkTwitter.prototype.getPathContext = async function (elm) {
     let getPhotoPath = async () => {
       let m = Array.prototype.map.call(elm.illust.photos, (e) => {
-        return {'src': e.src.replace(/(?::large)?$/, ':orig')};
+        return {'src': this.prefs.downloadOriginalSize ? e.src.replace(/(?::large)?$/, ':orig') : e.src};
       });
 
       return {
@@ -176,7 +176,7 @@
    */
   AnkTwitter.prototype.getContext = async function (elm) {
 
-    let tweet = ['tweet', 'gallary'].map((k) => {
+    let tweet = ['gallary', 'tweet'].map((k) => {
       let e = elm.illust[k];
       if (e.ovr && getComputedStyle(e.ovr).getPropertyValue('display') == 'block') {
         return e;
@@ -197,7 +197,7 @@
       let context = {
         'downloadable': !!result[0] && !!result[1] && !!result[2],
         'service_id': this.SITE_ID,
-        'siteName': this.sitePrefs.folder,
+        'siteName': this.prefs.site.folder,
         'path': result[0],
         'info': {
           'illust': result[1],

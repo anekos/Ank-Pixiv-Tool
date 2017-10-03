@@ -524,7 +524,7 @@
       let context = {
         'downloadable': !!result[0] && !!result[1] && !!result[2],
         'service_id': this.SITE_ID,
-        'siteName': this.sitePrefs.folder,
+        'siteName': this.prefs.site.folder,
         'path': result[0],
         'info': {
           'illust': result[1],

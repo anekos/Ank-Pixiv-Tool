@@ -138,9 +138,8 @@
 
       let img = resp.document.querySelector('.illust_view_big');
       if (img) {
-        let referrer = resp.responseURL || largePage;
         return {
-          'original': [{'src': [new URL(referrer).origin, img.getAttribute('data-src')].join(''), 'referrer': referrer}]
+          'original': [{'src': [new URL(resp.responseURL).origin, img.getAttribute('data-src')].join('')}]
         };
       }
     };
@@ -217,7 +216,7 @@
       let context = {
         'downloadable': !!result[0] && !!result[1] && !!result[2],
         'service_id': this.SITE_ID,
-        'siteName': this.sitePrefs.folder,
+        'siteName': this.prefs.site.folder,
         'path': result[0],
         'info': {
           'illust': result[1],

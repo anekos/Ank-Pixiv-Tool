@@ -2,18 +2,10 @@
 
 {
 
-  const SITE_MODULE_VALKEYS = ["enabled", "name", "folder", "useAutoDownload", "useViewer"];
-
-  // 表示テキストの変更
-  let setLabels = () => {
-    Array.prototype.forEach.call(document.querySelectorAll('*[data-i18n]'), (e) => {
-      let key = e.getAttribute('data-i18n');
-      e.textContent = chrome.i18n.getMessage('options_'+key) || '# UNDEFINED : '+key+' #';
-    });
-  };
+  const SITE_MODULE_VALKEYS = ["enabled", "name", "folder", "useAutoDownload", "useDisplayDownloaded", "useMarkDownloaded", "useViewer"];
 
   //
-  let setList = () => {
+  let setSiteList = () => {
     let createLabelBox = (text) => {
       let label = document.createElement('td');
       label.innerText = text;
@@ -48,6 +40,18 @@
       return txt_td;
     };
 
+    let header = document.querySelector('#siteListContainer > thead');
+
+    (() => {
+      let box = document.createElement('tr');
+      header.appendChild(box);
+      SITE_MODULE_VALKEYS.forEach((value_key) => {
+        let th = document.createElement('th');
+        th.setAttribute('data-i18n', ['siteList', value_key].join('_'));
+        box.appendChild(th);
+      });
+    })();
+
     let container = document.querySelector('#siteListContainer > tbody');
 
     let sms = OPTION_DEFAULT.siteModules;
@@ -74,6 +78,14 @@
         })(typeof value);
         box.appendChild(td);
       });
+    });
+  };
+
+  // 表示テキストの変更
+  let setLabels = () => {
+    Array.prototype.forEach.call(document.querySelectorAll('*[data-i18n]'), (e) => {
+      let key = e.getAttribute('data-i18n');
+      e.textContent = chrome.i18n.getMessage('options_'+key) || '# UNDEFINED : '+key+' #';
     });
   };
 
@@ -185,12 +197,12 @@
     });
   };
 
-  // その他のイベント
+  // ダウンロード履歴インポートボタンのイベント
   let addImportHistoryEvent = () => {
 
     const IMPORT_UNITS = 1000;
 
-    let requestImpoerHistory = async (target, src, getVal) => {
+    let requestImportHistory = async (target, src, getVal) => {
       let i = 0;
       let len = src.length;
       for (;;) {
@@ -245,7 +257,7 @@
       AnkUtils.blobToJSON(file)
         .then(async (r) => {
           if (r && Array.isArray(r.h)) {
-            await requestImpoerHistory('histories',
+            await requestImportHistory('histories',
               r.h,
               (v) => {
                 if (!v[0] || !v[1]) {
@@ -262,7 +274,7 @@
             });
           }
           if (r && Array.isArray(r.m)) {
-            await requestImpoerHistory('members',
+            await requestImportHistory('members',
               r.m,
               (v) => {
                 if (!v[0] || !v[1]) {
@@ -277,8 +289,9 @@
               })
           }
 
-          await AnkUtils.sleep(500);
-          label.textContent = 'comleted';
+          await AnkUtils.sleep(500); // 終了表示までの猶予
+
+          label.textContent = 'completed';
         })
         .catch((e) => {
           logger.error(e);
@@ -297,8 +310,8 @@
     let prefs = await AnkPrefs.restore(OPTION_DEFAULT);
     logger.setLevel(prefs.logLevel);
 
+    setSiteList(prefs);
     setLabels();
-    setList(prefs);
     setOptionValues(prefs);
     addResetEvent();
     addSaveEvent();

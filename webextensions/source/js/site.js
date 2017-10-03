@@ -12,10 +12,10 @@
     }
 
     this.SITE_ID = null;
+
     this.prefs = null;
-    this.sitePrefs = null;
     this.elements = null;
-    this.download = null;
+
     this.marked = 0;        // markingを行った最終時刻（キューインや保存完了の時刻と比較する）
   };
 
@@ -24,21 +24,32 @@
    */
   AnkSite.prototype.start = function () {
 
+    let applySitePrefs = (global, local) => {
+      this.prefs[global] = this.prefs[global] && this.prefs.site[local];
+    };
+
     return (async () => {
       this.prefs = await AnkPrefs.restore(OPTION_DEFAULT);
 
       logger.setLevel(this.prefs.logLevel);
 
-      this.sitePrefs = this.prefs.siteModules[this.SITE_ID];
-      if (!this.sitePrefs) {
-        logger.info('INVALID SITE MODULE:', this.SITE_ID);
+      this.prefs.site = this.prefs.siteModules[this.SITE_ID];
+      if (!this.prefs.site) {
+        logger.error('INVALID SITE MODULE:', this.SITE_ID);
         return Promise.reject(new Error('INVALID SITE MODULE'));
       }
-      if (!this.sitePrefs.enabled) {
+
+      applySitePrefs('largeOnMiddle', 'useViewer');
+      applySitePrefs('downloadWhenClickMiddle', 'useAutoDownload');
+      applySitePrefs('downloadWhenRate', 'useAutoDownload');
+      applySitePrefs('displayDownloaded', 'useDisplayDownloaded');
+      applySitePrefs('markDownloaded', 'useMarkDownloaded');
+
+      if (!this.prefs.site.enabled) {
         logger.info('DISABLED SITE MODULE:', this.SITE_ID);
         return;
       }
-      if (this.sitePrefs.experimental && !this.prefs.useExperimentalModule) {
+      if (!this.prefs.useExperimentalModule && this.prefs.site.experimental) {
         logger.info('DISABLED EXPERIMENTAL MODULE:', this.SITE_ID);
         return;
       }
@@ -332,7 +343,7 @@
           return ['failed'];
         }
         if (status.last_saved) {
-          if (this.prefs.markUpdated && opts.updated > status.last_saved) {
+          if (opts.updated > status.last_saved) {
             return ['updated']
           }
 
@@ -409,7 +420,7 @@
           if (!boxes[illust_id].find((b) => b.box === box)) {
             boxes[illust_id].push({
               'box': box,
-              'datetime': this.prefs.markUpdated && (opts.getLastUpdate && opts.getLastUpdate(box))
+              'datetime': opts.getLastUpdate && opts.getLastUpdate(box)
             });
           }
         });
@@ -432,7 +443,7 @@
               return 'ank-pixiv-downloading';
             }
             if (s.last_saved) {
-              if (this.prefs.markUpdated && e.datetime > s.last_saved) {
+              if (e.datetime > s.last_saved) {
                 return 'ank-pixiv-updated';
               }
 

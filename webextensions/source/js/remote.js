@@ -27,7 +27,7 @@
 
       xhr.open((isPost ? 'POST' : 'GET'), opts.url, true);
 
-      xhr.withCredentials = true;
+      //xhr.withCredentials = true;
 
       if (opts.responseType) {
         xhr.responseType = opts.responseType;
