@@ -110,13 +110,13 @@
 
           //if (delta.error && delta.error.current !== 'USER_CANCELED') {
           if (delta.error) {
-            logger.log('download failed:', delta.id, delta.error);
+            logger.debug('download failed:', delta.id, delta.error);
             let s = eraseDownloadItem(delta.id);
             return s.onError(new Error(delta.error));
           }
 
           if (delta.state && delta.state.current === 'complete') {
-            logger.log('download completed:', delta.id);
+            logger.debug('download completed:', delta.id);
             let s = eraseDownloadItem(delta.id);
             return s.onSuccess();
           }
@@ -184,7 +184,7 @@
               return resolve();
             }
 
-            queryUpdateDownloadStatus({'info': h}, null, resolve);
+            queryUpdateDownloadHistory({'info': h}, null, resolve);
           });
         };
 
@@ -214,7 +214,7 @@
                 let objURL = t.objurl;
                 if (objURL) {
                   t.objurl = null;
-                  logger.log('revoke', objURL);
+                  logger.debug('revoke', objURL);
                   try {
                     URL.revokeObjectURL(objURL);
                   }
@@ -278,14 +278,14 @@
 
         // ダウンロード処理が長時間続いた場合に刈り取ってもらうための監視
         f.timerId = setTimeout(() => {
-            logger.log('download timeout has occurred', f.service_id, f.illust_id);
+            logger.debug('download timeout has occurred', f.service_id, f.illust_id);
             opDownloadQueue(null, null, null);
           },
           prefs.downloadTimeout + WAITS_FOR_NEXT
         );
 
         f.start = now;
-        logger.log('que sz', downloadQueue.size());
+        logger.debug('que sz', downloadQueue.size());
 
         new Promise((resolve) => {
           saveTargetsAll(f.data, null, resolve);
@@ -294,7 +294,7 @@
             if (r && r.hasOwnProperty('error')) {
               return Promise.reject(r);
             }
-            logger.log('dwdn', r);
+            logger.debug('dwdn', r);
           })
           .catch((e) => {
             logger.error('dwer', e);
@@ -420,7 +420,7 @@
       /**
        * ダウンロード履歴を更新する
        */
-      let queryUpdateDownloadStatus = (data, sender, sendResponse) => {
+      let queryUpdateDownloadHistory = (data, sender, sendResponse) => {
         historyCache.setInfo(data.info.service_id, data.info.illust_id, data.info);
         db.histories.put(data.info)
           .catch((e) => {
@@ -439,46 +439,18 @@
        * ダウンロード履歴をインポートする
        */
       let queryImportDownloadHistory = (data, sender, sendResponse) => {
-        if (IS_FIREFOX) {
-          db.transaction('rw', db.histories, db.members, () => {
-            if (data.hasOwnProperty('histories')) {
-              data.histories.reduce((p, c) => p.then(() => db.histories.put(c)), Promise.resolve())
-                .then(() => {
-                  logger.log('histories imported:', data.histories.length);
-                });
-            }
-            if (data.hasOwnProperty('members')) {
-              data.members.reduce((p, c) => p.then(() => db.members.put(c)), Promise.resolve())
-                .then(() => {
-                  logger.log('members imported:', data.members.length);
-                });
-            }
-          })          .catch((e) => {
-            logger.error(e);
-            return {'error': e};
-          })
-            .then((r) => {
-              // finally
-              sendResponse(r);
-            });
-
-          return true;
-        }
-
-        db.transaction('rw', db.histories, db.members, async () => {
+        db.transaction('rw', db.histories, db.members, () => {
           if (data.hasOwnProperty('histories')) {
-            let len = data.histories.length;
-            for (let i=0; i < len; i++) {
-              await db.histories.put(data.histories[i]);
-            }
-            logger.log('histories imported:', len);
+            data.histories.reduce((p, c) => p.then(() => db.histories.put(c)), Promise.resolve())
+              .then(() => {
+                logger.debug('histories imported:', data.histories.length);
+              });
           }
           if (data.hasOwnProperty('members')) {
-            let len = data.members.length;
-            for (let i=0; i < len; i++) {
-              await db.members.put(data.members[i]);
-            }
-            logger.log('members imported:', len);
+            data.members.reduce((p, c) => p.then(() => db.members.put(c)), Promise.resolve())
+              .then(() => {
+                logger.debug('members imported:', data.members.length);
+              });
           }
         })
           .catch((e) => {
@@ -517,8 +489,8 @@
               return queryGetMemberInfo(message.data, sender, sendResponse);
             case 'AnkPixiv.Query.getDownloadStatus':
               return queryGetDownloadStatus(message.data, sender, sendResponse);
-            case 'AnkPixiv.Query.updateDownloadStatus':
-              return queryUpdateDownloadStatus(message.data, sender, sendResponse);
+            case 'AnkPixiv.Query.updateDownloadHistory':
+              return queryUpdateDownloadHistory(message.data, sender, sendResponse);
             case 'AnkPixiv.Query.importDownloadHistory':
               return queryImportDownloadHistory(message.data, sender, sendResponse);
             case 'AnkPixiv.Query.getSiteChanged':
@@ -669,7 +641,7 @@
         let v = cache.get(k);
         if (v !== undefined) {
           // LRU
-          logger.log('HIST CACHE HIT:', k);
+          logger.debug('HIST CACHE HIT:', k);
           cache.delete(k);
           cache.set(k, v)
         }
@@ -686,7 +658,7 @@
         if (cache.size > prefs.historyCacheSize + CACHE_DROP_MARGIN) {
           let it = cache.keys();
           for (let wk = it.next(); wk && cache.size > prefs.historyCacheSize; wk = it.next()) {
-            logger.log('HIST CACHE DROPPED:', wk.value);
+            logger.debug('HIST CACHE DROPPED:', wk.value);
             cache.delete(wk.value);
           }
         }

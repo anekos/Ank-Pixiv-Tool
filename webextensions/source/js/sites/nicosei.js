@@ -127,11 +127,9 @@
   AnkNicosei.prototype.getPathContext = async function (elm) {
     let getMedPath = async () => {
       let largePage = this.elements.illust.med.imgLink.href;
-      //let referrer = this.elements.doc.location.href;
       logger.info('ORIGINAL IMAGE PAGE:', largePage);
       let resp = await remote.get({
         'url': largePage,
-        //headers: [{name:'Referer', value:indexPage}],
         'responseType': 'document',
         'timeout': this.prefs.xhrTimeout
       });
@@ -378,7 +376,7 @@
         return;
       }
 
-      AnkViewer.open({'doc': this.elements.doc, 'prefs': this.prefs, 'path': context.path});
+      AnkViewer.open({'prefs': this.prefs, 'path': context.path});
     })();
   };
 

@@ -355,11 +355,10 @@
       // マンガインデックスページを参照して画像URLリストを取得する
       let indexURL = elm.illust.mng.largeLink.href;
       let referrer = elm.doc.location.href;
-      logger.info('MANGA INDEX PAGE:', indexURL, ',', referrer);
+      logger.info('MANGA INDEX PAGE:', indexURL, referrer);
 
       let respIndex = await remote.get({
         'url': indexURL,
-        //'headers': [{'name': 'Referer', 'value': referrer}],
         'responseType': 'document',
         'timeout': this.prefs.xhrTimeout
       });
@@ -709,7 +708,7 @@
         return;
       }
 
-      AnkViewer.open({'doc': this.elements.doc, 'prefs': this.prefs, 'path': context.path});
+      AnkViewer.open({'prefs': this.prefs, 'path': context.path});
     })();
   };
 

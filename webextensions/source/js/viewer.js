@@ -4,9 +4,10 @@
 
   var AnkViewer = (() => {
 
-    let doc = null;
     let prefs = null;
+
     let viewer = null;
+
     let currentPageIdx = 0;
     let totalPages = 0;
     let pageCache = null;
@@ -22,15 +23,15 @@
     };
 
     let queryElementById = (id) => {
-      return doc.querySelector('#' + getElementId(id));
+      return document.querySelector('#' + getElementId(id));
     };
 
     // 他のハンドラをキックさせない
     let noMoreEvent = (func) => {
-      return function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        return func.apply(this, arguments);
+      return (...args) => {
+        args[0].preventDefault();
+        args[0].stopPropagation();
+        return func.apply(this, args);
       };
     };
 
@@ -44,102 +45,112 @@
           return;
         }
         scrollPos = {
-          top: doc.body.scrollTop,
-          left: doc.body.scrollLeft
+          'top': document.body.scrollTop,
+          'left': document.body.scrollLeft
         };
-        doc.documentElement.classList.add(getElementId('enabled'));
+        document.documentElement.classList.add(getElementId('enabled'));
       };
 
-      let resume = () => () => {
+      let resume = () => {
         if (!scrollPos) {
           return;
         }
-        doc.documentElement.classList.remove(getElementId('enabled'));
-        doc.body.scrollTop = scrollPos.top;
-        doc.body.scrollLeft = scrollPos.left;
+        document.documentElement.classList.remove(getElementId('enabled'));
+        document.body.scrollTop = scrollPos.top;
+        document.body.scrollLeft = scrollPos.left;
         scrollPos = null;
       };
 
       return {
-        pause: pause,
-        resume: resume
-      }
+        'pause': pause,
+        'resume': resume
+      };
     })();
 
-    // キャッシュ済みでなく、ソースがblobやdataURLでない場合はリモートアクセスする
-    let getImageSource = async (pc) => {
-      if (!pc) {
-        return;
-      }
+    // ボタンパネルの表示・非表示
+    let buttonCtrl = (() => {
 
-      if (!prefs.useImagePrefetch) {
-        // 非キャッシュ設定の場合はsrcをそのまま渡す
-        return pc;
-      }
+      let fadeOutTimer = 0;
 
-      if (!pc.blob && /^https?:\/\//.test(pc.src)) {
-        let resp = await remote.get({
-          url: pc.src,
-          timeout: prefs.xhrTimeout,
-          headers: [{name:'Referer', value:doc.location.href}],
-          responseType: 'blob'
-        });
+      let show = () => {
+        if (fadeOutTimer) {
+          clearInterval(fadeOutTimer);
+          fadeOutTimer = 0;
+        }
 
-        logger.info('FETCHED: ', pc.src);
-        pc.blob = URL.createObjectURL(resp.blob);
-      }
-      return pc;
-    };
+        viewer.buttonPanel.style.opacity = prefs.maxPanelOpacity / 100.0;
+      };
+
+      let hide = function () {
+        let decOpacity = () => {
+          try {
+            if (buttonOpacity > prefs.minPanelOpacity) {
+              buttonOpacity -= step;
+              viewer.buttonPanel.style.opacity = buttonOpacity / 100.0;
+              return false;   // please retry
+            }
+          } catch (e) {}
+          return true;
+        };
+
+        let fadeOutTimerHandler = () => {
+          if (decOpacity()) {
+            clearInterval(fadeOutTimer);
+            fadeOutTimer = 0;
+          }
+        };
+
+        let buttonOpacity = prefs.maxPanelOpacity;
+        let step = (prefs.maxPanelOpacity - prefs.minPanelOpacity) / 10.0;
+
+        fadeOutTimer = setInterval(fadeOutTimerHandler, 100);
+      };
+
+      return {
+        'show': show,
+        'hide': hide
+      };
+    })();
 
     /**
      * 指定のページを表示する
-     * @param opt
-     * @returns {*}
+     * @param opts
      */
-    let showPage = (opt) => {
-      currentPageIdx = getNewPageIdx(opt, currentPageIdx, totalPages);
+    let setPage = (opts) => {
+      currentPageIdx = getNewPageIdx(opts, currentPageIdx, totalPages);
       if (currentPageIdx === undefined) {
         return closeViewer();
       }
 
-      let pgidx = currentPageIdx;
       let pgc = pageCache[currentPageIdx];
 
-      return Promise.all([
-        getImageSource(pgc[0]),
-        getImageSource(pgc[1])
-      ]).then((imgs) => {
-        if (pgidx != currentPageIdx) {
-          // ロード中に別のページに移ってしまっていたのでキャンセル
-          return;
-        }
+      if (pgc[1]) {
+        viewer.fpImg.classList.remove('none');
+        viewer.fpImg.setAttribute('src', pgc[1].objurl || pgc[1].src);
+      }
+      else {
+        viewer.fpImg.classList.add('none');
+        viewer.fpImg.setAttribute('src', '');
+      }
 
-        if (imgs[1]) {
-          viewer.fpImg.classList.remove('none');
-          viewer.fpImg.setAttribute('src', imgs[1].blob || imgs[1].src);
-        }
-        else {
-          viewer.fpImg.classList.add('none');
-          viewer.fpImg.setAttribute('src', '');
-        }
+      if (pgc[0]) {
+        viewer.bigImg.setAttribute('src', pgc[0].objurl || pgc[0].src);
+      }
 
-        if (imgs[0]) {
-          viewer.bigImg.setAttribute('src', imgs[0].blob || imgs[0].src);
-        }
-      }).catch((e) => logger.error(e));
+      if (prefs.useImagePrefetch) {
+        loadImageToCache(currentPageIdx);
+      }
     };
-
-    //
 
     /**
      * 移動先のページ番号を取得する
-     * @param opt
+     * @param opts
      * @param currentPageIdx
      * @param totalPages
      * @returns {*}
      */
-    let getNewPageIdx = (opt, currentPageIdx, totalPages) => {
-      if (opt.nextPage) {
+    let getNewPageIdx = (opts, currentPageIdx, totalPages) => {
+      if (opts.nextPage) {
         // 次へ
         let n = (currentPageIdx + 1) % totalPages;
         if (prefs.loopPage || currentPageIdx < n) {
@@ -147,7 +158,7 @@
           return n;
         }
       }
-      else if (opt.prevPage) {
+      else if (opts.prevPage) {
         // 前へ
         let n = (currentPageIdx + totalPages - 1) % totalPages;
         if (prefs.loopPage || currentPageIdx > n) {
@@ -155,9 +166,10 @@
           return n;
         }
       }
-      else if (0 <= opt.pageNo && opt.pageNo < totalPages) {
+      else if (0 <= opts.pageNo && opts.pageNo < totalPages) {
         // ページ番号指定
-        return opt.pageNo;
+        viewer.pageSelector.value = opts.pageNo;
+        return opts.pageNo;
       }
     };
 
@@ -190,124 +202,160 @@
         let n = img.facingNo > 0 && img.facingNo-1 || i;
         pageCache[n] = pageCache[n] || [];
         pageCache[n].push({
-          src: img.src,
-          blob: null
+          'src': img.src,
+          'referrer': img.referrer,
+          'busy': false,
+          'objurl': null
         })
       });
       return pageCache;
     };
 
     /**
-     * 全ページの画像データを先行読み込みする
-     * @param pageCache
-     * @param totalPages
-     * @returns {Promise.<void>}
+     * 画像データを先行読み込みする
+     * @param pageIdx
      */
-    let loadImagesToCache = async (pageCache, totalPages) => {
-      for (let n=0; n < totalPages; n++) {
-        let pgc = pageCache[(n+1) % totalPages];  // P.1は処理済みのはずなので、P.2から始める
-        for (let i=0; i<pgc.length; i++) {
-          let imgc = pgc[i];
-          if (!imgc.blob) {
-            let resp = await remote.get({
-              url: imgc.src,
-              timeout: prefs.xhrTimeout,
-              responseType: 'blob'
+    let loadImageToCache = (pageIdx) => {
+      let loadImg = async (pageCache) => {
+        for (let i=0; i<pageCache.length; i++) {
+          let imgCache = pageCache[i];
+          if (!imgCache.objurl && !imgCache.busy && /^https?:\/\//.test(imgCache.src)) {
+            imgCache.busy = true;
+            await remote.get({
+              'url': imgCache.src,
+              //'headers': imgCache.referrer && [{'name':'Referer', 'value': imgCache.referrer}],
+              'timeout': prefs.xhrTimeout,
+              'responseType': 'blob'
+            }).then((resp) => {
+              logger.debug('PREFETCHED:', imgCache.src);
+              imgCache.objurl = URL.createObjectURL(resp.blob);
+              imgCache.busy = false;
             });
-
-            logger.info('PREFETCHED: ', imgc.src);
-            imgc.blob = URL.createObjectURL(resp.blob);
           }
         }
-      }
+      };
+
+      (async () => {
+        if (pageIdx) {
+          // 指定ページ
+          await loadImg(pageCache[pageIdx]);
+        }
+        else {
+          // 全ページ
+          for (let n=0; n < totalPages; n++) {
+            await loadImg(pageCache[(n+1) % totalPages]);  // P.1は処理済みのはずなので、P.2から始める
+          }
+        }
+      })().catch((e) => {
+        logger.error(e);
+      });
     };
 
     /**
      * ビュアーを構築する
-     * @param doc
-     * @param totalPages
-     * @param facing
      * @returns {{panel, bigImg, fpImg, imgContainer, imgPanel, buttonPanel, prevButton, nextButton, resizeButton, closeButton, pageSelector}}
      */
-    let createViewerElements = (doc, totalPages, facing) => {
-      let viewer = {
-        panel: createElement('div', 'panel'),
-        bigImg: createElement('img', 'image', 'show_image'),
-        fpImg: createElement('img', 'image-fp', 'show_image'),
-        imgContainer: createElement('div', 'image-container'),
-        imgPanel: createElement('div', 'image-panel'),
-        buttonPanel: createElement('div', 'button-panel'),
-        prevButton: createElement('button', 'prev-button', 'submit_button'),
-        nextButton: createElement('button', 'next-button', 'submit_button'),
-        resizeButton: createElement('button', 'resize-button', 'submit_button'),
-        closeButton: createElement('button', 'close-button', 'submit_button'),
-        pageSelector: createElement('select', 'page-selector', 'item_selector')
+    let createViewerElements = () => {
+      let vw = {
+        'panel': createElement('div', 'panel'),
+        'bigImg': createElement('img', 'image', 'show_image'),
+        'fpImg': createElement('img', 'image-fp', 'show_image'),
+        'imgContainer': createElement('div', 'image-container'),
+        'imgPanel': createElement('div', 'image-panel'),
+        'buttonPanel': createElement('div', 'button-panel'),
+        'prevButton': createElement('button', 'prev-button', 'submit_button'),
+        'nextButton': createElement('button', 'next-button', 'submit_button'),
+        'resizeButton': createElement('button', 'resize-button', 'submit_button'),
+        'closeButton': createElement('button', 'close-button', 'submit_button'),
+        'pageSelector': createElement('select', 'page-selector', 'item_selector')
       };
 
-      viewer.fpImg.classList.add('fp');
+      vw.fpImg.classList.add('fp');
 
-      viewer.prevButton.classList.add('for-multi');
-      viewer.nextButton.classList.add('for-multi');
-      viewer.pageSelector.classList.add('for-multi');
+      vw.prevButton.classList.add('for-multi');
+      vw.nextButton.classList.add('for-multi');
+      vw.pageSelector.classList.add('for-multi');
 
-      viewer.panel.appendChild(viewer.imgPanel);
-      viewer.imgPanel.appendChild(viewer.imgContainer);
-      viewer.imgContainer.appendChild(viewer.fpImg);
-      viewer.imgContainer.appendChild(viewer.bigImg);
-      viewer.panel.appendChild(viewer.buttonPanel);
-      viewer.buttonPanel.appendChild(viewer.pageSelector);
-      viewer.buttonPanel.appendChild(viewer.prevButton);
-      viewer.buttonPanel.appendChild(viewer.nextButton);
-      viewer.buttonPanel.appendChild(viewer.resizeButton);
-      viewer.buttonPanel.appendChild(viewer.closeButton);
+      vw.panel.appendChild(vw.imgPanel);
+      vw.imgPanel.appendChild(vw.imgContainer);
+      vw.imgContainer.appendChild(vw.fpImg);
+      vw.imgContainer.appendChild(vw.bigImg);
+      vw.panel.appendChild(vw.buttonPanel);
+      vw.buttonPanel.appendChild(vw.pageSelector);
+      vw.buttonPanel.appendChild(vw.prevButton);
+      vw.buttonPanel.appendChild(vw.nextButton);
+      vw.buttonPanel.appendChild(vw.resizeButton);
+      vw.buttonPanel.appendChild(vw.closeButton);
 
+      vw.fpImg.classList.add('none');
+
+      vw.pageSelector.addEventListener('change', noMoreEvent((e) => setPage({'pageNo': e.target.value}), false));
+      vw.pageSelector.addEventListener('click', noMoreEvent(() => {}), true);
+      vw.prevButton.addEventListener('click', noMoreEvent(() => setPage({'prevPage': true})), true);
+      vw.nextButton.addEventListener('click', noMoreEvent(() => setPage({'nextPage': true})), true);
+
+      // TODO
+      vw.panel.classList.add('fit_in_height');
+
+      // FIXME 'FIT in Window'がないよ
+      vw.resizeButton.addEventListener('click', noMoreEvent(() => {
+        if (vw.panel.classList.contains('fit_in_height')) {
+          vw.panel.classList.remove('fit_in_height');
+          vw.panel.classList.add('fit_in_width');
+        }
+        else if (vw.panel.classList.contains('fit_in_width')) {
+          vw.panel.classList.remove('fit_in_width');
+        }
+        else {
+          vw.panel.classList.add('fit_in_height');
+        }
+      }), true);
+
+      vw.closeButton.addEventListener('click', noMoreEvent(() => closeViewer()), false);
+
+      vw.bigImg.addEventListener('click', noMoreEvent(() => setPage({'nextPage': true})), true);
+      vw.fpImg.addEventListener('click', noMoreEvent(() => setPage({'nextPage': true})), true);
+      vw.panel.addEventListener('click', noMoreEvent(() => closeViewer()), false);
+
+      vw.buttonPanel.addEventListener('mouseover', buttonCtrl.show, false);
+      vw.buttonPanel.addEventListener('mouseout', buttonCtrl.hide, false);
+
+      return vw;
+    };
+
+    /**
+     * 見開きモードを設定する
+     * @param facing
+     */
+    let setFacingMode = (facing) => {
+      viewer.panel.classList.remove('facing');
       if (facing) {
         viewer.panel.classList.add('facing');
       }
+    };
 
-      viewer.fpImg.classList.add('none');
-
+    /**
+     * ページセレクタの選択肢を生成する
+     * @param totalPages
+     */
+    let setPageSelectorOptions = (totalPages) => {
+      viewer.buttonPanel.classList.remove('single-image', 'multi-image');
       if (totalPages == 1) {
         viewer.buttonPanel.classList.add('single-image');
       }
       else {
         viewer.buttonPanel.classList.add('multi-image');
-        for (let i=0; i<totalPages; i++) {
-          let o = doc.createElement('option');
-          o.textContent = [i+1, totalPages].join('/');
-          o.value = i;
-          viewer.pageSelector.appendChild(o);
-        }
-        viewer.pageSelector.addEventListener('change', noMoreEvent((e) => showPage({pageNo:e.target.value}), false));
-        viewer.pageSelector.addEventListener('click', noMoreEvent(() => void 0), true);
-        viewer.prevButton.addEventListener('click', noMoreEvent(() => showPage({prevPage:true})), true);
-        viewer.nextButton.addEventListener('click', noMoreEvent(() => showPage({nextPage:true})), true);
       }
 
-      // TODO
-      viewer.panel.classList.add('fit_in_height');
-
-      // FIXME 'FIT in Window'がないよ
-      viewer.resizeButton.addEventListener('click', noMoreEvent(() => {
-        if (viewer.panel.classList.contains('fit_in_height')) {
-          viewer.panel.classList.remove('fit_in_height');
-          viewer.panel.classList.add('fit_in_width');
-        }
-        else if (viewer.panel.classList.contains('fit_in_width')) {
-          viewer.panel.classList.remove('fit_in_width');
-        }
-        else {
-          viewer.panel.classList.add('fit_in_height');
-        }
-      }), true);
-
-      viewer.closeButton.addEventListener('click', noMoreEvent(() => closeViewer()), false);
-
-      viewer.bigImg.addEventListener('click', noMoreEvent(() => showPage({nextPage:true})), true);
-      viewer.fpImg.addEventListener('click', noMoreEvent(() => showPage({nextPage:true})), true);
-      viewer.panel.addEventListener('click', noMoreEvent(() => closeViewer()), false);
-
-      return viewer;
+      while (viewer.pageSelector.firstChild) {
+        viewer.pageSelector.removeChild(viewer.pageSelector.firstChild);
+      }
+      for (let i=0; i<totalPages; i++) {
+        let o = document.createElement('option');
+        o.textContent = [i+1, totalPages].join('/');
+        o.value = i;
+        viewer.pageSelector.appendChild(o);
+      }
     };
 
     /**
@@ -316,8 +364,7 @@
      */
     let openViewer = (opts) => {
 
-      doc = opts.doc;
-      prefs = opts.prefs;
+      prefs = prefs || opts.prefs;
 
       let panel = queryElementById('panel');
       if (panel) {
@@ -326,8 +373,8 @@
       }
 
       // サムネかオリジナル画像か選ぶ
-      let imagePath = !prefs.viewOriginalSize && opts.path.thumbnail || opts.path.original;
-      if (!imagePath) {
+      let path = prefs.viewOriginalSize && opts.path.original || opts.path.thumbnail || opts.path.original;
+      if (!path) {
         // 引数にパスが見つからない
         return;
       }
@@ -335,62 +382,58 @@
       // ビュアーに隠れるページのスクロールを一時停止する
       scrollCtrl.pause();
 
-      // FIXME 再度開いたとき、前回開いていたページを開きなおしたい
-      currentPageIdx = 0;
-      totalPages = getTotalPage(imagePath);
-      pageCache = createPageCache(imagePath, totalPages);
-      let facing = pageCache.length < imagePath.length;
+      totalPages = getTotalPage(path);
+      pageCache = createPageCache(path, totalPages);
 
       // viewerを構築する
-      viewer = createViewerElements(doc, totalPages, facing);
-      doc.body.appendChild(viewer.panel);
+      viewer = viewer || createViewerElements();
+      setFacingMode(pageCache.length < path.length);
+      setPageSelectorOptions(totalPages);
+
+      document.body.appendChild(viewer.panel);
 
       // 開く
-      showPage({pageNo: currentPageIdx})
-        .then(() => {
-          if (!prefs.useImagePrefetch) {
-            return;
-          }
+      currentPageIdx = currentPageIdx === undefined ? 0 : currentPageIdx;
+      setPage({'pageNo': currentPageIdx});
+      buttonCtrl.show();
 
-          // 先行読み込み
-          return loadImagesToCache(pageCache, totalPages);
-        });
+      if (prefs.useImagePrefetch) {
+        // 先行読み込み
+        loadImageToCache();
+      }
     };
 
     /**
      * 閉じる
      */
     let closeViewer = () => {
-      if (!viewer) {
+      let panel = queryElementById('panel');
+      if (!panel) {
+        // 開いていない
         return;
       }
 
-      // キャッシュの開放
-      for (let i=0; i < pageCache.length; i++) {
-        let pgc = pageCache[i];
-        for (let j=0; j<pgc.length; j++) {
-          let imgc = pgc[j];
-          if (imgc.blob) {
-            logger.info('REVOKED: ', imgc.src);
-            URL.revokeObjectURL(imgc.blob);
-          }
-        }
-      }
+      document.body.removeChild(panel);
 
       scrollCtrl.resume();
 
-      doc.body.removeChild(viewer.panel);
-
-      viewer = null;
-      prefs = null;
-      doc = null;
-    };
+      // キャッシュの開放
+      pageCache.forEach((pgc) => {
+        pgc.forEach((imgc) => {
+          imgc.busy = true;
+          if (imgc.objurl) {
+            logger.debug('REVOKED:', imgc.src);
+            URL.revokeObjectURL(imgc.objurl);
+          }
+        });
+      });
+   };
 
     //
 
     return {
-      open: openViewer,
-      close: closeViewer
+      'open': openViewer,
+      'close': closeViewer
     };
 
   })();

@@ -107,16 +107,7 @@
       box.focus();
     };
 
-    let currentFilenameElement = null;
-
-    ['defaultFilename', 'alternateFilename'].forEach((e) => {
-      let box = document.getElementById(e);
-      if (box) {
-        box.addEventListener('focus', () => {
-          currentFilenameElement = box;
-        });
-      }
-    });
+    let currentFilenameElement = document.getElementById('defaultFilename');
 
     Array.prototype.forEach.call(document.querySelectorAll('#filenameTags select'), (e) => {
       e.addEventListener('click', (e) => pushToken(e));
@@ -234,7 +225,7 @@
         });
 
         label.textContent = [target, 'imported', i, '/', len].join(' ');
-        logger.log(target, 'imported:', i);
+        logger.debug(target, 'imported:', i);
 
         await AnkUtils.sleep(200);
       }
@@ -316,6 +307,7 @@
     setOptionValues(prefs);
     addResetEvent();
     addSaveEvent();
+    addFilenameTagPushEvent();
     addImportHistoryEvent();
   })();
 

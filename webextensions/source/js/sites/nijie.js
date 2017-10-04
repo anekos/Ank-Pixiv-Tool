@@ -395,7 +395,7 @@
         return;
       }
 
-      AnkViewer.open({'doc': this.elements.doc, 'prefs': this.prefs, 'path': context.path});
+      AnkViewer.open({'prefs': this.prefs, 'path': context.path});
     })();
   };
 

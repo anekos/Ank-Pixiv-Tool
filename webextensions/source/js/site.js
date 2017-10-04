@@ -45,6 +45,8 @@
       applySitePrefs('displayDownloaded', 'useDisplayDownloaded');
       applySitePrefs('markDownloaded', 'useMarkDownloaded');
 
+      this.prefs.useImagePrefetch = this.prefs.useImagePrefetch && ! IS_FIREFOX;
+
       if (!this.prefs.site.enabled) {
         logger.info('DISABLED SITE MODULE:', this.SITE_ID);
         return;
@@ -91,8 +93,7 @@
       }
 
       if (args[1] === 'Display') {
-        this.onFocusHandler();
-        return
+        return this.onFocusHandler();
       }
     };
 
@@ -273,7 +274,7 @@
         // FIXME objurlのcleanupが必要
         return AnkUtils.downloadTargets(targets, this.requestExecuteSaveObject, this.prefs.xhrTimeout)
           .then(() => {
-            return this.requestUpdateDownloadStatus(hist_data);
+            return this.requestUpdateDownloadHistory(hist_data);
           });
       }
     };
@@ -380,7 +381,7 @@
       let siteChanged = await this.requestGetSiteChanged();
       if (this.marked > siteChanged) {
         // 前回チェック時刻より後にサイトの更新が発生していなければ再度のチェックはしない
-        logger.log('skip mark downloaded');
+        logger.debug('skip mark downloaded');
         return;
       }
 
@@ -426,42 +427,48 @@
         });
       });
 
-      // FIXME BOXが多すぎるとブラウザが固まる
-      // ダウンロード状態を調べて反映する
+      // ダウンロード状態を調べて反映する（リソースを占有しないよう、一定数ごとにsleepする）
       let statuses = await this.requestGetDownloadStatus(Object.keys(boxes));
-      if (!statuses) {
-        return;
-      }
-      statuses.forEach((s) => {
-        boxes[s.illust_id].forEach((e) => {
-          let cls = (() => {
-            // s.failed は見る必要がない
-            if (s.downloading) {
-              return 'ank-pixiv-downloading';
-            }
-            if (s.downloading) {
-              return 'ank-pixiv-downloading';
-            }
-            if (s.last_saved) {
-              if (e.datetime > s.last_saved) {
-                return 'ank-pixiv-updated';
-              }
+      if (statuses) {
+        const S_STEP = 10;
+        let slen = statuses.length;
+        for (let sa=0; sa < slen; sa+=S_STEP) {
+          statuses.slice(sa, sa+S_STEP).forEach((s) => {
+            boxes[s.illust_id].forEach((e) => {
+              let cls = (() => {
+                // s.failed は見る必要がない
+                if (s.downloading) {
+                  return 'ank-pixiv-downloading';
+                }
+                if (s.downloading) {
+                  return 'ank-pixiv-downloading';
+                }
+                if (s.last_saved) {
+                  if (e.datetime > s.last_saved) {
+                    return 'ank-pixiv-updated';
+                  }
 
-              return 'ank-pixiv-downloaded';
-            }
-          })();
-          if (cls && !e.box.classList.contains(cls)) {
-            e.box.classList.remove('ank-pixiv-downloading', 'ank-pixiv-updated', 'ank-pixiv-downloaded');
-            e.box.classList.add(cls);
-            if (!opts.overlay) {
-              e.box.classList.add('ank-pixiv-mark-background');
-            }
-            else {
-              e.box.classList.add('ank-pixiv-mark-overlay');
-            }
+                  return 'ank-pixiv-downloaded';
+                }
+              })();
+              if (cls && !e.box.classList.contains(cls)) {
+                e.box.classList.remove('ank-pixiv-downloading', 'ank-pixiv-updated', 'ank-pixiv-downloaded');
+                e.box.classList.add(cls);
+                if (opts.overlay) {
+                  e.box.classList.add('ank-pixiv-mark-overlay');
+                }
+                else {
+                  e.box.classList.add('ank-pixiv-mark-background');
+                }
+              }
+            });
+          });
+
+          if (sa+S_STEP < slen) {
+            await AnkUtils.sleep(100);
           }
-        });
-      });
+        }
+      }
     })();
   };
 
@@ -528,10 +535,10 @@
    * @param info
    * @returns {Promise}
    */
-  AnkSite.prototype.requestUpdateDownloadStatus = function (info) {
+  AnkSite.prototype.requestUpdateDownloadHistory = function (info) {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({
-          'type': 'AnkPixiv.Query.updateDownloadStatus',
+          'type': 'AnkPixiv.Query.updateDownloadHistory',
           'data':{
             'info': info
           }

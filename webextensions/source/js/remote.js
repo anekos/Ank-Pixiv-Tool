@@ -2,15 +2,22 @@
 
 {
 
-  const WEBREQUEST_FILTER = [
-    "<all_urls>"
-    //"https://*.pximg.net/*"
-  ];
-
   const EXCHANGE_TARGETS = ['Referer'];
   const EXCHANGE_PREFIX = 'X-XXX-';
 
-  //　ヘッダ改変対象のoriginを保存する
+  const USE_INTERCEPT_ORIGINS = true;
+
+  const WEBREQUEST_FILTER = (() => {
+    if (!USE_INTERCEPT_ORIGINS) {
+      // URLフィルタが <all_urls> だとちょっと難があるか
+      return ["<all_urls>"];
+    }
+
+    return [
+      "https://*.pximg.net/*"
+    ];
+  })();
+
   let intercept_origins = {};
 
   /**
@@ -73,7 +80,9 @@
           }
 
           // TODO contents script側でのreferer変更に対応していない
-          intercept_origins[new URL(opts.url).origin] = true;
+          if (USE_INTERCEPT_ORIGINS) {
+            intercept_origins[new URL(opts.url).origin] = true;
+          }
           xhr.setRequestHeader(EXCHANGE_PREFIX+h.name, h.value);
         });
       }
@@ -98,7 +107,7 @@
 
       chrome.webRequest.onBeforeSendHeaders.addListener((details) => {
 
-        if (!intercept_origins.hasOwnProperty(new URL(details.url).origin)) {
+        if (USE_INTERCEPT_ORIGINS && !intercept_origins.hasOwnProperty(new URL(details.url).origin)) {
           // 改変対象のoriginではない
           return {};
         }
@@ -122,7 +131,6 @@
 
         return {'requestHeaders': details.requestHeaders};
       }, {
-        // FIXME URLフィルタが <all_urls> なのはちょっと難がある
         "urls": WEBREQUEST_FILTER,
         "types": [
           "xmlhttprequest"
