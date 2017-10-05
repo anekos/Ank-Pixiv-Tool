@@ -243,7 +243,7 @@
    * @returns {boolean}
    */
   AnkNicosei.prototype.displayDownloaded = function (opts) {
-    if (!this.prefs.displayDownloaded) {
+    if (!this.prefs.site.displayDownloaded) {
       return true;
     }
 
@@ -278,7 +278,7 @@
    * @returns {boolean}
    */
   AnkNicosei.prototype.markDownloaded = function (opts) {
-    if (!this.prefs.markDownloaded) {
+    if (!this.prefs.site.markDownloaded) {
       return true;
     }
 
@@ -391,7 +391,7 @@
     this.elements.info.illust.good.click();
 
     // 自動ダウンロード（評価時）
-    if (this.prefs.downloadWhenRate) {
+    if (this.prefs.site.downloadWhenRate) {
       this.downloadCurrentImage({'autoDownload': true});
     }
   };
@@ -404,17 +404,17 @@
     let middleClickEventFunc = () => {
       let addMiddleClickEventListener = (imgOvr) => {
         let mcHandler = (e) => {
-          let useEvent = this.prefs.largeOnMiddle || this.prefs.downloadWhenClickMiddle;
-          let useCapture = this.prefs.largeOnMiddle;
+          let useEvent = this.prefs.site.largeOnMiddle || this.prefs.site.downloadWhenClickMiddle;
+          let useCapture = this.prefs.site.largeOnMiddle;
           if (!useEvent) {
             return;
           }
 
-          if (this.prefs.largeOnMiddle) {
+          if (this.prefs.site.largeOnMiddle) {
             this.openViewer();
           }
 
-          if (this.prefs.downloadWhenClickMiddle) {
+          if (this.prefs.site.downloadWhenClickMiddle) {
             // 自動ダウンロード（中画像クリック時）
             this.downloadCurrentImage({'autoDownload': true});
           }
@@ -468,7 +468,7 @@
 
     // 評価したら自動ダウンロード
     let ratingEventFunc = () => {
-      if (!this.prefs.downloadWhenRate) {
+      if (!this.prefs.site.downloadWhenRate) {
         return true;
       }
 

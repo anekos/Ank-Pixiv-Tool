@@ -171,9 +171,22 @@
             'cleanDownloadBar': prefs.cleanDownloadBar
           })
             .then((r) => {
+              if (isOwnResource) {
+                logger.debug('revoke', t.objurl);
+                try {
+                  URL.revokeObjectURL(t.objurl);
+                  t.objurl = null;
+                  t.done = true;
+                }
+                catch (e) {
+                  logger.error(e);
+                }
+              }
+
               if (isMultiTargets) {
                 setButtonText();
               }
+
               return r;
             });
         };
@@ -209,20 +222,6 @@
           })
           .then((r) => {
             // finally
-            if (isOwnResource) {
-              targets.forEach((t) => {
-                let objURL = t.objurl;
-                if (objURL) {
-                  t.objurl = null;
-                  logger.debug('revoke', objURL);
-                  try {
-                    URL.revokeObjectURL(objURL);
-                  }
-                  catch (e) {}
-                }
-              });
-            }
-
             sendResponse(r);
           });
 
@@ -521,21 +520,17 @@
      * ツールバーボタンにダウンロード数を表示する
      */
     let setButtonText = () => {
-      let text = (() => {
-        let a = [];
-        if (prefs.showImageRemains) {
-          let remain = downloadQueue.remainImages();
-          if (remain) {
-            a.push(remain);
-          }
+      let a = [];
+      if (prefs.showIllustRemains) {
+        let remain = downloadQueue.remainImages();
+        if (remain) {
+          a.push(remain);
         }
-        if (prefs.showIllustRemains && downloadQueue.size() > 0) {
+        if (downloadQueue.size() > 0) {
           a.push(downloadQueue.size());
         }
-
-        return a.join('/');
-      })();
-      chrome.browserAction.setBadgeText({'text': text});
+      }
+      chrome.browserAction.setBadgeText({'text': a.join('/')});
     };
 
     //
@@ -576,7 +571,7 @@
         shift(f);
         f.expired = true;
 
-        let remains = f.data.targets.length - (1 + f.data.targets.findIndex((e) => !e.objurl));
+        let remains = f.data.targets.length - (1 + f.data.targets.findIndex((e) => !e.done));
         setTimeout(() => {
           // FIXME 単に捨てるのではなく、保存しておいてある程度時間が経ったらrevokeするべき（リーク対策）
         }, prefs.xhrTimeout * remains);
@@ -607,8 +602,14 @@
           return szImages;
         }
 
-        let completed = 1 + f.data.targets.findIndex((e) => !e.objurl);
-
+        let completed = 0;
+        f.data.targets.some((e) => {
+          if (e.done) {
+            completed++;
+            return;
+          }
+          return true;
+        });
         return szImages - completed;
       };
 
@@ -703,6 +704,13 @@
       };
     })();
 
+    //
+    let applyPrefsChange = () => {
+      logger.setLevel(prefs.logLevel);
+    };
+
+    //
+
     let prefs = null;
     let db = null;
     let download = null;
@@ -713,9 +721,7 @@
 
       logger.info('START: ANK PIXIV TOOL');
 
-      AnkPrefs.setAutoApply(() => {
-        logger.setLevel(prefs.logLevel);
-      });
+      AnkPrefs.setAutoApply(() => applyPrefsChange());
 
       db = await initDatabase();
       download = initDownload();

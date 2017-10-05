@@ -29,10 +29,9 @@ javascript:(d=>{Array.prototype.forEach.call(d.querySelectorAll('.item.hidden'),
 
 
 
-・[問] firefoxで、css中に__MSG__...を使って日本語を埋め込むと文字が化ける→対応待ち https://bugzilla.mozilla.org/show_bug.cgi?id=1389099
 ・[問] firefoxで、content scriptからのcross-originなXHRにrefererを含められない(onBeforeSendHeadersで弄っても)→これではない(これだとcross-oringinなリクエストを発行できない) https://discourse.mozilla.org/t/webextension-xmlhttprequest-issues-no-cookies-or-referrer-solved/11224
+・[問] firefoxで、viewerのページ先読みができない→↑が原因
 ・[問] firefoxで、ダウンロード完了後に変な例外が記録される→これか？ https://bug635044.bugzilla.mozilla.org/show_bug.cgi?id=1298362
-・[問] firefoxで、viewerのページ先読みができない→content scriptからのxhrだとrefererが含まれない／web pageからのxhrだとCORSが撥ねられるため
 ・[問] 履歴の保存場所がpermanentではない
 
 －[CLOSED] firefoxで、extensionからのXHRを onBeforeSendHeaders でトラップできない模様 https://bugzilla.mozilla.org/show_bug.cgi?id=1273138→対応された模様
@@ -41,6 +40,7 @@ javascript:(d=>{Array.prototype.forEach.call(d.querySelectorAll('.item.hidden'),
 －[CLOSED] CORSなXHRでcookie飛ばないけどいいのかどうかわからない→いいんじゃね
 －[CLOSED] firefoxで、content script側で作ったObjectURLをbackground page側に渡してもアクセスできない→XHRは（というかcreate/revokeを）background側に戻したくない。しかし他の方法だと画像データのやり取りのコストが高い。保留 ※参考 http://qiita.com/rndomhack/items/87794e5618a315a51a75→諦めてbpでxhr
 －[CLOSED] firefoxで、ダウンロード履歴のインポートができない→現バージョンのDexie.jsがfirefoxのasync/awaitに対応していないらしい。保留 http://dexie.org/docs/Dexie/Dexie.transaction()#async-and-await→reduceを使って書き直した
+－[CLOSED] firefoxで、css中に__MSG__...を使って日本語を埋め込むと文字が化ける→対応待ち https://bugzilla.mozilla.org/show_bug.cgi?id=1389099→cssファイル埋め込みを止めて、attr()で間接指定することで対処
 
 ・[課] 公開ライセンスの検討
 ・[課] ファイルの保存にdownloads apiを使っているため、画像ダウンロード毎にダウンロードバーが一瞬表示される→ダウンロードバー置き換えの拡張機能を入れるとか
@@ -49,6 +49,7 @@ javascript:(d=>{Array.prototype.forEach.call(d.querySelectorAll('.item.hidden'),
 ・[課] 順序制御をシンプルにする
 ・[課] messagingでsendResponse待ちを多用するのは良くないのでは…
 ・[課] firefoxのstrictモードにソースの粗がガンガン弾かれる
+・[課] 設定変更時に各タブのcontent scriptにも反映させてるけどタブを大量に開いてたら負荷が大きいかも
 
 
 －[CLOSED] うごイラビューアが、等倍表示以外だと負荷が高い→うごイラ再生対応機能は削除

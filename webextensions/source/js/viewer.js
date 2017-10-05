@@ -117,8 +117,22 @@
      * @param opts
      */
     let setPage = (opts) => {
+      let setImgSrc = (e, c, p) => {
+        e.classList.remove('loading');
+        e.setAttribute('data-page-no', p);
+
+        if (c.objurl) {
+          return e.setAttribute('src', c.objurl);
+        }
+
+        if (prefs.useLoadProgress) {
+          e.classList.add('loading');
+        }
+        e.setAttribute('src', c.src);
+      };
+
       currentPageIdx = getNewPageIdx(opts, currentPageIdx, totalPages);
-      if (currentPageIdx === undefined) {
+      if (currentPageIdx == -1) {
         return closeViewer();
       }
 
@@ -126,7 +140,7 @@
 
       if (pgc[1]) {
         viewer.fpImg.classList.remove('none');
-        viewer.fpImg.setAttribute('src', pgc[1].objurl || pgc[1].src);
+        setImgSrc(viewer.fpImg, pgc[1], currentPageIdx);
       }
       else {
         viewer.fpImg.classList.add('none');
@@ -134,11 +148,7 @@
       }
 
       if (pgc[0]) {
-        viewer.bigImg.setAttribute('src', pgc[0].objurl || pgc[0].src);
-      }
-
-      if (prefs.useImagePrefetch) {
-        loadImageToCache(currentPageIdx);
+        setImgSrc(viewer.bigImg, pgc[0], currentPageIdx);
       }
     };
 
@@ -150,7 +160,7 @@
      * @returns {*}
      */
     let getNewPageIdx = (opts, currentPageIdx, totalPages) => {
-      if (opts.nextPage) {
+      if (!opts.reverse && opts.nextPage || opts.prevPage) {
         // 次へ
         let n = (currentPageIdx + 1) % totalPages;
         if (prefs.loopPage || currentPageIdx < n) {
@@ -158,7 +168,7 @@
           return n;
         }
       }
-      else if (opts.prevPage) {
+      else if (!opts.reverse && opts.prevPage || opts.nextPage) {
         // 前へ
         let n = (currentPageIdx + totalPages - 1) % totalPages;
         if (prefs.loopPage || currentPageIdx > n) {
@@ -171,6 +181,8 @@
         viewer.pageSelector.value = opts.pageNo;
         return opts.pageNo;
       }
+
+      return -1;
     };
 
     /**
@@ -236,19 +248,46 @@
       };
 
       (async () => {
-        if (pageIdx) {
+        if (!isNaN(pageIdx)) {
           // 指定ページ
           await loadImg(pageCache[pageIdx]);
         }
         else {
           // 全ページ
-          for (let n=0; n < totalPages; n++) {
-            await loadImg(pageCache[(n+1) % totalPages]);  // P.1は処理済みのはずなので、P.2から始める
+          for (let n=1; n < totalPages; n++) {
+            await loadImg(pageCache[n]);  // P.1はonloadで処理されるはずなので、P.2から始める
           }
         }
       })().catch((e) => {
         logger.error(e);
       });
+    };
+
+    /**
+     * imgへのsrcの読み込みが完了した際に実行する
+     * @param e
+     */
+    let onImageLoadCompleted = (e) => {
+      let img = e.target;
+      if (!img.complete) {
+        return;
+      }
+
+      if (img.classList.contains('loading')) {
+        // 半透明終了
+        img.classList.remove('loading');
+
+        // 未プリフェッチのsrcの場合は、imgのロードが完了してからキャッシュに入れる
+        if (prefs.useImagePrefetch) {
+          try {
+            let p = parseInt(img.getAttribute('data-page-no'), 10);
+            if (!isNaN(p)) {
+              loadImageToCache(p);
+            }
+          }
+          catch (e) {}
+        }
+      }
     };
 
     /**
@@ -291,8 +330,8 @@
 
       vw.pageSelector.addEventListener('change', noMoreEvent((e) => setPage({'pageNo': e.target.value}), false));
       vw.pageSelector.addEventListener('click', noMoreEvent(() => {}), true);
-      vw.prevButton.addEventListener('click', noMoreEvent(() => setPage({'prevPage': true})), true);
-      vw.nextButton.addEventListener('click', noMoreEvent(() => setPage({'nextPage': true})), true);
+      vw.prevButton.addEventListener('click', noMoreEvent(() => setPage({'prevPage': true, 'reverse': prefs.swapArrowButton})), true);
+      vw.nextButton.addEventListener('click', noMoreEvent(() => setPage({'nextPage': true, 'reverse': prefs.swapArrowButton})), true);
 
       // TODO
       vw.panel.classList.add('fit_in_height');
@@ -315,6 +354,10 @@
 
       vw.bigImg.addEventListener('click', noMoreEvent(() => setPage({'nextPage': true})), true);
       vw.fpImg.addEventListener('click', noMoreEvent(() => setPage({'nextPage': true})), true);
+
+      vw.bigImg.addEventListener('load', onImageLoadCompleted, false);
+      vw.fpImg.addEventListener('load', onImageLoadCompleted, false);
+
       vw.panel.addEventListener('click', noMoreEvent(() => closeViewer()), false);
 
       vw.buttonPanel.addEventListener('mouseover', buttonCtrl.show, false);
@@ -393,7 +436,7 @@
       document.body.appendChild(viewer.panel);
 
       // 開く
-      currentPageIdx = currentPageIdx === undefined ? 0 : currentPageIdx;
+      currentPageIdx = currentPageIdx == -1 ? 0 : currentPageIdx;
       setPage({'pageNo': currentPageIdx});
       buttonCtrl.show();
 

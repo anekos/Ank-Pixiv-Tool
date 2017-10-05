@@ -56,15 +56,12 @@
         }
       };
 
-      xhr.error = () => {
+      xhr.onerror = xhr.abort = xhr.ontimeout = () => {
         reject(new Error(xhr.statusText+" ("+xhr.status+") : "+opts.url));
       };
 
       if (opts.timeout !== undefined) {
         xhr.timeout = opts.timeout;
-        xhr.ontimeout = () => {
-          reject(new Error(xhr.statusText+" ("+xhr.status+") : "+opts.url));
-        };
       }
 
       if (isPost) {

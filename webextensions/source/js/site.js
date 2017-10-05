@@ -24,8 +24,20 @@
    */
   AnkSite.prototype.start = function () {
 
-    let applySitePrefs = (global, local) => {
-      this.prefs[global] = this.prefs[global] && this.prefs.site[local];
+    let applyPrefsChange = () => {
+      let applySitePrefs = (global, local) => {
+        this.prefs.site[global] = this.prefs[global] && this.prefs.site[local];
+      };
+
+      logger.setLevel(this.prefs.logLevel);
+
+      applySitePrefs('largeOnMiddle', 'useViewer');
+      applySitePrefs('downloadWhenClickMiddle', 'useAutoDownload');
+      applySitePrefs('downloadWhenRate', 'useAutoDownload');
+      applySitePrefs('displayDownloaded', 'useDisplayDownloaded');
+      applySitePrefs('markDownloaded', 'useMarkDownloaded');
+
+      this.prefs.useImagePrefetch = this.prefs.useImagePrefetch && ! IS_FIREFOX;
     };
 
     return (async () => {
@@ -38,15 +50,6 @@
         logger.error('INVALID SITE MODULE:', this.SITE_ID);
         return Promise.reject(new Error('INVALID SITE MODULE'));
       }
-
-      applySitePrefs('largeOnMiddle', 'useViewer');
-      applySitePrefs('downloadWhenClickMiddle', 'useAutoDownload');
-      applySitePrefs('downloadWhenRate', 'useAutoDownload');
-      applySitePrefs('displayDownloaded', 'useDisplayDownloaded');
-      applySitePrefs('markDownloaded', 'useMarkDownloaded');
-
-      this.prefs.useImagePrefetch = this.prefs.useImagePrefetch && ! IS_FIREFOX;
-
       if (!this.prefs.site.enabled) {
         logger.info('DISABLED SITE MODULE:', this.SITE_ID);
         return;
@@ -55,6 +58,9 @@
         logger.info('DISABLED EXPERIMENTAL MODULE:', this.SITE_ID);
         return;
       }
+
+      AnkPrefs.setAutoApply(() => applyPrefsChange());
+      applyPrefsChange();
 
       this.elements = this.getElements(document);
 
@@ -336,6 +342,17 @@
       if (!display) {
         display = appendTo.ownerDocument.createElement('div');
         display.setAttribute('id', 'ank-pixiv-downloaded-display');
+        [
+          'downloaded',
+          'downloaded_used',
+          'downloaded_updated',
+          'download_wait',
+          'download_run',
+          'download_failed',
+          'download_timeout'
+        ].forEach((k) => {
+          display.setAttribute('data-text-'+k, chrome.i18n.getMessage('msg_'+k));
+        });
         appendTo.appendChild(display);
       }
 
@@ -345,6 +362,7 @@
         }
         if (status.last_saved) {
           if (opts.updated > status.last_saved) {
+            logger.debug('updated:', new Date(opts.updated), '>', new Date(status.last_saved));
             return ['updated']
           }
 
@@ -379,14 +397,15 @@
   AnkSite.prototype.insertDownloadedMark = function (node, opts) {
     (async () => {
       let siteChanged = await this.requestGetSiteChanged();
-      if (this.marked > siteChanged) {
-        // 前回チェック時刻より後にサイトの更新が発生していなければ再度のチェックはしない
-        logger.debug('skip mark downloaded');
-        return;
-      }
-
       if (!opts.pinpoint) {
-        // 決め打ちのチェックならチェック時刻は更新しない
+        // 決め打ちのチェックなら前回チェック時刻は確認しない
+
+        if (this.marked > siteChanged) {
+          // 前回チェック時刻より後にサイトの更新が発生していなければ再度のチェックはしない
+          logger.debug('skip mark downloaded');
+          return;
+        }
+
         this.marked = new Date().getTime();
       }
 

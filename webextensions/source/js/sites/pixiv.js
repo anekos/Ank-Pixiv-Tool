@@ -149,6 +149,9 @@
         get rankingList() {
           return query('.ranking-items');
         },
+        get discovery() {
+          return query('#js-mount-point-discovery');
+        },
         get downloadedFilenameArea () {
           return query('.ank-pixiv-downloaded-filename-text');
         },
@@ -564,7 +567,7 @@
    * @returns {boolean}
    */
   AnkPixiv.prototype.displayDownloaded = function (opts) {
-    if (!this.prefs.displayDownloaded) {
+    if (!this.prefs.site.displayDownloaded) {
       return true;
     }
 
@@ -599,7 +602,7 @@
    * @returns {boolean}
    */
   AnkPixiv.prototype.markDownloaded = function (opts) {
-    if (!this.prefs.markDownloaded) {
+    if (!this.prefs.site.markDownloaded) {
       return true;
     }
 
@@ -622,6 +625,7 @@
       { 'q':'.stacc_ref_user_illust_img > a', 'n':1 },    // フィード（お気に入りに追加したユーザ内のイラスト）
       { 'q':'.hotimage > a.work', 'n':1 },                // タグページ（週間ベスト）
       { 'q':'.image-item > a:nth-child(1)', 'n':1 },      // タグページ（全期間＆新着）
+      { 'q':'figure > div > a ', 'n':2 },                 // ディスカバリー、タグページ
       { 'q':'.sibling-items > .after > a', 'n':1 },       // 前の作品
       { 'q':'.sibling-items > .before > a', 'n':1 }       // 次の作品
     ];
@@ -724,7 +728,7 @@
     this.elements.info.illust.rating.click();
 
     // 自動ダウンロード（評価時）
-    if (this.prefs.downloadWhenRate) {
+    if (this.prefs.site.downloadWhenRate) {
       this.downloadCurrentImage({'autoDownload': true});
     }
   };
@@ -738,17 +742,17 @@
       // imgOvrの方になった場合は、medImgより広い領域がクリック可能となるが、ページ側の jQuery.on('click')を無効化できないため止む無し
       let addMiddleClickEventListener = (imgOvr) => {
         let mcHandler = (e) => {
-          let useEvent = this.prefs.largeOnMiddle || this.prefs.downloadWhenClickMiddle;
-          let useCapture = this.prefs.largeOnMiddle;
+          let useEvent = this.prefs.site.largeOnMiddle || this.prefs.site.downloadWhenClickMiddle;
+          let useCapture = this.prefs.site.largeOnMiddle;
           if (!useEvent) {
             return;
           }
 
-          if (this.prefs.largeOnMiddle) {
+          if (this.prefs.site.largeOnMiddle) {
             this.openViewer();
           }
 
-          if (this.prefs.downloadWhenClickMiddle) {
+          if (this.prefs.site.downloadWhenClickMiddle) {
             // 自動ダウンロード（中画像クリック時）
             this.downloadCurrentImage({'autoDownload': true});
           }
@@ -838,7 +842,7 @@
 
     // 評価したら自動ダウンロード
     let ratingEventFunc = () => {
-      if (!this.prefs.downloadWhenRate) {
+      if (!this.prefs.site.downloadWhenRate) {
         return true;
       }
 
@@ -892,16 +896,26 @@
 
     // ページが自動伸長したらダウンロード済みマークを追加する
     let followExpansion = () => {
-      let elm = this.elements.misc.recommendList || this.elements.misc.feedList || this.elements.misc.rankingList;
-      if (!elm) {
-        return;
+      let observe = (elm) => {
+        new MutationObserver((o) => {
+          o.forEach((e) => Array.prototype.forEach.call(e.addedNodes, (n) => this.markDownloaded({'node': n, 'force':true})));
+        }).observe(elm, {'childList': true});
+
+        return true;
+      };
+
+      let alist = this.elements.misc.recommendList || this.elements.misc.feedList || this.elements.misc.rankingList;
+      if (alist) {
+        return observe(alist);
       }
 
-      new MutationObserver((o) => {
-        o.forEach((e) => this.markDownloaded({'node': e.target, 'force':true}));
-      }).observe(elm, {childList: true});
-
-      return true;
+      let discovery = this.elements.misc.discovery;
+      if (discovery) {
+        let container = discovery.querySelector('.column-title+div');
+        if (container) {
+          return observe(container);
+        }
+      }
     };
 
     // AutoPagerize/AutoPatchWork が継ぎ足し動作したらダウンロード済みマークを追加する

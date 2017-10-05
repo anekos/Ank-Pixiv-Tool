@@ -63,31 +63,31 @@
 }
 
 #ank-pixiv-downloaded-display.done:after {
-    content: "__MSG_msg_downloaded__";
+    content: attr(data-text-downloaded);
 }
 
 #ank-pixiv-downloaded-display.R18:after {
-    content: "__MSG_msg_downloaded_used__";
+    content: attr(data-text-downloaded_used);
 }
 
 #ank-pixiv-downloaded-display.updated:after {
-    content: "__MSG_msg_downloaded_updated__";
+    content: attr(data-text-downloaded_updated);
 }
 
 #ank-pixiv-downloaded-display.wait:after {
-    content: "__MSG_msg_download_wait__";
+    content: attr(data-text-download_wait);
 }
 
 #ank-pixiv-downloaded-display.run:after {
-    content: "__MSG_msg_download_run__";
+    content: attr(data-text-download_run);
 }
 
 #ank-pixiv-downloaded-display.failed:after {
-    content: "__MSG_msg_download_failed__";
+    content: attr(data-text-download_failed);
 }
 
 #ank-pixiv-downloaded-display.timeout:after {
-    content: "__MSG_msg_download_timeout__";
+    content: attr(data-text-download_timeout);
 }
 
 
@@ -146,6 +146,10 @@
 #ank-pixiv-viewer-image-panel .ank-pixiv-viewer-show_image {
     margin: 0;
     background-color: white;
+}
+
+#ank-pixiv-viewer-image-panel .ank-pixiv-viewer-show_image.loading {
+    opacity: 0.4;
 }
 
 
