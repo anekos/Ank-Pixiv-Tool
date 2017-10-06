@@ -510,6 +510,7 @@
 
   /**
    * backgroundにユーザ情報を問い合わせる
+   * - 存在しない場合は追加する
    * @param member_id
    * @param member_name
    * @returns {Promise}
@@ -554,12 +555,12 @@
    * @param info
    * @returns {Promise}
    */
-  AnkSite.prototype.requestUpdateDownloadHistory = function (info) {
+  AnkSite.prototype.requestUpdateDownloadHistory = function (hist_data) {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({
           'type': 'AnkPixiv.Query.updateDownloadHistory',
           'data':{
-            'info': info
+            'hist_data': hist_data
           }
         },
         (result) => resolve(result)
@@ -643,23 +644,21 @@
    * @param opts
    * @returns {Promise}
    */
-  AnkSite.prototype.delayFunctionInstaller = function (opts) {
-    return (async () => {
-      for (let retry=1; retry <= opts.retry.max; retry++) {
-        let installed = await opts.func();
-        if (installed) {
-          logger.info('installed:', (opts.label || ''));
-          return;
-        }
-
-        if (retry <= opts.retry.max) {
-          logger.info('wait for retry:', retry, '/', opts.retry.max ,':', opts.label);
-          await AnkUtils.sleep(opts.retry.wait);
-        }
+  AnkSite.prototype.delayFunctionInstaller = async function (opts) {
+    for (let retry=1; retry <= opts.retry.max; retry++) {
+      let installed = await opts.func();
+      if (installed) {
+        logger.info('installed:', (opts.label || ''));
+        return;
       }
 
-      return Promise.reject(new Error('retry over:', opts.label));
-    })();
+      if (retry <= opts.retry.max) {
+        logger.info('wait for retry:', retry, '/', opts.retry.max ,':', opts.label);
+        await AnkUtils.sleep(opts.retry.wait);
+      }
+    }
+
+    return Promise.reject(new Error('retry over:', opts.label));
   };
 
   // 抽象メソッドのようなもの

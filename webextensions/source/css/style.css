@@ -154,23 +154,31 @@
 
 
 #ank-pixiv-viewer-panel.fit_in_height #ank-pixiv-viewer-image-container {
+    /*
     display: flex;
     justify-content: center;
     height: 100%;
+    */
 }
 
 #ank-pixiv-viewer-panel.fit_in_height #ank-pixiv-viewer-image-container > * {
+    /*
     height: 100%;
+    */
 }
 
 
 #ank-pixiv-viewer-panel.fit_in_width #ank-pixiv-viewer-image-container {
+    /*
     width: 100%;
+    */
 }
 
 #ank-pixiv-viewer-panel.fit_in_width #ank-pixiv-viewer-image-container > * {
+    /*
     width: 100%;
     height: auto;
+    */
 }
 
 
@@ -179,7 +187,9 @@
 }
 
 #ank-pixiv-viewer-panel.facing.fit_in_width #ank-pixiv-viewer-image-container > * {
+    /*
     width: 50%;
+    */
 }
 
 
@@ -232,4 +242,8 @@
 
 #ank-pixiv-viewer-panel.fit_in_width #ank-pixiv-viewer-resize-button:after {
     content: "FIT in Width";
+}
+
+#ank-pixiv-viewer-panel.fit_in_window #ank-pixiv-viewer-resize-button:after {
+    content: "FIT in WIndow";
 }

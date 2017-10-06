@@ -60,6 +60,7 @@
     "https://*/",
     "storage",
     "downloads",
+    "downloads.shelf",
     "webRequest",
     "webRequestBlocking"
   ]

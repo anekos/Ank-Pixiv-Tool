@@ -52,6 +52,34 @@
       return node;
     };
 
+    let getScrollbarSize = () => {
+      let f = (wh) => {
+        let outer = document.createElement('div');
+        let inner = document.createElement('div');
+
+        outer.style.visibility = 'hidden';
+        outer.style[wh] = '100px';
+        inner.style[wh] = '100%';
+
+        outer.appendChild(inner);
+        document.body.appendChild(outer);
+
+        let owh = 'offset' + wh.charAt(0).toUpperCase() + wh.slice(1).toLowerCase();
+        let withoutScrollbar = outer[owh];
+        outer.style.overflow = 'scroll';
+        let withScrollbar = inner[owh];
+
+        document.body.removeChild(outer);
+
+        return (withoutScrollbar - withScrollbar);
+      };
+
+      return {
+        'width': f('width'),
+        'height': f('height')
+      };
+    };
+
     //
     let trim = (str) => {
       return str && str.replace(/^\s*|\s*$/g, '');
@@ -418,6 +446,7 @@
       'createElement': createElement,
       'createElementNS': createElementNS,
       'trackbackParentNode': trackbackParentNode,
+      'getScrollbarSize': getScrollbarSize,
       'trim': trim,
       'zeroPad': zeroPad,
       'getDecodedDateTime': getDecodedDateTime,

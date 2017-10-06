@@ -25,6 +25,7 @@
   "options_showIllustRemains": { "message": "ダウンロードを待っている作品の数をボタンに表示する" },
   "options_showImageRemains": { "message": "ダウンロードを待っている画像の枚数をボタンに表示する" },
   "options_showCompletePopup": { "message": "ダウンロード終了時にポップアップ表示" },
+  "options_hideDownloadShelf": { "message": "ダウンロードバーを隠す" },
   "options_cleanDownloadBar": { "message": "ダウンロードバーに履歴を残さない" },
   "options_displayDownloaded": { "message": "保存済みイラストのページに「保存済み」を表示する" },
   "options_downloadedAnimationStyle": { "message": "「保存済み」のアニメーションスタイル" },
