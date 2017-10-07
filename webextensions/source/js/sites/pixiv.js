@@ -17,8 +17,6 @@
       'wait': 1000
     };
 
-    this.collectedContext = null;
-
     this.executed = {
       'displayDownloaded': false,
       'markDownloaded': false
@@ -506,41 +504,6 @@
   };
 
   /**
-   * ダウンロード情報をまとめる
-   * @param elm
-   * @param force
-   * @returns {Promise.<*>}
-   */
-  AnkPixiv.prototype.getContext = async function (elm, force) {
-
-    if (!force && (this.collectedContext && this.collectedContext.downloadable)) {
-      // 既にダウンロード可能な情報を取得済みならそのまま返す
-      return this.collectedContext;
-    }
-
-    return Promise.all([
-      this.getPathContext(elm),
-      this.getIllustContext(elm),
-      this.getMemberContext(elm)
-    ]).then((result) => {
-      let context = {
-        'downloadable': !!result[0] && !!result[1] && !!result[2],
-        'service_id': this.SITE_ID,
-        'siteName': this.prefs.site.folder,
-        'path': result[0],
-        'info': {
-          'illust': result[1],
-          'member': result[2]
-        }
-      };
-
-      logger.info('CONTEXT: ', context);
-
-      return context;
-    });
-  };
-
-  /**
    * イラストIDの取得
    * @param loc
    * @returns {*}
@@ -675,7 +638,7 @@
 
       opts = opts || {};
 
-      let context = this.collectedContext = await this.getContext(this.elements);
+      let context = await this.getContext(this.elements);
       if (!context) {
         // コンテキストが集まらない（ダウンロード可能な状態になっていない）
         let msg = chrome.i18n.getMessage('msg_notReady');
@@ -699,21 +662,6 @@
       //chrome.runtime.sendMessage({'type': 'AnkPixiv.Download.addContext', 'context': context}, (o) => logger.info(o));
       this.executeDownload({'status': status, 'context': context, 'autoDownload': opts.autoDownload});
     })().catch((e) => logger.error(e));
-  };
-
-  /**
-   * Viewerの操作
-   */
-  AnkPixiv.prototype.openViewer = function (opts) {
-    (async () => {
-      let context = this.collectedContext = await this.getContext(this.elements);
-      if (!context) {
-        logger.error(new Error('viewer not ready'));
-        return;
-      }
-
-      AnkViewer.open({'prefs': this.prefs, 'path': context.path});
-    })();
   };
 
   /**

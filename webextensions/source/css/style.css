@@ -153,35 +153,6 @@
 }
 
 
-#ank-pixiv-viewer-panel.fit_in_height #ank-pixiv-viewer-image-container {
-    /*
-    display: flex;
-    justify-content: center;
-    height: 100%;
-    */
-}
-
-#ank-pixiv-viewer-panel.fit_in_height #ank-pixiv-viewer-image-container > * {
-    /*
-    height: 100%;
-    */
-}
-
-
-#ank-pixiv-viewer-panel.fit_in_width #ank-pixiv-viewer-image-container {
-    /*
-    width: 100%;
-    */
-}
-
-#ank-pixiv-viewer-panel.fit_in_width #ank-pixiv-viewer-image-container > * {
-    /*
-    width: 100%;
-    height: auto;
-    */
-}
-
-
 #ank-pixiv-viewer-image-fp.none {
     display: none;
 }

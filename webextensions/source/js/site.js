@@ -14,8 +14,9 @@
     this.SITE_ID = null;
 
     this.prefs = null;
-    this.elements = null;
 
+    this.elements = null;
+    this.collectedContext = null;
     this.marked = 0;        // markingを行った最終時刻（キューインや保存完了の時刻と比較する）
   };
 
@@ -59,6 +60,8 @@
         return;
       }
 
+      logger.info('SITE MODULE INSTALLED:', this.SITE_ID, document.location.href);
+
       AnkPrefs.setAutoApply(() => applyPrefsChange());
       applyPrefsChange();
 
@@ -83,23 +86,22 @@
   AnkSite.prototype.initMessageListener = function () {
 
     let execMessage = (message, sender) => {
-      let args = message.type.split('.', 3);
-      if (args[1] === 'Download') {
-        return this.downloadCurrentImage();
-      }
-      if (args[1] === 'Viewer') {
-        return this.openViewer(args[2] && {'command': args[2]});
-      }
-      if (args[1] === 'Rate') {
-        return this.setRate(args[2]);
+      switch (message.type) {
+        case 'AnkPixiv.Download':
+          return this.downloadCurrentImage();
+        case 'AnkPixiv.Viewer':
+          return this.openViewer(message.data);
+        case 'AnkPixiv.Rate':
+          return this.setRate(message.data);
       }
 
       if (!sender) {
         return;
       }
 
-      if (args[1] === 'Display') {
-        return this.onFocusHandler();
+      switch (message.type) {
+        case 'AnkPixiv.Display':
+          return this.onFocusHandler();
       }
     };
 
@@ -661,11 +663,78 @@
     return Promise.reject(new Error('retry over:', opts.label));
   };
 
+  /**
+   *
+   * @param opts
+   */
+  AnkSite.prototype.openViewer = function (opts) {
+    if (!this.prefs.largeOnMiddle) {
+      return;
+    }
+
+    let command = (!opts || !Array.isArray(opts)) && 'open' || opts[0];
+    switch (command) {
+      case 'open':
+        this.getContext(this.elements)
+          .then((context) => {
+            if (!context) {
+              logger.error(new Error('viewer not ready'));
+              return;
+            }
+            AnkViewer.open({'prefs': this.prefs, 'path': context.path});
+          }).catch((e) => logger.error(e));
+        break;
+      case 'close':
+        AnkViewer.close();
+        break;
+      case 'fit':
+        AnkViewer.fit(opts[1]);
+        break;
+    }
+  };
+
+  /**
+   *
+   * @param elm
+   * @param force
+   * @returns {*}
+   */
+  AnkSite.prototype.getContext = async function (elm, force) {
+
+    if (!force && (this.collectedContext && this.collectedContext.downloadable)) {
+      // 既にダウンロード可能な情報を取得済みならそのまま返す
+      return this.collectedContext;
+    }
+
+    return Promise.all([
+      this.getPathContext(elm),
+      this.getIllustContext(elm),
+      this.getMemberContext(elm)
+    ]).then((result) => {
+      this.collectedContext = {
+        'downloadable': !!result[0] && !!result[1] && !!result[2],
+        'service_id': this.SITE_ID,
+        'siteName': this.prefs.site.folder,
+        'path': result[0],
+        'info': {
+          'illust': result[1],
+          'member': result[2]
+        }
+      };
+
+      logger.info('CONTEXT: ', this.collectedContext);
+
+      return this.collectedContext;
+    });
+  };
+
   // 抽象メソッドのようなもの
 
   AnkSite.prototype.getElements = function (doc) {};
+  AnkSite.prototype.getPathContext = function (elm) {};
+  AnkSite.prototype.getIllustContext = function (elm) {};
+  AnkSite.prototype.getMemberContext = function (elm) {};
   AnkSite.prototype.downloadCurrentImage = function (opts) {};
-  AnkSite.prototype.openViewer = function (opts) {};
   AnkSite.prototype.setRate = function (pt) {};
   AnkSite.prototype.onFocusHandler = function () {};
   AnkSite.prototype.installFunctions = function () {};
@@ -673,4 +742,3 @@
   AnkSite.prototype.markDownloaded = function () {};
 
 }
-

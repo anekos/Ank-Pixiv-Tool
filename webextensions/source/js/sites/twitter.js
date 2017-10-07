@@ -172,9 +172,10 @@
   /**
    * ダウンロード情報をまとめる
    * @param elm
+   * @param force
    * @returns {Promise.<*>}
    */
-  AnkTwitter.prototype.getContext = async function (elm) {
+  AnkTwitter.prototype.getContext = async function (elm, force) {
 
     let tweet = ['gallary', 'tweet'].map((k) => {
       let e = elm.illust[k];
@@ -189,26 +190,7 @@
 
     let elmTweet = this.getElements(tweet.tweet);
 
-    return Promise.all([
-      this.getPathContext(elmTweet),
-      this.getIllustContext(elmTweet),
-      this.getMemberContext(elmTweet)
-    ]).then((result) => {
-      let context = {
-        'downloadable': !!result[0] && !!result[1] && !!result[2],
-        'service_id': this.SITE_ID,
-        'siteName': this.prefs.site.folder,
-        'path': result[0],
-        'info': {
-          'illust': result[1],
-          'member': result[2]
-        }
-      };
-
-      logger.info('CONTEXT: ', context);
-
-      return context;
-    });
+    return AnkSite.prototype.getContext.call(this, elmTweet, true);
   };
 
   /**
