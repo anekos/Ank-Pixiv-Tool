@@ -1,4 +1,3 @@
-※OSSライブラリを使うので公開ライセンスを検討する。以下は仮置き
 
 このプロダクトはMozilla Public License 2.0のもとで公開しています。
 This software is released under the Mozilla Public License 2.0.

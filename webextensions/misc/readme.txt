@@ -9,17 +9,17 @@
 javascript:(() => {window.postMessage({'type':'AnkPixiv.Download'},'*')})();
 
 // viewer操作
-javascript:(() => {window.postMessage({'type':'AnkPixiv.Viewer', 'data':['open']},'*')})();
-javascript:(() => {window.postMessage({'type':'AnkPixiv.Viewer', 'data':['close']},'*')})();
-javascript:(() => {window.postMessage({'type':'AnkPixiv.Viewer', 'data':['prev']},'*')})();
-javascript:(() => {window.postMessage({'type':'AnkPixiv.Viewer', 'data':['next']},'*')})();
-javascript:(() => {window.postMessage({'type':'AnkPixiv.Viewer', 'data':['fit', 'n']},'*')})();  // n = FIT_MODE(0,1,2,3)
+javascript:(() => {window.postMessage({'type':'AnkPixiv.Viewer', 'data':{'cmd':'open'}},'*')})();
+javascript:(() => {window.postMessage({'type':'AnkPixiv.Viewer', 'data':{'cmd':'close'}},'*')})();
+javascript:(() => {window.postMessage({'type':'AnkPixiv.Viewer', 'data':{'cmd':'prev'}},'*')})();
+javascript:(() => {window.postMessage({'type':'AnkPixiv.Viewer', 'data':{'cmd':'next'}},'*')})();
+javascript:(() => {window.postMessage({'type':'AnkPixiv.Viewer', 'data':{'cmd':'fit', 'mode':n}},'*')})();  // n = FIT_MODE(0,1,2,3)
 
 // いいね！
-javascript:(() => {window.postMessage({'type':'AnkPixiv.Rate', 'data':['n']},'*')})(); // n = 点数(1～10)
+javascript:(() => {window.postMessage({'type':'AnkPixiv.Rate', 'data':{'pt':n}},'*')})(); // n = 点数(1～10)
 
 // 設定画面の隠しオプションを表示する
-javascript:(d=>{Array.prototype.forEach.call(d.querySelectorAll('.item.hidden'),e=>e.classList.remove('hidden'))})(document);
+javascript:((d)=>{Array.prototype.forEach.call(d.querySelectorAll('.item.hidden'),e=>e.classList.remove('hidden'))})(document);
 
 
 
@@ -42,12 +42,9 @@ javascript:(d=>{Array.prototype.forEach.call(d.querySelectorAll('.item.hidden'),
 －[CLOSED] firefoxで、ダウンロード履歴のインポートができない→現バージョンのDexie.jsがfirefoxのasync/awaitに対応していないらしい。保留 http://dexie.org/docs/Dexie/Dexie.transaction()#async-and-await→reduceを使って書き直した
 －[CLOSED] firefoxで、css中に__MSG__...を使って日本語を埋め込むと文字が化ける→対応待ち https://bugzilla.mozilla.org/show_bug.cgi?id=1389099→cssファイル埋め込みを止めて、attr()で間接指定することで対処
 
-・[課] 公開ライセンスの検討
-・[課] ファイルの保存にdownloads apiを使っているため、画像ダウンロード毎にダウンロードバーが一瞬表示される→ダウンロードバー置き換えの拡張機能を入れるとか
 ・[課] ダウンロード時のパス文字列に // とか .. とかが入ると例外が発生する→ファイル名チェックする
 ・[課] メタテキストにうごイラのframe情報を出力しているので、非保存にすると情報が欠けてしまう
-・[課] 順序制御をシンプルにする
-・[課] messagingでsendResponse待ちを多用するのは良くないのでは…
+・[課] messagingでsendResponse待ちを多用するのは良くないのでは
 ・[課] firefoxのstrictモードにソースの粗がガンガン弾かれる
 ・[課] 設定変更時に各タブのcontent scriptにも反映させてるけどタブを大量に開いてたら負荷が大きいかも
 
@@ -59,6 +56,9 @@ javascript:(d=>{Array.prototype.forEach.call(d.querySelectorAll('.item.hidden'),
 －[CLOSED] background pageをevent pageにしたい→setTimeout()の排除が必要(utils.jsとかdexie.jsとか)→目途が立たないので課題から削除
 －[CLOSED] dexie.jsをdb.jsか自製のコードに置き換える→目途が立たないので課題から削除
 －[CLOSED] ファイルシステム上に同名のファイルが存在するかどうかの確認を行えるAPIがないため、ダウンロード履歴を保存していないと、再ダウンロード（既存ファイルの上書き）になるかどうかの確認がとれない→どうしようもない
+－[CLOSED] 順序制御をシンプルにする→スキル不足。断念
+－[CLOSED] 公開ライセンスの検討→MPL2+APL2で
+－[CLOSED] ファイルの保存にdownloads apiを使っているため、画像ダウンロード毎にダウンロードバーが一瞬表示される→ダウンロードバー置き換えの拡張機能を入れるとか→downloads.setShelfEnabled()でゴニョゴニョする隠しオプションを追加
 
 /*
  * 変更点

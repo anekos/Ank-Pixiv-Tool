@@ -88,6 +88,14 @@
   };
 
   /**
+   *
+   * @returns {boolean}
+   */
+  AnkSite.prototype.inIllustPage = function () {
+    return true;
+  };
+
+  /**
    * ダウンロード情報（画像パス）の取得
    * @param elm
    * @returns {Promise}
@@ -194,39 +202,17 @@
   };
 
   /**
-   * ダウンロードの実行
+   *
    * @param opts
    */
-  AnkTwitter.prototype.downloadCurrentImage = function (opts) {
+  AnkTwitter.prototype.displayDownloaded = function (opts) {};
 
-    (async () => {
-
-      opts = opts || {};
-
-      let context = await this.getContext(this.elements);
-      if (!context) {
-        // コンテキストが集まらない（ダウンロード可能な状態になっていない）
-        let msg = chrome.i18n.getMessage('msg_notReady');
-        logger.warn(new Error(msg));
-        return;
-      }
-
-      if (!context.downloadable) {
-        // 作品情報が見つからない
-        let msg = chrome.i18n.getMessage('msg_cannotFindImages');
-        logger.error(new Error(msg));
-        alert(msg);
-        return;
-      }
-
-      let status = await this.requestGetDownloadStatus(context.info.illust.id, true);
-
-      let member = await this.requestGetMemberInfo(context.info.member.id, context.info.member.name);
-      context.info.member.memoized_name = member.name;
-
-      this.executeDownload({'status': status, 'context': context, 'autoDownload': opts.autoDownload});
-    })().catch((e) => logger.error(e));
-  };
+  /**
+   *
+   * @param opts
+   * @param siteSpecs
+   */
+  AnkTwitter.prototype.markDownloaded = function (opts, siteSpecs) {};
 
   // 開始
 

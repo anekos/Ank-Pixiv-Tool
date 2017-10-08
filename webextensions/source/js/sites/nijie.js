@@ -17,11 +17,6 @@
       'wait': 1000
     };
 
-    this.executed = {
-      'displayDownloaded': false,
-      'markDownloaded': false
-    };
-
   };
 
   /**
@@ -220,56 +215,12 @@
   };
 
   /**
-   *　イラストページにダウンロード済みの表示をする
-   * @param opts
-   * @returns {boolean}
-   */
-  AnkNijie.prototype.displayDownloaded = function (opts) {
-    if (!this.prefs.site.displayDownloaded) {
-      return true;
-    }
-
-    opts = opts || {};
-
-    if (this.executed.displayDownloaded && !opts.force) {
-      // 二度実行しない（強制時を除く）
-      return true;
-    }
-
-    let appendTo = this.elements.misc.downloadedDisplayParent;
-    if (!appendTo) {
-      return false;
-    }
-
-    let illustContext = this.getIllustContext(this.elements);
-    if (!illustContext) {
-      return false;
-    }
-
-    this.insertDownloadedDisplay(appendTo, {'id': illustContext.id, 'R18': illustContext.R18, 'updated': illustContext.updated});
-
-    this.executed.displayDownloaded = true;
-
-    return true;
-  };
-
-  /**
    * サムネイルにダウンロード済みマークを付ける
-   * @param node
    * @param opts
-   * @returns {boolean}
+   * @param siteSpecs
+   * @returns {*}
    */
-  AnkNijie.prototype.markDownloaded = function (opts) {
-    if (!this.prefs.site.markDownloaded) {
-      return true;
-    }
-
-    opts = opts || {};
-
-    if (this.executed.markDownloaded && !opts.force) {
-      // 二度実行しない（強制時を除く）
-      return true;
-    }
+  AnkNijie.prototype.markDownloaded = function (opts, siteSpecs) {
 
     const MARKING_TARGETS = [
       { 'q':'.nijie > .picture > .nijiedao > a', 'n':3 },         // 通常の一覧
@@ -279,23 +230,14 @@
       { 'q':'#carouselInner-view > ul > li > a', 'n':1 }          // "あなたにオススメのイラスト"
     ];
 
-    let node = opts.node || this.elements.doc;
-
-    this.insertDownloadedMark(node, {
-      'illust_id': opts.illust_id,
+    return AnkSite.prototype.markDownloaded.call(this, opts, {
+      'queries': MARKING_TARGETS,
       'getId': (href) => {
         return this.getIllustId(href);
       },
       'getLastUpdate': undefined,
-      'targets': MARKING_TARGETS,
-      'overlay': false,
-      'pinpoint': !!opts.node,
-      'ignorePref': false
+      'overlay': false
     });
-
-    this.executed.markDownloaded = true;
-
-    return true;
   };
 
   /**
@@ -306,45 +248,6 @@
       this.displayDownloaded({'force': true});
     }
     this.markDownloaded({'force': true});
-  };
-
-  /**
-   * ダウンロードの実行
-   * @param opts
-   */
-  AnkNijie.prototype.downloadCurrentImage = function (opts) {
-    if (!this.inIllustPage()) {
-      return;
-    }
-
-    (async () => {
-
-      opts = opts || {};
-
-      let context = await this.getContext(this.elements);
-      if (!context) {
-        // コンテキストが集まらない（ダウンロード可能な状態になっていない）
-        let msg = chrome.i18n.getMessage('msg_notReady');
-        logger.warn(new Error(msg));
-        return;
-      }
-
-      if (!context.downloadable) {
-        // 作品情報が見つからない
-        let msg = chrome.i18n.getMessage('msg_cannotFindImages');
-        logger.error(new Error(msg));
-        alert(msg);
-        return;
-      }
-
-      let status = await this.requestGetDownloadStatus(context.info.illust.id, true);
-
-      let member = await this.requestGetMemberInfo(context.info.member.id, context.info.member.name);
-      context.info.member.memoized_name = member.name;
-
-      //chrome.runtime.sendMessage({'type': 'AnkNijie.Download.addContext', 'context': context}, (o) => logger.info(o));
-      this.executeDownload({'status': status, 'context': context, 'autoDownload': opts.autoDownload});
-    })().catch((e) => logger.error(e));
   };
 
   /**

@@ -17,7 +17,13 @@
 
     this.elements = null;
     this.collectedContext = null;
+
+    this.executed = {
+      'displayDownloaded': false,
+      'markDownloaded': false
+    };
     this.marked = 0;        // markingを行った最終時刻（キューインや保存完了の時刻と比較する）
+
   };
 
   /**
@@ -92,7 +98,7 @@
         case 'AnkPixiv.Viewer':
           return this.openViewer(message.data);
         case 'AnkPixiv.Rate':
-          return this.setRate(message.data);
+          return this.setRate(message.data && message.data.pt);
       }
 
       if (!sender) {
@@ -383,7 +389,6 @@
         }
       })();
 
-      // FIXME Unicode characters broken when __MSG_... in css file (https://bugzilla.mozilla.org/show_bug.cgi?id=1389099)
       if (!display.classList.contains(cls[0])) {
         display.setAttribute('class', '');
         display.classList.add.apply(display.classList, cls);
@@ -414,7 +419,7 @@
       let boxes = {};
 
       // チェック対象のサムネイルを抽出する
-      opts.targets.forEach((t) => {
+      opts.queries.forEach((t) => {
         Array.prototype.map.call(node.querySelectorAll(t.q), (e) => {
           let url = ((tagName) => {
             if (tagName === 'a') {
@@ -664,16 +669,162 @@
   };
 
   /**
+   * ダウンロード情報をまとめる
+   * @param elm
+   * @param force
+   * @returns {Promise.<*>}
+   */
+  AnkSite.prototype.getContext = async function (elm, force) {
+
+    if (!force) {
+      if (this.collectedContext && this.collectedContext.downloadable) {
+        // 既にダウンロード可能な情報を取得済みならそのまま返す
+        return this.collectedContext;
+      }
+    }
+
+    return Promise.all([
+      this.getPathContext(elm),
+      this.getIllustContext(elm),
+      this.getMemberContext(elm)
+    ]).then((result) => {
+      let context = {
+        'downloadable': !!result[0] && !!result[1] && !!result[2],
+        'service_id': this.SITE_ID,
+        'siteName': this.prefs.site.folder,
+        'path': result[0],
+        'info': {
+          'illust': result[1],
+          'member': result[2]
+        }
+      };
+
+      logger.info('CONTEXT: ', context);
+
+      return this.collectedContext = context;
+    });
+  };
+
+  /**
+   * ダウンロードの実行
+   * @param opts
+   */
+  AnkSite.prototype.downloadCurrentImage = function (opts) {
+    if (!this.inIllustPage()) {
+      return;
+    }
+
+    (async () => {
+
+      opts = opts || {};
+
+      let context = await this.getContext(this.elements);
+      if (!context) {
+        // コンテキストが集まらない（ダウンロード可能な状態になっていない）
+        let msg = chrome.i18n.getMessage('msg_notReady');
+        logger.warn(new Error(msg));
+        return;
+      }
+
+      if (!context.downloadable) {
+        // 作品情報が見つからない
+        let msg = chrome.i18n.getMessage('msg_cannotFindImages');
+        logger.error(new Error(msg));
+        alert(msg);
+        return;
+      }
+
+      let status = await this.requestGetDownloadStatus(context.info.illust.id, true);
+
+      let member = await this.requestGetMemberInfo(context.info.member.id, context.info.member.name);
+      context.info.member.memoized_name = member.name;
+
+      this.executeDownload({'status': status, 'context': context, 'autoDownload': opts.autoDownload});
+    })().catch((e) => logger.error(e));
+  };
+
+  /**
+   *　イラストページにダウンロード済みの表示をする
+   * @param opts
+   * @returns {boolean}
+   */
+  AnkSite.prototype.displayDownloaded = function (opts) {
+    if (!this.prefs.site.displayDownloaded) {
+      return true;
+    }
+
+    if (this.executed.displayDownloaded && (opts && !opts.force)) {
+      // 二度実行しない（強制時を除く）
+      return true;
+    }
+
+    let appendTo = this.elements.misc.downloadedDisplayParent;
+    if (!appendTo) {
+      return false;
+    }
+
+    let illustContext = this.getIllustContext(this.elements);
+    if (!illustContext) {
+      return false;
+    }
+
+    this.insertDownloadedDisplay(appendTo, {'id': illustContext.id, 'R18': illustContext.R18, 'updated': illustContext.updated});
+
+    this.executed.displayDownloaded = true;
+
+    return true;
+  };
+
+  /**
+   * サムネイルにダウンロード済みマークを付ける
+   * @param opts
+   * @param siteSpecs
+   * @returns {boolean}
+   */
+  AnkSite.prototype.markDownloaded = function (opts, siteSpecs) {
+    if (!this.prefs.site.markDownloaded) {
+      return true;
+    }
+
+    if (!siteSpecs) {
+      return true;
+    }
+
+    if (this.executed.markDownloaded && (opts && !opts.force)) {
+      // 二度実行しない（強制時を除く）
+      return true;
+    }
+
+    opts = opts || {};
+
+    let node = siteSpecs.node || this.elements.doc;
+
+    this.insertDownloadedMark(node, {
+      'illust_id': opts.illust_id,
+      'queries': siteSpecs.queries,
+      'getId': siteSpecs.getId,
+      'getLastUpdate': siteSpecs.getLastUpdate,
+      'overlay': siteSpecs.overlay,
+      'pinpoint': !!siteSpecs.node,
+      'ignorePref': false
+    });
+
+    this.executed.markDownloaded = true;
+
+    return true;
+  };
+
+  /**
    *
    * @param opts
    */
   AnkSite.prototype.openViewer = function (opts) {
-    if (!this.prefs.largeOnMiddle) {
+    if (!this.prefs.site.largeOnMiddle) {
       return;
     }
 
-    let command = (!opts || !Array.isArray(opts)) && 'open' || opts[0];
-    switch (command) {
+    let cmd = opts && opts.cmd || 'open';
+    switch (cmd) {
       case 'open':
         this.getContext(this.elements)
           .then((context) => {
@@ -688,57 +839,29 @@
         AnkViewer.close();
         break;
       case 'fit':
-        AnkViewer.fit(opts[1]);
+        try {
+          AnkViewer.fit(parseInt(opts.mode, 10));
+        }
+        catch (e) {}
+        break;
+      case 'prev':
+        AnkViewer.setPage({'prevPage': true});
+        break;
+      case 'next':
+        AnkViewer.setPage({'nextPage': true});
         break;
     }
-  };
-
-  /**
-   *
-   * @param elm
-   * @param force
-   * @returns {*}
-   */
-  AnkSite.prototype.getContext = async function (elm, force) {
-
-    if (!force && (this.collectedContext && this.collectedContext.downloadable)) {
-      // 既にダウンロード可能な情報を取得済みならそのまま返す
-      return this.collectedContext;
-    }
-
-    return Promise.all([
-      this.getPathContext(elm),
-      this.getIllustContext(elm),
-      this.getMemberContext(elm)
-    ]).then((result) => {
-      this.collectedContext = {
-        'downloadable': !!result[0] && !!result[1] && !!result[2],
-        'service_id': this.SITE_ID,
-        'siteName': this.prefs.site.folder,
-        'path': result[0],
-        'info': {
-          'illust': result[1],
-          'member': result[2]
-        }
-      };
-
-      logger.info('CONTEXT: ', this.collectedContext);
-
-      return this.collectedContext;
-    });
   };
 
   // 抽象メソッドのようなもの
 
   AnkSite.prototype.getElements = function (doc) {};
-  AnkSite.prototype.getPathContext = function (elm) {};
+  AnkSite.prototype.inIllustPage = function () {};
+  AnkSite.prototype.getPathContext = async function (elm) {};
   AnkSite.prototype.getIllustContext = function (elm) {};
   AnkSite.prototype.getMemberContext = function (elm) {};
-  AnkSite.prototype.downloadCurrentImage = function (opts) {};
   AnkSite.prototype.setRate = function (pt) {};
   AnkSite.prototype.onFocusHandler = function () {};
   AnkSite.prototype.installFunctions = function () {};
-  AnkSite.prototype.displayDownloaded = function () {};
-  AnkSite.prototype.markDownloaded = function () {};
 
 }

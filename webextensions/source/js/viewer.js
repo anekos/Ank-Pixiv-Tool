@@ -24,7 +24,8 @@
     return {
       'open': openViewer,
       'close': closeViewer,
-      'fit': fitViewer
+      'fit': fitViewer,
+      'setPage': setPage
     };
   };
 
@@ -37,7 +38,7 @@
    * @param id
    * @returns {string}
    */
-  let getElementId = (id) => {
+  let getAnkId = (id) => {
     return 'ank-pixiv-viewer-' + id;
   };
 
@@ -48,7 +49,7 @@
    * @param cls
    */
   let createElement = (tagName, id, cls) => {
-    return AnkUtils.createElement(tagName, getElementId(id), null, cls && {'class': getElementId(cls)});
+    return AnkUtils.createElement(tagName, getAnkId(id), null, cls && {'class': getAnkId(cls)});
   };
 
   /**
@@ -56,8 +57,8 @@
    * @param id
    * @returns {Element}
    */
-  let queryElementById = (id) => {
-    return document.getElementById(getElementId(id));
+  let queryElementByAnkId = (id) => {
+    return document.getElementById(getAnkId(id));
   };
 
   /**
@@ -92,14 +93,14 @@
         'left': document.body.scrollLeft
       };
       barSize = AnkUtils.getScrollbarSize();
-      document.documentElement.classList.add(getElementId('enabled'));
+      document.documentElement.classList.add(getAnkId('enabled'));
     };
 
     let resume = () => {
       if (!scrollPos) {
         return;
       }
-      document.documentElement.classList.remove(getElementId('enabled'));
+      document.documentElement.classList.remove(getAnkId('enabled'));
       document.body.scrollTop = scrollPos.top;
       document.body.scrollLeft = scrollPos.left;
       scrollPos = null;
@@ -400,6 +401,10 @@
    * @param opts
    */
   let setPage = (opts) => {
+    if (!isOpened()) {
+      return;
+    }
+
     let setImgSrc = (e, c, p) => {
       e.classList.remove('loading');
       e.setAttribute('data-page-no', p);
@@ -632,7 +637,11 @@
    *
    */
   let isOpened = () => {
-    return !!queryElementById('panel');
+    if (viewer) {
+      return viewer.opened;
+    }
+
+    return !!queryElementByAnkId('panel');
   };
 
   /**

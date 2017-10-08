@@ -37,7 +37,7 @@ const OPTION_DEFAULT ={
   "warnWrongDatetimeFormat": true,
   "largeOnMiddle": true,
   "largeImageSize": 0,
-  "dontResizeIfSmall": true,
+  "dontResizeIfSmall": false,
   "maxPanelOpacity": 10,
   "minPanelOpacity": 0,
   "panelSize": 0,

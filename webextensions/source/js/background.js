@@ -756,7 +756,7 @@
       try {
         chrome.downloads.setShelfEnabled(enabled);
       }
-      catch (e) {};
+      catch (e) {}
     }
   };
 
