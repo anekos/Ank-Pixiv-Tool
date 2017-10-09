@@ -148,19 +148,16 @@
     background-color: white;
 }
 
-#ank-pixiv-viewer-image-panel .ank-pixiv-viewer-show_image.loading {
+#ank-pixiv-viewer-image-panel.loading {
     opacity: 0.4;
 }
 
+#ank-pixiv-viewer-image-panel.hide {
+    opacity: 0;
+}
 
 #ank-pixiv-viewer-image-fp.none {
     display: none;
-}
-
-#ank-pixiv-viewer-panel.facing.fit_in_width #ank-pixiv-viewer-image-container > * {
-    /*
-    width: 50%;
-    */
 }
 
 

@@ -48,8 +48,15 @@
    * @param id
    * @param cls
    */
-  let createElement = (tagName, id, cls) => {
-    return AnkUtils.createElement(tagName, getAnkId(id), null, cls && {'class': getAnkId(cls)});
+  let createAnkElement = (tagName, id, cls) => {
+    let e = document.createElement(tagName);
+    if (id) {
+      e.id = getAnkId(id);
+    }
+    if (cls) {
+      e.classList.add(getAnkId(cls));
+    }
+    return e;
   };
 
   /**
@@ -240,13 +247,30 @@
       let fw = facing ? viewer.fpImg.naturalWidth : 0;
       let fh = facing ? viewer.fpImg.naturalHeight : 0;
 
-      let ph = ch / ih;
-      if (Math.ceil(iw * ph) > cw) {
-        ph = (ch - sh) / ih;
+      if (prefs.adjustFacingImageHeight) {
+        if (fh) {
+          // 見開きの画像の高さが不揃いの場合は高い方に合わせる
+          if (ih > fh) {
+            fw = Math.round(fw * (ih / fh));
+            fh = ih;
+          }
+          else {
+            iw = Math.round(iw * (fh / ih));
+            ih = fh;
+          }
+        }
       }
-      let pw = cw / iw;
-      if (Math.ceil(ih * pw) > ch) {
-        pw = (cw - sw) / iw;
+
+      let gw = iw + fw;
+      let gh = ih > fh ? ih : fh;
+
+      let ph = ch / gh;
+      if (Math.ceil(gw * ph) > cw) {
+        ph = (ch - sh) / gh;
+      }
+      let pw = cw / gw;
+      if (Math.ceil(gh * pw) > ch) {
+        pw = (cw - sw) / gw;
       }
 
       let pp = ph < pw ? ph : pw;
@@ -406,16 +430,17 @@
     }
 
     let setImgSrc = (e, c, p) => {
-      e.classList.remove('loading');
       e.setAttribute('data-page-no', p);
 
       if (c.objurl) {
+        // ObjectURL だと即表示されるのでロード中エフェクトは使わない
         return e.setAttribute('src', c.objurl);
       }
 
       if (prefs.useLoadProgress) {
-        e.classList.add('loading');
+        viewer.imgPanel.classList.add('loading');
       }
+
       e.setAttribute('src', c.src);
     };
 
@@ -497,29 +522,27 @@
    */
   let onImageLoadCompleted = (ev) => {
     let img = ev.target;
-    if (!img.complete) {
+    if (!viewer.bigImg.complete || !viewer.fpImg.complete) {
       return;
     }
 
     resizeCtrl.onResizeTriggered(ev);
 
-    if (img.classList.contains('loading')) {
-      // 半透明終了
-      img.classList.remove('loading');
+    // 半透明終了
+    viewer.imgPanel.classList.remove('loading', 'hide');
 
-      // 未プリフェッチのsrcの場合は、imgのロードが完了してからキャッシュに入れる
-      if (prefs.useImagePrefetch) {
-        try {
-          let p = parseInt(img.getAttribute('data-page-no'), 10);
-          if (!isNaN(p)) {
-            pageCache.addImage(p)
-              .then(() => {
-                pageCache.addImage();
-              });
-          }
+    // 未プリフェッチのsrcの場合は、imgのロードが完了してからキャッシュに入れる
+    if (prefs.useImagePrefetch) {
+      try {
+        let p = parseInt(img.getAttribute('data-page-no'), 10);
+        if (!isNaN(p)) {
+          pageCache.addImage(p)
+            .then(() => {
+              pageCache.addImage();
+            });
         }
-        catch (e) {}
       }
+      catch (e) {}
     }
   };
 
@@ -529,17 +552,17 @@
    */
   let createViewerElements = () => {
     let vw = {
-      'panel': createElement('div', 'panel'),
-      'bigImg': createElement('img', 'image', 'show_image'),
-      'fpImg': createElement('img', 'image-fp', 'show_image'),
-      'imgContainer': createElement('div', 'image-container'),
-      'imgPanel': createElement('div', 'image-panel'),
-      'buttonPanel': createElement('div', 'button-panel'),
-      'prevButton': createElement('button', 'prev-button', 'submit_button'),
-      'nextButton': createElement('button', 'next-button', 'submit_button'),
-      'resizeButton': createElement('button', 'resize-button', 'submit_button'),
-      'closeButton': createElement('button', 'close-button', 'submit_button'),
-      'pageSelector': createElement('select', 'page-selector', 'item_selector'),
+      'panel': createAnkElement('div', 'panel'),
+      'bigImg': createAnkElement('img', 'image', 'show_image'),
+      'fpImg': createAnkElement('img', 'image-fp', 'show_image'),
+      'imgContainer': createAnkElement('div', 'image-container'),
+      'imgPanel': createAnkElement('div', 'image-panel'),
+      'buttonPanel': createAnkElement('div', 'button-panel'),
+      'prevButton': createAnkElement('button', 'prev-button', 'submit_button'),
+      'nextButton': createAnkElement('button', 'next-button', 'submit_button'),
+      'resizeButton': createAnkElement('button', 'resize-button', 'submit_button'),
+      'closeButton': createAnkElement('button', 'close-button', 'submit_button'),
+      'pageSelector': createAnkElement('select', 'page-selector', 'item_selector'),
       'opened': false
     };
 
@@ -593,7 +616,7 @@
     for (let i=0; i<=10; i++) {
       css.push('#ank-pixiv-viewer-button-panel[data-opacity="'+i+'"]{opacity:'+(i/10.0)+';}');
     }
-    let style = createElement('style', 'style');
+    let style = createAnkElement('style', 'style');
     style.innerHTML = css.join('\n');
     document.head.appendChild(style);
   };
@@ -675,6 +698,8 @@
       viewer = createViewerElements();
       addCustomStyle()
     }
+
+    viewer.imgPanel.classList.add('hide'); // 見栄えが悪いので最初のロード中は隠す
 
     setFacingMode(pageCache.length < path.length);
     setPageSelectorOptions(totalPages);

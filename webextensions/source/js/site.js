@@ -40,7 +40,7 @@
 
       applySitePrefs('largeOnMiddle', 'useViewer');
       applySitePrefs('downloadWhenClickMiddle', 'useAutoDownload');
-      applySitePrefs('downloadWhenRate', 'useAutoDownload');
+      applySitePrefs('downloadWhenNice', 'useAutoDownload');
       applySitePrefs('displayDownloaded', 'useDisplayDownloaded');
       applySitePrefs('markDownloaded', 'useMarkDownloaded');
 
@@ -97,8 +97,8 @@
           return this.downloadCurrentImage();
         case 'AnkPixiv.Viewer':
           return this.openViewer(message.data);
-        case 'AnkPixiv.Rate':
-          return this.setRate(message.data && message.data.pt);
+        case 'AnkPixiv.Nice!':
+          return this.setNice();
       }
 
       if (!sender) {
@@ -144,8 +144,8 @@
       let name = ((c) => {
         let ii = c.info.illust;
         let im = c.info.member;
-        let pos = AnkUtils.getDecodedDateTime(new Date(ii.posted || ii.saved));
-        let sav = AnkUtils.getDecodedDateTime(new Date(ii.saved));
+        let pos = AnkUtils.getDateData(new Date(ii.posted || ii.saved));
+        let sav = AnkUtils.getDateData(new Date(ii.saved));
         return [
           {'re': /\?site-name\?/g, 'val': c.siteName},
           {'re': /\?illust-id\?/g, 'val': ii.id},
@@ -315,7 +315,7 @@
     let age = dw.status ? dw.status.age+1 : 1;
 
     // 保存時刻
-    let saved = AnkUtils.getDecodedDateTime(new Date());
+    let saved = AnkUtils.getDateData(new Date());
     dw.start = saved.timestamp;
     dw.context.info.illust.saved = saved.timestamp;
     dw.context.info.illust.savedYMD = saved.ymd;
@@ -744,6 +744,16 @@
   };
 
   /**
+   * focusイベントのハンドラ
+   */
+  AnkSite.prototype.onFocusHandler = function () {
+    if (this.inIllustPage()) {
+      this.displayDownloaded({'force': true});
+    }
+    this.markDownloaded({'force': true});
+  };
+
+  /**
    *　イラストページにダウンロード済みの表示をする
    * @param opts
    * @returns {boolean}
@@ -776,7 +786,50 @@
   };
 
   /**
-   * サムネイルにダウンロード済みマークを付ける
+   * ビューアを開く
+   * @param opts
+   */
+  AnkSite.prototype.openViewer = function (opts) {
+    if (!this.prefs.site.largeOnMiddle) {
+      return;
+    }
+
+    let cmd = opts && opts.cmd || 'open';
+    switch (cmd) {
+      case 'open':
+        this.getContext(this.elements)
+          .then((context) => {
+            if (!context) {
+              logger.error(new Error('viewer not ready'));
+              return;
+            }
+            AnkViewer.open({'prefs': this.prefs, 'path': context.path});
+          }).catch((e) => logger.error(e));
+        break;
+      case 'close':
+        AnkViewer.close();
+        break;
+      case 'fit':
+        try {
+          AnkViewer.fit(parseInt(opts.mode, 10));
+        }
+        catch (e) {}
+        break;
+      case 'prev':
+        AnkViewer.setPage({'prevPage': true});
+        break;
+      case 'next':
+        AnkViewer.setPage({'nextPage': true});
+        break;
+    }
+  };
+
+  /*
+   * 以下はサイト別スクリプトの中で実装が必要なもの
+   */
+
+  /**
+   * サムネイルにダウンロード済みマークを付ける ※半完成品なのでサイト別スクリプト側で補完する必要がある（siteSpecsを与える）
    * @param opts
    * @param siteSpecs
    * @returns {boolean}
@@ -815,53 +868,43 @@
   };
 
   /**
-   *
-   * @param opts
+   * 利用するクエリのまとめ
+   * @param doc
    */
-  AnkSite.prototype.openViewer = function (opts) {
-    if (!this.prefs.site.largeOnMiddle) {
-      return;
-    }
-
-    let cmd = opts && opts.cmd || 'open';
-    switch (cmd) {
-      case 'open':
-        this.getContext(this.elements)
-          .then((context) => {
-            if (!context) {
-              logger.error(new Error('viewer not ready'));
-              return;
-            }
-            AnkViewer.open({'prefs': this.prefs, 'path': context.path});
-          }).catch((e) => logger.error(e));
-        break;
-      case 'close':
-        AnkViewer.close();
-        break;
-      case 'fit':
-        try {
-          AnkViewer.fit(parseInt(opts.mode, 10));
-        }
-        catch (e) {}
-        break;
-      case 'prev':
-        AnkViewer.setPage({'prevPage': true});
-        break;
-      case 'next':
-        AnkViewer.setPage({'nextPage': true});
-        break;
-    }
-  };
-
-  // 抽象メソッドのようなもの
-
   AnkSite.prototype.getElements = function (doc) {};
+
+  /**
+   * 画像ダウンロード可能なページに居るか？
+   */
   AnkSite.prototype.inIllustPage = function () {};
+
+  /**
+   * ダウンロード情報（画像パス）の取得
+   * @param elm
+   * @returns {Promise.<void>}
+   */
   AnkSite.prototype.getPathContext = async function (elm) {};
+
+  /**
+   * ダウンロード情報（イラスト情報）の取得
+   * @param elm
+   */
   AnkSite.prototype.getIllustContext = function (elm) {};
+
+  /**
+   * ダウンロード情報（メンバー情報）の取得
+   * @param elm
+   */
   AnkSite.prototype.getMemberContext = function (elm) {};
-  AnkSite.prototype.setRate = function (pt) {};
-  AnkSite.prototype.onFocusHandler = function () {};
+
+  /**
+   * いいね！する
+   */
+  AnkSite.prototype.setNice = function () {};
+
+  /**
+   * ページに機能をインストールする
+   */
   AnkSite.prototype.installFunctions = function () {};
 
 }

@@ -31,7 +31,7 @@
    */
 
   /**
-   * ダウンロード実行キュークラス
+   * ダウンロードキュークラス
    * - 複数のダウンロードが同時に動いてサーバに負荷をかけるのを防ぐため順序制御を行う
    * @returns {{push: (function(*=, *=, *=)), first: (function()), shift: (function(*)), drop: (function(*=)), find: (function(*, *)), getSiteChanged: (function(*)), size: (function()), sizeImages: (function()), remainImages: (function())}}
    * @constructor
@@ -42,6 +42,7 @@
     let changed = {};
     let szImages = 0;
 
+    // キューイン
     let push = (service_id, illust_id, data) => {
       queue.push({
         'service_id': service_id,
@@ -54,12 +55,14 @@
       szImages += data.targets.length;
     };
 
+    // 先頭の要素を参照する
     let first = () => {
       return queue[0];
     };
 
+    // 先頭の要素を取り出す ※引数 f があるのは非同期実行順序に確信が持てない不安の表れ
     let shift = (f) => {
-      if (queue[0] === f) {
+      if (first() === f) {
         queue.shift();
         changed[f.service_id] = new Date().getTime();
         szImages -= f.data.targets.length;
@@ -67,35 +70,43 @@
       return f;
     };
 
+    // 先頭の要素を捨てる
     let drop = (f) => {
       shift(f);
+
       f.expired = true;
 
       let remains = f.data.targets.length - (1 + f.data.targets.findIndex((e) => !e.done));
+
       setTimeout(() => {
         // FIXME 単に捨てるのではなく、保存しておいてある程度時間が経ったらrevokeするべき（リーク対策）
       }, prefs.xhrTimeout * remains);
     };
 
+    // 検索
     let find = (service_id, illust_id) => {
       return queue.find((e) => {
         return e.service_id == service_id && e.illust_id == illust_id;
       });
     };
 
+    // サイトの最終更新時刻の取得
     let getSiteChanged = (service_id) => {
       // 最後のダウンロード実行時刻より後にマーキングを行っているなら、再度マーキングチェックを行う必要がない
       return changed[service_id] || 0;
     };
 
+    // キューサイズ
     let size = () => {
       return queue.length;
     };
 
+    // キュー中の画像の総数(meta.jsonの数も含む)
     let sizeImages = () => {
       return szImages;
     };
 
+    // 未ダウンロード画像の総数
     let remainImages = () => {
       let f = first();
       if (!f || !f.start) {
@@ -134,44 +145,46 @@
    */
   let HistoryCache = function () {
 
-    const CACHE_DROP_MARGIN = 20;
+    const CACHE_DROP_MARGIN = 40;
 
-    let cache = new Map();
+    let cache = new Map(); // LRUにするため順序付き
 
+    // キャッシュのキー
     let getKey = (service_id, illust_id) => {
-      return service_id + illust_id;
+      return service_id + illust_id; // service_id は英大文字3と決めてるのでくっ付けるだけでいい
     };
 
+    // ゲット
     let get = (service_id, illust_id) => {
       let k = getKey(service_id, illust_id);
       let v = cache.get(k);
       if (v !== undefined) {
-        // LRU
         logger.debug('HIST CACHE HIT:', k);
-        cache.delete(k);
+        cache.delete(k); // LRU
         cache.set(k, v)
       }
       return v;
     };
 
+    // セット
     let set = (service_id, illust_id, v)=> {
-      // LRU
       let k = getKey(service_id, illust_id);
-      cache.delete(k);
+      cache.delete(k); // LRU
       cache.set(k, v);
 
-      // FIXME keys()のコスト高そうな気がする
-      if (cache.size > prefs.historyCacheSize + CACHE_DROP_MARGIN) {
-        let it = cache.keys();
-        for (let wk = it.next(); wk && cache.size > prefs.historyCacheSize; wk = it.next()) {
-          logger.debug('HIST CACHE DROPPED:', wk.value);
-          cache.delete(wk.value);
+      // keys()のコスト高そうな気がするので（未計測）、満杯になるごとに１個ずつ開けるのではなく CACHE_DROP_MARGIN 個分の空きを一気つくる
+      if (cache.size >= prefs.historyCacheSize + CACHE_DROP_MARGIN) {
+        let ks = Array.from(cache.keys()).slice(0, cache.size - prefs.historyCacheSize);
+        logger.debug('HIST CACHE DROPPED:', ks);
+        for (let i=0; i<ks.length; i++) {
+          cache.delete(ks[i]);
         }
       }
 
       return v;
     };
 
+    // 通常セット
     let setInfo = (service_id, illust_id, info) => {
       let v = {
         'service_id': service_id,
@@ -184,12 +197,13 @@
         v.age = isNaN(info.age) ? 1 : info.age;
       }
       else {
-        v.empty = true;
+        v.empty = true; // 履歴DB上に存在しないことを表す
       }
 
       return set(service_id, illust_id, v);
     };
 
+    // エラーセット
     let setFailed = (service_id, illust_id) => {
       let v  = get(service_id, illust_id) || {
         'service_id': service_id,
@@ -351,7 +365,12 @@
           'active': true
         },
         (tab) => {
-          chrome.tabs.sendMessage(tab[0].id, {'type': 'AnkPixiv.Download'}, () => {});
+          if (tab && tab[0]) {
+            chrome.tabs.sendMessage(tab[0].id, {'type': 'AnkPixiv.Download'}, () => {});
+          }
+          else {
+            logger.warn('no active tab identified');
+          }
         }
       );
     });
@@ -376,7 +395,7 @@
           'filename': t.filename,
           'cleanDownloadBar': prefs.cleanDownloadBar
         })
-          .then((r) => {
+          .then(() => {
             if (t.ownResource) {
               logger.debug('revoke', t.objurl);
               try {
@@ -393,8 +412,6 @@
             if (isMultiTargets) {
               setButtonText();
             }
-
-            return r;
           });
       };
 
@@ -416,14 +433,8 @@
       targets.forEach((t) => t.ownResource = !t.objurl);
 
       AnkUtils.downloadTargets(targets, sv, prefs.xhrTimeout)
-        .then((r) => {
-          return us(hist_data)
-            .then((u) => {
-              if (u && u.hasOwnProperty('error')) {
-                return u;
-              }
-              return {'result': r};
-            });
+        .then(() => {
+          return us(hist_data);
         })
         .catch((e) => {
           return {'error': e};
@@ -446,7 +457,7 @@
      */
     let opDownloadQueue = (data, sender, sendResponse) => {
 
-      const WAITS_FOR_NEXT = 200;
+      const WAIT_FOR_NEXT = 200; // 次のダウンロード開始までの猶予
 
       if (data) {
         // ダウンロード情報の追加を要求された場合
@@ -485,10 +496,11 @@
 
       // ダウンロード処理が長時間続いた場合に刈り取ってもらうための監視
       f.timerId = setTimeout(() => {
+          f.timerId = 0;
           logger.debug('download timeout has occurred', f.service_id, f.illust_id);
           opDownloadQueue(null, null, null);
         },
-        prefs.downloadTimeout + WAITS_FOR_NEXT
+        prefs.downloadTimeout + WAIT_FOR_NEXT
       );
 
       f.start = now;
@@ -500,7 +512,7 @@
       })
         .then((r) => {
           if (r && r.hasOwnProperty('error')) {
-            return Promise.reject(r);
+            return Promise.reject(r.error);
           }
           logger.debug('dwdn', r);
         })
@@ -520,6 +532,7 @@
           }
 
           if (f.timerId) {
+            // 刈り取り監視はキャンセル
             clearTimeout(f.timerId);
             f.timerId = 0;
           }
@@ -529,7 +542,7 @@
           sendDisplayMessage();
           setButtonText();
 
-          setTimeout(() => opDownloadQueue(null, null, null), WAITS_FOR_NEXT);
+          setTimeout(() => opDownloadQueue(null, null, null), WAIT_FOR_NEXT);
         });
 
       return false;
@@ -557,7 +570,11 @@
         }
 
         sendResponse(member);
-      })();
+      })()
+        .catch((e) => {
+          logger.error(e);
+          sendResponse({'error': e});
+        });
 
       return true;
     };
@@ -624,7 +641,11 @@
         }
 
         sendResponse(multi_target ? results : results[0]);
-      })();
+      })()
+        .catch((e) => {
+          logger.error(e);
+          sendResponse({'error': e});
+        });
 
       return true;
     };
@@ -635,13 +656,12 @@
     let queryUpdateDownloadHistory = (data, sender, sendResponse) => {
       historyCache.setInfo(data.hist_data.service_id, data.hist_data.illust_id, data.hist_data);
       db.histories.put(data.hist_data)
+        .then(() => {
+          sendResponse();
+        })
         .catch((e) => {
           logger.error(e);
-          return {'error': e};
-        })
-        .then((r) => {
-          // finally
-          sendResponse(r);
+          sendResponse({'error': e});
         });
 
       return true;
@@ -666,13 +686,12 @@
           imp('members');
         }
       })
+        .then(() => {
+          sendResponse();
+        })
         .catch((e) => {
           logger.error(e);
-          return {'error': e};
-        })
-        .then((r) => {
-          // finally
-          sendResponse(r);
+          sendResponse({'error': e});
         });
 
       return true;
@@ -721,11 +740,16 @@
   let sendDisplayMessage = () => {
     chrome.tabs.query(
       {
-        currentWindow: true,
-        active: true
+        'currentWindow': true,
+        'active': true
       },
       (tab) => {
-        chrome.tabs.sendMessage(tab[0].id, {'type':'AnkPixiv.Display'}, () => {});
+        if (tab && tab[0]) {
+          chrome.tabs.sendMessage(tab[0].id, {'type':'AnkPixiv.Display'}, () => {});
+        }
+        else {
+          logger.warn('no active tab identified');
+        }
       }
     );
   };

@@ -147,7 +147,7 @@
    */
   AnkNicosei.prototype.getIllustContext = function (elm) {
     try {
-      let posted = this.getPosted(() => AnkUtils.decodeDateTimeText(elm.info.illust.datetime.textContent));
+      let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(elm.info.illust.datetime.textContent));
 
       let info = {
         'url': elm.doc.location.href,
@@ -222,29 +222,14 @@
   };
 
   /**
-   * focusイベントのハンドラ
+   * クリップする
    */
-  AnkNicosei.prototype.onFocusHandler = function () {
-    if (this.inIllustPage()) {
-      this.displayDownloaded({'force': true});
-    }
-    this.markDownloaded({'force': true});
-  };
-
-  /**
-   * 評価の実行
-   */
-  AnkNicosei.prototype.setRate = function (pt) {
-    if (!this.elements.info.illust.good) {
+  AnkNicosei.prototype.setNice = function () {
+    if (!this.elements.info.illust.clip) {
       return;
     }
 
-    this.elements.info.illust.good.click();
-
-    // 自動ダウンロード（評価時）
-    if (this.prefs.site.downloadWhenRate) {
-      this.downloadCurrentImage({'autoDownload': true});
-    }
+    this.elements.info.illust.clip.click();
   };
 
   /**
@@ -317,22 +302,20 @@
       return this.markDownloaded();
     };
 
-    // 評価したら自動ダウンロード
-    let ratingEventFunc = () => {
-      if (!this.prefs.site.downloadWhenRate) {
+    // クリップしたら自動ダウンロード
+    let niceEventFunc = () => {
+      if (!this.prefs.site.downloadWhenNice) {
         return true;
       }
 
-      let btns = ['nuita', 'good'].map((e) => this.elements.info.illust[e]);
-      if (!btns[0] || !btns[1]) {
+      let clip = this.elements.info.illust.clip;
+      if (!clip) {
         return;
       }
 
-      btns.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          this.downloadCurrentImage({'autoDownload': true});
-        }, false);
-      });
+      clip.addEventListener('click', () => {
+        this.downloadCurrentImage({'autoDownload': true});
+      }, false);
 
       return true;
     };
@@ -343,9 +326,9 @@
       this.delayFunctionInstaller({'func': middleClickEventFunc, 'retry': RETRY_VALUE, 'label': 'middleClickEventFunc'}),
       this.delayFunctionInstaller({'func': delayDisplaying, 'retry': RETRY_VALUE, 'label': 'delayDisplaying'}),
       this.delayFunctionInstaller({'func': delayMarking, 'retry': RETRY_VALUE, 'label': 'delayMarking'}),
-      this.delayFunctionInstaller({'func': ratingEventFunc, 'retry': RETRY_VALUE, 'label': 'ratingEventFunc'})
+      this.delayFunctionInstaller({'func': niceEventFunc, 'retry': RETRY_VALUE, 'label': 'niceEventFunc'})
     ])
-      .catch((e) => logger.error(e));
+      .catch((e) => logger.warn(e));
   };
 
   /**

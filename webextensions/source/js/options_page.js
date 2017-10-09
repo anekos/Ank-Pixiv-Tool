@@ -165,9 +165,11 @@
           }
           else if (tagName === 'input' && e.type === 'number') {
             try {
-              obj[e.id] = parseInt(v, 10);
+              obj[e.id] = parseInt(e.value, 10);
             }
-            catch (e) {}
+            catch (e) {
+              logger.error(e);
+            }
           }
           else {
             obj[e.id] = ((v) => {
@@ -176,7 +178,9 @@
                   return parseInt(v, 10);
                 }
               }
-              catch (e) {}
+              catch (e) {
+                logger.error(e);
+              }
               return v;
             })(e.value);
           }

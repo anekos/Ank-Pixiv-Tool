@@ -11,15 +11,8 @@
     <div id="group_download" class="groupbox">
         <div data-i18n="group_download" class="grouptitle"></div>
         <div class="item">
-            <input type="checkbox" id="downloadWhenRate">
-            <select id="downloadRate" title="">
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10</option>
-            </select>
-            <span data-i18n="downloadWhenRate"></span>
+            <input type="checkbox" id="downloadWhenNice">
+            <span data-i18n="downloadWhenNice"></span>
         </div>
         <div class="item">
             <input type="checkbox" id="downloadWhenClickMiddle">
@@ -41,7 +34,7 @@
             <input type="checkbox" id="saveHistory">
             <span data-i18n="saveHistory"></span>
         </div>
-        <div class="item">
+        <div class="item hidden">
             <input type="checkbox" id="saveHistoryWithDetails">
             <span data-i18n="saveHistoryWithDetails"></span>
         </div>
@@ -188,6 +181,10 @@
             <span data-i18n="dontResizeIfSmall"></span>
         </div>
         <div class="item">
+            <input type="checkbox" id="adjustFacingImageHeight">
+            <span data-i18n="adjustFacingImageHeight"></span>
+        </div>
+        <div class="item">
             <select id="maxPanelOpacity">
                 <option value="10">100%</option>
                 <option value="9">90%</option>
@@ -242,7 +239,7 @@
             <input type="checkbox" id="swapArrowButton">
             <span data-i18n="swapArrowButton"></span>
         </div>
-        <div class="item">
+        <div class="item hidden">
             <input type="checkbox" id="useFacingView">
             <span data-i18n="useFacingView"></span>
         </div>

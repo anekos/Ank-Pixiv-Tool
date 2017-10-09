@@ -6,20 +6,20 @@
  */
 
 // ダウンロード実行
-javascript:(() => {window.postMessage({'type':'AnkPixiv.Download'},'*')})();
+javascript:(() => window.postMessage({'type':'AnkPixiv.Download'},'*'))();
 
 // viewer操作
-javascript:(() => {window.postMessage({'type':'AnkPixiv.Viewer', 'data':{'cmd':'open'}},'*')})();
-javascript:(() => {window.postMessage({'type':'AnkPixiv.Viewer', 'data':{'cmd':'close'}},'*')})();
-javascript:(() => {window.postMessage({'type':'AnkPixiv.Viewer', 'data':{'cmd':'prev'}},'*')})();
-javascript:(() => {window.postMessage({'type':'AnkPixiv.Viewer', 'data':{'cmd':'next'}},'*')})();
-javascript:(() => {window.postMessage({'type':'AnkPixiv.Viewer', 'data':{'cmd':'fit', 'mode':n}},'*')})();  // n = FIT_MODE(0,1,2,3)
+javascript:(() => window.postMessage({'type':'AnkPixiv.Viewer', 'data':{'cmd':'open'}},'*'))();
+javascript:(() => window.postMessage({'type':'AnkPixiv.Viewer', 'data':{'cmd':'close'}},'*'))();
+javascript:(() => window.postMessage({'type':'AnkPixiv.Viewer', 'data':{'cmd':'prev'}},'*'))();
+javascript:(() => window.postMessage({'type':'AnkPixiv.Viewer', 'data':{'cmd':'next'}},'*'))();
+javascript:(() => window.postMessage({'type':'AnkPixiv.Viewer', 'data':{'cmd':'fit', 'mode':n}},'*'))();  // n = FIT_MODE(0,1,2,3)
 
 // いいね！
-javascript:(() => {window.postMessage({'type':'AnkPixiv.Rate', 'data':{'pt':n}},'*')})(); // n = 点数(1～10)
+javascript:(() => window.postMessage({'type':'AnkPixiv.Nice!'},'*'))();
 
 // 設定画面の隠しオプションを表示する
-javascript:((d)=>{Array.prototype.forEach.call(d.querySelectorAll('.item.hidden'),e=>e.classList.remove('hidden'))})(document);
+javascript:((d) => Array.prototype.forEach.call(d.querySelectorAll('.item.hidden'),e=>e.classList.remove('hidden')))(document);
 
 
 

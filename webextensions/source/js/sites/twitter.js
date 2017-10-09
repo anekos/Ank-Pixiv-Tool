@@ -138,7 +138,7 @@
   AnkTwitter.prototype.getIllustContext = function (elm) {
     try {
       let dd = new Date(parseInt(elm.info.illust.datetime.getAttribute('data-time-ms'),10));
-      let posted = this.getPosted(() => AnkUtils.getDecodedDateTime(dd));
+      let posted = this.getPosted(() => AnkUtils.getDateData(dd));
 
       let info = {
         'url': elm.info.illust.ownLink.href,

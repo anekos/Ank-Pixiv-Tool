@@ -3,8 +3,8 @@
 const IS_FIREFOX = ((ua)=>{return ua && ua.indexOf("Firefox") != -1})(navigator.userAgent);
 
 const OPTION_DEFAULT ={
-  "downloadWhenRate": false,
-  "downloadRate": 10,
+  "downloadWhenNice": false,
+  //"downloadRate": 10,
   "downloadWhenClickMiddle": false,
   //"initialDirectory": "AnkPixiv",
   "downloadOriginalSize": true,
@@ -38,6 +38,7 @@ const OPTION_DEFAULT ={
   "largeOnMiddle": true,
   "largeImageSize": 0,
   "dontResizeIfSmall": false,
+  "adjustFacingImageHeight": true,
   "maxPanelOpacity": 10,
   "minPanelOpacity": 0,
   "panelSize": 0,

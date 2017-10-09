@@ -105,7 +105,7 @@
           get caption () {
             return query('.work-info .caption');
           },
-          get rating () {
+          get nice () {
             return query('.work-info .js-nice-button');
           },
           get tags () {
@@ -413,7 +413,7 @@
       let id = 'ank-pixiv-script-ugoinfo';
       let name = 'AnkPixiv.UgoInfo';
 
-      return AnkUtils.siteScript.exec(elm.doc, id, name, script);
+      return AnkUtils.executeSiteScript(id, name, script);
     };
 
     //
@@ -436,7 +436,7 @@
    */
   AnkPixiv.prototype.getIllustContext = function (elm) {
     try {
-      let posted = this.getPosted(() => AnkUtils.decodeDateTimeText(elm.info.illust.datetime.textContent));
+      let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(elm.info.illust.datetime.textContent));
 
       let info = {
         'url': elm.doc.location.href,
@@ -463,7 +463,7 @@
       ((u) => {
         let t = u && this.getLastUpdate(u.getAttribute('data-src'));
         if (t) {
-          let d = AnkUtils.getDecodedDateTime(new Date(t));
+          let d = AnkUtils.getDateData(new Date(t), false);
           if (d.timestamp > posted.timestamp) {
             // 更新があった場合
             info.updated = d.timestamp;
@@ -558,30 +558,15 @@
   };
 
   /**
-   * focusイベントのハンドラ
+   * いいね！する
    */
-  AnkPixiv.prototype.onFocusHandler = function () {
-    if (this.inIllustPage()) {
-      this.displayDownloaded({'force': true});
-    }
-    this.markDownloaded({'force': true});
-  };
-
-  /**
-   * 評価の実行
-   */
-  AnkPixiv.prototype.setRate = function (pt) {
-    if (this.elements.info.illust.rating.classList.contains('rated')) {
+  AnkPixiv.prototype.setNice = function () {
+    if (this.elements.info.illust.nice.classList.contains('rated')) {
       logger.info('already rated');
       return;
     }
 
-    this.elements.info.illust.rating.click();
-
-    // 自動ダウンロード（評価時）
-    if (this.prefs.site.downloadWhenRate) {
-      this.downloadCurrentImage({'autoDownload': true});
-    }
+    this.elements.info.illust.nice.click();
   };
 
   /**
@@ -692,23 +677,23 @@
     };
 
     // 評価したら自動ダウンロード
-    let ratingEventFunc = () => {
-      if (!this.prefs.site.downloadWhenRate) {
+    let niceEventFunc = () => {
+      if (!this.prefs.site.downloadWhenNice) {
         return true;
       }
 
-      let rating = this.elements.info.illust.rating;
-      if (!rating) {
+      let nice = this.elements.info.illust.nice;
+      if (!nice) {
         return;
       }
 
-      let rated = rating.classList.contains('rated');
+      let rated = nice.classList.contains('rated');
       if (rated) {
         return true;
       }
 
-      rating.addEventListener('click', () => {
-        let rated = rating.classList.contains('rated');
+      nice.addEventListener('click', () => {
+        let rated = nice.classList.contains('rated');
         if (rated) {
           return;
         }
@@ -726,9 +711,9 @@
       this.delayFunctionInstaller({'func': delayDisplaying, 'retry': RETRY_VALUE, 'label': 'delayDisplaying'}),
       this.delayFunctionInstaller({'func': delayMarking, 'retry': RETRY_VALUE, 'label': 'delayMarking'}),
       this.delayFunctionInstaller({'func': openCaption, 'retry': RETRY_VALUE, 'label': 'openCaption'}),
-      this.delayFunctionInstaller({'func': ratingEventFunc, 'retry': RETRY_VALUE, 'label': 'ratingEventFunc'})
+      this.delayFunctionInstaller({'func': niceEventFunc, 'retry': RETRY_VALUE, 'label': 'niceEventFunc'})
     ])
-      .catch((e) => logger.error(e));
+      .catch((e) => logger.warn(e));
   };
 
   /**
@@ -781,7 +766,7 @@
       this.delayFunctionInstaller({'func': followExpansion, 'retry': RETRY_VALUE, 'label': 'followExpansion'}),
       this.delayFunctionInstaller({'func': autoPagerize, 'retry': RETRY_VALUE, 'label': 'autoPagerize'})
     ])
-      .catch((e) => logger.error(e));
+      .catch((e) => logger.warn(e));
   };
 
   /**
