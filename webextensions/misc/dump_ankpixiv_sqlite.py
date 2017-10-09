@@ -24,18 +24,18 @@ def main():
         f = sys.stdout if opts.dst is None else codecs.open(opts.dst, 'w', 'utf-8')
         conn = sqlite3.connect(opts.src, isolation_level='DEFERRED')
         cursor = conn.cursor()
-        print >> f, '{"h":['
+        print('{"h":[', file=f)
         for row in cursor.execute("SELECT service_id,illust_id,member_id,datetime FROM histories WHERE service_id IS NOT NULL"):
-            d = map(lambda n:'' if n is None else n, row)
+            d = ['' if n is None else n for n in row]
             ts = str(int(time.mktime(datetime.strptime(d[3][0:19], '%Y-%m-%d %H:%M:%S').timetuple()))) + d[3][20:23]
-            print >> f, json.dumps([d[0], unicode(d[1]), unicode(d[2]), ts]) + ','
-        print >> f, '[]],"m":['
+            print(json.dumps([d[0], str(d[1]), str(d[2]), ts]) + ',', file=f)
+        print('[]],"m":[', file=f)
         for row in cursor.execute("SELECT service_id,id,name FROM members WHERE service_id IS NOT NULL"):
-            d = map(lambda n:'' if n is None else n, row)
-            print >> f, json.dumps([d[0], unicode(d[1]), d[2]]) + ','
-        print >> f, '[]]}'
-    except Exception, e:
-        print e
+            d = ['' if n is None else n for n in row]
+            print(json.dumps([d[0], str(d[1]), d[2]]) + ',', file=f)
+        print('[]]}', file=f)
+    except Exception as e:
+        print (e)
         if conn:
             conn.rollback()
     finally:

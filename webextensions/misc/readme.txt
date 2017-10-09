@@ -33,10 +33,10 @@ javascript:((d) => Array.prototype.forEach.call(d.querySelectorAll('.item.hidden
 ・[問] firefoxで、viewerのページ先読みができない→↑が原因
 ・[問] firefoxで、ダウンロード完了後に変な例外が記録される→これか？ https://bug635044.bugzilla.mozilla.org/show_bug.cgi?id=1298362
 ・[問] 履歴の保存場所がpermanentではない
+・[問] chromeで、「設定＞ダウンロード前に各ファイルの保存場所を確認する」が有効だと、chrome.downloadsの指定で無効にしていても確認ダイアログが出てしまう→対応待ち https://code.google.com/p/chromium/issues/detail?id=417112
 
 －[CLOSED] firefoxで、extensionからのXHRを onBeforeSendHeaders でトラップできない模様 https://bugzilla.mozilla.org/show_bug.cgi?id=1273138→対応された模様
 －[CLOSED] firefoxで、chrome.storageがcontent scriptから利用できない→対応待ち https://bugzilla.mozilla.org/show_bug.cgi?id=1197346→対応された模様
-－[CLOSED] chromeで、「設定＞ダウンロード前に各ファイルの保存場所を確認する」が有効だと、chrome.downloadsの指定で無効にしていても確認ダイアログが出てしまう→対応待ち https://code.google.com/p/chromium/issues/detail?id=417112→保存場所確認は廃止する
 －[CLOSED] CORSなXHRでcookie飛ばないけどいいのかどうかわからない→いいんじゃね
 －[CLOSED] firefoxで、content script側で作ったObjectURLをbackground page側に渡してもアクセスできない→XHRは（というかcreate/revokeを）background側に戻したくない。しかし他の方法だと画像データのやり取りのコストが高い。保留 ※参考 http://qiita.com/rndomhack/items/87794e5618a315a51a75→諦めてbpでxhr
 －[CLOSED] firefoxで、ダウンロード履歴のインポートができない→現バージョンのDexie.jsがfirefoxのasync/awaitに対応していないらしい。保留 http://dexie.org/docs/Dexie/Dexie.transaction()#async-and-await→reduceを使って書き直した
