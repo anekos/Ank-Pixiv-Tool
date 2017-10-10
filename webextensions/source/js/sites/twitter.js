@@ -143,11 +143,11 @@
       let info = {
         'url': elm.info.illust.ownLink.href,
         'id': elm.doc.getAttribute('data-tweet-id'),
-        'title': AnkUtils.trim(elm.info.illust.caption.innerText),
+        'title': AnkUtils.trim(elm.info.illust.caption.textContent),
         'posted': !posted.fault && posted.timestamp,
         'postedYMD': !posted.fault && posted.ymd,
         'tags': [],
-        'caption': AnkUtils.trim(elm.info.illust.caption.innerText),
+        'caption': AnkUtils.trim(elm.info.illust.caption.textContent),
         'R18': false
       };
 

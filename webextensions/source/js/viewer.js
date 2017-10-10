@@ -14,12 +14,12 @@
   let pageCache = null;
 
   let currentPageIdx = 0;
-  let totalPages = 0;
 
   let start = () => {
     scrollCtrl = new ScrollCtrl();
     buttonCtrl = new ButtonCtrl();
     resizeCtrl = new ResizeCtrl();
+    pageCache = new PageCache();
 
     return {
       'open': openViewer,
@@ -337,85 +337,149 @@
 
   /**
    * 全ページの画像データの入れ物を用意する
-   * @param imagePath
-   * @param totalPages
-   * @returns {{addImage: (function(*=)), clear: (function()), get: (function(*)), length}}
+   * @returns {{init: (function(*)), prefetch: (function(*=)), get: (function(*)), totalPages, facing}}
    * @constructor
    */
-  let PageCache = function (imagePath, totalPages) {
+  let PageCache = function () {
 
-    // FIXME キャッシュサイズに上限を設けてないので画像数の多い場合危険
-    let cache = new Array(totalPages);
+    const CACHE_SIZE = 5;
 
-    //
-    let addImage = (pageIdx) => {
-      let loadImg = async (pgc) => {
-        for (let i=0; i<pgc.length; i++) {
-          let img = pgc[i];
-          if (!img.objurl && !img.busy && /^https?:\/\//.test(img.src)) {
-            img.busy = true;
-            await remote.get({
-              'url': img.src,
-              //'headers': imgCache.referrer && [{'name':'Referer', 'value': imgCache.referrer}],
-              'timeout': prefs.xhrTimeout,
-              'responseType': 'blob'
-            }).then((resp) => {
+    let totalPages = 0;
+    let facing = false;
+
+    let path = [];
+    let cache = [];
+
+    let busy = false;
+
+    // 画像を読み込む
+    let load = async (pgc) => {
+      for (let i=0; i<pgc.length; i++) {
+        let img = pgc[i];
+        if (!img.objurl && /^https?:\/\//.test(img.src)) {
+          await remote.get({
+            'url': img.src,
+            //'headers': imgCache.referrer && [{'name':'Referer', 'value': imgCache.referrer}],
+            'timeout': prefs.xhrTimeout,
+            'responseType': 'blob'
+          })
+            .then((resp) => {
               logger.debug('PREFETCHED:', img.src);
-              img.objurl = URL.createObjectURL(resp.blob);
-              img.busy = false;
+              try {
+                img.objurl = URL.createObjectURL(resp.blob);
+              }
+              catch (e) {
+                logger.warn(e);
+              }
             });
-          }
         }
-      };
-
-      return (async () => {
-        if (!isNaN(pageIdx)) {
-          // 指定ページ
-          await loadImg(cache[pageIdx]);
-        }
-        else {
-          // 全ページ
-          for (let n=1; n < totalPages; n++) {
-            await loadImg(cache[n]);  // P.1はonloadで処理されるはずなので、P.2から始める
-          }
-        }
-      })().catch((e) => {
-        logger.error(e);
-      });
+      }
     };
 
-    //
-    let clear = () => {
-      cache.forEach((pgc) => {
-        pgc.forEach((img) => {
-          img.busy = true;
-          if (img.objurl) {
-            logger.debug('REVOKED:', img.src);
+    // 読み込んだ画像データを破棄する
+    let revoke = (pgc) => {
+      pgc.forEach((img) => {
+        img.busy = true;
+        if (img.objurl) {
+          logger.debug('REVOKED:', img.src);
+          try {
             URL.revokeObjectURL(img.objurl);
           }
-        });
+          catch (e) {
+            logger.warn(e);
+          }
+        }
       });
     };
 
-    imagePath.forEach((path, i) => {
-      let n = path.facingNo > 0 && path.facingNo-1 || i;
-      cache[n] = cache[n] || [];
-      cache[n].push({
-        'src': path.src,
-        'referrer': path.referrer,
-        'busy': false,
-        'objurl': null
-      })
-    });
+    // キャッシュする
+    let prefetch = (pageIdx) => {
+      if (busy) {
+        // TODO キャッシュ範囲外へページジャンプした場合は実行中のloadをキャンセルしてやりなおしたい
+        logger.debug('prefetch busy', pageIdx);
+        return;
+      }
+
+      busy = true;
+
+      let wkCache = [];
+      for (let i=0; i < CACHE_SIZE && i < totalPages; i++) {
+        let page = (i + pageIdx + totalPages - 1) % totalPages; // 前ページからCACHE_SIZE分がキャッシュ対象
+        let pgc;
+        let index = cache.findIndex((c) => c && c[0] && c[0].page == page);
+        if (index != -1) {
+          pgc = cache.splice(index, 1)[0];
+        }
+        else {
+          pgc = path[page].map((img) => {
+            return {
+              'src': img.src,
+              'referrer': img.referrer,
+              'objurl': null,
+              'page': page
+            };
+          });
+        }
+        wkCache.push(pgc);
+      }
+
+      cache.forEach((e) => revoke(e));
+      cache = wkCache;
+      cache.push(cache.shift()); // 前ページは最後に回す
+
+      return (async () => {
+        for (let i=0; i < cache.length; i++) {
+          await load(cache[i]);
+        }
+
+        busy = false;
+      })()
+        .catch((e) => {
+          busy = false;
+          return Promise.reject(e);
+        });
+    };
+
+    // キャッシュから情報を探す
+    let get = (pageIdx) => {
+      let pgc = cache.find((e) => e && e[0] && e[0].page == pageIdx);
+      return path[pageIdx].map((img, i) => {
+        return {
+          'src': img.src,
+          'objurl': pgc && pgc[i] && pgc[i].objurl
+        };
+      });
+    };
+
+    //　初期化する
+    let init = (imagePath) => {
+      path = [];
+      imagePath.forEach((p, i) => {
+        let page = p.facingNo > 0 && p.facingNo-1 || i;
+
+        path[page] = path[page] || [];
+        path[page].push({
+          'src': p.src,
+          'referrer': p.referrer
+        });
+
+        totalPages = page + 1;
+      });
+
+      facing = totalPages != imagePath.length;
+    };
+
+    //
 
     return {
-      'addImage': addImage,
-      'clear': clear,
-      'get':  (i) => {
-        return cache[i];
+      'init': init,
+      'prefetch': prefetch,
+      'get': get,
+      get totalPages () {
+        return totalPages
       },
-      get length () {
-        return cache.length
+      get facing () {
+        return facing;
       }
     };
   };
@@ -444,7 +508,7 @@
       e.setAttribute('src', c.src);
     };
 
-    currentPageIdx = getNewPageIdx(opts, currentPageIdx, totalPages);
+    currentPageIdx = getNewPageIdx(opts, currentPageIdx, pageCache.totalPages);
     if (currentPageIdx == -1) {
       return closeViewer();
     }
@@ -499,24 +563,6 @@
   };
 
   /**
-   * 総ページ数を調べる（見開き考慮あり）
-   * @param imagePath
-   * @returns {*}
-   */
-  let getTotalPage = (imagePath) => {
-    if (imagePath.length == 1) {
-      return 1;
-    }
-
-    let lastImg = imagePath[imagePath.length-1];
-    if (lastImg.facingNo) {
-      return lastImg.facingNo;
-    }
-
-    return imagePath.length;
-  };
-
-  /**
    * imgへのsrcの読み込みが完了した際に実行する
    * @param ev
    */
@@ -536,9 +582,9 @@
       try {
         let p = parseInt(img.getAttribute('data-page-no'), 10);
         if (!isNaN(p)) {
-          pageCache.addImage(p)
-            .then(() => {
-              pageCache.addImage();
+          pageCache.prefetch(p)
+            .catch((e) => {
+              logger.error(e);
             });
         }
       }
@@ -690,19 +736,19 @@
     // ビュアーに隠れるページのスクロールを一時停止する
     scrollCtrl.pause();
 
-    totalPages = getTotalPage(path);
-    pageCache = new PageCache(path, totalPages);
-
     // viewerを構築する
     if (!viewer) {
       viewer = createViewerElements();
-      addCustomStyle()
+      addCustomStyle();
+
+      // 画像読み込みキャッシュの初期化
+      pageCache.init(path);
+
+      setFacingMode(pageCache.facing);
+      setPageSelectorOptions(pageCache.totalPages);
     }
 
     viewer.imgPanel.classList.add('hide'); // 見栄えが悪いので最初のロード中は隠す
-
-    setFacingMode(pageCache.length < path.length);
-    setPageSelectorOptions(totalPages);
 
     document.body.appendChild(viewer.panel);
     viewer.opened = true;
@@ -730,8 +776,6 @@
     resizeCtrl.setWindowResizeListener(false);
 
     scrollCtrl.resume();
-
-    pageCache.clear();
   };
 
   /**

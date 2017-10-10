@@ -456,7 +456,7 @@
         })(elm.info.illust.size.textContent),
         'tags': Array.prototype.map.call(elm.info.illust.tags, (e) => AnkUtils.trim(e.textContent)),
         'tools': elm.info.illust.tools && AnkUtils.trim(elm.info.illust.tools.textContent),
-        'caption': elm.info.illust.caption && AnkUtils.trim(elm.info.illust.caption.innerText),
+        'caption': elm.info.illust.caption && AnkUtils.trim(elm.info.illust.caption.textContent),
         'R18': !!elm.info.illust.R18
       };
 

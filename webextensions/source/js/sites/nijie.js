@@ -175,7 +175,7 @@
         'posted': !posted.fault && posted.timestamp,
         'postedYMD': !posted.fault && posted.ymd,
         'tags': Array.prototype.map.call(elm.info.illust.tags, (e) => AnkUtils.trim(e.textContent)),
-        'caption': elm.info.illust.caption && AnkUtils.trim(elm.info.illust.caption.innerText),
+        'caption': elm.info.illust.caption && AnkUtils.trim(elm.info.illust.caption.textContent),
         'R18': true
       };
 
