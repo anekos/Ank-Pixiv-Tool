@@ -195,8 +195,6 @@
   // ダウンロード履歴インポートボタンのイベント
   let addImportHistoryEvent = () => {
 
-    const IMPORT_UNITS = 1000;
-
     let requestImportHistory = async (target, src, getVal) => {
       let i = 0;
       let len = src.length;
@@ -239,11 +237,14 @@
     let chooser = document.querySelector('#importHistory');
     let label = document.querySelector('#importHistoryLabel');
 
+    let busy = false;
+
     // ファイルが選択されたら
     chooser.addEventListener('change', () => {
       let file = chooser.files[0];
       chooser.value = '';
       if (!file) {
+        busy = false;
         return;
       }
 
@@ -291,12 +292,142 @@
         .catch((e) => {
           logger.error(e);
           alert(chrome.i18n.getMessage('msg_importHistoryError'));
+        })
+        .then(() => {
+          // finally
+          busy = false;
         });
     });
 
     // ボタンクリックで chooser を開く
     button.addEventListener('click', () => {
-      chooser.click();
+      if (!busy) {
+        busy = true;
+        chooser.click();
+      }
+    });
+  };
+
+  // ダウンロード履歴エクスポートボタンのイベント
+  let addExportHistoryEvent = () => {
+
+    let requestExportHistory = () => {
+      let recvMessage = (message) => {
+        if (!message) {
+          port.disconnect();
+          port = null;
+
+          let objURL = URL.createObjectURL(new Blob([JSON.stringify(obj)], {'type': 'text/plain'}));
+          chooser.href = objURL;
+          chooser.click();
+          URL.revokeObjectURL(objURL);
+
+          label.textContent = 'completed';
+          busy = false;
+          return;
+        }
+
+        try {
+          let table = obj[message.table.slice(0,1)];
+          let len = message.response.length;
+          for (let i=0; i<len; i++) {
+            let info = message.response[i];
+            if (message.table == 'histories') {
+              table.push([
+                info.service_id,
+                info.illust_id,
+                info.member_id,
+                info.last_saved,
+                isNaN(info.age) ? 1 : info.age
+              ]);
+            }
+            else if (message.table == 'members') {
+              table.push([
+                info.service_id,
+                info.member_id,
+                info.name
+              ]);
+            }
+          }
+          label.textContent = [message.table, 'exported', table.length].join(' ');
+          logger.debug(message.table, 'exported:', table.length);
+        }
+        catch (e) {
+          logger.error(e);
+        }
+      };
+
+      let obj = {
+        'h': [],
+        'm': []
+      };
+
+      let port = chrome.runtime.connect({'name': 'AnkPixivChannel'});
+      port.onMessage.addListener(recvMessage);
+      port.postMessage({'type': 'AnkPixiv.Query.exportDownloadHistory'});
+    };
+
+    let button = document.querySelector('#exportHistoryButton');
+    let chooser = document.querySelector('#exportHistory');
+    let label = document.querySelector('#exportHistoryLabel');
+
+    let busy = false;
+
+    button.addEventListener('click', () => {
+      if (!busy) {
+        busy = true;
+        requestExportHistory();
+      }
+    });
+  };
+
+  // ダウンロード履歴DB初期化ボタンのイベント
+  let addClearHistoryEvent = () => {
+
+    let button = document.querySelector('#cleartHistoryButton');
+    let label = document.querySelector('#cleartHistoryLabel');
+
+    let busy = false;
+
+    button.addEventListener('click', () => {
+      if (!busy) {
+        busy = true;
+
+        let msg = chrome.i18n.getMessage('msg_ARE_YOU_SURE');
+        let result = confirm(msg);
+        if (!result) {
+          busy = false;
+          return;
+        }
+
+        label.textContent = 'removing...';
+
+        new Promise((resolve, reject) => {
+          chrome.runtime.sendMessage({
+              'type': 'AnkPixiv.Query.clearDownloadHistory'
+            },
+            (result) => {
+              if (result && result.hasOwnProperty('error')) {
+                reject(result.error);
+              }
+              resolve(result);
+            }
+          )
+        })
+          .then(() => {
+            alert(chrome.i18n.getMessage('msg_clearHistoryCompleted'));
+            label.textContent = 'completed';
+          })
+          .catch((e) => {
+            logger.error(e);
+            alert(chrome.i18n.getMessage('msg_clearHistoryError'));
+            label.textContent = 'failed';
+          })
+          .then(() => {
+            // finally
+            busy = false;
+          });
+      }
     });
   };
 
@@ -313,6 +444,8 @@
     addSaveEvent();
     addFilenameTagPushEvent();
     addImportHistoryEvent();
+    addExportHistoryEvent();
+    addClearHistoryEvent();
   })();
 
 }

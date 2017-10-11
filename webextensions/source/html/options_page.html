@@ -251,6 +251,10 @@
             <input type="checkbox" id="useImagePrefetch">
             <span data-i18n="useImagePrefetch"></span>
         </div>
+        <div class="item hidden">
+            <input type="number" id="imagePrefetchSize" min="5" max="99">
+            <span data-i18n="imagePrefetchSize"></span>
+        </div>
         <div class="item">
             <input type="checkbox" id="viewOriginalSize">
             <span data-i18n="viewOriginalSize"></span>
@@ -315,22 +319,29 @@
 <div class="groupbox">
     <div data-i18n="group_history" class="grouptitle"></div>
     <div class="item">
+        <button id="exportHistoryButton" data-i18n="exportHistory" class="button">Apply</button>
+        <a id="exportHistory" href="#" download="ankpixiv.json" onclick="javascript:void(0)" style="display: none;"></a>
+        <label for="exportHistory" id="exportHistoryLabel"/>
+    </div>
+    <div class="item">
         <button id="importHistoryButton" data-i18n="importHistory" class="button">Apply</button>
         <input type="file" class="button" id="importHistory" accept=".json" style="display: none;"/>
         <label for="importHistory" id="importHistoryLabel"/>
     </div>
-    <div class="item hidden">
-        <button id="exportHistory" data-i18n="exportHistory" class="button">Apply</button>
+    <div class="item">
+        <button id="cleartHistoryButton" data-i18n="clearHistory" class="button">Apply</button>
+        <label for="cleartHistoryButton" id="cleartHistoryLabel"/>
     </div>
 </div>
 
 <div class="groupbox">
-    <span class="item">
+    <div data-i18n="group_submit" class="grouptitle"></div>
+    <div class="item">
         <button id="reset" data-i18n="reset" class="button">Reset</button>
-    </span>
-    <span class="item">
+    </div>
+    <div class="item">
         <button id="apply" data-i18n="apply" class="button">Apply</button>
-    </span>
+    </div>
 </div>
 
 <script src="../js/logger.js"></script>

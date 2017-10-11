@@ -47,6 +47,7 @@ const OPTION_DEFAULT ={
   "useFacingView": true,
   "useLoadProgress": true,
   "useImagePrefetch": false,
+  "imagePrefetchSize": 5,
   "viewOriginalSize": true,
   //"openComment": false,
   "openCaption": false,
@@ -66,3 +67,7 @@ const OPTION_DEFAULT ={
     "TWT":{"enabled": true, "experimental": false, "name": "Twitter", "folder": "Twitter"}
   }
 };
+
+const IMPORT_UNITS = 1000;
+const EXPORT_UNITS = 1000;
+

@@ -13,7 +13,7 @@
   let resizeCtrl = null;
   let pageCache = null;
 
-  let currentPageIdx = 0;
+  let curPageIdx = 0;
 
   let start = () => {
     scrollCtrl = new ScrollCtrl();
@@ -132,6 +132,8 @@
     const FADEOUT_TIME = 500.0;
 
     let fadeOutTimer = 0;
+    let maxOpa = 0;
+    let minOpa = 0;
 
     let show = () => {
       if (fadeOutTimer) {
@@ -142,27 +144,27 @@
       viewer.buttonPanel.setAttribute('data-opacity', prefs.maxPanelOpacity.toString());
     };
 
-    let hide = function () {
-      let decOpacity = () => {
-        try {
-          if (btnOpa > minOpa) {
-            btnOpa--;
-            viewer.buttonPanel.setAttribute('data-opacity', btnOpa.toString());
-            return false;   // please retry
-          }
-        } catch (e) {}
-        return true;
-      };
-
-      let fadeOutTimerHandler = () => {
-        if (decOpacity()) {
-          clearInterval(fadeOutTimer);
-          fadeOutTimer = 0;
+    let decOpacity = (btnOpa) => {
+      try {
+        if (btnOpa > minOpa) {
+          btnOpa--;
+          viewer.buttonPanel.setAttribute('data-opacity', btnOpa.toString());
+          return false;   // please retry
         }
-      };
+      } catch (e) {}
+      return true;
+    };
 
-      let maxOpa = prefs.maxPanelOpacity > prefs.minPanelOpacity ? prefs.maxPanelOpacity : prefs.minPanelOpacity;
-      let minOpa = prefs.maxPanelOpacity < prefs.minPanelOpacity ? prefs.maxPanelOpacity : prefs.minPanelOpacity;
+    let fadeOutTimerHandler = (btnOpa) => {
+      if (decOpacity(btnOpa)) {
+        clearInterval(fadeOutTimer);
+        fadeOutTimer = 0;
+      }
+    };
+
+    let hide = function () {
+      maxOpa = prefs.maxPanelOpacity > prefs.minPanelOpacity ? prefs.maxPanelOpacity : prefs.minPanelOpacity;
+      minOpa = prefs.maxPanelOpacity < prefs.minPanelOpacity ? prefs.maxPanelOpacity : prefs.minPanelOpacity;
       let step = maxOpa - minOpa;
       if (step <= 0) {
         return;
@@ -170,7 +172,7 @@
 
       let btnOpa = maxOpa;
 
-      fadeOutTimer = setInterval(fadeOutTimerHandler, FADEOUT_TIME / step);
+      fadeOutTimer = setInterval(() => fadeOutTimerHandler(btnOpa--), FADEOUT_TIME / step);
     };
 
     return {
@@ -337,12 +339,10 @@
 
   /**
    * 全ページの画像データの入れ物を用意する
-   * @returns {{init: (function(*)), prefetch: (function(*=)), get: (function(*)), totalPages, facing}}
+   * @returns {{init: (function(*)), prefetch: (function(*=)), get: (function(*)), getNewPageIdx: (function(*, *)), totalPages, facing}}
    * @constructor
    */
   let PageCache = function () {
-
-    const CACHE_SIZE = 5;
 
     let totalPages = 0;
     let facing = false;
@@ -403,8 +403,8 @@
       busy = true;
 
       let wkCache = [];
-      for (let i=0; i < CACHE_SIZE && i < totalPages; i++) {
-        let page = (i + pageIdx + totalPages - 1) % totalPages; // 前ページからCACHE_SIZE分がキャッシュ対象
+      for (let i=0; i < prefs.imagePrefetchSize && i < totalPages; i++) {
+        let page = (i + pageIdx + totalPages - 1) % totalPages; // 前ページから imagePrefetchSize 分がキャッシュ対象
         let pgc;
         let index = cache.findIndex((c) => c && c[0] && c[0].page == page);
         if (index != -1) {
@@ -451,19 +451,43 @@
       });
     };
 
+    // 移動先のページ番号を取得する
+    let getNewPageIdx = (opts, currentPageIdx) => {
+      if (opts.reverse ? opts.prevPage : opts.nextPage) {
+        // 次へ
+        let n = (currentPageIdx + 1) % totalPages;
+        if (prefs.loopPage || currentPageIdx < n) {
+          return n;
+        }
+      }
+      else if (opts.reverse ? opts.nextPage : opts.prevPage) {
+        // 前へ
+        let n = (currentPageIdx + totalPages - 1) % totalPages;
+        if (prefs.loopPage || currentPageIdx > n) {
+          return n;
+        }
+      }
+      else if (0 <= opts.pageNo && opts.pageNo < totalPages) {
+        // ページ番号指定
+        return opts.pageNo;
+      }
+
+      return -1;
+    };
+
     //　初期化する
     let init = (imagePath) => {
       path = [];
       imagePath.forEach((p, i) => {
-        let page = p.facingNo > 0 && p.facingNo-1 || i;
+        let pageIdx = p.facingNo > 0 && p.facingNo-1 || i;
 
-        path[page] = path[page] || [];
-        path[page].push({
+        path[pageIdx] = path[pageIdx] || [];
+        path[pageIdx].push({
           'src': p.src,
           'referrer': p.referrer
         });
 
-        totalPages = page + 1;
+        totalPages = pageIdx + 1;
       });
 
       facing = totalPages != imagePath.length;
@@ -475,6 +499,7 @@
       'init': init,
       'prefetch': prefetch,
       'get': get,
+      'getNewPageIdx': getNewPageIdx,
       get totalPages () {
         return totalPages
       },
@@ -485,85 +510,28 @@
   };
 
   /**
-   * 指定のページを表示する
-   * @param opts
+   * bigImg/fpImgに画像を張り付ける
+   * @param eImg
+   * @param cache
+   * @param pageIdx
    */
-  let setPage = (opts) => {
-    if (!isOpened()) {
-      return;
+  let setImgSrc = (eImg, cache, pageIdx) => {
+    eImg.setAttribute('data-page-idx', pageIdx);
+
+    if (cache.objurl) {
+      // ObjectURL だと即表示されるのでロード中エフェクトは使わない
+      return eImg.setAttribute('src', cache.objurl);
     }
 
-    let setImgSrc = (e, c, p) => {
-      e.setAttribute('data-page-no', p);
-
-      if (c.objurl) {
-        // ObjectURL だと即表示されるのでロード中エフェクトは使わない
-        return e.setAttribute('src', c.objurl);
-      }
-
-      if (prefs.useLoadProgress) {
-        viewer.imgPanel.classList.add('loading');
-      }
-
-      e.setAttribute('src', c.src);
-    };
-
-    currentPageIdx = getNewPageIdx(opts, currentPageIdx, pageCache.totalPages);
-    if (currentPageIdx == -1) {
-      return closeViewer();
+    if (prefs.useLoadProgress) {
+      viewer.imgPanel.classList.add('loading');
     }
 
-    let pgc = pageCache.get(currentPageIdx);
-
-    if (pgc[1]) {
-      viewer.fpImg.classList.remove('none');
-      setImgSrc(viewer.fpImg, pgc[1], currentPageIdx);
-    }
-    else {
-      viewer.fpImg.classList.add('none');
-      viewer.fpImg.setAttribute('src', '');
-    }
-
-    if (pgc[0]) {
-      setImgSrc(viewer.bigImg, pgc[0], currentPageIdx);
-    }
+    eImg.setAttribute('src', cache.src);
   };
 
   /**
-   * 移動先のページ番号を取得する
-   * @param opts
-   * @param currentPageIdx
-   * @param totalPages
-   * @returns {*}
-   */
-  let getNewPageIdx = (opts, currentPageIdx, totalPages) => {
-    if (opts.reverse ? opts.prevPage : opts.nextPage) {
-      // 次へ
-      let n = (currentPageIdx + 1) % totalPages;
-      if (prefs.loopPage || currentPageIdx < n) {
-        viewer.pageSelector.value = n;
-        return n;
-      }
-    }
-    else if (opts.reverse ? opts.nextPage : opts.prevPage) {
-      // 前へ
-      let n = (currentPageIdx + totalPages - 1) % totalPages;
-      if (prefs.loopPage || currentPageIdx > n) {
-        viewer.pageSelector.value = n;
-        return n;
-      }
-    }
-    else if (0 <= opts.pageNo && opts.pageNo < totalPages) {
-      // ページ番号指定
-      viewer.pageSelector.value = opts.pageNo;
-      return opts.pageNo;
-    }
-
-    return -1;
-  };
-
-  /**
-   * imgへのsrcの読み込みが完了した際に実行する
+   * bigImg/fpImgへのsrcの読み込みが完了した際に実行する
    * @param ev
    */
   let onImageLoadCompleted = (ev) => {
@@ -580,7 +548,7 @@
     // 未プリフェッチのsrcの場合は、imgのロードが完了してからキャッシュに入れる
     if (prefs.useImagePrefetch) {
       try {
-        let p = parseInt(img.getAttribute('data-page-no'), 10);
+        let p = parseInt(img.getAttribute('data-page-idx'), 10);
         if (!isNaN(p)) {
           pageCache.prefetch(p)
             .catch((e) => {
@@ -589,6 +557,38 @@
         }
       }
       catch (e) {}
+    }
+  };
+
+  /**
+   * 指定のページを表示する
+   * @param opts
+   */
+  let setPage = (opts) => {
+    if (!isOpened()) {
+      return;
+    }
+
+    curPageIdx = pageCache.getNewPageIdx(opts, curPageIdx);
+    if (curPageIdx == -1) {
+      return closeViewer();
+    }
+
+    viewer.pageSelector.value = curPageIdx;
+
+    let pgc = pageCache.get(curPageIdx);
+
+    if (pgc[1]) {
+      viewer.fpImg.classList.remove('none');
+      setImgSrc(viewer.fpImg, pgc[1], curPageIdx);
+    }
+    else {
+      viewer.fpImg.classList.add('none');
+      viewer.fpImg.setAttribute('src', '');
+    }
+
+    if (pgc[0]) {
+      setImgSrc(viewer.bigImg, pgc[0], curPageIdx);
     }
   };
 
@@ -755,8 +755,8 @@
     resizeCtrl.setWindowResizeListener(true);
 
     // 開く
-    currentPageIdx = currentPageIdx == -1 ? 0 : currentPageIdx;
-    setPage({'pageNo': currentPageIdx});
+    curPageIdx = curPageIdx == -1 ? 0 : curPageIdx;
+    setPage({'pageNo': curPageIdx});
     buttonCtrl.show();
  };
 

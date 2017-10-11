@@ -6,7 +6,7 @@
     padding: .25em;
     margin-bottom: 1em;
 }
-.groupbox > div {
+.groupbox > div, .groupbox > * > div {
     margin-bottom: .5em;
 }
 .grouptitle {
@@ -26,7 +26,7 @@
 }
 .button {
     font-size: 1.5em;
-    min-width: 6em;
+    min-width: 10em;
 }
 .item.hidden {
     display: none;

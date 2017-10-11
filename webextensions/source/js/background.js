@@ -691,7 +691,59 @@
         })
         .catch((e) => {
           logger.error(e);
-          sendResponse({'error': e});
+          sendResponse({'error': e.toString()});
+        });
+
+      return true;
+    };
+
+    /**
+     * ダウンロード履歴を初期化する
+     */
+    let queryClearDownloadHistory = (data, sender, sendResponse) => {
+      db.histories.clear()
+        .then(() => {
+          return db.members.clear();
+        })
+        .then(() => {
+          sendResponse();
+        })
+        .catch((e) => {
+          logger.error(e);
+          sendResponse({'error': e.toString()});
+        });
+
+      return true;
+    };
+
+    /**
+     * ダウンロード履歴をエクスポートする
+     */
+    let queryExportDownloadHistory = (data, sender, postMessage) => {
+      let exp = (t) => {
+        let a = [];
+        return db[t].each((r) => {
+          a.push(r);
+          if (a.length >= EXPORT_UNITS) {
+            logger.debug(t, 'exported:', a.length);
+            postMessage({'table': t, 'response': a});
+            a = [];
+          }
+        })
+          .then(() => {
+            if (a.length > 0) {
+              logger.debug(t, 'exported:', a.length);
+              postMessage({'table': t, 'response': a});
+            }
+          });
+      };
+
+      exp('histories')
+        .then(() => exp('members'))
+        .then(() => postMessage())
+        .catch((e) => {
+          logger.error(e);
+          postMessage({'error': e.toString()});
         });
 
       return true;
@@ -725,11 +777,28 @@
             return queryUpdateDownloadHistory(message.data, sender, sendResponse);
           case 'AnkPixiv.Query.importDownloadHistory':
             return queryImportDownloadHistory(message.data, sender, sendResponse);
+          case 'AnkPixiv.Query.clearDownloadHistory':
+            return queryClearDownloadHistory(message.data, sender, sendResponse);
           case 'AnkPixiv.Query.getSiteChanged':
             return queryGetSiteChanged(message.data, sender, sendResponse);
           default:
             break;
         }
+      }
+    });
+
+    chrome.runtime.onConnect.addListener((port) => {
+      let postMessage = (msg) => {
+        port.postMessage(msg);
+      };
+
+      if (port.name == 'AnkPixivChannel') {
+        port.onMessage.addListener((message) => {
+          switch (message.type) {
+            case 'AnkPixiv.Query.exportDownloadHistory':
+              return queryExportDownloadHistory(message.data, null, postMessage);
+          }
+        });
       }
     });
   };
