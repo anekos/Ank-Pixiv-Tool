@@ -64,7 +64,9 @@ const OPTION_DEFAULT ={
     "PXV":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Pixiv", "folder": "Pixiv"},
     "NJE":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Nijie", "folder": "Nijie"},
     "NCS":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Nicosei", "folder": "Nicosei"},
-    "TWT":{"enabled": true, "experimental": false, "name": "Twitter", "folder": "Twitter"}
+    "TNM":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Tinami", "folder": "Tinami"},
+    "TWT":{"enabled": true, "experimental": false, "name": "Twitter", "folder": "Twitter"},
+    "TDK":{"enabled": true, "experimental": false, "name": "Tweetdeck", "folder": "Twitter"}
   }
 };
 

@@ -12,6 +12,7 @@
     }
 
     this.SITE_ID = null;
+    this.ALT_SITE_ID = null;
 
     this.prefs = null;
 
@@ -507,7 +508,7 @@
       chrome.runtime.sendMessage({
           'type': 'AnkPixiv.Query.getSiteChanged',
           'data':{
-            'service_id': this.SITE_ID
+            'service_id': this.ALT_SITE_ID || this.SITE_ID
           }
         },
         (result) => resolve(result)
@@ -527,7 +528,7 @@
       chrome.runtime.sendMessage({
           'type': 'AnkPixiv.Query.getMemberInfo',
           'data':{
-            'service_id': this.SITE_ID,
+            'service_id': this.ALT_SITE_ID || this.SITE_ID,
             'member_id': member_id,
             'member_name': member_name
           }
@@ -547,7 +548,7 @@
       chrome.runtime.sendMessage({
           'type': 'AnkPixiv.Query.getDownloadStatus',
           'data':{
-            'service_id': this.SITE_ID,
+            'service_id': this.ALT_SITE_ID || this.SITE_ID,
             'illust_id': illust_id,
             'ignore_cache': ignore_cache
           }
@@ -690,7 +691,7 @@
     ]).then((result) => {
       let context = {
         'downloadable': !!result[0] && !!result[1] && !!result[2],
-        'service_id': this.SITE_ID,
+        'service_id': this.ALT_SITE_ID || this.SITE_ID,
         'siteName': this.prefs.site.folder,
         'path': result[0],
         'info': {
