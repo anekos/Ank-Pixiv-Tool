@@ -68,8 +68,8 @@
           get title () {
             return query('.viewdata > h1 > span');
           },
-          get caption () {
-            return query('.description');
+          get captions () {
+            return queryAll('.description');
           },
           get tags () {
             return queryAll('.tag > span');
@@ -84,6 +84,9 @@
       'misc': {
         get postParams () {
           return queryAll('#open_original_content > input');
+        },
+        get openCantion () {
+          return query('#show_all');
         },
         get downloadedDisplayParent () {
           return query('.description');
@@ -172,6 +175,7 @@
     try {
       let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(elm.info.illust.datetime.textContent));
 
+
       let info = {
         'url': elm.doc.location.href,
         'id': this.getIllustId(elm.doc.location.href),
@@ -179,7 +183,7 @@
         'posted': !posted.fault && posted.timestamp,
         'postedYMD': !posted.fault && posted.ymd,
         'tags': Array.prototype.map.call(elm.info.illust.tags, (e) => AnkUtils.trim(e.textContent)),
-        'caption': elm.info.illust.caption && AnkUtils.trim(elm.info.illust.caption.textContent),
+        'caption': Array.prototype.map.call(elm.info.illust.captions, (e) =>AnkUtils.trim(e.textContent)).join('\n'),
         'R18': false
       };
 
@@ -312,12 +316,33 @@
       return this.markDownloaded();
     };
 
+    // キャプションを自動で開く
+    let openCaption = () => {
+      if (!this.prefs.openCaption) {
+        return true;
+      }
+
+      let button = this.elements.misc.openCantion;
+      if (!button) {
+        return;
+      }
+
+      setTimeout(() => {
+        if (getComputedStyle(button).getPropertyValue('display') === 'block') {
+          button.click();
+        }
+      }, this.prefs.openCaptionDelay);
+
+      return true;
+    };
+
     //
 
     Promise.all([
       this.delayFunctionInstaller({'func': middleClickEventFunc, 'retry': RETRY_VALUE, 'label': 'middleClickEventFunc'}),
       this.delayFunctionInstaller({'func': delayDisplaying, 'retry': RETRY_VALUE, 'label': 'delayDisplaying'}),
-      this.delayFunctionInstaller({'func': delayMarking, 'retry': RETRY_VALUE, 'label': 'delayMarking'})
+      this.delayFunctionInstaller({'func': delayMarking, 'retry': RETRY_VALUE, 'label': 'delayMarking'}),
+      this.delayFunctionInstaller({'func': openCaption, 'retry': RETRY_VALUE, 'label': 'openCaption'})
     ])
       .catch((e) => logger.warn(e));
   };

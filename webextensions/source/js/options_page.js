@@ -55,7 +55,7 @@
     let container = document.querySelector('#siteListContainer > tbody');
 
     let sms = OPTION_DEFAULT.siteModules;
-    Object.keys(sms).sort().forEach((site_key) => {
+    Object.keys(sms).forEach((site_key) => {
       let box = document.createElement('tr');
       container.appendChild(box);
       SITE_MODULE_VALKEYS.forEach((value_key) => {

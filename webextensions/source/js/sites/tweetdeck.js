@@ -118,7 +118,8 @@
 
       let info = {
         'url': elm.info.illust.ownLink.href,
-        'id': elm.info.illust.actionsMenu.getAttribute('data-chirp-id'),
+        'id': /\/status\/(\d+)/.exec(elm.info.illust.ownLink.href)[1],
+        'chirpId': elm.info.illust.actionsMenu.getAttribute('data-chirp-id'),
         'title': AnkUtils.trim(elm.info.illust.caption.textContent),
         'posted': !posted.fault && posted.timestamp,
         'postedYMD': !posted.fault && posted.ymd,
