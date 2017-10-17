@@ -32,47 +32,36 @@
    */
   AnkTweetdeck.prototype.getElements = function (doc) {
 
-    let query = (q) => {
-      return doc.querySelector(q);
-    };
-
-    let queryAll = (q) => {
-      return doc.querySelectorAll(q);
-    };
-
-    return {
-      'illust': {
-        get modal () {
-          return query('#open-modal');
-        }
+    const SELECTOR_ITEMS = {
+      "illust": {
+        "modal": {"s": "#open-modal"},
+        "photos": null
       },
-      'info': {
-        'illust': {
-          get actionsMenu () {
-            return query('#open-modal .tweet-action[rel="actionsMenu"]');
-          },
-          get ownLink () {
-            return query('#open-modal .tweet-timestamp a');
-          },
-          get name () {
-            return query('#open-modal .fullname');
-          },
-          get datetime () {
-            return query('#open-modal .tweet-timestamp');
-          },
-          get caption () {
-            return query('#open-modal .tweet-text');
-          }
+      "info": {
+        "illust": {
+          "actionsMenu": {"s": "#open-modal .tweet-action[rel=\"actionsMenu\"]"},
+          "ownLink": {"s": "#open-modal .tweet-timestamp a"},
+          "name": {"s": "#open-modal .fullname"},
+          "datetime": {"s": "#open-modal .tweet-timestamp"},
+          "caption": {"s": "#open-modal .tweet-text"}
         },
-        'member': {
+        "member": {
         }
       },
-      'misc': {
-      },
-      'thumbnails': {
-      },
-      'doc': doc
+      "misc": {
+      }
     };
+
+    let gElms = this.initSelectors({'doc': doc}, SELECTOR_ITEMS, doc);
+
+    Object.defineProperty(gElms.illust, 'photos', {
+      'get': function () {
+        let chirpId = gElms.info.illust.actionsMenu.getAttribute('data-chirp-id');
+        return gElms.doc.querySelector('article[data-key="'+chirpId+'"]').querySelectorAll('.js-media-image-link');
+      }
+    });
+
+    return gElms;
   };
 
   /**
@@ -89,7 +78,7 @@
    * @returns {Promise}
    */
   AnkTweetdeck.prototype.getPathContext = async function (elm) {
-    let photos = elm.doc.querySelector('article[data-key="'+elm.info.illust.actionsMenu.getAttribute('data-chirp-id')+'"]').querySelectorAll('.js-media-image-link');
+    let photos = elm.illust.photos;
     if (photos.length > 0) {
       let m = Array.prototype.map.call(photos, (e) => {
         let src = (/background-image:url\("?(.+?)"?\)/.exec(e.getAttribute('style')) || [])[1];
@@ -118,8 +107,7 @@
 
       let info = {
         'url': elm.info.illust.ownLink.href,
-        'id': /\/status\/(\d+)/.exec(elm.info.illust.ownLink.href)[1],
-        'chirpId': elm.info.illust.actionsMenu.getAttribute('data-chirp-id'),
+        'id': /\/status\/(\d+)$/.exec(elm.info.illust.ownLink.href)[1],
         'title': AnkUtils.trim(elm.info.illust.caption.textContent),
         'posted': !posted.fault && posted.timestamp,
         'postedYMD': !posted.fault && posted.ymd,

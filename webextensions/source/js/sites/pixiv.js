@@ -36,129 +36,62 @@
    */
   AnkPixiv.prototype.getElements = function (doc) {
 
-    let query = (q) => {
-      return doc.querySelector(q);
+    const SELECTOR_ITEMS = {
+      "illust": {
+        "imgOvr": {"s": ".works_display"},
+        "med": {
+          "img": {"s": ".works_display > ._layout-thumbnail > img"},
+          "bigImg": {"s": ".original-image"}
+        },
+        "mng": {
+          "img": {"s": ".works_display > ._work > ._layout-thumbnail > img"},
+          "largeLink": {"s": ".works_display > a"}
+        },
+        "ugo": {
+          "img": {"s": ".works_display > ._ugoku-illust-player-container canvas"}
+        }
+      },
+      "mngIdx": {
+        "errorMessage": {"s": [".errorArea" ,".errortxt"]},
+
+        "scripts": {"ALL": "scripts"},
+        "images": {"ALL": ".manga > .item-container > img"},
+        "largeLinks": {"ALL": ".manga > .item-container > a"}
+      },
+      "info": {
+        "illust": {
+          "datetime": {"s": ".work-info .meta > li"},
+          "size": {"s": ".work-info .meta > li+li"},
+          "tools": {"s": ".work-info .tools"},
+          "title": {"s": ".work-info .title"},
+          "R18": {"s": ".work-info .r-18, .work-info .r-18g"},
+          "caption": {"s": ".work-info .caption"},
+          "nice": {"s": ".work-info .js-nice-button"},
+          "update": {"s": ".bookmark_modal_thumbnail"},
+
+          "tags": {"ALL": ".work-tags .tags > .tag > .text"}
+        },
+        "member": {
+          "memberLink": {"s": ".profile .user-name"},
+          "feedLink": {"s": ".tab-feed"}
+        }
+      },
+      "misc": {
+        "openCantion": {"s": ".ui-expander-container > .ui-expander-target > .expand"},
+        "downloadedDisplayParent": {"s": ".score"},
+        "recommendList": {"s": "#illust-recommend ._image-items"},
+        "feedList": {"s": ["#stacc_timeline", "#stacc_center_timeline"]},
+        "rankingList": {"s": ".ranking-items"},
+        "discovery": {"s": "#js-mount-point-discovery"},
+        "downloadedFilenameArea": {"s": ".ank-pixiv-downloaded-filename-text"},
+        "nextLink": {"s": ".before > a"},
+        "prevLink": {"s": ".after > a'"}
+      }
     };
 
-    let queryAll = (q) => {
-      return doc.querySelectorAll(q);
-    };
+    let gElms = this.initSelectors({'doc': doc}, SELECTOR_ITEMS, doc);
 
-    return {
-      'illust': {
-        get imgOvr () {
-          return query('.works_display');
-        },
-        'med': {
-          get img () {
-            return query('.works_display > ._layout-thumbnail > img');
-          },
-          get bigImg () {
-            return query('.original-image');
-          }
-        },
-        'mng': {
-          get img () {
-            return query('.works_display > ._work > ._layout-thumbnail > img');
-          },
-          get largeLink () {
-            return query('.works_display > a');
-          }
-        },
-        'ugo': {
-          get img () {
-            return query('.works_display > ._ugoku-illust-player-container canvas');
-          }
-        }
-      },
-      'mngIdx': {
-        get errorMessage () {
-          return query('.errorArea') || query('.errortxt');
-        },
-        get scripts () {
-          return queryAll('script');
-        },
-        get images () {
-          return queryAll('.manga > .item-container > img');
-        },
-        get largeLinks () {
-          return queryAll('.manga > .item-container > a');
-        }
-      },
-      'info': {
-        'illust': {
-          get datetime () {
-            return query('.work-info .meta > li');
-          },
-          get size () {
-            return query('.work-info .meta > li+li');
-          },
-          get tools () {
-            return query('.work-info .tools');
-          },
-          get title () {
-            return query('.work-info .title');
-          },
-          get R18 () {
-            return query('.work-info .r-18, .work-info .r-18g');
-          },
-          get caption () {
-            return query('.work-info .caption');
-          },
-          get nice () {
-            return query('.work-info .js-nice-button');
-          },
-          get tags () {
-            return queryAll('.work-tags .tags > .tag > .text');
-          },
-          get update () {
-            return query('.bookmark_modal_thumbnail');
-          }
-        },
-        'member': {
-          get memberLink () {
-            return query('.profile .user-name');
-          },
-          get feedLink () {
-            return Array.prototype.filter.call(queryAll('.tabs > li > a'), (a) => /\/stacc\//.test(a.href))[0];
-          }
-        }
-      },
-      'misc': {
-        get openCantion () {
-          return query('.ui-expander-container > .ui-expander-target > .expand');
-        },
-        get downloadedDisplayParent () {
-          return query('.score');
-        },
-        get recommendList() {
-          // この作品をブックマークした人はこんな作品もブックマークしています
-          // あなたのブックマークタグ「○○」へのおすすめ作品
-          return query('#illust-recommend ._image-items');
-        },
-        get feedList() {
-          return query('#stacc_timeline') || query('#stacc_center_timeline');
-        },
-        get rankingList() {
-          return query('.ranking-items');
-        },
-        get discovery() {
-          return query('#js-mount-point-discovery');
-        },
-        get downloadedFilenameArea () {
-          return query('.ank-pixiv-downloaded-filename-text');
-        },
-        get nextLink() {
-          return query('.before > a');
-        },
-        get prevLink() {
-          return query('.after > a');
-        }
-      },
-      'thumbnails': {
-      },
-      'doc': doc
-    };
+    return gElms;
   };
 
   /**

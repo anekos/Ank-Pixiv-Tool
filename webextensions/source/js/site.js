@@ -825,6 +825,84 @@
     }
   };
 
+  /**
+   *
+   * @param o
+   * @param items
+   * @param doc
+   * @returns {*}
+   */
+  AnkSite.prototype.initSelectors = function (o, items, doc, mod_selector) {
+
+    mod_selector = mod_selector || this.prefs.site._mod_selector;
+
+    Object.keys(items).forEach((k) => {
+      let item = items[k];
+      if (item === undefined) {
+        throw new Error('invalid selector format');
+      }
+
+      if (item === null) {
+        // パターンA （セレクタの書き換えだけでは対処できないパターン）
+        o[k] = null;
+        return;
+      }
+
+      o[k] = o[k] || {};
+
+      let mods = mod_selector && mod_selector[k] || {};
+
+      let typ = ['s', 'ALL'].find((p) => item.hasOwnProperty(p));
+      if (typ) {
+        // パターンB
+        let s = mods[typ] || item[typ];
+        if (typ == 's') {
+          if (!Array.isArray(s)) {
+            // 決め打ち
+            Object.defineProperty(o, k, {
+              'get': function () {
+                return doc.querySelector(s)
+              }
+            });
+            return;
+          }
+          else {
+            // 複数候補
+            Object.defineProperty(o, k, {
+              'get': function () {
+                for (let i = 0; i < s.length; i++) {
+                  let o = doc.querySelector(s[i]);
+                  if (o) {
+                    return o;
+                  }
+                }
+              }
+            });
+            return;
+          }
+        }
+        else {
+          if (!Array.isArray(s)) {
+            // ALLの場合は決め打ちのみ
+            Object.defineProperty(o, k, {
+              'get': function () {
+                return doc.querySelectorAll(s)
+              }
+            });
+            return;
+          }
+        }
+
+        throw new Error('invalid selector format');
+      }
+
+      // パターンC
+      this.initSelectors(o[k], item, doc, mods);
+    });
+
+    return o;
+  };
+
   /*
    * 以下はサイト別スクリプトの中で実装が必要なもの
    */

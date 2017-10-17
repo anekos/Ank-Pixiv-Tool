@@ -31,60 +31,36 @@
    */
   AnkTwitter.prototype.getElements = function (doc) {
 
-    let query = (q) => {
-      return doc.querySelector(q);
-    };
+    const SELECTOR_ITEMS = {
+      "illust": {
+        "tweet": {
+          "ovr": {"s": "#permalink-overlay"},
+          "tweet": {"s": "#permalink-overlay .permalink-tweet"}
+        },
+        "gallary": {
+          "ovr": {"s": ".Gallery.with-tweet"},
+          "tweet": {"s": ".Gallery.with-tweet .tweet"}
+        },
+        "video": {"s": ".AdaptiveMedia-container .AdaptiveMedia-videoContainer video"},
 
-    let queryAll = (q) => {
-      return doc.querySelectorAll(q);
-    };
-
-    return {
-      'illust': {
-        'tweet': {
-          get ovr () {
-            return query('#permalink-overlay');
-          },
-          get tweet () {
-            return query('#permalink-overlay .permalink-tweet');
-          }
+        "photos": {"ALL": ".AdaptiveMedia-container .AdaptiveMedia-photoContainer img"}
+      },
+      "info": {
+        "illust": {
+          "ownLink": {"s": ".time .tweet-timestamp"},
+          "datetime": {"s": ".time  .tweet-timestamp ._timestamp"},
+          "caption": {"s": ".tweet-text"}
         },
-        'gallary': {
-          get ovr () {
-            return query('.Gallery.with-tweet');
-          },
-          get tweet () {
-            return query('.Gallery.with-tweet .tweet');
-          }
-        },
-        get photos () {
-          return queryAll('.AdaptiveMedia-container .AdaptiveMedia-photoContainer img');
-        },
-        get video () {
-          return query('.AdaptiveMedia-container .AdaptiveMedia-videoContainer video');
+        "member": {
         }
       },
-      'info': {
-        'illust': {
-          get ownLink () {
-            return query('.time .tweet-timestamp');
-          },
-          get datetime () {
-            return query('.time  .tweet-timestamp ._timestamp');
-          },
-          get caption () {
-            return query('.tweet-text');
-          }
-        },
-        'member': {
-        }
-      },
-      'misc': {
-      },
-      'thumbnails': {
-      },
-      'doc': doc
+      "misc": {
+      }
     };
+
+    let gElms = this.initSelectors({'doc': doc}, SELECTOR_ITEMS, doc);
+
+    return gElms;
   };
 
   /**

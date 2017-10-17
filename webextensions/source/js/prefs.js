@@ -20,7 +20,15 @@
           o[ka.join('-')] = item;
         }
         else {
-          Object.keys(item).forEach((k) => f(o, item[k], ka.concat(k), depth+1));
+          Object.keys(item).forEach((k) => {
+            if (k.startsWith('_')) {
+              // 先頭が _ で始まっているものはそれ以上分解しない
+              o[ka.concat(k).join('-')] = item[k];
+            }
+            else {
+              f(o, item[k], ka.concat(k), depth+1)
+            }
+          });
         }
         return o;
       };

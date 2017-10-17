@@ -319,18 +319,29 @@
 <div class="groupbox">
     <div data-i18n="group_history" class="grouptitle"></div>
     <div class="item">
-        <button id="exportHistoryButton" data-i18n="exportHistory" class="button">Apply</button>
+        <button id="exportHistoryButton" data-i18n="exportHistory" class="button">Export</button>
         <a id="exportHistory" href="#" download="ankpixiv.json" onclick="javascript:void(0)" style="display: none;"></a>
         <label for="exportHistory" id="exportHistoryLabel"/>
     </div>
     <div class="item">
-        <button id="importHistoryButton" data-i18n="importHistory" class="button">Apply</button>
+        <button id="importHistoryButton" data-i18n="importHistory" class="button">Import</button>
         <input type="file" class="button" id="importHistory" accept=".json" style="display: none;"/>
         <label for="importHistory" id="importHistoryLabel"/>
     </div>
     <div class="item">
-        <button id="cleartHistoryButton" data-i18n="clearHistory" class="button">Apply</button>
+        <button id="cleartHistoryButton" data-i18n="clearHistory" class="button">Clear</button>
         <label for="cleartHistoryButton" id="cleartHistoryLabel"/>
+    </div>
+</div>
+
+<div class="groupbox">
+    <div data-i18n="group_overrideSelector" class="grouptitle"></div>
+    <div class="item">
+        <button id="importOverrideSelectorButton" data-i18n="importOverrideSelector" class="button">Import</button>
+        <input type="file" class="button" id="importOverrideSelector" accept=".json" style="display: none;"/>
+    </div>
+    <div class="item">
+        <button id="cleartOverrideSelectorButton" data-i18n="clearOverrideSelector" class="button">Clear</button>
     </div>
 </div>
 

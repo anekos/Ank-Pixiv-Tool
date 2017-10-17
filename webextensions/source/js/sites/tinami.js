@@ -36,75 +36,43 @@
    */
   AnkTinami.prototype.getElements = function (doc) {
 
-    let query = (q) => {
-      return doc.querySelector(q);
+    const SELECTOR_ITEMS = {
+      "illust": {
+        "imgOvr": {"s": ".viewbody"},
+        "med": {
+          "img": {"s": ".viewbody .captify"}
+        },
+        "mng": {
+          "imgs": {"ALL": ".viewbody img"}
+        }
+      },
+      "info": {
+        "illust": {
+          "datetime": {"s": ".view_info"},
+          "title": {"s": ".viewdata > h1 > span"},
+
+          "captions": {"ALL": ".description"},
+          "tags": {"ALL": ".tag > span"}
+        },
+        "member": {
+          "memberLink": {"s": ".prof > p > a"}
+        }
+      },
+      "misc": {
+        "openCantion": {"s": "#show_all"},
+        "downloadedDisplayParent": {"s": ".viewdata"},
+
+        "postParams": {"ALL": "#open_original_content > input"},
+
+        "downloadedFilenameArea": {"s": ".ank-pixiv-downloaded-filename-text"},
+        "nextLink": {"s": ".mvnext > a"},
+        "prevLink": {"s": ".mvprev > a"}
+      }
     };
 
-    let queryAll = (q) => {
-      return doc.querySelectorAll(q);
-    };
+    let gElms = this.initSelectors({'doc': doc}, SELECTOR_ITEMS, doc);
 
-    return {
-      'illust': {
-        get imgOvr () {
-          return query('.viewbody');
-        },
-        'med': {
-          get img () {
-            return query('.viewbody .captify');
-          }
-        },
-        'mng': {
-          get imgs () {
-            return queryAll('.viewbody img');
-          }
-        }
-      },
-      'info': {
-        'illust': {
-          get datetime () {
-            return query('.view_info');
-          },
-          get title () {
-            return query('.viewdata > h1 > span');
-          },
-          get captions () {
-            return queryAll('.description');
-          },
-          get tags () {
-            return queryAll('.tag > span');
-          }
-        },
-        'member': {
-          get memberLink () {
-            return query('.prof > p > a');
-          }
-        }
-      },
-      'misc': {
-        get postParams () {
-          return queryAll('#open_original_content > input');
-        },
-        get openCantion () {
-          return query('#show_all');
-        },
-        get downloadedDisplayParent () {
-          return query('.description');
-        },
-        get downloadedFilenameArea () {
-          return query('.ank-pixiv-downloaded-filename-text');
-        },
-        get nextLink() {
-          return query('a#nextIllust');
-        },
-        get prevLink() {
-          return query('a#backIllust');
-        }
-      },
-      'thumbnails': {
-      },
-      'doc': doc
-    };
+    return gElms;
   };
 
   /**
@@ -146,7 +114,6 @@
 
 
       let docMed = respMed.document;
-      console.log(docMed);
 
       let m = Array.prototype.filter.call(docMed.querySelectorAll('img'), (e) => /^https?:\/\/img\.tinami\.com\/illust\d*\/img\//.test(e.src))
         .map((e) => {

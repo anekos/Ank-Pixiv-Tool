@@ -36,81 +36,45 @@
    */
   AnkNijie.prototype.getElements = function (doc) {
 
-    let query = (q) => {
-      return doc.querySelector(q);
+    const SELECTOR_ITEMS = {
+      "illust": {
+        "imgOvr": {"s": ["#gallery", "#dojin_left .left"]},
+        "med": {
+          "img": {"s": "#gallery  > #gallery_open > #img_filter > a > img"},
+
+          "imgs": {"ALL": "#gallery  > #gallery_open > a > img"}
+        },
+        "djn": {
+          "imgLink": {"s": "#dojin_left .left .image a"},
+
+          "imgLinks": {"ALL": "#gallery_new #thumbnail a"}
+        }
+      },
+      "info": {
+        "illust": {
+          "datetime": {"s": ["div#view-honbun > p", "div#created > p"]},
+          "title": {"s": ["#view-header > #view-left > .illust_title", "#dojin_header .title"]},
+          "caption": {"s": ["#view-honbun > p+p", "#dojin_text > p+p"]},
+          "nuita": {"s": "#nuita"},
+          "good": {"s": "#good"},
+
+          "tags": {"ALL": "#view-tag .tag"}
+        },
+        "member": {
+          "memberLink": {"s": ["a.name", "div#dojin_left > div.right > p.text > a"]}
+        }
+      },
+      "misc": {
+        "downloadedDisplayParent": {"s": ["div#view-honbun", "div#infomation"]},
+        "downloadedFilenameArea": {"s": ".ank-pixiv-downloaded-filename-text"},
+        "nextLink": {"s": "a#nextIllust"},
+        "prevLink": {"s": "a#backIllust"}
+      }
     };
 
-    let queryAll = (q) => {
-      return doc.querySelectorAll(q);
-    };
+    let gElms = this.initSelectors({'doc': doc}, SELECTOR_ITEMS, doc);
 
-    return {
-      'illust': {
-        get imgOvr () {
-          return query('#gallery') || query('#dojin_left .left');
-        },
-        'med': {
-          get img () {
-            return query('#gallery  > #gallery_open > #img_filter > a > img');
-          },
-          get imgs () {
-            return queryAll('#gallery  > #gallery_open > a > img');
-          }
-        },
-        'djn': {
-          get imgLink () {
-            return query('#dojin_left .left .image a');
-          },
-          get imgLinks () {
-            return queryAll('#gallery_new #thumbnail a');
-          }
-        }
-      },
-      'info': {
-        'illust': {
-          get datetime () {
-            return query('div#view-honbun > p') || query('div#created > p');
-          },
-          get title () {
-            return query('#view-header > #view-left > .illust_title') || query('#dojin_header .title');
-          },
-          get caption () {
-            return queryAll('#view-honbun > p')[1] || queryAll('#dojin_text > p')[1];
-          },
-          get nuita () {
-            return query('#nuita');
-          },
-          get good () {
-            return query('#good');
-          },
-          get tags () {
-            return queryAll('#view-tag .tag');
-          }
-        },
-        'member': {
-          get memberLink () {
-            return query('a.name') || query('div#dojin_left > div.right > p.text > a');
-          }
-        }
-      },
-      'misc': {
-        get downloadedDisplayParent () {
-          return query('div#view-honbun') || query('div#infomation');
-        },
-        get downloadedFilenameArea () {
-          return query('.ank-pixiv-downloaded-filename-text');
-        },
-        get nextLink() {
-          return query('a#nextIllust');
-        },
-        get prevLink() {
-          return query('a#backIllust');
-        }
-      },
-      'thumbnails': {
-      },
-      'doc': doc
-    };
+    return gElms;
   };
 
   /**

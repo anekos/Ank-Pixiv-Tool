@@ -8,7 +8,8 @@
   "options_group_viewer": { "message": "ビュアー" },
   "options_group_misc": { "message": "その他" },
   "options_group_sites": { "message": "サイト別設定" },
-  "options_group_history": { "message": "ダウンロード履歴のインポート／エクスポート" },
+  "options_group_history": { "message": "ダウンロード履歴のエクスポート／インポート／消去" },
+  "options_group_overrideSelector": { "message": "セレクタ上書き設定のインポート／消去" },
   "options_group_submit": { "message": "設定の保存／リセット" },
   "options_showSaveDialog": { "message": "保存ダイアログを使う(オフの場合、保存ディレクトリに自動で保存します)" },
   "options_downloadWhenNice": { "message": "いいね！した時に自動でダウンロードする" },
@@ -79,6 +80,8 @@
   "options_exportHistory": { "message": "エクスポート" },
   "options_importHistory": { "message": "インポート" },
   "options_clearHistory": { "message": "消去" },
+  "options_importOverrideSelector": { "message": "インポート" },
+  "options_clearOverrideSelector": { "message": "消去" },
   "msg_downloadExistingImage": { "message": "この絵はすでに保存されています。もう一度保存しますか？" },
   "msg_finishedDownload": { "message": "ダウンロード完了" },
   "msg_notifyNonexistentDirectory": { "message": "そのディレクトリは存在しません。設定を本当に保存しますか？" },
@@ -103,6 +106,10 @@
   "msg_importHistoryError": { "message": "ダウンロード履歴のインポートに失敗しました" },
   "msg_clearHistoryCompleted": { "message": "ダウンロード履歴DBの初期化が完了しました" },
   "msg_clearHistoryError": { "message": "ダウンロード履歴DBの初期化に失敗しました" },
+  "msg_importOverrideSelectorCompleted": { "message": "セレクタ上書き設定のインポートが完了しました" },
+  "msg_importOverrideSelectorError": { "message": "セレクタ上書き設定のインポートに失敗しました" },
+  "msg_clearOverrideSelectorCompleted": { "message": "セレクタ上書き設定の初期化が完了しました" },
+  "msg_clearOverrideSelectorError": { "message": "セレクタ上書き設定の初期化に失敗しました" },
   "msg_ARE_YOU_SURE": { "message": "ARE YOU SURE ?" }
 }
 

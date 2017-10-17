@@ -36,70 +36,36 @@
    */
   AnkNicosei.prototype.getElements = function (doc) {
 
-    let query = (q) => {
-      return doc.querySelector(q);
+    const SELECTOR_ITEMS = {
+      "illust": {
+        "imgOvr": {"s": ".illust_wrapper"},
+        "med": {
+          "imgLink": {"s": "#illust_link"}
+        }
+      },
+      "info": {
+        "illust": {
+          "datetime": {"s": "#content #detail .created"},
+          "title": {"s": "#content #detail .title"},
+          "R18": {"s": "#content #detail .kind a[href=\"/shunga/\"]"},
+          "caption": {"s": "#content #detail .discription"},
+          "clip": {"s": ".add_clip_button"},
+
+          "tags": {"ALL": "#content #detail .illust_tag.static .tag .text"}
+        },
+        "member": {
+          "memberLink": {"s": "#content #detail .user_link > a"}
+        }
+      },
+      "misc": {
+        "downloadedDisplayParent": {"s": "#content #detail .other_info"},
+        "downloadedFilenameArea": {"s": ".ank-pixiv-downloaded-filename-text"}
+      }
     };
 
-    let queryAll = (q) => {
-      return doc.querySelectorAll(q);
-    };
+    let gElms = this.initSelectors({'doc': doc}, SELECTOR_ITEMS, doc);
 
-    return {
-      'illust': {
-        get imgOvr () {
-          return query('.illust_wrapper');
-        },
-        'med': {
-          get imgLink () {
-            return query('#illust_link');
-          }
-        }
-      },
-      'info': {
-        'illust': {
-          get datetime () {
-            return query('#content #detail .created');
-          },
-          get title () {
-            return query('#content #detail .title');
-          },
-          get R18 () {
-            return query('#content #detail .kind a[href="/shunga/"]');
-          },
-          get caption () {
-            return query('#content #detail .discription');
-          },
-          get clip () {
-            return query('.add_clip_button');
-          },
-          get tags () {
-            return queryAll('#content #detail .illust_tag.static .tag .text');
-          }
-        },
-        'member': {
-          get memberLink () {
-            return query('#content #detail .user_link > a');
-          }
-        }
-      },
-      'misc': {
-        get downloadedDisplayParent () {
-          return query('#content #detail .other_info');
-        },
-        get downloadedFilenameArea () {
-          return query('.ank-pixiv-downloaded-filename-text');
-        },
-        get nextLink() {
-          return query('a#nextIllust');
-        },
-        get prevLink() {
-          return query('a#backIllust');
-        }
-      },
-      'thumbnails': {
-      },
-      'doc': doc
-    };
+    return gElms;
   };
 
   /**

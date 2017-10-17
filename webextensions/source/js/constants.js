@@ -61,12 +61,12 @@ const OPTION_DEFAULT ={
   "openCaptionDelay": 1000,
   "historyCacheSize": 200,
   "siteModules": {
-    "PXV":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Pixiv", "folder": "Pixiv"},
-    "NJE":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Nijie", "folder": "Nijie"},
-    "NCS":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Nicosei", "folder": "Nicosei"},
-    "TNM":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Tinami", "folder": "Tinami"},
-    "TWT":{"enabled": true, "experimental": false, "name": "Twitter", "folder": "Twitter"},
-    "TDK":{"enabled": true, "experimental": false, "name": "Tweetdeck", "folder": "Twitter"}
+    "PXV":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Pixiv", "folder": "Pixiv", "_mod_selector": {}},
+    "NJE":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Nijie", "folder": "Nijie", "_mod_selector": {}},
+    "NCS":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Nicosei", "folder": "Nicosei", "_mod_selector": {}},
+    "TNM":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Tinami", "folder": "Tinami", "_mod_selector": {}},
+    "TWT":{"enabled": true, "experimental": false, "name": "Twitter", "folder": "Twitter", "_mod_selector": {}},
+    "TDK":{"enabled": true, "experimental": false, "name": "Tweetdeck", "folder": "Twitter", "_mod_selector": {}}
   }
 };
 
