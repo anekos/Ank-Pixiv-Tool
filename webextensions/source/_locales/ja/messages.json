@@ -88,6 +88,7 @@
   "msg_downloaded": { "message": "保存済み" },
   "msg_downloaded_used": { "message": "使用済み" },
   "msg_downloaded_updated": { "message": "更新アリ" },
+  "msg_download_inprogress": { "message": "情報取得中" },
   "msg_download_wait": { "message": "ダウンロード待機中" },
   "msg_download_run": { "message": "ダウンロード中 " },
   "msg_download_failed": { "message": "ダウンロード失敗！" },

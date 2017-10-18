@@ -57,7 +57,7 @@
     Object.defineProperty(gElms.illust, 'photos', {
       'get': function () {
         let chirpId = gElms.info.illust.actionsMenu.getAttribute('data-chirp-id');
-        return gElms.doc.querySelector('article[data-key="'+chirpId+'"]').querySelectorAll('.js-media-image-link');
+        return gElms.doc.querySelector('article[data-key="'+chirpId+'"], .quoted-tweet[data-key="'+chirpId+'"]').querySelectorAll('.js-media-image-link');
       }
     });
 
@@ -151,7 +151,7 @@
   AnkTweetdeck.prototype.getContext = async function (elm, force) {
 
     let modal = elm.illust.modal;
-    if (!modal || getComputedStyle(modal).getPropertyValue('display') != 'block') {
+    if (!modal || getComputedStyle(modal, '').getPropertyValue('display') !== 'block') {
       return;
     }
 

@@ -336,14 +336,8 @@
   let initDatabase = async () => {
     let db = new Dexie('AnkPixiv');
 
-    // 履歴削除用のキー追加
-    await db.version(2)
-      .stores({
-        'histories': '&[service_id+illust_id], last_saved',
-        'members': '&[service_id+member_id]'
-      });
-
-    await db.version(1)
+    // 「〇〇日以前の履歴を削除」を実装する予定がなくなったので last_saved にインデックスを張るのを止める
+    await db.version(3)
       .stores({
         'histories': '&[service_id+illust_id]',
         'members': '&[service_id+member_id]'

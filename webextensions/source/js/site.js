@@ -341,60 +341,71 @@
    * 作品ページに「保存済み」メッセージを表示する
    */
   AnkSite.prototype.insertDownloadedDisplay = function (appendTo, opts) {
+
+    let display = appendTo.querySelector('#ank-pixiv-downloaded-display');
+    if (!display) {
+      display = appendTo.ownerDocument.createElement('div');
+      display.setAttribute('id', 'ank-pixiv-downloaded-display');
+      [
+        'downloaded',
+        'downloaded_used',
+        'downloaded_updated',
+        'download_inprogress',
+        'download_wait',
+        'download_run',
+        'download_failed',
+        'download_timeout'
+      ].forEach((k) => {
+        display.setAttribute('data-text-'+k, chrome.i18n.getMessage('msg_'+k));
+      });
+      appendTo.appendChild(display);
+    }
+
     (async () => {
+
+      if (opts.inProgress) {
+        return ['inprogress'];
+      }
+
       let status = await this.requestGetDownloadStatus(opts.id);
       if (!status) {
         return;
       }
 
-      let display = appendTo.querySelector('#ank-pixiv-downloaded-display');
-      if (!display) {
-        display = appendTo.ownerDocument.createElement('div');
-        display.setAttribute('id', 'ank-pixiv-downloaded-display');
-        [
-          'downloaded',
-          'downloaded_used',
-          'downloaded_updated',
-          'download_wait',
-          'download_run',
-          'download_failed',
-          'download_timeout'
-        ].forEach((k) => {
-          display.setAttribute('data-text-'+k, chrome.i18n.getMessage('msg_'+k));
-        });
-        appendTo.appendChild(display);
+      if (status.failed) {
+        return ['failed'];
       }
 
-      let cls = (() => {
-        if (status.failed) {
-          return ['failed'];
+      if (status.last_saved) {
+        if (opts.updated > status.last_saved) {
+          logger.debug('updated:', new Date(opts.updated), '>', new Date(status.last_saved));
+          return ['updated']
         }
-        if (status.last_saved) {
-          if (opts.updated > status.last_saved) {
-            logger.debug('updated:', new Date(opts.updated), '>', new Date(status.last_saved));
-            return ['updated']
-          }
 
-          if (!opts.R18) {
-            return ['done'];
-          }
-
-          if (!this.prefs.downloadedAnimationStyle) {
-            return ['R18'];
-          }
-
-          return ['R18', this.prefs.downloadedAnimationStyle == 1 ? 'shake' : 'slidein'];
+        if (!opts.R18) {
+          return ['done'];
         }
-        else {
-          return status.running ? ['run'] : ['wait'];
-        }
-      })();
 
-      if (!display.classList.contains(cls[0])) {
-        display.setAttribute('class', '');
-        display.classList.add.apply(display.classList, cls);
+        if (!this.prefs.downloadedAnimationStyle) {
+          return ['R18'];
+        }
+
+        return ['R18', this.prefs.downloadedAnimationStyle == 1 ? 'shake' : 'slidein'];
       }
-    })();
+      else {
+        return status.running ? ['run'] : ['wait'];
+      }
+    })()
+      .then((cls) => {
+        if (!cls) {
+          return;
+        }
+
+        if (!display.classList.contains(cls[0])) {
+          display.setAttribute('class', '');
+          display.classList.add.apply(display.classList, cls);
+        }
+      });
   };
 
   /**
@@ -715,6 +726,8 @@
       return;
     }
 
+    this.displayDownloaded({'inProgress': true});
+
     (async () => {
 
       opts = opts || {};
@@ -724,6 +737,7 @@
         // コンテキストが集まらない（ダウンロード可能な状態になっていない）
         let msg = chrome.i18n.getMessage('msg_notReady');
         logger.warn(new Error(msg));
+        this.displayDownloaded({'force': true});
         return;
       }
 
@@ -732,6 +746,7 @@
         let msg = chrome.i18n.getMessage('msg_cannotFindImages');
         logger.error(new Error(msg));
         alert(msg);
+        this.displayDownloaded({'force': true});
         return;
       }
 
@@ -741,6 +756,7 @@
       context.info.member.memoized_name = member.name;
 
       this.executeDownload({'status': status, 'context': context, 'autoDownload': opts.autoDownload});
+
     })().catch((e) => logger.error(e));
   };
 
@@ -764,14 +780,19 @@
       return true;
     }
 
-    if (this.executed.displayDownloaded && (opts && !opts.force)) {
-      // 二度実行しない（強制時を除く）
-      return true;
-    }
-
     let appendTo = this.elements.misc.downloadedDisplayParent;
     if (!appendTo) {
       return false;
+    }
+
+    if (opts.inProgress) {
+      this.insertDownloadedDisplay(appendTo, opts);
+      return true;
+    }
+
+    if (this.executed.displayDownloaded && (opts && !opts.force)) {
+      // 二度実行しない（強制時を除く）
+      return true;
     }
 
     let illustContext = this.getIllustContext(this.elements);

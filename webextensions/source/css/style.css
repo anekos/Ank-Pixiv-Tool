@@ -74,6 +74,10 @@
     content: attr(data-text-downloaded_updated);
 }
 
+#ank-pixiv-downloaded-display.inprogress:after {
+    content: attr(data-text-download_inprogress);
+}
+
 #ank-pixiv-downloaded-display.wait:after {
     content: attr(data-text-download_wait);
 }
