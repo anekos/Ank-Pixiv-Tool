@@ -49,7 +49,7 @@
       "mngIdx": {
         "errorMessage": {"s": [".errorArea" ,".errortxt"]},
 
-        "scripts": {"ALL": "scripts"},
+        "scripts": {"ALL": "script"},
         "images": {"ALL": ".manga > .item-container > img"},
         "largeLinks": {"ALL": ".manga > .item-container > a"}
       },

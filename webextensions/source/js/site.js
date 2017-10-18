@@ -790,12 +790,14 @@
       return false;
     }
 
+    opts = opts || {};
+
     if (opts.inProgress) {
       this.insertDownloadedDisplay(appendTo, opts);
       return true;
     }
 
-    if (this.executed.displayDownloaded && (opts && !opts.force)) {
+    if (this.executed.displayDownloaded && !opts.force) {
       // 二度実行しない（強制時を除く）
       return true;
     }
