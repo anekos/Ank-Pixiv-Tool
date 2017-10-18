@@ -25,6 +25,11 @@
     };
     this.marked = 0;        // markingを行った最終時刻（キューインや保存完了の時刻と比較する）
 
+    this.FUNC_INST_RETRY_VALUE = {
+      'max': 30,
+      'wait': 1000
+    };
+
   };
 
   /**

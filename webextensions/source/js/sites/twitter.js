@@ -35,11 +35,13 @@
       "illust": {
         "tweet": {
           "ovr": {"s": "#permalink-overlay"},
-          "tweet": {"s": "#permalink-overlay .permalink-tweet"}
+          "tweet": {"s": "#permalink-overlay .permalink-tweet"},
+          "content": {"s": "#permalink-overlay .PermalinkOverlay-content"}
         },
         "gallary": {
           "ovr": {"s": ".Gallery.with-tweet"},
-          "tweet": {"s": ".Gallery.with-tweet .tweet"}
+          "tweet": {"s": ".Gallery.with-tweet .tweet"},
+          "content": {"s": ".Gallery.with-tweet .Gallery-content"}
         },
         "video": {"s": ".AdaptiveMedia-container .AdaptiveMedia-videoContainer video"},
 
@@ -55,6 +57,7 @@
         }
       },
       "misc": {
+        "downloadedDisplayParent": {"s": ".stream-item-footer"}
       }
     };
 
@@ -65,10 +68,24 @@
 
   /**
    *
+   * @returns {*}
+   */
+  AnkTwitter.prototype.getOpenedModal = function () {
+    const KS = ['gallary', 'tweet'];
+    for (let i=0; i<KS.length; i++) {
+      let e = this.elements.illust[KS[i]];
+      if (e.ovr && getComputedStyle(e.ovr, '').getPropertyValue('display') === 'block') {
+        return e;
+      }
+    }
+  };
+
+  /**
+   *
    * @returns {boolean}
    */
-  AnkSite.prototype.inIllustPage = function () {
-    return true;
+  AnkTwitter.prototype.inIllustPage = function () {
+    return !!this.getOpenedModal();
   };
 
   /**
@@ -161,18 +178,12 @@
    */
   AnkTwitter.prototype.getContext = async function (elm, force) {
 
-    let tweet = ['gallary', 'tweet'].map((k) => {
-      let e = elm.illust[k];
-      if (e.ovr && getComputedStyle(e.ovr).getPropertyValue('display') == 'block') {
-        return e;
-      }
-    }).filter((e) => !!e)[0];
-
-    if (!tweet) {
+    let modal = this.getOpenedModal();
+    if (!modal) {
       return;
     }
 
-    let elmTweet = this.getElements(tweet.tweet);
+    let elmTweet = this.getElements(modal.tweet);
 
     return AnkSite.prototype.getContext.call(this, elmTweet, true);
   };
@@ -180,8 +191,48 @@
   /**
    *
    * @param opts
+   * @returns {boolean}
    */
-  AnkTwitter.prototype.displayDownloaded = function (opts) {};
+  AnkTwitter.prototype.displayDownloaded = function (opts) {
+    if (!this.prefs.site.displayDownloaded) {
+      return true;
+    }
+
+    let elmTweet = opts.elm;
+    if (!elmTweet) {
+      let modal = this.getOpenedModal();
+      if (!modal) {
+        return false;
+      }
+      elmTweet = this.getElements(modal.tweet);
+    }
+
+    let appendTo = elmTweet.misc.downloadedDisplayParent;
+    if (!appendTo) {
+      return false;
+    }
+
+    if (opts.inProgress) {
+      this.insertDownloadedDisplay(appendTo, opts);
+      return true;
+    }
+
+    if (this.executed.displayDownloaded && (opts && !opts.force)) {
+      // 二度実行しない（強制時を除く）
+      return true;
+    }
+
+    let illustContext = this.getIllustContext(elmTweet);
+    if (!illustContext) {
+      return false;
+    }
+
+    this.insertDownloadedDisplay(appendTo, {'id': illustContext.id, 'R18': illustContext.R18, 'updated': illustContext.updated});
+
+    this.executed.displayDownloaded = true;
+
+    return true;
+  };
 
   /**
    *
@@ -189,6 +240,66 @@
    * @param siteSpecs
    */
   AnkTwitter.prototype.markDownloaded = function (opts, siteSpecs) {};
+
+  /**
+   *
+   */
+  AnkTwitter.prototype.installFunctions = function () {
+
+    //
+    let displayWhenGallaryOpened = () => {
+      let content = this.elements.illust.gallary.content;
+      if (!content) {
+        return false;
+      }
+
+      new MutationObserver(() => {
+        let modal = this.getOpenedModal();
+        if (modal && modal.tweet) {
+          this.displayDownloaded({'elm': this.getElements(modal.tweet), 'force': true});
+        }
+      }).observe(content, {'attributes': true});
+
+      return true;
+    };
+
+    //
+    let displayWhenTweetOpened = () => {
+      let content = this.elements.illust.tweet.content;
+      if (!content) {
+        return false;
+      }
+
+      new MutationObserver((o) => {
+        o.forEach((e) => {
+          if (e.target.classList.contains('permalink-tweet')) {
+            if (getComputedStyle(e.target, '').getPropertyValue('display') === 'block') {
+              this.displayDownloaded({'elm': this.getElements(e.target), 'force': true});
+            }
+          }
+        });
+      }).observe(content, {'attributes': true, 'subtree': true});
+
+      return true;
+    };
+
+    // 「保存済み」を表示する
+    let delayDisplaying = () => {
+      let modal = this.getOpenedModal();
+      if (!modal || !modal.tweet) {
+        return false;
+      }
+
+      return this.displayDownloaded({'elm': this.getElements(modal.tweet), 'force': true});
+    };
+
+    Promise.all([
+      this.delayFunctionInstaller({'func': displayWhenGallaryOpened, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'displayWhenGallaryOpened'}),
+      this.delayFunctionInstaller({'func': displayWhenTweetOpened, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'displayWhenTweetOpened'}),
+      this.delayFunctionInstaller({'func': delayDisplaying, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'delayDisplaying'}),
+    ])
+      .catch((e) => logger.warn(e));
+  };
 
   // 開始
 

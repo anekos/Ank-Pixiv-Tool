@@ -49,6 +49,7 @@
         }
       },
       "misc": {
+        "downloadedDisplayParent": {"s": "#open-modal .tweet"}
       }
     };
 
@@ -68,8 +69,11 @@
    *
    * @returns {boolean}
    */
-  AnkSite.prototype.inIllustPage = function () {
-    return true;
+  AnkTweetdeck.prototype.inIllustPage = function () {
+    let modal = this.elements.illust.modal;
+    if (modal) {
+      return getComputedStyle(modal, '').getPropertyValue('display') === 'block';
+    }
   };
 
   /**
@@ -149,9 +153,7 @@
    * @returns {Promise.<*>}
    */
   AnkTweetdeck.prototype.getContext = async function (elm, force) {
-
-    let modal = elm.illust.modal;
-    if (!modal || getComputedStyle(modal, '').getPropertyValue('display') !== 'block') {
+    if (!this.inIllustPage()) {
       return;
     }
 
@@ -161,15 +163,35 @@
   /**
    *
    * @param opts
-   */
-  AnkTweetdeck.prototype.displayDownloaded = function (opts) {};
-
-  /**
-   *
-   * @param opts
    * @param siteSpecs
    */
   AnkTweetdeck.prototype.markDownloaded = function (opts, siteSpecs) {};
+
+  /**
+   *
+   */
+  AnkTweetdeck.prototype.installFunctions = function () {
+
+    let displayWhenOpened = () => {
+      let modal = this.elements.illust.modal;
+      if (!modal) {
+        return false;
+      }
+
+      new MutationObserver(() => {
+        if (this.inIllustPage()) {
+          this.displayDownloaded({'force': true});
+        }
+      }).observe(modal, {'attributes': true});
+
+      return true;
+    };
+
+    Promise.all([
+      this.delayFunctionInstaller({'func': displayWhenOpened, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'displayWhenOpened'})
+    ])
+      .catch((e) => logger.warn(e));
+  };
 
   // 開始
 

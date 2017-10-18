@@ -65,8 +65,8 @@ const OPTION_DEFAULT ={
     "NJE":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Nijie", "folder": "Nijie", "_mod_selector": {}},
     "NCS":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Nicosei", "folder": "Nicosei", "_mod_selector": {}},
     "TNM":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Tinami", "folder": "Tinami", "_mod_selector": {}},
-    "TWT":{"enabled": true, "experimental": false, "name": "Twitter", "folder": "Twitter", "_mod_selector": {}},
-    "TDK":{"enabled": true, "experimental": false, "name": "Tweetdeck", "folder": "Twitter", "_mod_selector": {}}
+    "TWT":{"enabled": true, "experimental": false, "useDisplayDownloaded": true, "name": "Twitter", "folder": "Twitter", "_mod_selector": {}},
+    "TDK":{"enabled": true, "experimental": false, "useDisplayDownloaded": true, "name": "Tweetdeck", "folder": "Twitter", "_mod_selector": {}}
   }
 };
 

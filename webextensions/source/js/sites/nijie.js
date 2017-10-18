@@ -12,11 +12,6 @@
 
     this.SITE_ID = 'NJE';
 
-    this.FUNC_INST_RETRY_VALUE = {
-      'max': 30,
-      'wait': 1000
-    };
-
   };
 
   /**
