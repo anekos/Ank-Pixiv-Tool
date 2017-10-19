@@ -343,179 +343,6 @@
   };
 
   /**
-   * 作品ページに「保存済み」メッセージを表示する
-   */
-  AnkSite.prototype.insertDownloadedDisplay = function (appendTo, opts) {
-
-    let display = appendTo.querySelector('#ank-pixiv-downloaded-display');
-    if (!display) {
-      display = appendTo.ownerDocument.createElement('div');
-      display.setAttribute('id', 'ank-pixiv-downloaded-display');
-      [
-        'downloaded',
-        'downloaded_used',
-        'downloaded_updated',
-        'download_inprogress',
-        'download_wait',
-        'download_run',
-        'download_failed',
-        'download_timeout'
-      ].forEach((k) => {
-        display.setAttribute('data-text-'+k, chrome.i18n.getMessage('msg_'+k));
-      });
-      appendTo.appendChild(display);
-    }
-
-    (async () => {
-
-      if (opts.inProgress) {
-        return ['inprogress'];
-      }
-
-      let status = await this.requestGetDownloadStatus(opts.id);
-      if (!status) {
-        return;
-      }
-
-      if (status.failed) {
-        return ['failed'];
-      }
-
-      if (status.last_saved) {
-        if (opts.updated > status.last_saved) {
-          logger.debug('updated:', new Date(opts.updated), '>', new Date(status.last_saved));
-          return ['updated']
-        }
-
-        if (!opts.R18) {
-          return ['done'];
-        }
-
-        if (!this.prefs.downloadedAnimationStyle) {
-          return ['R18'];
-        }
-
-        return ['R18', this.prefs.downloadedAnimationStyle == 1 ? 'shake' : 'slidein'];
-      }
-      else {
-        return status.running ? ['run'] : ['wait'];
-      }
-    })()
-      .then((cls) => {
-        if (!cls) {
-          return;
-        }
-
-        if (!display.classList.contains(cls[0])) {
-          display.setAttribute('class', '');
-          display.classList.add.apply(display.classList, cls);
-        }
-      });
-  };
-
-  /**
-   * サムネイルにダウンロード状態を表示する
-   * @param node
-   * @param opts
-   */
-  AnkSite.prototype.insertDownloadedMark = function (node, opts) {
-    (async () => {
-      let siteChanged = await this.requestGetSiteChanged();
-      if (!opts.pinpoint) {
-        // 決め打ちのチェックなら前回チェック時刻は確認しない
-
-        if (this.marked > siteChanged) {
-          // 前回チェック時刻より後にサイトの更新が発生していなければ再度のチェックはしない
-          logger.debug('skip mark downloaded');
-          return;
-        }
-
-        this.marked = new Date().getTime();
-      }
-
-      let boxes = {};
-
-      // チェック対象のサムネイルを抽出する
-      opts.queries.forEach((t) => {
-        Array.prototype.map.call(node.querySelectorAll(t.q), (e) => {
-          let url = ((tagName) => {
-            if (tagName === 'a') {
-              return e.href;
-            }
-            if (tagName === 'img') {
-              return e.src;
-            }
-          })(e.tagName.toLowerCase());
-
-          let illust_id = opts.getId(url);
-          if (!illust_id || (opts.illust_id && opts.illust_id != illust_id)) {
-            // IDが見つからないか、ID指定があって一致しない場合
-            return;
-          }
-
-          let box = AnkUtils.trackbackParentNode(e, t.n, t.c);
-          if (!box) {
-            return;
-          }
-
-          boxes[illust_id] = boxes[illust_id] || [];
-
-          // クエリの結果が重複する場合があるので排除する
-          if (!boxes[illust_id].find((b) => b.box === box)) {
-            boxes[illust_id].push({
-              'box': box,
-              'datetime': opts.getLastUpdate && opts.getLastUpdate(box)
-            });
-          }
-        });
-      });
-
-      // ダウンロード状態を調べて反映する（リソースを占有しないよう、一定数ごとにsleepする）
-      let statuses = await this.requestGetDownloadStatus(Object.keys(boxes));
-      if (statuses) {
-        const S_STEP = 10;
-        let slen = statuses.length;
-        for (let sa=0; sa < slen; sa+=S_STEP) {
-          statuses.slice(sa, sa+S_STEP).forEach((s) => {
-            boxes[s.illust_id].forEach((e) => {
-              let cls = (() => {
-                // s.failed は見る必要がない
-                if (s.downloading) {
-                  return 'ank-pixiv-downloading';
-                }
-                if (s.downloading) {
-                  return 'ank-pixiv-downloading';
-                }
-                if (s.last_saved) {
-                  if (e.datetime > s.last_saved) {
-                    return 'ank-pixiv-updated';
-                  }
-
-                  return 'ank-pixiv-downloaded';
-                }
-              })();
-              if (cls && !e.box.classList.contains(cls)) {
-                e.box.classList.remove('ank-pixiv-downloading', 'ank-pixiv-updated', 'ank-pixiv-downloaded');
-                e.box.classList.add(cls);
-                if (opts.overlay) {
-                  e.box.classList.add('ank-pixiv-mark-overlay');
-                }
-                else {
-                  e.box.classList.add('ank-pixiv-mark-background');
-                }
-              }
-            });
-          });
-
-          if (sa+S_STEP < slen) {
-            await AnkUtils.sleep(100);
-          }
-        }
-      }
-    })();
-  };
-
-  /**
    * backgroundにサイトの最終更新時刻を問い合わせる
    * @returns {Promise}
    */
@@ -664,28 +491,6 @@
   };
 
   /**
-   * 機能の遅延インストール
-   * @param opts
-   * @returns {Promise}
-   */
-  AnkSite.prototype.delayFunctionInstaller = async function (opts) {
-    for (let retry=1; retry <= opts.retry.max; retry++) {
-      let installed = await opts.func();
-      if (installed) {
-        logger.info('installed:', (opts.label || ''));
-        return;
-      }
-
-      if (retry <= opts.retry.max) {
-        logger.info('wait for retry:', retry, '/', opts.retry.max ,':', opts.label);
-        await AnkUtils.sleep(opts.retry.wait);
-      }
-    }
-
-    return Promise.reject(new Error('retry over:', opts.label));
-  };
-
-  /**
    * ダウンロード情報をまとめる
    * @param elm
    * @param force
@@ -776,7 +581,80 @@
   };
 
   /**
-   *　イラストページにダウンロード済みの表示をする
+   * 作品ページに「保存済み」メッセージを表示する（DOM操作部）
+   */
+  AnkSite.prototype._insertDownloadedDisplay = function (appendTo, opts) {
+
+    let display = appendTo.querySelector('#ank-pixiv-downloaded-display');
+    if (!display) {
+      display = appendTo.ownerDocument.createElement('div');
+      display.setAttribute('id', 'ank-pixiv-downloaded-display');
+      [
+        'downloaded',
+        'downloaded_used',
+        'downloaded_updated',
+        'download_inprogress',
+        'download_wait',
+        'download_run',
+        'download_failed',
+        'download_timeout'
+      ].forEach((k) => {
+        display.setAttribute('data-text-'+k, chrome.i18n.getMessage('msg_'+k));
+      });
+      appendTo.appendChild(display);
+    }
+
+    let cls = (() => {
+      if (opts.inProgress) {
+        // ダウンロードイベントがトリガーされた
+        return ['inprogress'];
+      }
+
+      if (!opts.status) {
+        // 状態なし
+        return;
+      }
+
+      if (opts.status.failed) {
+        // 最近失敗したようだ
+        return ['failed'];
+      }
+
+      if (opts.status.downloading) {
+        // ダウンロード中
+        return opts.status.running ? ['run'] : ['wait'];
+      }
+
+      if (opts.status.last_saved) {
+        // 履歴に存在する
+        if (opts.updated) {
+          return ['updated']
+        }
+
+        if (!opts.R18) {
+          return ['done'];
+        }
+
+        if (!this.prefs.downloadedAnimationStyle) {
+          return ['R18'];
+        }
+
+        return ['R18', this.prefs.downloadedAnimationStyle == 1 ? 'shake' : 'slidein'];
+      }
+    })();
+
+    if (!cls) {
+      return;
+    }
+
+    if (!display.classList.contains(cls[0])) {
+      display.setAttribute('class', '');
+      display.classList.add.apply(display.classList, cls);
+    }
+  };
+
+  /**
+   *　作品ページに「保存済み」メッセージを表示する
    * @param opts
    * @returns {boolean}
    */
@@ -785,15 +663,18 @@
       return true;
     }
 
-    let appendTo = this.elements.misc.downloadedDisplayParent;
+    opts = opts || {};
+
+    let elm = opts.getElms && opts.getElms() || this.elements;
+
+    let appendTo = elm.misc.downloadedDisplayParent;
     if (!appendTo) {
       return false;
     }
 
-    opts = opts || {};
-
     if (opts.inProgress) {
-      this.insertDownloadedDisplay(appendTo, opts);
+      // ダウンロードイベントトリガー時に強制表示
+      this._insertDownloadedDisplay(appendTo, opts);
       return true;
     }
 
@@ -802,14 +683,170 @@
       return true;
     }
 
-    let illustContext = this.getIllustContext(this.elements);
+    let illustContext = this.getIllustContext(elm);
     if (!illustContext) {
       return false;
     }
 
-    this.insertDownloadedDisplay(appendTo, {'id': illustContext.id, 'R18': illustContext.R18, 'updated': illustContext.updated});
+    this.requestGetDownloadStatus(illustContext.id)
+      .then((status) => {
+        this._insertDownloadedDisplay(appendTo, {
+          'status': status,
+          'R18': illustContext.R18,
+          'updated': (() => {
+            if (status) {
+              if (status.last_saved && illustContext.updated &&  (illustContext.updated > status.last_saved)) {
+                logger.debug('updated:', new Date(illustContext.updated), '>', new Date(status.last_saved));
+                return true;
+              }
+            }
+          })()
+        });
+      });
 
     this.executed.displayDownloaded = true;
+
+    return true;
+  };
+
+  /**
+   * サムネイルにダウンロード済みマークを付ける（DOM操作部）
+   * @param node
+   * @param opts
+   */
+  AnkSite.prototype._insertDownloadedMark = function (node, opts) {
+    (async () => {
+
+      let boxes = {};
+
+      // チェック対象のサムネイルを抽出する
+      opts.queries.forEach((t) => {
+        Array.prototype.map.call(node.querySelectorAll(t.q), (e) => {
+          let url = ((tagName) => {
+            if (tagName === 'a') {
+              return e.href;
+            }
+            if (tagName === 'img') {
+              return e.src;
+            }
+          })(e.tagName.toLowerCase());
+
+          let illust_id = opts.getId(url);
+          if (!illust_id || (opts.illust_id && opts.illust_id != illust_id)) {
+            // IDが見つからないか、ID指定があって一致しない場合
+            return;
+          }
+
+          let box = AnkUtils.trackbackParentNode(e, t.n, t.c);
+          if (!box) {
+            return;
+          }
+
+          boxes[illust_id] = boxes[illust_id] || [];
+
+          // クエリの結果が重複する場合があるので排除する
+          if (!boxes[illust_id].find((b) => b.box === box)) {
+            boxes[illust_id].push({
+              'box': box,
+              'datetime': opts.getLastUpdate && opts.getLastUpdate(box)
+            });
+          }
+        });
+      });
+
+      // ダウンロード状態を調べて反映する（リソースを占有しないよう、一定数ごとにsleepする）
+      let statuses = await this.requestGetDownloadStatus(Object.keys(boxes));
+      if (statuses) {
+        const S_STEP = 10;
+        let slen = statuses.length;
+        for (let sa=0; sa < slen; sa+=S_STEP) {
+          statuses.slice(sa, sa+S_STEP).forEach((s) => {
+            boxes[s.illust_id].forEach((e) => {
+              let cls = (() => {
+                // s.failed は見る必要がない
+                if (s.downloading) {
+                  return 'ank-pixiv-downloading';
+                }
+                if (s.downloading) {
+                  return 'ank-pixiv-downloading';
+                }
+                if (s.last_saved) {
+                  if (e.datetime > s.last_saved) {
+                    return 'ank-pixiv-updated';
+                  }
+
+                  return 'ank-pixiv-downloaded';
+                }
+              })();
+              if (cls && !e.box.classList.contains(cls)) {
+                e.box.classList.remove('ank-pixiv-downloading', 'ank-pixiv-updated', 'ank-pixiv-downloaded');
+                e.box.classList.add(cls);
+                if (opts.overlay) {
+                  e.box.classList.add('ank-pixiv-mark-overlay');
+                }
+                else {
+                  e.box.classList.add('ank-pixiv-mark-background');
+                }
+              }
+            });
+          });
+
+          if (sa+S_STEP < slen) {
+            await AnkUtils.sleep(100);
+          }
+        }
+      }
+    })();
+  };
+
+  /**
+   * サムネイルにダウンロード済みマークを付ける ※半完成品なのでサイト別スクリプト側で補完する必要がある（siteSpecsを与える）
+   * @param opts
+   * @param siteSpecs
+   * @returns {boolean}
+   */
+  AnkSite.prototype.markDownloaded = function (opts, siteSpecs) {
+    if (!this.prefs.site.markDownloaded) {
+      return true;
+    }
+
+    if (!siteSpecs) {
+      return true;
+    }
+
+    opts = opts || {};
+
+    if (this.executed.markDownloaded && !opts.force) {
+      // 二度実行しない（強制時を除く）
+      return true;
+    }
+
+    this.requestGetSiteChanged()
+      .then((siteChanged) => {
+        if (!siteSpecs.node) {
+          // ページ単位のチェック（＝node決め打ちでないチェック）の場合は前回チェック時刻と比較を行い、前回以降にサイトの更新が発生していなければ再度のチェックはしない
+          if (this.marked > siteChanged) {
+            logger.debug('skip mark downloaded');
+            return;
+          }
+
+          this.marked = new Date().getTime();
+        }
+
+        let node = siteSpecs.node || this.elements.doc;
+
+        this._insertDownloadedMark(node, {
+          'illust_id': opts.illust_id,
+          'queries': siteSpecs.queries,
+          'getId': siteSpecs.getId,
+          'getLastUpdate': siteSpecs.getLastUpdate,
+          'overlay': siteSpecs.overlay,
+          'ignorePref': false
+        });
+
+      });
+
+    this.executed.markDownloaded = true;
 
     return true;
   };
@@ -934,45 +971,6 @@
   /*
    * 以下はサイト別スクリプトの中で実装が必要なもの
    */
-
-  /**
-   * サムネイルにダウンロード済みマークを付ける ※半完成品なのでサイト別スクリプト側で補完する必要がある（siteSpecsを与える）
-   * @param opts
-   * @param siteSpecs
-   * @returns {boolean}
-   */
-  AnkSite.prototype.markDownloaded = function (opts, siteSpecs) {
-    if (!this.prefs.site.markDownloaded) {
-      return true;
-    }
-
-    if (!siteSpecs) {
-      return true;
-    }
-
-    if (this.executed.markDownloaded && (opts && !opts.force)) {
-      // 二度実行しない（強制時を除く）
-      return true;
-    }
-
-    opts = opts || {};
-
-    let node = siteSpecs.node || this.elements.doc;
-
-    this.insertDownloadedMark(node, {
-      'illust_id': opts.illust_id,
-      'queries': siteSpecs.queries,
-      'getId': siteSpecs.getId,
-      'getLastUpdate': siteSpecs.getLastUpdate,
-      'overlay': siteSpecs.overlay,
-      'pinpoint': !!siteSpecs.node,
-      'ignorePref': false
-    });
-
-    this.executed.markDownloaded = true;
-
-    return true;
-  };
 
   /**
    * 利用するクエリのまとめ

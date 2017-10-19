@@ -464,6 +464,28 @@
     }
   };
 
+  /**
+   * 機能の遅延インストール
+   * @param opts
+   * @returns {Promise}
+   */
+  let delayFunctionInstaller = async function (opts) {
+    for (let retry=1; retry <= opts.retry.max; retry++) {
+      let installed = await opts.func();
+      if (installed) {
+        logger.info('installed:', (opts.label || ''));
+        return;
+      }
+
+      if (retry <= opts.retry.max) {
+        logger.info('wait for retry:', retry, '/', opts.retry.max ,':', opts.label);
+        await sleep(opts.retry.wait);
+      }
+    }
+
+    return Promise.reject(new Error('retry over:', opts.label));
+  };
+
   /*
    *
    */
@@ -483,7 +505,8 @@
     'fixFileExt': fixFileExt,
     'getFileExt': getFileExt,
     'downloadTargets': downloadTargets,
-    'executeSiteScript': executeSiteScript
+    'executeSiteScript': executeSiteScript,
+    'delayFunctionInstaller': delayFunctionInstaller
   };
 
 }

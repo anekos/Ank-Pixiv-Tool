@@ -194,44 +194,21 @@
    * @returns {boolean}
    */
   AnkTwitter.prototype.displayDownloaded = function (opts) {
-    if (!this.prefs.site.displayDownloaded) {
-      return true;
-    }
 
-    let elmTweet = opts.elm;
-    if (!elmTweet) {
-      let modal = this.getOpenedModal();
-      if (!modal) {
-        return false;
+    opts = opts || {};
+
+    opts.getElms = () => {
+      if (opts.elm) {
+        return opts.elm;
       }
-      elmTweet = this.getElements(modal.tweet);
-    }
 
-    let appendTo = elmTweet.misc.downloadedDisplayParent;
-    if (!appendTo) {
-      return false;
-    }
+      let modal = this.getOpenedModal();
+      if (modal) {
+        return this.getElements(modal.tweet);
+      }
+    };
 
-    if (opts.inProgress) {
-      this.insertDownloadedDisplay(appendTo, opts);
-      return true;
-    }
-
-    if (this.executed.displayDownloaded && (opts && !opts.force)) {
-      // 二度実行しない（強制時を除く）
-      return true;
-    }
-
-    let illustContext = this.getIllustContext(elmTweet);
-    if (!illustContext) {
-      return false;
-    }
-
-    this.insertDownloadedDisplay(appendTo, {'id': illustContext.id, 'R18': illustContext.R18, 'updated': illustContext.updated});
-
-    this.executed.displayDownloaded = true;
-
-    return true;
+    return AnkSite.prototype.displayDownloaded.call(this, opts);
   };
 
   /**
@@ -294,9 +271,9 @@
     };
 
     Promise.all([
-      this.delayFunctionInstaller({'func': displayWhenGallaryOpened, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'displayWhenGallaryOpened'}),
-      this.delayFunctionInstaller({'func': displayWhenTweetOpened, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'displayWhenTweetOpened'}),
-      this.delayFunctionInstaller({'func': delayDisplaying, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'delayDisplaying'}),
+      AnkUtils.delayFunctionInstaller({'func': displayWhenGallaryOpened, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'displayWhenGallaryOpened'}),
+      AnkUtils.delayFunctionInstaller({'func': displayWhenTweetOpened, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'displayWhenTweetOpened'}),
+      AnkUtils.delayFunctionInstaller({'func': delayDisplaying, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'delayDisplaying'}),
     ])
       .catch((e) => logger.warn(e));
   };

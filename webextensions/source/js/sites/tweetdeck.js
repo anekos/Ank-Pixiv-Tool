@@ -136,7 +136,7 @@
     try {
       return {
         'id': elm.info.illust.actionsMenu.getAttribute('data-user-id'),
-        'name': elm.info.illust.name.textContent,
+        'name': AnkUtils.trim(elm.info.illust.name.textContent),
         'pixiv_id': /^https?:\/\/twitter\.com\/(.+?)\//.exec(elm.info.illust.ownLink.href)[1],
         'memoized_name': null
       };
@@ -188,7 +188,7 @@
     };
 
     Promise.all([
-      this.delayFunctionInstaller({'func': displayWhenOpened, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'displayWhenOpened'})
+      AnkUtils.delayFunctionInstaller({'func': displayWhenOpened, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'displayWhenOpened'})
     ])
       .catch((e) => logger.warn(e));
   };
