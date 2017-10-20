@@ -58,7 +58,10 @@
     Object.defineProperty(gElms.illust, 'photos', {
       'get': function () {
         let chirpId = gElms.info.illust.actionsMenu.getAttribute('data-chirp-id');
-        return gElms.doc.querySelector('article[data-key="'+chirpId+'"], .quoted-tweet[data-key="'+chirpId+'"]').querySelectorAll('.js-media-image-link');
+        return Array.prototype.filter.call(
+          gElms.doc.querySelector('article[data-key="'+chirpId+'"], .quoted-tweet[data-key="'+chirpId+'"]').querySelectorAll('.js-media-image-link'),
+          (e) => !e.parentNode.classList.contains('is-video')
+        );
       }
     });
 
