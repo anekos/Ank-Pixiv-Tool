@@ -467,7 +467,7 @@
       { 'q':'.stacc_ref_user_illust_img > a', 'n':1 },    // フィード（お気に入りに追加したユーザ内のイラスト）
       { 'q':'.hotimage > a.work', 'n':1 },                // タグページ（週間ベスト）
       { 'q':'.image-item > a:nth-child(1)', 'n':1 },      // タグページ（全期間＆新着）
-      { 'q':'figure > div > a ', 'n':2 },                 // ディスカバリー、タグページ
+      { 'q':'figure > div > a', 'n':2 },                 // ディスカバリー、タグページ
       { 'q':'.sibling-items > .after > a', 'n':1 },       // 前の作品
       { 'q':'.sibling-items > .before > a', 'n':1 }       // 次の作品
     ];

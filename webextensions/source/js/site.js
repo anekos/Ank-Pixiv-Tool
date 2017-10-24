@@ -113,7 +113,7 @@
 
       switch (message.type) {
         case 'AnkPixiv.Display':
-          return this.onFocusHandler();
+          return this.forceDisplayAndMarkDownloaded();
       }
     };
 
@@ -574,6 +574,16 @@
    * focusイベントのハンドラ
    */
   AnkSite.prototype.onFocusHandler = function () {
+    if (document.readyState !== "complete") {
+      return;
+    }
+    this.forceDisplayAndMarkDownloaded();
+  };
+
+  /**
+   * 保存済み表示の強制実行
+   */
+  AnkSite.prototype.forceDisplayAndMarkDownloaded = function () {
     if (this.inIllustPage()) {
       this.displayDownloaded({'force': true});
     }
@@ -704,7 +714,9 @@
         });
       });
 
-    this.executed.displayDownloaded = true;
+    if (!opts.force) {
+      this.executed.displayDownloaded = true;
+    }
 
     return true;
   };
@@ -846,7 +858,9 @@
 
       });
 
-    this.executed.markDownloaded = true;
+    if (!opts.force) {
+      this.executed.markDownloaded = true;
+    }
 
     return true;
   };
