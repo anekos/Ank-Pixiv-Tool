@@ -14,10 +14,12 @@
     this.SITE_ID = null;
     this.ALT_SITE_ID = null;
 
+    this.USE_CONTEXT_CACHE = true;
+
     this.prefs = null;
 
     this.elements = null;
-    this.collectedContext = null;
+    this.contextCache = null;
 
     this.executed = {
       'displayDownloaded': false,
@@ -315,7 +317,7 @@
     }
 
     // サムネ画像かオリジナル画像かの選択
-    let path = this.prefs.downloadOriginalSize && dw.context.path.original || dw.context.path.thumbnail || dw.context.path.original;
+    let path = this.prefs.downloadOriginalSize && dw.context.path.original || dw.context.path.thumbnail;
 
     // 保存世代
     let age = dw.status ? dw.status.age+1 : 1;
@@ -493,15 +495,14 @@
   /**
    * ダウンロード情報をまとめる
    * @param elm
-   * @param force
    * @returns {Promise.<*>}
    */
-  AnkSite.prototype.getContext = async function (elm, force) {
+  AnkSite.prototype.getContext = async function (elm) {
 
-    if (!force) {
-      if (this.collectedContext && this.collectedContext.downloadable) {
+    if (this.USE_CONTEXT_CACHE) {
+      if (this.contextCache && this.contextCache.downloadable) {
         // 既にダウンロード可能な情報を取得済みならそのまま返す
-        return this.collectedContext;
+        return this.contextCache;
       }
     }
 
@@ -523,7 +524,7 @@
 
       logger.info('CONTEXT: ', context);
 
-      return this.collectedContext = context;
+      return this.contextCache = context;
     });
   };
 
@@ -793,8 +794,11 @@
               if (cls && !e.box.classList.contains(cls)) {
                 e.box.classList.remove('ank-pixiv-downloading', 'ank-pixiv-updated', 'ank-pixiv-downloaded');
                 e.box.classList.add(cls);
-                if (opts.overlay) {
+                if (opts.method === 'overlay') {
                   e.box.classList.add('ank-pixiv-mark-overlay');
+                }
+                else if (opts.method === 'border') {
+                  e.box.classList.add('ank-pixiv-mark-border');
                 }
                 else {
                   e.box.classList.add('ank-pixiv-mark-background');
@@ -852,7 +856,7 @@
           'queries': siteSpecs.queries,
           'getId': siteSpecs.getId,
           'getLastUpdate': siteSpecs.getLastUpdate,
-          'overlay': siteSpecs.overlay,
+          'method': siteSpecs.method,
           'ignorePref': false
         });
 

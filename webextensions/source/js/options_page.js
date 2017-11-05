@@ -513,6 +513,20 @@
   };
 
   //
+  let setLicense = () => {
+    let title = document.getElementById('license_title');
+    title.classList.add('hidden');
+    title.addEventListener('click', () => {
+      if (title.classList.contains('hidden')) {
+        title.classList.remove('hidden');
+      }
+      else {
+        title.classList.add('hidden');
+      }
+    });
+  };
+
+  //
 
   (async () => {
     let prefs = await AnkPrefs.restore(OPTION_DEFAULT);
@@ -520,6 +534,7 @@
 
     setSiteList();
     setLabels();
+    setLicense();
     setOptionValues(prefs);
     addResetEvent();
     addSaveEvent();

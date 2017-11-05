@@ -13,6 +13,8 @@
     this.SITE_ID = 'TDK';
     this.ALT_SITE_ID = 'TWT';
 
+    this.USE_CONTEXT_CACHE = false;
+
   };
 
   /**
@@ -86,19 +88,34 @@
    */
   AnkTweetdeck.prototype.getPathContext = async function (elm) {
     let photos = elm.illust.photos;
-    if (photos.length > 0) {
-      let m = Array.prototype.map.call(photos, (e) => {
-        let src = (/background-image:url\("?(.+?)"?\)/.exec(e.getAttribute('style')) || [])[1];
-        src = src && src.replace(/:small$/, ':large');
-        return {'src': this.prefs.downloadOriginalSize ? src.replace(/(?::large)?$/, ':orig') : src};
-      });
-
-      if (m.length > 0) {
-        return {
-          'original': m
-        };
-      }
+    if (!photos || photos.length == 0) {
+      return;
     }
+
+    let thumb = Array.prototype.map.call(photos, (e) => {
+      let src = (/background-image:url\("?(.+?)"?\)/.exec(e.getAttribute('style')) || [])[1];
+      if (src) {
+        return {'src': src.replace(/:small$/, ':large')};
+      }
+      let img = e.querySelector('.media-img');
+      if (img && img.src) {
+        return {'src': img.src.replace(/:small$/, ':large')};
+      }
+    })
+      .filter(e => !!e);
+
+    if (thumb.length < photos.length) {
+      return;
+    }
+
+    let orig = thumb.map((e) => {
+      return {'src': e.src.replace(/(?::large)?$/, ':orig')};
+    });
+
+    return {
+      'thumbnail': thumb,
+      'original': orig
+    };
   };
 
   /**
@@ -152,15 +169,14 @@
   /**
    * ダウンロード情報をまとめる
    * @param elm
-   * @param force
    * @returns {Promise.<*>}
    */
-  AnkTweetdeck.prototype.getContext = async function (elm, force) {
+  AnkTweetdeck.prototype.getContext = async function (elm) {
     if (!this.inIllustPage()) {
       return;
     }
 
-    return AnkSite.prototype.getContext.call(this, elm, true);
+    return AnkSite.prototype.getContext.call(this, elm);
   };
 
   /**

@@ -92,6 +92,7 @@
       });
 
       return {
+        'thumbnail': m,
         'original': m
       }
     };
@@ -116,6 +117,7 @@
         });
 
       return {
+        'thumbnail': m,
         'original': m
       }
     };
@@ -204,7 +206,7 @@
         return this.getIllustId(href);
       },
       'getLastUpdate': undefined,
-      'overlay': false
+      'method': undefined
     });
   };
 

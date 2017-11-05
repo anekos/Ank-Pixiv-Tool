@@ -8,9 +8,16 @@
     background: repeat-x bottom pink url("chrome-extension://__MSG_@@extension_id__/images/bg-downloaded.png") !important;
 }
 
+.ank-pixiv-downloaded.ank-pixiv-mark-border {
+    box-sizing: border-box;
+    border: solid 6px pink;
+    border-bottom: solid 6px deeppink;
+}
+
 .ank-pixiv-updated.ank-pixiv-mark-background {
     background: repeat-x bottom paleturquoise url("chrome-extension://__MSG_@@extension_id__/images/bg-updated.png") !important;
 }
+
 
 .ank-pixiv-downloaded.ank-pixiv-mark-overlay {
     background-image: url("chrome-extension://__MSG_@@extension_id__/images/downloaded.png");

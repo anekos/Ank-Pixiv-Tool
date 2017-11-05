@@ -38,10 +38,6 @@
             <input type="checkbox" id="saveHistoryWithDetails">
             <span data-i18n="saveHistoryWithDetails"></span>
         </div>
-        <div class="item deprecated">
-            <input type="checkbox" id="showSaveDialog">
-            <span data-i18n="showSaveDialog"></span>
-        </div>
         <div class="item">
             <input type="checkbox" id="confirmExistingDownload">
             <span data-i18n="confirmExistingDownload"></span>
@@ -57,10 +53,6 @@
         <div class="item">
             <input type="checkbox" id="showIllustRemains">
             <span data-i18n="showIllustRemains"></span>
-        </div>
-        <div class="item deprecated">
-            <input type="checkbox" id="showImageRemains">
-            <span data-i18n="showImageRemains"></span>
         </div>
         <div class="item deprecated">
             <input type="checkbox" id="showCompletePopup">
@@ -102,18 +94,9 @@
 
     <div id="group_filename" class="groupbox">
         <div data-i18n="group_filename" class="grouptitle"></div>
-        <div class="item deprecated">
-            <div data-i18n="initialDirectory"></div>
-            <input type="text" size="48" id="initialDirectory">
-            <button data-i18n="browse">Browse</button>
-        </div>
         <div class="item">
             <div data-i18n="defaultFilename"></div>
             <input type="text" size="80" id="defaultFilename">
-        </div>
-        <div class="item deprecated">
-            <div data-i18n="alternateFilename"></div>
-            <input type="text" size="80" id="alternateFilename">
         </div>
         <div class="item">
             <div id="filenameTags" class="itembox">
@@ -275,17 +258,9 @@
 
     <div id="group_misc" class="groupbox">
         <div data-i18n="group_misc" class="grouptitle"></div>
-        <div class="item deprecated">
-            <input type="checkbox" id="openComment">
-            <span data-i18n="openComment"></span>
-        </div>
         <div class="item">
             <input type="checkbox" id="openCaption">
             <span data-i18n="openCaption"></span>
-        </div>
-        <div class="item deprecated">
-            <input type="checkbox" id="allowThirdPartyCookie">
-            <span data-i18n="allowThirdPartyCookie"></span>
         </div>
         <div class="item hidden">
             <input type="checkbox" id="xhrFromBackgroundPage">
@@ -352,6 +327,32 @@
     </div>
     <div class="item">
         <button id="apply" data-i18n="apply" class="button">Apply</button>
+    </div>
+</div>
+
+<div class="groupbox">
+    <div id="license_title" class="grouptitle license_title">License</div>
+    <div id="license_body" class="license_body">
+        <div>
+            <p>This software is released under the Mozilla Public License 2.0.</p>
+            <div class="license_desc">
+                <p>Mozilla Public License 2.0</p>
+                <p>https://www.mozilla.org/MPL/2.0/</p>
+            </div>
+        </div>
+        <br/>
+        <div>
+            <p>This product contains the following software components. Please refer to a license terms of each software.</p>
+            <ul class="license_library">
+                <li>
+                    Dexie.js - http://dexie.org/
+                    <div class="license_desc">
+                        <p>Apache-2.0 license</p>
+                        <p>http://www.apache.org/licenses/LICENSE-2.0</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
     </div>
 </div>
 

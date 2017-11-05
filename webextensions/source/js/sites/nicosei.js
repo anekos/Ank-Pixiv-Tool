@@ -90,8 +90,10 @@
 
       let img = resp.document.querySelector('.illust_view_big');
       if (img) {
+        let m = [{'src': [new URL(resp.responseURL).origin, img.getAttribute('data-src')].join('')}];
         return {
-          'original': [{'src': [new URL(resp.responseURL).origin, img.getAttribute('data-src')].join('')}]
+          'thumbnail': m,
+          'original': m
         };
       }
     };
@@ -178,7 +180,7 @@
         return this.getIllustId(href);
       },
       'getLastUpdate': undefined,
-      'overlay': false
+      'method': undefined
     });
   };
 

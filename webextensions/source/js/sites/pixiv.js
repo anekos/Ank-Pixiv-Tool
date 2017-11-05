@@ -107,6 +107,7 @@
   AnkPixiv.prototype.getPathContext = async function (elm) {
     let getMedPath = async () => {
       return {
+        'thumbnail': [{'src': elm.illust.med.img.src, 'referrer': elm.doc.location.href}],
         'original': [{'src': elm.illust.med.bigImg.getAttribute('data-src'), 'referrer': elm.doc.location.href}]
       };
     };
@@ -197,13 +198,6 @@
 
           thumbnail.push({'src': v.getAttribute('data-src'), 'referrer': referrer});
         });
-
-        if (!this.prefs.viewOriginalSize) {
-          // オリジナルサイズの画像は利用しない
-          return {
-            'thumbnail': thumbnail
-          };
-        }
 
         // オリジナル画像
         const RE_BIG = /(_p\d+)\./;
@@ -481,7 +475,7 @@
         let g = e.querySelector('img');
         return g && this.getLastUpdate(g.src);
       },
-      'overlay': false
+      'method': undefined
     });
   };
 
