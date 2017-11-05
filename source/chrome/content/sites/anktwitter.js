@@ -567,7 +567,6 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           return;
         }
 
-        console.log('ccc');
         let context = new AnkBase.Context(self);
         let ev = AnkBase.createDownloadEvent(context, useDialog, debug);
         window.dispatchEvent(ev);

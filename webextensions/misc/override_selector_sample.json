@@ -1,0 +1,61 @@
+{
+  "PXV": {
+    "illust": {
+      "illust": {
+        "imgOvr": {"s": ".works_display"},
+        "med": {
+          "img": {"s": ".works_display > ._layout-thumbnail > img"},
+          "bigImg": {"s": ".original-image"}
+        },
+        "mng": {
+          "img": {"s": ".works_display > ._work > ._layout-thumbnail > img"},
+          "largeLink": {"s": ".works_display > a"}
+        },
+        "ugo": {
+          "img": {"s": ".works_display > ._ugoku-illust-player-container canvas"}
+        }
+      },
+      "mngIdx": {
+        "errorMessage": {"s": [".errorArea" ,".errortxt"]},
+
+        "scripts": {"ALL": "scripts"},
+        "images": {"ALL": ".manga > .item-container > img"},
+        "largeLinks": {"ALL": ".manga > .item-container > a"}
+      },
+      "info": {
+        "illust": {
+          "datetime": {"s": ".work-info .meta > li"},
+          "size": {"s": ".work-info .meta > li+li"},
+          "tools": {"s": ".work-info .tools"},
+          "title": {"s": ".work-info .title"},
+          "R18": {"s": ".work-info .r-18, .work-info .r-18g"},
+          "caption": {"s": ".work-info .caption"},
+          "nice": {"s": ".work-info .js-nice-button"},
+          "update": {"s": ".bookmark_modal_thumbnail"},
+
+          "tags": {"ALL": ".work-tags .tags > .tag > .text"}
+        },
+        "member": {
+          "memberLink": {"s": ".profile .user-name"},
+          "feedLink": {"s": ".tab-feed"}
+        }
+      },
+      "misc": {
+        "openCantion": {"s": ".ui-expander-container > .ui-expander-target > .expand"},
+        "downloadedDisplayParent": {"s": ".score"},
+        "recommendList": {"s": "#illust-recommend ._image-items"},
+        "feedList": {"s": ["#stacc_timeline", "#stacc_center_timeline"]},
+        "rankingList": {"s": ".ranking-items"},
+        "discovery": {"s": "#js-mount-point-discovery"},
+        "downloadedFilenameArea": {"s": ".ank-pixiv-downloaded-filename-text"},
+        "nextLink": {"s": ".before > a"},
+        "prevLink": {"s": ".after > a'"}
+      }
+    }
+  },
+  "NJE": {
+    "illust": {
+      "imgOvr": {"s": ["#gallery", "#dojin_left .left"]}
+    }
+  }
+}

@@ -309,7 +309,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
           var rise = false;
           o.forEach(function (a) {
             Array.slice(a.addedNodes).forEach(function (e) {
-              console.log(e);
+              AnkUtils.dumpError(e);
               if (e.tagName.toLowerCase() === 'footer' && 'depths' === e.id) {
                 rise = true;
               }
