@@ -13,7 +13,7 @@
     prefs = await AnkPrefs.restore(OPTION_DEFAULT);
     logger.setLevel(prefs.logLevel);
 
-    logger.info('START: ANK PIXIV TOOL');
+    logger.info('START: ANK PIXIV TOOL ver.', prefs.version);
 
     AnkPrefs.setAutoApply(() => applyPrefsChange());
 

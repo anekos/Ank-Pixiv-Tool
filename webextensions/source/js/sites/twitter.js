@@ -12,6 +12,8 @@
 
     this.SITE_ID = 'TWT';
 
+    this.USE_CONTEXT_CACHE = false;
+
   };
 
   /**
@@ -95,20 +97,27 @@
    */
   AnkTwitter.prototype.getPathContext = async function (elm) {
     let getPhotoPath = async () => {
-      let m = Array.prototype.map.call(elm.illust.photos, (e) => {
-        return {'src': this.prefs.downloadOriginalSize ? e.src.replace(/(?::large)?$/, ':orig') : e.src};
+      let thumb = Array.prototype.map.call(elm.illust.photos, (e) => {
+        return {'src': e.src};
+      });
+
+      let orig = thumb.map((e) => {
+        return {'src': e.src.replace(/(?::large)?$/, ':orig')};
       });
 
       return {
-        'original': m
+        'thumbnail': thumb,
+        'original': orig
       };
     };
 
     let getVideoPath = async () => {
       let src = elm.illust.video.src;
       if (/^https?:\/\//.test(src)) {
+        let m = [{'src': src}];
         return {
-          'original': [{'src': src}]
+          'thumbnail': m,
+          'original': m
         };
       }
 
@@ -173,10 +182,9 @@
   /**
    * ダウンロード情報をまとめる
    * @param elm
-   * @param force
    * @returns {Promise.<*>}
    */
-  AnkTwitter.prototype.getContext = async function (elm, force) {
+  AnkTwitter.prototype.getContext = async function (elm) {
 
     let modal = this.getOpenedModal();
     if (!modal) {
@@ -185,7 +193,7 @@
 
     let elmTweet = this.getElements(modal.tweet);
 
-    return AnkSite.prototype.getContext.call(this, elmTweet, true);
+    return AnkSite.prototype.getContext.call(this, elmTweet);
   };
 
   /**

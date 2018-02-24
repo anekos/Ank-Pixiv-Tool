@@ -56,3 +56,19 @@ input[type="number"] {
     text-align: right;
     width: 6em;
 }
+
+.license_body {
+    line-height: 102%;
+}
+.license_title:after {
+    content: " [－]";
+}
+.license_title.hidden:after {
+    content: " [＋]";
+}
+.license_title.hidden+.license_body {
+    display: none;
+}
+.license_desc {
+    text-indent: 1em;
+}

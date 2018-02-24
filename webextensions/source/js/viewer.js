@@ -663,7 +663,7 @@
       css.push('#ank-pixiv-viewer-button-panel[data-opacity="'+i+'"]{opacity:'+(i/10.0)+';}');
     }
     let style = createAnkElement('style', 'style');
-    style.innerHTML = css.join('\n');
+    style.textContent = css.join('\n');
     document.head.appendChild(style);
   };
 

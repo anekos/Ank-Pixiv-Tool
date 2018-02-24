@@ -230,6 +230,28 @@
   };
 
   /**
+   * "x.x.x" 形式のバージョン番号文字列の比較
+   * @param a
+   * @param b
+   * @returns {number}
+   */
+  let compareVersion = (a, b) => {
+    a = a && a.split('.') || [];
+    b = b && b.split('.') || [];
+
+    while (a.length || b.length) {
+      let ia = parseInt(a.shift() || 0);
+      let ib = parseInt(b.shift() || 0);
+      let d = ia - ib;
+      if (d) {
+        return d;
+      }
+    }
+
+    return 0;
+  };
+
+  /**
    * blob -> ArrayBuffer
    * @param blob
    * @returns {Promise}
@@ -496,8 +518,9 @@
     'getScrollbarSize': getScrollbarSize,
     'trim': trim,
     'zeroPad': zeroPad,
-    'getDateData': getDateData,
     'decodeTextToDateData': decodeTextToDateData,
+    'getDateData': getDateData,
+    'compareVersion': compareVersion,
     'blobToArrayBuffer': blobToArrayBuffer,
     'blobToDataURL': blobToDataURL,
     'blobToJSON': blobToJSON,

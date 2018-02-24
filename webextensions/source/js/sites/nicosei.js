@@ -49,7 +49,8 @@
           "tags": {"ALL": "#content #detail .illust_tag.static .tag .text"}
         },
         "member": {
-          "memberLink": {"s": "#content #detail .user_link > a"}
+          "memberLink": {"s": "#content #detail .user_link > a"},
+          "memberName": {"s": "#content #detail .user_name strong"},
         }
       },
       "misc": {
@@ -90,8 +91,10 @@
 
       let img = resp.document.querySelector('.illust_view_big');
       if (img) {
+        let m = [{'src': [new URL(resp.responseURL).origin, img.getAttribute('data-src')].join('')}];
         return {
-          'original': [{'src': [new URL(resp.responseURL).origin, img.getAttribute('data-src')].join('')}]
+          'thumbnail': m,
+          'original': m
         };
       }
     };
@@ -137,7 +140,7 @@
     try {
       return {
         'id': /\/user\/illust\/(.+?)(?:$|\?)/.exec(elm.info.member.memberLink.href)[1],
-        'name': AnkUtils.trim(elm.info.member.memberLink.textContent),
+        'name': AnkUtils.trim(elm.info.member.memberName.textContent),
         'pixiv_id': null,
         'memoized_name': null
       };
@@ -178,7 +181,7 @@
         return this.getIllustId(href);
       },
       'getLastUpdate': undefined,
-      'overlay': false
+      'method': undefined
     });
   };
 
