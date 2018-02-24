@@ -74,6 +74,18 @@
         return;
       }
 
+      if (Object.keys(this.prefs.site._mod_selector).length) {
+        let selector_overrode = this.prefs.selector_overrode || "3.0.0";
+        if (AnkUtils.compareVersion(this.prefs.version, selector_overrode) > 0) {
+          // 過去のバージョンでインポートしたセレクタ上書き設定は無視する
+          logger.info("IGNORE override_selector:", selector_overrode);
+          this.prefs.site._mod_selector = {};
+        }
+        else {
+          logger.info("USE override_selector:", selector_overrode);
+        }
+      }
+
       logger.info('SITE MODULE INSTALLED:', this.SITE_ID, document.location.href);
 
       AnkPrefs.setAutoApply(() => applyPrefsChange());
@@ -188,6 +200,10 @@
           return s;
         }, this.prefs.defaultFilename);
       })(info.context);
+
+      //  . で始まるファイル名 or フォルダ名が含まれていると invalid filename になる (#160)
+      name = name.replace(/^\./, '_');
+      name = name.replace(/([/\\])\./g, '$1_');
 
       if (!this.prefs.overwriteExistingDownload && info.age > 1) {
         // ２回目の保存からは世代情報を付加（windows風に(1)から）

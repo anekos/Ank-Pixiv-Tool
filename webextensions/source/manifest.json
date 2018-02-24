@@ -23,7 +23,7 @@
   },
   "background": {
     "scripts": [
-      "js/vendor/Dexie.min.js", "js/constants.js", "js/prefs.js", "js/logger.js", "js/utils.js", "js/remote.js", "js/background.js"
+      "js/vendor/dexie.js", "js/constants.js", "js/prefs.js", "js/logger.js", "js/utils.js", "js/remote.js", "js/background.js"
     ]
   },
   "content_scripts": [

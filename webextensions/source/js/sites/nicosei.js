@@ -49,7 +49,8 @@
           "tags": {"ALL": "#content #detail .illust_tag.static .tag .text"}
         },
         "member": {
-          "memberLink": {"s": "#content #detail .user_link > a"}
+          "memberLink": {"s": "#content #detail .user_link > a"},
+          "memberName": {"s": "#content #detail .user_name strong"},
         }
       },
       "misc": {
@@ -139,7 +140,7 @@
     try {
       return {
         'id': /\/user\/illust\/(.+?)(?:$|\?)/.exec(elm.info.member.memberLink.href)[1],
-        'name': AnkUtils.trim(elm.info.member.memberLink.textContent),
+        'name': AnkUtils.trim(elm.info.member.memberName.textContent),
         'pixiv_id': null,
         'memoized_name': null
       };

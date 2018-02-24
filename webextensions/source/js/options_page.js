@@ -461,6 +461,8 @@
             }
           });
 
+          opts.selector_overrode = opts.version;
+
           return AnkPrefs.save(opts)
             .then(() => {
               alert(chrome.i18n.getMessage('msg_importOverrideSelectorCompleted'));

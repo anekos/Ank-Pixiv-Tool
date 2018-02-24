@@ -68,7 +68,7 @@
         },
         "member": {
           "memberLink": {"s": ".profile .user-name"},
-          "feedLink": {"s": ".tab-feed"}
+          "feedLink": {"s": ".column-header .tabs a[href^=\"/stacc/\"]"}
         }
       },
       "misc": {

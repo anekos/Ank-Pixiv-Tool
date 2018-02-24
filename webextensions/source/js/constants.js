@@ -54,7 +54,9 @@ const OPTION_DEFAULT ={
     "dART":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "name": "DeviantArt", "folder": "DeviantArt", "_mod_selector": {}},
     "TWT":{"enabled": true, "experimental": false, "useDisplayDownloaded": true, "name": "Twitter", "folder": "Twitter", "_mod_selector": {}},
     "TDK":{"enabled": true, "experimental": false, "useDisplayDownloaded": true, "name": "Tweetdeck", "folder": "Twitter", "_mod_selector": {}}
-  }
+  },
+  "selector_overrode": null,
+  "version": chrome.runtime.getManifest().version
 };
 
 const IMPORT_UNITS = 1000;
