@@ -53,7 +53,7 @@
           "nuita": {"s": "#nuita"},
           "good": {"s": "#good"},
 
-          "tags": {"ALL": "#view-tag .tag"}
+          "tags": {"ALL": "#view-tag .tag .tag_name"}
         },
         "member": {
           "memberLink": {"s": ["a.name", "div#dojin_left > div.right > p.text > a"]}
