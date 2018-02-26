@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Ank Pixiv Tool",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "homepage_url": "https://github.com/anekos/Ank-Pixiv-Tool",
   "author": "anekos, ginzu",
   "default_locale": "ja",

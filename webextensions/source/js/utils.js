@@ -75,6 +75,18 @@
   };
 
   /**
+   * br を改行として認識する textContent
+   *    elem:     要素
+   *    return:   String;
+   */
+  let getTextContent = (e) => {
+    let doc = e.ownerDocument;
+    let temp = doc.createElement('div');
+    temp.innerHTML = e.innerHTML.replace(/<br\s*\/?>/ig, '\n');
+    return temp.textContent;
+  };
+
+  /**
    * ゼロパディングする
    * @param s
    * @param n
@@ -517,6 +529,7 @@
     'trackbackParentNode': trackbackParentNode,
     'getScrollbarSize': getScrollbarSize,
     'trim': trim,
+    'getTextContent': getTextContent,
     'zeroPad': zeroPad,
     'decodeTextToDateData': decodeTextToDateData,
     'getDateData': getDateData,
