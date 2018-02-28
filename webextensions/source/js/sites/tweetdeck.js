@@ -59,11 +59,16 @@
 
     Object.defineProperty(gElms.illust, 'photos', {
       'get': function () {
+        let photos = [];
         let chirpId = gElms.info.illust.actionsMenu.getAttribute('data-chirp-id');
-        return Array.prototype.filter.call(
-          gElms.doc.querySelector('article[data-key="'+chirpId+'"], .quoted-tweet[data-key="'+chirpId+'"]').querySelectorAll('.js-media-image-link'),
-          (e) => !e.parentNode.classList.contains('is-video')
+        Array.prototype.find.call(
+          gElms.doc.querySelectorAll('article[data-key="'+chirpId+'"], .quoted-tweet[data-key="'+chirpId+'"]'),
+          (e) => {
+            photos = Array.prototype.filter.call(e.querySelectorAll('.js-media-image-link'), (e) => !e.parentNode.classList.contains('is-video'));
+            return !!photos.length;
+          }
         );
+        return photos;
       }
     });
 
