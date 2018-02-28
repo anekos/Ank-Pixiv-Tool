@@ -93,7 +93,7 @@
     }
 
     let thumb = Array.prototype.map.call(photos, (e) => {
-      let src = (/background-image:url\("?(.+?)"?\)/.exec(e.getAttribute('style')) || [])[1];
+      let src = (/background-image:\s*url\("?(.+?)"?\)/.exec(e.getAttribute('style')) || [])[1];
       if (src) {
         return {'src': src.replace(/:small$/, ':large')};
       }
