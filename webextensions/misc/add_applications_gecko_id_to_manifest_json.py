@@ -3,31 +3,42 @@
 import sys
 import os
 import os.path
-import shutil
 import json
+from optparse import OptionParser
 
 def main():
-  orig = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../source/manifest_orig.json'))
-  path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../source/manifest.json'))
+  parser = OptionParser()
+  parser.add_option('-i', '--input', dest='input_folder', help='input folder', default='./source')
+  parser.add_option('-o', '--output', dest='output_folder', help='output folder')
+  (opts, args) = parser.parse_args(sys.argv[1:])
 
-  if not os.path.exists(path):
-    print(path, 'not found')
-    sys.exit()
-  if not os.path.exists(orig):
-    shutil.copyfile(path, orig)
-  f = open(orig, 'r')
-  json_man = json.load(f)
-  f.close()
+  orig = os.path.abspath(os.path.join(opts.input_folder, 'manifest.json'))
+  if opts.output_folder:
+    path = os.path.abspath(os.path.join(opts.output_folder, 'manifest.json'))
+  else:
+    path = None
+
+  if not os.path.exists(orig) or orig == path:
+    print("invalid arguments", file=sys.stderr)
+    sys.exit(1)
+
+  fin = open(orig, 'r')
+  json_man = json.load(fin)
+  fin.close()
+
+  json_man['permissions'] = [x for x in json_man['permissions'] if x != "downloads.shelf"]
   json_man['applications'] = {
     "gecko": {
-      "id": "loot@vixip.kna",
+      "id": "ankpixiv@snca.net",
       "strict_min_version": "55.0"
     }
   }
-  f = open(path, 'w')
-  print(json.dumps(json_man, indent=2),file=f)
-  f.close()
 
+  if path:
+    fout = open(path, 'w')
+  else:
+    fout = sys.stdout
+  print(json.dumps(json_man, indent=2),file=fout)
 
 if __name__ == '__main__':
   main()
