@@ -37,7 +37,7 @@
         "med": {
           "img": {"s": "#gallery  > #gallery_open > #img_filter > a > img"},
 
-          "imgs": {"ALL": "#gallery  > #gallery_open > a > img"}
+          "imgs": {"ALL": "#gallery  > #gallery_open > #img_diff > a > img"}
         },
         "djn": {
           "imgLink": {"s": "#dojin_left .left .image a"},
