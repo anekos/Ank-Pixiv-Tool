@@ -461,7 +461,7 @@
             }
           });
 
-          opts.selector_overrode = opts.version;
+          opts.selector_overrode = OPTION_DEFAULT.version;
 
           return AnkPrefs.save(opts)
             .then(() => {

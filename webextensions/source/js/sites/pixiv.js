@@ -360,6 +360,21 @@
     try {
       let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(elm.info.illust.datetime.textContent));
 
+      let tags = Array.prototype.map.call(elm.info.illust.tags, (e) => {
+        let tag = AnkUtils.trim(e.textContent);
+        let eTrans = e.querySelector('.illust-tag-translation');
+        if (eTrans) {
+          let trans = AnkUtils.trim(eTrans.textContent);
+          if (trans.length > 0) {
+            tag = AnkUtils.trim(tag.slice(0, -trans.length));
+            if (this.prefs.saveTagsWithTranslation) {
+              tag += '('+trans+')';
+            }
+          }
+        }
+        return tag;
+      });
+
       let info = {
         'url': elm.doc.location.href,
         'id': this.getIllustId(elm.doc.location.href),
@@ -376,7 +391,7 @@
           }
           return sz;
         })(elm.info.illust.size.textContent),
-        'tags': Array.prototype.map.call(elm.info.illust.tags, (e) => AnkUtils.trim(e.textContent)),
+        'tags': tags,
         'tools': elm.info.illust.tools && AnkUtils.trim(elm.info.illust.tools.textContent),
         'caption': elm.info.illust.caption && AnkUtils.trim(AnkUtils.getTextContent(elm.info.illust.caption)),
         'R18': !!elm.info.illust.R18

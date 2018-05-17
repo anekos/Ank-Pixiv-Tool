@@ -36,6 +36,7 @@
   "options_mangaImagesSaveToFolder": { "message": "Store multiple images manga in one folder." },
   "options_ignoreWrongDatetimeFormat": { "message": "Use the current date, when cannot confirm the illust date." },
   "options_warnWrongDatetimeFormat": { "message": "Don't show 'unsupported datetime format' warnings." },
+  "options_saveTagsWithTranslation": { "message": "Save tags with translation." },
   "options_largeOnMiddle": { "message": "Show the large image on the same tab when you click the middle image." },
   "options_largeImageSize": { "message": "Default resize method" },
   "options_fitInWindowSize": { "message": "Fit in window." },

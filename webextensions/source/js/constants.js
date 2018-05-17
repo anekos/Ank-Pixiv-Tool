@@ -1,6 +1,7 @@
 "use strict";
 
 const IS_FIREFOX = ((ua)=>{return ua && ua.indexOf("Firefox") != -1})(navigator.userAgent);
+const IS_WINDOWS = ((ua)=>{return ua && ua.indexOf("Win") != -1})(navigator.platform);
 
 const OPTION_DEFAULT ={
   "downloadWhenNice": false,
@@ -24,6 +25,7 @@ const OPTION_DEFAULT ={
   "mangaImagesSaveToFolder": true,
   "ignoreWrongDatetimeFormat": false,
   "warnWrongDatetimeFormat": true,
+  "saveTagsWithTranslation": true,
   "largeOnMiddle": true,
   "largeImageSize": 0,
   "dontResizeIfSmall": false,
@@ -46,6 +48,7 @@ const OPTION_DEFAULT ={
   "downloadTimeout": 60000,
   "openCaptionDelay": 1000,
   "historyCacheSize": 200,
+  "maxFilenameLength": 100,
   "siteModules": {
     "PXV":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Pixiv", "folder": "Pixiv", "_mod_selector": {}},
     "NJE":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Nijie", "folder": "Nijie", "_mod_selector": {}},

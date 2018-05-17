@@ -36,6 +36,7 @@
   "options_mangaImagesSaveToFolder": { "message": "複数画像の作品はフォルダにまとめる" },
   "options_ignoreWrongDatetimeFormat": { "message": "投稿日時を確認できない時に現在日時で代替する" },
   "options_warnWrongDatetimeFormat": { "message": "現在日時で代替したことを警告する" },
+  "options_saveTagsWithTranslation": { "message": "タグに翻訳を含める" },
   "options_largeOnMiddle": { "message": "中サイズ画像をクリックで、同一タブに大サイズ画像を表示する" },
   "options_largeImageSize": { "message": "リサイズ方法" },
   "options_fitInWindowSize": { "message": "ウィンドウサイズに合わせる" },

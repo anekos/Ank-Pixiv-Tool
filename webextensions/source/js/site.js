@@ -205,6 +205,12 @@
       name = name.replace(/^\./, '_');
       name = name.replace(/([/\\])\./g, '$1_');
 
+      // ファイル名の長さの調整 (#165)
+      if (IS_FIREFOX && IS_WINDOWS) {
+        let basename = name.replace(/^.*[\\\/]/, '');
+        name = name.slice(0, -basename.length) + basename.slice(0, this.prefs.maxFilenameLength);
+      }
+
       if (!this.prefs.overwriteExistingDownload && info.age > 1) {
         // ２回目の保存からは世代情報を付加（windows風に(1)から）
         name += ' (' + (info.age-1) + ')';
