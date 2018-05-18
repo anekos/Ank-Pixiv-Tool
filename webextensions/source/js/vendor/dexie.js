@@ -4,7 +4,7 @@
  *
  * By David Fahlander, david.fahlander@gmail.com
  *
- * Version 2.0.1, Mon Oct 02 2017
+ * Version 2.0.3, Thu Apr 26 2018
  *
  * http://dexie.org
  *
@@ -70,10 +70,6 @@ function slice(args, start, end) {
 }
 function override(origFunc, overridedFactory) {
     return overridedFactory(origFunc);
-}
-function doFakeAutoComplete(fn) {
-    var to = setTimeout(fn, 1000);
-    clearTimeout(to);
 }
 function assert(b) {
     if (!b)
@@ -294,7 +290,6 @@ function getArrayOf(arrayLike) {
 
 // By default, debug will be true only if platform is a web platform and its page is served from localhost.
 // When debug = true, error's stacks will contain asyncronic long stacks.
-// By default, debug will be true only if platform is a web platform and its page is served from localhost.
 var debug = typeof location !== 'undefined' &&
     // By default, use debug mode if served from localhost.
     /^(http|https):\/\/(localhost|127\.0\.0\.1)/.test(location.href);
@@ -596,6 +591,10 @@ function promisableChain(f1, f2) {
     };
 }
 
+/*
+ * Copyright (c) 2014-2017 David Fahlander
+ * Apache License Version 2.0, January 2004, http://www.apache.org/licenses/LICENSE-2.0
+ */
 //
 // Promise and Zone (PSD) for Dexie library
 //
@@ -690,7 +689,6 @@ var unhandledErrors = [];
 var rejectingErrors = [];
 var currentFulfiller = null;
 var rejectionMapper = mirror; // Remove in next major when removing error mapping of DOMErrors and DOMExceptions
-// Remove in next major when removing error mapping of DOMErrors and DOMExceptions
 var globalPSD = {
     id: 'global',
     global: true,
@@ -710,11 +708,8 @@ var globalPSD = {
 };
 var PSD = globalPSD;
 var microtickQueue = []; // Callbacks to call in this or next physical tick.
-// Callbacks to call in this or next physical tick.
 var numScheduledCalls = 0; // Number of listener-calls left to do in this physical tick.
-// Number of listener-calls left to do in this physical tick.
 var tickFinalizers = []; // Finalizers to call when there are no more async calls scheduled within current physical tick.
-// Finalizers to call when there are no more async calls scheduled within current physical tick.
 function Promise(fn) {
     if (typeof this !== 'object')
         throw new TypeError('Promises must be constructed via new');
@@ -772,7 +767,7 @@ var thenProp = {
     // and when that framework wants to restore the original property, we must identify that and restore the original property descriptor.
     set: function (value) {
         setProp(this, 'then', value && value.prototype === INTERNAL ?
-            thenProp :
+            thenProp : // Restore to original property descriptor.
             {
                 get: function () {
                     return value; // Getter returning provided value (behaves like value is just changed)
@@ -1392,12 +1387,6 @@ function globalError(err, promise) {
         }
         catch (e) { }
 }
-doFakeAutoComplete(function () {
-    // Simplify the job for VS Intellisense. This piece of code is one of the keys to the new marvellous intellisense support in Dexie.
-    asap$1 = function (fn, args) {
-        setTimeout(function () { fn.apply(null, args); }, 0);
-    };
-});
 var rejection = Promise.reject;
 
 function Events(ctx) {
@@ -1478,15 +1467,16 @@ function Events(ctx) {
  * Dexie.js - a minimalistic wrapper for IndexedDB
  * ===============================================
  *
- * By David Fahlander, david.fahlander@gmail.com
+ * Copyright (c) 2014-2017 David Fahlander
  *
- * Version 2.0.1, Mon Oct 02 2017
+ * Version 2.0.3, Thu Apr 26 2018
  *
  * http://dexie.org
  *
- * Apache License Version 2.0, January 2004, http://www.apache.org/licenses/
+ * Apache License Version 2.0, January 2004, http://www.apache.org/licenses/LICENSE-2.0
+ *
  */
-var DEXIE_VERSION = '2.0.1';
+var DEXIE_VERSION = '2.0.3';
 var maxString = String.fromCharCode(65535);
 var maxKey = (function () { try {
     IDBKeyRange.only([[]]);
@@ -1630,11 +1620,6 @@ function Dexie(dbName, options) {
             return this;
         },
         upgrade: function (upgradeFunction) {
-            /// <param name="upgradeFunction" optional="true">Function that performs upgrading actions.</param>
-            var self = this;
-            fakeAutoComplete(function () {
-                upgradeFunction(db._createTransaction(READWRITE, keys(self._cfg.dbschema), self._cfg.dbschema)); // BUGBUG: No code completion for prev version's tables wont appear.
-            });
             this._cfg.contentUpgrade = upgradeFunction;
             return this;
         },
@@ -1875,7 +1860,7 @@ function Dexie(dbName, options) {
         }
     }
     this._whenReady = function (fn) {
-        return fake || openComplete || PSD.letThrough ? fn() : new Promise(function (resolve, reject) {
+        return openComplete || PSD.letThrough ? fn() : new Promise(function (resolve, reject) {
             if (!isBeingOpened) {
                 if (!autoOpen) {
                     reject(new exceptions.DatabaseClosed());
@@ -1907,7 +1892,6 @@ function Dexie(dbName, options) {
         // upgradeTransaction to abort on failure.
         upgradeTransaction = null;
         return Promise.race([openCanceller, new Promise(function (resolve, reject) {
-                doFakeAutoComplete(function () { return resolve(); });
                 // Multiply db.verno with 10 will be needed to workaround upgrading bug in IE:
                 // IE fails when deleting objectStore after reading from it.
                 // A future version of Dexie.js will stopover an intermediate version to workaround this.
@@ -1954,6 +1938,7 @@ function Dexie(dbName, options) {
                             adjustToExistingIndexNames(globalSchema, idbdb.transaction(safariMultiStoreFix(idbdb.objectStoreNames), READONLY));
                         }
                         catch (e) {
+                            // Safari may bail out if > 1 store names. However, this shouldnt be a showstopper. Issue #120.
                         }
                     }
                     idbdb.onversionchange = wrap(function (ev) {
@@ -2111,9 +2096,6 @@ function Dexie(dbName, options) {
             });
         };
     });
-    fakeAutoComplete(function () {
-        db.on("populate").fire(db._createTransaction(READWRITE, dbStoreNames, globalSchema));
-    });
     this.transaction = function () {
         /// <summary>
         ///
@@ -2251,6 +2233,7 @@ function Dexie(dbName, options) {
                     Promise.resolve(returnValue).then(function (x) { return trans.active ?
                         x // Transaction still active. Continue.
                         : rejection(new exceptions.PrematureCommit("Transaction committed too early. See http://bit.ly/2kdckMn")); })
+                    // No promise returned. Wait for all outstanding promises before continuing. 
                     : promiseFollowed.then(function () { return returnValue; })).then(function (x) {
                     // sub transactions don't react to idbtrans.oncomplete. We must trigger a completion:
                     if (parentTransaction)
@@ -2267,8 +2250,6 @@ function Dexie(dbName, options) {
     };
     this.table = function (tableName) {
         /// <returns type="Table"></returns>
-        if (fake && autoSchema)
-            return new Table(tableName);
         if (!hasOwn(allTables, tableName)) {
             throw new exceptions.InvalidTable("Table " + tableName + " does not exist");
         }
@@ -2349,8 +2330,6 @@ function Dexie(dbName, options) {
                 tempTransaction(mode, [this.name], fn);
         },
         _idbstore: function getIDBObjectStore(mode, fn, writeLocked) {
-            if (fake)
-                return new Promise(fn); // Simplify the work for Intellisense/Code completion.
             var tableName = this.name;
             function supplyIdbStore(resolve, reject, trans) {
                 if (trans.storeNames.indexOf(tableName) === -1)
@@ -2367,7 +2346,6 @@ function Dexie(dbName, options) {
                 return this.where(keyOrCrit).first(cb);
             var self = this;
             return this._idbstore(READONLY, function (resolve, reject, idbstore) {
-                fake && resolve(self.schema.instanceTemplate);
                 var req = idbstore.get(keyOrCrit);
                 req.onerror = eventRejectHandler(reject);
                 req.onsuccess = wrap(function () {
@@ -2419,7 +2397,7 @@ function Dexie(dbName, options) {
                 this.where(idx.name).equals(indexOrCrit[idx.keyPath])
                     .filter(simpleIndex[1]) :
                 compoundIndex ?
-                    this.filter(simpleIndex[1]) :
+                    this.filter(simpleIndex[1]) : // Has compound but browser bad. Allow filter.
                     this.where(keyPaths).equals(''); // No index at all. Fail lazily.
         },
         count: function (cb) {
@@ -3488,9 +3466,6 @@ function Dexie(dbName, options) {
                     iterate(openCursor(ctx, idbstore), ctx.algorithm, union, resolveboth, reject, !ctx.keysOnly && ctx.valueMapper);
                 })();
         }
-        function getInstanceTemplate(ctx) {
-            return ctx.table.schema.instanceTemplate;
-        }
         return {
             //
             // Collection Protected Functions
@@ -3530,17 +3505,11 @@ function Dexie(dbName, options) {
             //
             each: function (fn) {
                 var ctx = this._ctx;
-                if (fake) {
-                    var item = getInstanceTemplate(ctx), primKeyPath = ctx.table.schema.primKey.keyPath, key = getByKeyPath(item, ctx.index ? ctx.table.schema.idxByName[ctx.index].keyPath : primKeyPath), primaryKey = getByKeyPath(item, primKeyPath);
-                    fn(item, { key: key, primaryKey: primaryKey });
-                }
                 return this._read(function (resolve, reject, idbstore) {
                     iter(ctx, fn, resolve, reject, idbstore);
                 });
             },
             count: function (cb) {
-                if (fake)
-                    return Promise.resolve(0).then(cb);
                 var ctx = this._ctx;
                 if (isPlainKeyRange(ctx, true)) {
                     // This is a plain key range. We can use the count() method if the index.
@@ -3581,7 +3550,6 @@ function Dexie(dbName, options) {
             toArray: function (cb) {
                 var ctx = this._ctx;
                 return this._read(function (resolve, reject, idbstore) {
-                    fake && resolve([getInstanceTemplate(ctx)]);
                     if (hasGetAll && ctx.dir === 'next' && isPlainKeyRange(ctx, true) && ctx.limit > 0) {
                         // Special optimation if we could use IDBObjectStore.getAll() or
                         // IDBKeyRange.getAll():
@@ -3655,8 +3623,6 @@ function Dexie(dbName, options) {
                 return this;
             },
             until: function (filterFunction, bIncludeStopEntry) {
-                var ctx = this._ctx;
-                fake && filterFunction(getInstanceTemplate(ctx));
                 addFilter(this._ctx, function (cursor, advance, resolve) {
                     if (filterFunction(cursor.value)) {
                         advance(resolve);
@@ -3676,7 +3642,6 @@ function Dexie(dbName, options) {
             },
             filter: function (filterFunction) {
                 /// <param name="jsFunctionFilter" type="Function">function(val){return true/false}</param>
-                fake && filterFunction(getInstanceTemplate(this._ctx));
                 addFilter(this._ctx, function (cursor) {
                     return filterFunction(cursor.value);
                 });
@@ -3774,7 +3739,6 @@ function Dexie(dbName, options) {
             //
             modify: function (changes) {
                 var self = this, ctx = this._ctx, hook = ctx.table.hook, updatingHook = hook.updating.fire, deletingHook = hook.deleting.fire;
-                fake && typeof changes === 'function' && changes.call({ value: ctx.table.schema.instanceTemplate }, ctx.table.schema.instanceTemplate);
                 return this._write(function (resolve, reject, idbstore, trans) {
                     var modifyer;
                     if (typeof changes === 'function') {
@@ -4156,8 +4120,6 @@ function Dexie(dbName, options) {
         fn(db);
     });
 }
-var fakeAutoComplete = function () { }; // Will never be changed. We just fake for the IDE that we change it (see doFakeAutoComplete())
-var fake = false; // Will never be changed. We just fake for the IDE that we change it (see doFakeAutoComplete())
 function parseType(type) {
     if (typeof type === 'function') {
         return new type();
@@ -4192,7 +4154,8 @@ function hookedEventSuccessHandler(resolve) {
     // If no hook, the virtual tick will be executed in the reject()/resolve of the final promise,
     // because it is always marked with _lib = true when created using Transaction._promise().
     return wrap(function (event) {
-        var req = event.target, result = req.result, ctx = req._hookCtx, // Contains the hook error handler. Put here instead of closure to boost performance.
+        var req = event.target, ctx = req._hookCtx, // Contains the hook error handler. Put here instead of closure to boost performance.
+        result = ctx.value || req.result, // Pass the object value on updates. The result from IDB is the primary key.
         hookSuccessHandler = ctx && ctx.onsuccess;
         hookSuccessHandler && hookSuccessHandler(result);
         resolve && resolve(result);
@@ -4322,18 +4285,13 @@ props(Dexie, {
             req.onerror = eventRejectHandler(reject);
         }).then(cb) : dbNamesDB.dbnames.toCollection().primaryKeys(cb);
     },
-    defineClass: function (structure) {
-        /// <summary>
-        ///     Create a javascript constructor based on given template for which properties to expect in the class.
-        ///     Any property that is a constructor function will act as a type. So {name: String} will be equal to {name: new String()}.
-        /// </summary>
-        /// <param name="structure">Helps IDE code completion by knowing the members that objects contain and not just the indexes. Also
-        /// know what type each member has. Example: {name: String, emailAddresses: [String], properties: {shoeSize: Number}}</param>
+    defineClass: function () {
         // Default constructor able to copy given properties into this object.
         function Class(properties) {
             /// <param name="properties" type="Object" optional="true">Properties to initialize object with.
             /// </param>
-            properties ? extend(this, properties) : fake && applyStructure(this, structure);
+            if (properties)
+                extend(this, properties);
         }
         return Class;
     },
@@ -4361,7 +4319,7 @@ props(Dexie, {
         //  3) setImmediate() is not supported in the ES standard.
         //  4) You might want to keep other PSD state that was set in a parent PSD, such as PSD.letThrough.
         return PSD.trans ?
-            usePSD(PSD.transless, scopeFunc) :
+            usePSD(PSD.transless, scopeFunc) : // Use the closest parent that was non-transactional.
             scopeFunc(); // No need to change scope because there is no ongoing transaction.
     },
     vip: function (fn) {
@@ -4470,7 +4428,6 @@ props(Dexie, {
     version: DEXIE_VERSION.split('.')
         .map(function (n) { return parseInt(n); })
         .reduce(function (p, c, i) { return p + (c / Math.pow(10, i * 2)); }),
-    fakeAutoComplete: fakeAutoComplete,
     // https://github.com/dfahlander/Dexie.js/issues/186
     // typescript compiler tsc in mode ts-->es5 & commonJS, will expect require() to return
     // x.default. Workaround: Set Dexie.default = Dexie.
@@ -4484,25 +4441,21 @@ props(Dexie, {
 });
 // Map DOMErrors and DOMExceptions to corresponding Dexie errors. May change in Dexie v2.0.
 Promise.rejectionMapper = mapError;
-// Fool IDE to improve autocomplete. Tested with Visual Studio 2013 and 2015.
-doFakeAutoComplete(function () {
-    Dexie.fakeAutoComplete = fakeAutoComplete = doFakeAutoComplete;
-    Dexie.fake = fake = true;
-});
 // Initialize dbNamesDB (won't ever be opened on chromium browsers')
 dbNamesDB = new Dexie('__dbnames');
 dbNamesDB.version(1).stores({ dbnames: 'name' });
 (function () {
     // Migrate from Dexie 1.x database names stored in localStorage:
     var DBNAMES = 'Dexie.DatabaseNames';
-    if (typeof localStorage !== undefined && _global.document !== undefined)
-        try {
+    try {
+        if (typeof localStorage !== undefined && _global.document !== undefined) {
             // Have localStorage and is not executing in a worker. Lets migrate from Dexie 1.x.
             JSON.parse(localStorage.getItem(DBNAMES) || "[]")
                 .forEach(function (name) { return dbNamesDB.dbnames.put({ name: name }).catch(nop); });
             localStorage.removeItem(DBNAMES);
         }
-        catch (_e) { }
+    }
+    catch (_e) { }
 })();
 
 return Dexie;
