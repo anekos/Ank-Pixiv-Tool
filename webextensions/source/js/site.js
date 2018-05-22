@@ -100,6 +100,17 @@
   };
 
   /**
+   * 再初期化
+   */
+  AnkSite.prototype.restart = function () {
+
+    logger.info('RESET CONTEXT INFO:', this.SITE_ID, document.location.href);
+
+    this.elements = this.getElements(document);
+    this.contextCache = null;
+  };
+
+  /**
    * focusイベントリスナーの定義
    */
   AnkSite.prototype.initFocusListener = function () {

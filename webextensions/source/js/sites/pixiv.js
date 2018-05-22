@@ -33,17 +33,19 @@
 
     const SELECTOR_ITEMS = {
       "illust": {
-        "imgOvr": {"s": ".works_display"},
+        "imgOvr": {"s": ".works_display, ._1tR0cJT"},
         "med": {
-          "img": {"s": ".works_display > ._layout-thumbnail > img"},
-          "bigImg": {"s": ".original-image"}
+          "img": {"s": ".works_display > ._layout-thumbnail > img, ._1tR0cJT ._2r_DywD"},
+          "bigImg": {"s": ".original-image, ._1tR0cJT ._1-h8Se6.r_Q2Jin"}
         },
         "mng": {
-          "img": {"s": ".works_display > ._work > ._layout-thumbnail > img"},
-          "largeLink": {"s": ".works_display > a"}
+          "img": {"s": ".works_display > ._work > ._layout-thumbnail > img, ._1tR0cJT ._2r_DywD"},
+          "largeLink": {"s": ".works_display > a, ._1tR0cJT ._1-h8Se6"},
+          "pages": {"s": "._2uvBc97"}
         },
         "ugo": {
-          "img": {"s": ".works_display > ._ugoku-illust-player-container canvas"}
+          "img": {"s": ".works_display > ._ugoku-illust-player-container canvas"},
+          "pause": {"s": ".kbpwWEq"}
         }
       },
       "mngIdx": {
@@ -55,25 +57,26 @@
       },
       "info": {
         "illust": {
-          "datetime": {"s": ".work-info .meta > li"},
+          "datetime": {"s": ".work-info .meta > li, ._3VLfD7p"},
           "size": {"s": ".work-info .meta > li+li"},
           "tools": {"s": ".work-info .tools"},
-          "title": {"s": ".work-info .title"},
-          "R18": {"s": ".work-info .r-18, .work-info .r-18g"},
-          "caption": {"s": ".work-info .caption"},
-          "nice": {"s": ".work-info .js-nice-button"},
+          "title": {"s": ".work-info .title, .TTmQ_bQ"},
+          "R18": {"s": '.work-info .r-18, .work-info .r-18g, ._2wuGX9T > a[href*="R-18"]'},
+          "caption": {"s": ".work-info .caption, ._2awgH_j .EG8MDwA p"},
+          "nice": {"s": ".work-info .js-nice-button, .Ki5EGTG"},
           "update": {"s": ".bookmark_modal_thumbnail"},
 
-          "tags": {"ALL": ".work-tags .tags > .tag > .text"}
+          "tags": {"ALL": ".work-tags .tags > .tag > .text, ._1tTPwGC"}
         },
         "member": {
-          "memberLink": {"s": ".profile .user-name"},
-          "feedLink": {"s": ".column-header .tabs a[href^=\"/stacc/\"]"}
+          "memberLink": {"s": ".profile .user-name, .JdrBYtD ._3RqJTSD"},
+          "feedLink": {"s": '.column-header .tabs a[href^="/stacc/"]'}
         }
       },
       "misc": {
-        "openCantion": {"s": ".ui-expander-container > .ui-expander-target > .expand"},
-        "downloadedDisplayParent": {"s": ".score"},
+        "content": {"s": "._290uSJE"},
+        "openCantion": {"s": ".ui-expander-container > .ui-expander-target > .expand, ._4A2uxPW"},
+        "downloadedDisplayParent": {"s": ".score, ._3VLfD7p"},
         "recommendList": {"s": "#illust-recommend ._image-items"},
         "feedList": {"s": ["#stacc_timeline", "#stacc_center_timeline"]},
         "rankingList": {"s": ".ranking-items"},
@@ -108,7 +111,7 @@
     let getMedPath = async () => {
       return {
         'thumbnail': [{'src': elm.illust.med.img.src, 'referrer': elm.doc.location.href}],
-        'original': [{'src': elm.illust.med.bigImg.getAttribute('data-src'), 'referrer': elm.doc.location.href}]
+        'original': [{'src': elm.illust.med.bigImg.getAttribute('data-src') || elm.illust.med.bigImg.getAttribute('href'), 'referrer': elm.doc.location.href}]
       };
     };
 
@@ -340,6 +343,15 @@
 
     //
 
+    // 新デザイン
+    if (elm.illust.mng.pages) {
+      return getMngPath();
+    }
+    if (elm.illust.ugo.pause) {
+      return getUgoPath();
+    }
+
+    // 旧デザイン
     if (elm.illust.med.img) {
       return getMedPath();
     }
@@ -390,7 +402,7 @@
             };
           }
           return sz;
-        })(elm.info.illust.size.textContent),
+        })(elm.info.illust.size && elm.info.illust.size.textContent),
         'tags': tags,
         'tools': elm.info.illust.tools && AnkUtils.trim(elm.info.illust.tools.textContent),
         'caption': elm.info.illust.caption && AnkUtils.trim(AnkUtils.getTextContent(elm.info.illust.caption)),
@@ -425,7 +437,7 @@
     try {
       return {
         'id': /\/member\.php\?id=(.+?)(?:&|$)/.exec(elm.info.member.memberLink.href)[1],
-        'pixiv_id': /\/stacc\/([^?\/]+)/.exec(elm.info.member.feedLink.href)[1],
+        'pixiv_id': elm.info.member.feedLink && /\/stacc\/([^?\/]+)/.exec(elm.info.member.feedLink.href)[1],
         'name': AnkUtils.trim(elm.info.member.memberLink.textContent),
         'memoized_name': null
       };
@@ -624,19 +636,42 @@
         return;
       }
 
-      let rated = nice.classList.contains('rated');
+      let rated = nice.classList.contains('rated') || nice.classList.contains('_2iDv0r8');
       if (rated) {
         return true;
       }
 
       nice.addEventListener('click', () => {
-        let rated = nice.classList.contains('rated');
+        let rated = nice.classList.contains('rated') || nice.classList.contains('_2iDv0r8');
         if (rated) {
           return;
         }
 
         this.downloadCurrentImage({'autoDownload': true});
       }, false);
+
+      return true;
+    };
+
+    // ajaxによるコンテンツの入れ替えを検出する
+    let detectContentChange = () => {
+      if (this.elements.doc.readyState !== "complete") {
+        return false;   // リトライしてほしい
+      }
+
+      let content = this.elements.misc.content;
+      if (!content) {
+        return false;   // リトライしてほしい
+      }
+
+      // miniBrowseの中身が書き換わるのを検出する
+      let moBrowse = new MutationObserver(() => {
+        logger.debug('content changed.');
+        this.restart();
+        this.forceDisplayAndMarkDownloaded();
+      });
+
+      moBrowse.observe(content, {'childList': true});
 
       return true;
     };
@@ -648,7 +683,8 @@
       AnkUtils.delayFunctionInstaller({'func': delayDisplaying, 'retry': RETRY_VALUE, 'label': 'delayDisplaying'}),
       AnkUtils.delayFunctionInstaller({'func': delayMarking, 'retry': RETRY_VALUE, 'label': 'delayMarking'}),
       AnkUtils.delayFunctionInstaller({'func': openCaption, 'retry': RETRY_VALUE, 'label': 'openCaption'}),
-      AnkUtils.delayFunctionInstaller({'func': niceEventFunc, 'retry': RETRY_VALUE, 'label': 'niceEventFunc'})
+      AnkUtils.delayFunctionInstaller({'func': niceEventFunc, 'retry': RETRY_VALUE, 'label': 'niceEventFunc'}),
+      AnkUtils.delayFunctionInstaller({'func': detectContentChange, 'retry': RETRY_VALUE, 'label': 'detectContentChange'})
     ])
       .catch((e) => logger.warn(e));
   };

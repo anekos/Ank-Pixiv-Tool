@@ -19,7 +19,7 @@
     scrollCtrl = new ScrollCtrl();
     buttonCtrl = new ButtonCtrl();
     resizeCtrl = new ResizeCtrl();
-    pageCache = new PageCache();
+    //pageCache = new PageCache();
 
     return {
       'open': openViewer,
@@ -740,13 +740,14 @@
     if (!viewer) {
       viewer = createViewerElements();
       addCustomStyle();
-
-      // 画像読み込みキャッシュの初期化
-      pageCache.init(path);
-
-      setFacingMode(pageCache.facing);
-      setPageSelectorOptions(pageCache.totalPages);
     }
+
+    // 画像読み込みキャッシュの初期化
+    pageCache = new PageCache();
+    pageCache.init(path);
+
+    setFacingMode(pageCache.facing);
+    setPageSelectorOptions(pageCache.totalPages);
 
     viewer.imgPanel.classList.add('hide'); // 見栄えが悪いので最初のロード中は隠す
 
