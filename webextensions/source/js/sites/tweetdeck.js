@@ -126,10 +126,9 @@
   /**
    * ダウンロード情報（イラスト情報）の取得
    * @param elm
-   * @returns {{url: string, id, title, posted: (boolean|Number|*), postedYMD: (boolean|*), size: {width, height}, tags: *, tools: *, caption: *, R18: boolean}}
-   * @returns {{url: (string|*), id: string, title: (*|string|XML|void), posted: (boolean|Number|*), postedYMD: (boolean|string|*), tags: Array, caption: (*|string|XML|void), R18: boolean}}
+   * @returns {Promise.<{url: (string|*), id: *, title: (*|string|XML|void), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: Array, caption: (*|string|XML|void), R18: boolean}>}
    */
-  AnkTweetdeck.prototype.getIllustContext = function (elm) {
+  AnkTweetdeck.prototype.getIllustContext = async function (elm) {
     try {
       let dd = new Date(parseInt(elm.info.illust.datetime.getAttribute('data-time'),10));
       let posted = this.getPosted(() => AnkUtils.getDateData(dd));
@@ -155,9 +154,9 @@
   /**
    * ダウンロード情報（メンバー情報）の取得
    * @param elm
-   * @returns {{id: *, pixiv_id: *, name, memoized_name: null}}
+   * @returns {Promise.<{id: string, name: (*|string|XML|void), pixiv_id: *, memoized_name: null}>}
    */
-  AnkTweetdeck.prototype.getMemberContext = function(elm) {
+  AnkTweetdeck.prototype.getMemberContext = async function(elm) {
     try {
       return {
         'id': elm.info.illust.actionsMenu.getAttribute('data-user-id'),

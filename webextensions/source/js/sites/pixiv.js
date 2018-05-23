@@ -75,7 +75,7 @@
       },
       "misc": {
         "content": {"s": "._290uSJE"},
-        "openCantion": {"s": ".ui-expander-container > .ui-expander-target > .expand, ._4A2uxPW"},
+        "openCantion": {"s": ".ui-expander-container > .ui-expander-target > .expand, ._1MskjZd"},
         "downloadedDisplayParent": {"s": ".score, ._3VLfD7p"},
         "recommendList": {"s": "#illust-recommend ._image-items"},
         "feedList": {"s": ["#stacc_timeline", "#stacc_center_timeline"]},
@@ -366,9 +366,9 @@
   /**
    * ダウンロード情報（イラスト情報）の取得
    * @param elm
-   * @returns {{url: string, id, title, posted: (boolean|Number|*), postedYMD: (boolean|*), size: {width, height}, tags: *, tools: *, caption: *, R18: boolean}}
+   * @returns {Promise.<{url: string, id: *, title: (SELECTOR_ITEMS.info.illust.title|{s}|*|*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), size: {width, height}, tags: *, tools: (SELECTOR_ITEMS.info.illust.tools|{s}|*|string|XML|void|string), caption: (SELECTOR_ITEMS.info.illust.caption|{s}|*|*|string|XML|void|string), R18: boolean}>}
    */
-  AnkPixiv.prototype.getIllustContext = function (elm) {
+  AnkPixiv.prototype.getIllustContext = async function (elm) {
     try {
       let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(elm.info.illust.datetime.textContent));
 
@@ -390,7 +390,7 @@
       let info = {
         'url': elm.doc.location.href,
         'id': this.getIllustId(elm.doc.location.href),
-        'title': AnkUtils.trim(elm.info.illust.title.textContent),
+        'title': elm.info.illust.title && AnkUtils.trim(elm.info.illust.title.textContent) || '',
         'posted': !posted.fault && posted.timestamp,
         'postedYMD': !posted.fault && posted.ymd,
         'size': ((sz) => {
@@ -401,11 +401,11 @@
               'height': m[2]
             };
           }
-          return sz;
+          return sz || '';
         })(elm.info.illust.size && elm.info.illust.size.textContent),
         'tags': tags,
-        'tools': elm.info.illust.tools && AnkUtils.trim(elm.info.illust.tools.textContent),
-        'caption': elm.info.illust.caption && AnkUtils.trim(AnkUtils.getTextContent(elm.info.illust.caption)),
+        'tools': elm.info.illust.tools && AnkUtils.trim(elm.info.illust.tools.textContent) || '',
+        'caption': elm.info.illust.caption && AnkUtils.trim(AnkUtils.getTextContent(elm.info.illust.caption)) || '',
         'R18': !!elm.info.illust.R18
       };
 
@@ -431,13 +431,31 @@
   /**
    * ダウンロード情報（メンバー情報）の取得
    * @param elm
-   * @returns {{id: *, pixiv_id: *, name, memoized_name: null}}
+   * @returns {Promise.<{id: *, pixiv_id: (SELECTOR_ITEMS.info.member.feedLink|{s}|*|string), name: (*|string|XML|void), memoized_name: null}>}
    */
-  AnkPixiv.prototype.getMemberContext = function(elm) {
+  AnkPixiv.prototype.getMemberContext = async function(elm) {
     try {
+      let memberId = /\/member\.php\?id=(.+?)(?:&|$)/.exec(elm.info.member.memberLink.href)[1];
+
+      let pixivId = await (async (id) => {
+        if (!id) {
+          let memDoc = await remote.get({
+            'url': 'https://www.pixiv.net/member.php?id='+memberId,
+            //headers: [{name:'Referer', value:indexPage}],
+            'responseType': 'document',
+            'timeout': this.prefs.xhrTimeout
+          });
+          let feedLink = memDoc.document.querySelector('#wrapper a[href*="/stacc/"]');
+          if (feedLink) {
+            id = /\/stacc\/([^?\/]+)/.exec(feedLink.href)[1];
+          }
+        }
+        return id;
+      })(elm.info.member.feedLink && /\/stacc\/([^?\/]+)/.exec(elm.info.member.feedLink.href)[1]);
+
       return {
-        'id': /\/member\.php\?id=(.+?)(?:&|$)/.exec(elm.info.member.memberLink.href)[1],
-        'pixiv_id': elm.info.member.feedLink && /\/stacc\/([^?\/]+)/.exec(elm.info.member.feedLink.href)[1],
+        'id': memberId,
+        'pixiv_id': pixivId,
         'name': AnkUtils.trim(elm.info.member.memberLink.textContent),
         'memoized_name': null
       };
@@ -617,7 +635,7 @@
       }
 
       setTimeout(() => {
-        if (caption.style.display === 'block') {
+        if (getComputedStyle(caption).getPropertyValue('display').indexOf('block') != -1) {
           caption.click();
         }
       }, this.prefs.openCaptionDelay);

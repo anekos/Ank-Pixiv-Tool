@@ -135,9 +135,9 @@
   /**
    * ダウンロード情報（イラスト情報）の取得
    * @param elm
-   * @returns {{url: string, id, title, posted: (boolean|Number|*), postedYMD: (boolean|*), size: {width, height}, tags: *, tools: *, caption: *, R18: boolean}}
+   * @returns {Promise.<{url: (string|*), id: string, title: (*|string|XML|void), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: Array, caption: (*|string|XML|void), R18: boolean}>}
    */
-  AnkTwitter.prototype.getIllustContext = function (elm) {
+  AnkTwitter.prototype.getIllustContext = async function (elm) {
     try {
       let dd = new Date(parseInt(elm.info.illust.datetime.getAttribute('data-time-ms'),10));
       let posted = this.getPosted(() => AnkUtils.getDateData(dd));
@@ -163,9 +163,9 @@
   /**
    * ダウンロード情報（メンバー情報）の取得
    * @param elm
-   * @returns {{id: *, pixiv_id: *, name, memoized_name: null}}
+   * @returns {Promise.<{id: string, name: string, pixiv_id: string, memoized_name: null}>}
    */
-  AnkTwitter.prototype.getMemberContext = function(elm) {
+  AnkTwitter.prototype.getMemberContext = async function(elm) {
     try {
       return {
         'id': elm.doc.getAttribute('data-user-id'),

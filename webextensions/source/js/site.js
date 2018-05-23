@@ -570,9 +570,9 @@
       return;
     }
 
-    this.displayDownloaded({'inProgress': true});
-
     (async () => {
+
+      await this.displayDownloaded({'inProgress': true});
 
       opts = opts || {};
 
@@ -581,7 +581,7 @@
         // コンテキストが集まらない（ダウンロード可能な状態になっていない）
         let msg = chrome.i18n.getMessage('msg_notReady');
         logger.warn(new Error(msg));
-        this.displayDownloaded({'force': true});
+        await this.displayDownloaded({'force': true});
         return;
       }
 
@@ -590,7 +590,7 @@
         let msg = chrome.i18n.getMessage('msg_cannotFindImages');
         logger.error(new Error(msg));
         alert(msg);
-        this.displayDownloaded({'force': true});
+        await this.displayDownloaded({'force': true});
         return;
       }
 
@@ -702,7 +702,7 @@
    * @param opts
    * @returns {boolean}
    */
-  AnkSite.prototype.displayDownloaded = function (opts) {
+  AnkSite.prototype.displayDownloaded = async function (opts) {
     if (!this.prefs.site.displayDownloaded) {
       return true;
     }
@@ -727,7 +727,7 @@
       return true;
     }
 
-    let illustContext = this.getIllustContext(elm);
+    let illustContext = await this.getIllustContext(elm);
     if (!illustContext) {
       return false;
     }
@@ -1045,13 +1045,13 @@
    * ダウンロード情報（イラスト情報）の取得
    * @param elm
    */
-  AnkSite.prototype.getIllustContext = function (elm) {};
+  AnkSite.prototype.getIllustContext = async function (elm) {};
 
   /**
    * ダウンロード情報（メンバー情報）の取得
    * @param elm
    */
-  AnkSite.prototype.getMemberContext = function (elm) {};
+  AnkSite.prototype.getMemberContext = async function (elm) {};
 
   /**
    * いいね！する
