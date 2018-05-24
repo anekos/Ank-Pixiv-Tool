@@ -106,6 +106,8 @@
 
     logger.info('RESET CONTEXT INFO:', this.SITE_ID, document.location.href);
 
+    AnkViewer.reset();
+
     this.elements = this.getElements(document);
     this.contextCache = null;
   };

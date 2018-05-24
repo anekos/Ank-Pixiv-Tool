@@ -19,11 +19,11 @@
     scrollCtrl = new ScrollCtrl();
     buttonCtrl = new ButtonCtrl();
     resizeCtrl = new ResizeCtrl();
-    //pageCache = new PageCache();
 
     return {
       'open': openViewer,
       'close': closeViewer,
+      'reset': resetViewer,
       'fit': fitViewer,
       'setPage': setPage
     };
@@ -339,7 +339,7 @@
 
   /**
    * 全ページの画像データの入れ物を用意する
-   * @returns {{init: (function(*)), prefetch: (function(*=)), get: (function(*)), getNewPageIdx: (function(*, *)), totalPages, facing}}
+   * @returns {{init: (function(*)), terminate: (function()), prefetch: (function(*=)), get: (function(*)), getNewPageIdx: (function(*, *)), totalPages, facing}}
    * @constructor
    */
   let PageCache = function () {
@@ -351,9 +351,10 @@
     let cache = [];
 
     let busy = false;
+    let terminated = false;
 
     // 画像を読み込む
-    let load = async (pgc) => {
+    let _load = async (pgc) => {
       for (let i=0; i<pgc.length; i++) {
         let img = pgc[i];
         if (!img.objurl && /^https?:\/\//.test(img.src)) {
@@ -373,11 +374,15 @@
               }
             });
         }
+
+        if (terminated) { // 中断
+          break;
+        }
       }
     };
 
     // 読み込んだ画像データを破棄する
-    let revoke = (pgc) => {
+    let _revoke = (pgc) => {
       pgc.forEach((img) => {
         img.busy = true;
         if (img.objurl) {
@@ -394,6 +399,9 @@
 
     // キャッシュする
     let prefetch = (pageIdx) => {
+      if (terminated) {
+        return;
+      }
       if (busy) {
         // TODO キャッシュ範囲外へページジャンプした場合は実行中のloadをキャンセルしてやりなおしたい
         logger.debug('prefetch busy', pageIdx);
@@ -423,13 +431,17 @@
         wkCache.push(pgc);
       }
 
-      cache.forEach((e) => revoke(e));
+      cache.forEach((e) => _revoke(e));
       cache = wkCache;
       cache.push(cache.shift()); // 前ページは最後に回す
 
       return (async () => {
         for (let i=0; i < cache.length; i++) {
-          await load(cache[i]);
+          await _load(cache[i]);
+
+          if (terminated) { // 中断
+            break;
+          }
         }
 
         busy = false;
@@ -493,10 +505,28 @@
       facing = totalPages != imagePath.length;
     };
 
+    // 終了する
+    let terminate = () => {
+
+      terminated = true;
+
+      (async () => {
+        for (let i=0; i<30 && busy; i++) {
+          await AnkUtils.sleep(500);
+        }
+
+        cache.forEach((e) => _revoke(e));
+        cache = null;
+
+        logger.debug('viewer page cache terminated.');
+      })();
+    };
+
     //
 
     return {
       'init': init,
+      'terminate': terminate,
       'prefetch': prefetch,
       'get': get,
       'getNewPageIdx': getNewPageIdx,
@@ -743,11 +773,13 @@
     }
 
     // 画像読み込みキャッシュの初期化
-    pageCache = new PageCache();
-    pageCache.init(path);
+    if (!pageCache) {
+      pageCache = new PageCache();
+      pageCache.init(path);
 
-    setFacingMode(pageCache.facing);
-    setPageSelectorOptions(pageCache.totalPages);
+      setFacingMode(pageCache.facing);
+      setPageSelectorOptions(pageCache.totalPages);
+    }
 
     viewer.imgPanel.classList.add('hide'); // 見栄えが悪いので最初のロード中は隠す
 
@@ -777,6 +809,18 @@
     resizeCtrl.setWindowResizeListener(false);
 
     scrollCtrl.resume();
+  };
+
+  /**
+   * リセットする
+   */
+  let resetViewer = () => {
+    closeViewer();
+    if (pageCache) {
+      pageCache.terminate();
+      pageCache = null;
+      curPageIdx = 0;
+    }
   };
 
   /**

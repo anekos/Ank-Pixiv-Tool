@@ -437,21 +437,18 @@
     try {
       let memberId = /\/member\.php\?id=(.+?)(?:&|$)/.exec(elm.info.member.memberLink.href)[1];
 
-      let pixivId = await (async (id) => {
-        if (!id) {
+      let pixivId = await (async (feedLink) => {
+        if (!feedLink) {
           let memDoc = await remote.get({
             'url': 'https://www.pixiv.net/member.php?id='+memberId,
             //headers: [{name:'Referer', value:indexPage}],
             'responseType': 'document',
             'timeout': this.prefs.xhrTimeout
           });
-          let feedLink = memDoc.document.querySelector('#wrapper a[href*="/stacc/"]');
-          if (feedLink) {
-            id = /\/stacc\/([^?\/]+)/.exec(feedLink.href)[1];
-          }
+          feedLink = memDoc.document.querySelector('#wrapper a[href*="/stacc/"]');
         }
-        return id;
-      })(elm.info.member.feedLink && /\/stacc\/([^?\/]+)/.exec(elm.info.member.feedLink.href)[1]);
+        return /\/stacc\/([^?\/]+)/.exec(feedLink.href)[1];
+      })(elm.info.member.feedLink);
 
       return {
         'id': memberId,
