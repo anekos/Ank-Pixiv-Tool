@@ -133,9 +133,9 @@
   /**
    * ダウンロード情報（イラスト情報）の取得
    * @param elm
-   * @returns {{url: string, id, title, posted: (boolean|Number|*), postedYMD: (boolean|*), size: {width, height}, tags: *, tools: *, caption: *, R18: boolean}}
+   * @returns {Promise.<{url: string, id: *, title: (*|string|XML|void), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: *, caption: string, R18: boolean}>}
    */
-  AnkTinami.prototype.getIllustContext = function (elm) {
+  AnkTinami.prototype.getIllustContext = async function (elm) {
     try {
       let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(elm.info.illust.datetime.textContent));
 
@@ -161,9 +161,9 @@
   /**
    * ダウンロード情報（メンバー情報）の取得
    * @param elm
-   * @returns {{id: *, pixiv_id: *, name, memoized_name: null}}
+   * @returns {Promise.<{id: *, name: (*|string|XML|void), pixiv_id: null, memoized_name: null}>}
    */
-  AnkTinami.prototype.getMemberContext = function(elm) {
+  AnkTinami.prototype.getMemberContext = async function(elm) {
     try {
       return {
         'id': /\/profile\/(.+)(?:\?|$)/.exec(elm.info.member.memberLink.href)[1],
