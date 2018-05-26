@@ -82,8 +82,8 @@
         "rankingList": {"s": ".ranking-items"},
         "discovery": {"s": "#js-mount-point-discovery"},
         "downloadedFilenameArea": {"s": ".ank-pixiv-downloaded-filename-text"},
-        "nextLink": {"s": ".before > a"},
-        "prevLink": {"s": ".after > a'"}
+        "nextLink": {"s": ".before > a, ._3FJ1FEb.Dn9Rstg"},
+        "prevLink": {"s": ".after > a, ._3FJ1FEb.WTz_C1E"}
       }
     };
 
@@ -341,14 +341,123 @@
       return AnkUtils.executeSiteScript(id, name, script);
     };
 
+    let getMangaPath = async () => {
+      try {
+        let loc = elm.doc.location.href;
+        let illustId = this.getIllustId(loc);
+
+        let illust_resp = await remote.get({
+          'url': 'https://www.pixiv.net/ajax/illust/'+illustId,
+          'responseType': 'json',
+          'timeout': this.prefs.xhrTimeout
+        });
+
+        let pages_resp = await remote.get({
+          'url': 'https://www.pixiv.net/ajax/illust/'+illustId+'/pages',
+          'responseType': 'json',
+          'timeout': this.prefs.xhrTimeout
+        });
+
+        let illust_json = illust_resp.json.body;
+        let pages_json = pages_resp.json.body;
+
+        let thumbnail = pages_json.map((e) => { return {'src': e.urls.regular, 'referrer': loc}});
+        let original = pages_json.map((e) => { return {'src': e.urls.original, 'referrer': loc}});
+
+        if (illust_json.illustType != 1) {
+          let sp_book_style = illust_json.contestBanners && parseInt(illust_json.contestBanners.illust_book_style, 10);
+          if (sp_book_style == 1 || sp_book_style == 2) {
+            // 特殊な値を返してくるタイプのブックスタイルマンガ (ex. 46271807 ～ 事務局の作品でしか見かけないが？)
+            illust_json.illustType = 1;
+            illust_json.restrict = sp_book_style == 1 && 2 || 1;
+          }
+          else if (illust_json.pageCount <= 1) {
+            // マンガじゃないかも
+            logger.error('not manga: illustType =', illust_json.illustType);
+            return Promise.reject();
+          }
+        }
+
+        if (!illust_json.restrict) {
+          // イラストマンガ
+          return {
+            'original': original.length == 1 ? original[0] : original,
+            'thumbnail': thumbnail.length == 1 ? thumbnail[0] : thumbnail
+          };
+        }
+        else {
+          // ブックスタイルマンガ - ブックスタイルマンガは作品数が少ないので考慮漏れがあるかもしれない
+
+          let swapLR = (a, i) => {
+            let tmp = a[i-1];
+            a[i-1] = a[i];
+            a[i] = tmp;
+          };
+
+          // 見開き方向の判定
+          let left2right = illust_json.restrict == 1;
+
+          // 見開きを考慮したページ数のカウントと画像の並べ替え
+          for (let i=0; i<thumbnail.length; i++) {
+            let p = i + 1;
+            let odd = p % 2;
+            thumbnail[i].facingNo = original[i].facingNo = (p - odd) / 2 + 1;
+
+            // 見開きの向きに合わせて画像の順番を入れ替える
+            if (i > 0 && (left2right && odd)) {
+              swapLR(thumbnail, i);
+              swapLR(original, i);
+            }
+          }
+
+          return {
+            'original': original,
+            'thumbnail': thumbnail
+          };
+        }
+      }
+      catch (e) {
+        logger.error(e);
+      }
+    };
+
+    let getUgoiraPath = async () => {
+      try {
+        let f = (s, u, r) => {
+          return [{
+            'src': s,
+            'frames': u.map((o) => {return {'f':o.file, 'd':o.delay}}),
+            'referrer': r
+          }];
+        };
+
+        let loc = elm.doc.location.href;
+        let illustId = this.getIllustId(loc);
+
+        let resp = await remote.get({
+          'url': 'https://www.pixiv.net/ajax/illust/'+illustId+'/ugoira_meta',
+          'responseType': 'json',
+          'timeout': this.prefs.xhrTimeout
+        });
+
+        return {
+          'thumbnail': f(resp.json.body.src, resp.json.body.frames, loc),
+          'original': f(resp.json.body.originalSrc, resp.json.body.frames, loc)
+        };
+      }
+      catch (e) {
+        logger.error(e);
+      }
+    };
+
     //
 
     // 新デザイン
     if (elm.illust.mng.pages) {
-      return getMngPath();
+      return getMangaPath();
     }
     if (elm.illust.ugo.pause) {
-      return getUgoPath();
+      return getUgoiraPath();
     }
 
     // 旧デザイン
@@ -436,6 +545,21 @@
   AnkPixiv.prototype.getMemberContext = async function(elm) {
     try {
       let memberId = /\/member\.php\?id=(.+?)(?:&|$)/.exec(elm.info.member.memberLink.href)[1];
+
+      /* - body.background が存在しないユーザが居るので保留 -
+      let resp = await remote.get({
+        'url': 'https://www.pixiv.net/ajax/user/'+memberId,
+        'responseType': 'json',
+        'timeout': this.prefs.xhrTimeout
+      });
+
+      return {
+        'id': memberId,
+        'pixiv_id': resp.json.body.background.extra.user_account,
+        'name': resp.json.body.name,
+        'memoized_name': null
+      };
+      */
 
       let pixivId = await (async (feedLink) => {
         if (!feedLink) {
