@@ -371,6 +371,8 @@
     let chooser = document.querySelector('#exportHistory');
     let label = document.querySelector('#exportHistoryLabel');
 
+    chooser.onclick = () => void(0);
+
     let busy = false;
 
     button.addEventListener('click', () => {

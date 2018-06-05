@@ -110,6 +110,12 @@
 
     this.elements = this.getElements(document);
     this.contextCache = null;
+
+    this.executed = {
+      'displayDownloaded': false,
+      'markDownloaded': false
+    };
+    this.marked = 0;
   };
 
   /**
@@ -796,7 +802,8 @@
           if (!boxes[illust_id].find((b) => b.box === box)) {
             boxes[illust_id].push({
               'box': box,
-              'datetime': opts.getLastUpdate && opts.getLastUpdate(box)
+              'datetime': opts.getLastUpdate && opts.getLastUpdate(box),
+              'method': t.m || opts.method
             });
           }
         });
@@ -829,10 +836,10 @@
               if (cls && !e.box.classList.contains(cls)) {
                 e.box.classList.remove('ank-pixiv-downloading', 'ank-pixiv-updated', 'ank-pixiv-downloaded');
                 e.box.classList.add(cls);
-                if (opts.method === 'overlay') {
+                if (e.method === 'overlay') {
                   e.box.classList.add('ank-pixiv-mark-overlay');
                 }
-                else if (opts.method === 'border') {
+                else if (e.method === 'border') {
                   e.box.classList.add('ank-pixiv-mark-border');
                 }
                 else {
@@ -874,7 +881,7 @@
 
     this.requestGetSiteChanged()
       .then((siteChanged) => {
-        if (!siteSpecs.node) {
+        if (!opts.node) {
           // ページ単位のチェック（＝node決め打ちでないチェック）の場合は前回チェック時刻と比較を行い、前回以降にサイトの更新が発生していなければ再度のチェックはしない
           if (this.marked > siteChanged) {
             logger.debug('skip mark downloaded');

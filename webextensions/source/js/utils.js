@@ -22,7 +22,7 @@
    */
   let trackbackParentNode = (node, n, targetClass) => {
     if (n < 0) {
-      return node.firstChild;
+      return targetClass && node.getElementsByClassName(targetClass)[0] || node.firstChild;
     }
 
     for (let i=0; i<n && node; i++, node = node.parentNode) {

@@ -60,6 +60,7 @@
           "datetime": {"s": ".work-info .meta > li, ._3VLfD7p"},
           "size": {"s": ".work-info .meta > li+li"},
           "tools": {"s": ".work-info .tools"},
+          "seriesTitle": {"s": "._1XvRWok"},
           "title": {"s": ".work-info .title, .TTmQ_bQ"},
           "R18": {"s": '.work-info .r-18, .work-info .r-18g, ._2wuGX9T > a[href*="R-18"]'},
           "caption": {"s": ".work-info .caption, ._2awgH_j .EG8MDwA p"},
@@ -81,6 +82,8 @@
         "feedList": {"s": ["#stacc_timeline", "#stacc_center_timeline"]},
         "rankingList": {"s": ".ranking-items"},
         "discovery": {"s": "#js-mount-point-discovery"},
+        "allContents": {"s": '.bJ-RXgp div[role="rowgroup"]'},
+        "recommendContents": {"s": "._3NOStiW > aside:last-child"},
         "downloadedFilenameArea": {"s": ".ank-pixiv-downloaded-filename-text"},
         "nextLink": {"s": ".before > a, ._3FJ1FEb.Dn9Rstg"},
         "prevLink": {"s": ".after > a, ._3FJ1FEb.WTz_C1E"}
@@ -530,6 +533,14 @@
         }
       })(elm.info.illust.update);
 
+      ((e) => {
+        let m = e && /\/(\d+)$/.exec(e.href);
+        if (m) {
+          info.seriesId = m[1];
+          info.seriesTitle = AnkUtils.trim(elm.info.illust.seriesTitle.textContent);
+        }
+      })(elm.info.illust.seriesTitle);
+
       return info;
     }
     catch (e) {
@@ -614,22 +625,25 @@
    * @returns {*}
    */
   AnkPixiv.prototype.markDownloaded = function (opts, siteSpecs) {
-
     const MARKING_TARGETS = [
-      { 'q':'.image-item > .work', 'n':1 },               // 作品一覧、ブックマーク
-      { 'q':'.rank-detail a._work', 'n':2 },              // ホーム（ランキング）
-      { 'q':'.ranking-item a._work', 'n':2 },             // ランキング
-      { 'q':'.worksListOthersImg > ul > li > a', 'n':1 }, // プロファイル（ブックマーク、イメージレスポンス）
-      { 'q':'.worksImageresponseImg > a', 'n':2 },        // イラストページ（イメージレスポンス）
-      { 'q':'li > a.response-in-work', 'n':1 },           // イラストページ（イメージレスポンス）
-      { 'q':'.search_a2_result > ul > li > a', 'n':1 },   // イメージレスポンス
-      { 'q':'.stacc_ref_illust_img > a', 'n':3 },         // フィード（お気に入りに追加したイラスト）
-      { 'q':'.stacc_ref_user_illust_img > a', 'n':1 },    // フィード（お気に入りに追加したユーザ内のイラスト）
-      { 'q':'.hotimage > a.work', 'n':1 },                // タグページ（週間ベスト）
-      { 'q':'.image-item > a:nth-child(1)', 'n':1 },      // タグページ（全期間＆新着）
-      { 'q':'figure > div > a', 'n':2 },                 // ディスカバリー、タグページ
-      { 'q':'.sibling-items > .after > a', 'n':1 },       // 前の作品
-      { 'q':'.sibling-items > .before > a', 'n':1 }       // 次の作品
+      {'q': '.image-item > .work', 'n': 1},               // 作品一覧、ブックマーク
+      {'q': '.rank-detail a._work', 'n': 2},              // ホーム（ランキング）
+      {'q': '.ranking-item a._work', 'n': 2},             // ランキング
+      {'q': '.worksListOthersImg > ul > li > a', 'n': 1}, // プロファイル（ブックマーク、イメージレスポンス）
+      {'q': '.worksImageresponseImg > a', 'n': 2},        // イラストページ（イメージレスポンス）
+      {'q': 'li > a.response-in-work', 'n': 1},           // イラストページ（イメージレスポンス）
+      {'q': '.search_a2_result > ul > li > a', 'n': 1},   // イメージレスポンス
+      {'q': '.stacc_ref_illust_img > a', 'n': 3},         // フィード（お気に入りに追加したイラスト）
+      {'q': '.stacc_ref_user_illust_img > a', 'n': 1},    // フィード（お気に入りに追加したユーザ内のイラスト）
+      {'q': '.hotimage > a.work', 'n': 1},                // タグページ（週間ベスト）
+      {'q': '.image-item > a:nth-child(1)', 'n': 1},      // タグページ（全期間＆新着）
+      {'q': 'figure > div > a', 'n': 2},                  // ディスカバリー、タグページ
+      {'q': '.sibling-items > .after > a', 'n': 1},       // 前の作品
+      {'q': '.sibling-items > .before > a', 'n': 1},      // 次の作品
+      // 以下新UI対応
+      {'q': '.aw29wyY .kbZjQ32', 'n': -1, 'c': 'P1uthkK', 'm': 'border'},     // 関連作品
+      {'q': '.bJ-RXgp ._3FJ1FEb', 'n': -1, 'c': '_2r6o3jI', 'm': 'border'},   // サムネイルリスト
+      {'q': '.cTjUwDK ._3FJ1FEb', 'n': -1, 'c': '_2r6o3jI', 'm': 'border'}    // 前の作品、次の作品
     ];
 
     return AnkSite.prototype.markDownloaded.call(this, opts, {
@@ -639,7 +653,8 @@
       },
       'getLastUpdate': (e) => {
         let g = e.querySelector('img');
-        return g && this.getLastUpdate(g.src);
+        let s = g && g.src || e.getAttribute('style');
+        return s && this.getLastUpdate(s);
       },
       'method': undefined
     });
@@ -815,6 +830,43 @@
       return true;
     };
 
+    // 作品リストが自動伸長したらダウンロード済みマークを追加する
+    let followExpansion = () => {
+      let observe = (elm) => {
+        new MutationObserver((o) => {
+          o.forEach((e) => Array.prototype.forEach.call(e.addedNodes, (n) => this.markDownloaded({'node': n, 'force':true})));
+        }).observe(elm, {'childList': true});
+
+        return true;
+      };
+
+      let alist = this.elements.misc.allContents;
+      if (alist) {
+        return observe(alist);
+      }
+    };
+
+    // ページが自動伸長したらダウンロード済みマークを追加する
+    let recommendExpansion = () => {
+      let observe = (elm) => {
+        new MutationObserver((o) => {
+          o.forEach((e) => Array.prototype.forEach.call(e.addedNodes, (n) => {
+            if (n.classList.contains('_2UWAFbb')) {
+              this.markDownloaded({'node': n, 'force':true});
+            }
+          }));
+        }).observe(elm, {'childList': true, 'subtree': true});
+
+        return true;
+      };
+
+      let alist = this.elements.misc.recommendContents;
+      if (alist) {
+        return observe(alist);
+      }
+
+    };
+
     //
 
     Promise.all([
@@ -823,7 +875,9 @@
       AnkUtils.delayFunctionInstaller({'func': delayMarking, 'retry': RETRY_VALUE, 'label': 'delayMarking'}),
       AnkUtils.delayFunctionInstaller({'func': openCaption, 'retry': RETRY_VALUE, 'label': 'openCaption'}),
       AnkUtils.delayFunctionInstaller({'func': niceEventFunc, 'retry': RETRY_VALUE, 'label': 'niceEventFunc'}),
-      AnkUtils.delayFunctionInstaller({'func': detectContentChange, 'retry': RETRY_VALUE, 'label': 'detectContentChange'})
+      AnkUtils.delayFunctionInstaller({'func': detectContentChange, 'retry': RETRY_VALUE, 'label': 'detectContentChange'}),
+      AnkUtils.delayFunctionInstaller({'func': followExpansion, 'retry': RETRY_VALUE, 'label': 'followExpansion'}),
+      AnkUtils.delayFunctionInstaller({'func': recommendExpansion, 'retry': RETRY_VALUE, 'label': 'recommendExpansion'})
     ])
       .catch((e) => logger.warn(e));
   };
