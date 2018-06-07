@@ -82,11 +82,11 @@
         "feedList": {"s": ["#stacc_timeline", "#stacc_center_timeline"]},
         "rankingList": {"s": ".ranking-items"},
         "discovery": {"s": "#js-mount-point-discovery"},
-        "allContents": {"s": '.bJ-RXgp div[role="rowgroup"]'},
+        "allContents": {"s": '._3kixzeH div[role="rowgroup"]'}, // 'thumbnailAll': '_3kixzeH'
         "recommendContents": {"s": "._3NOStiW > aside:last-child"},
         "downloadedFilenameArea": {"s": ".ank-pixiv-downloaded-filename-text"},
-        "nextLink": {"s": ".before > a, ._3FJ1FEb.Dn9Rstg"},
-        "prevLink": {"s": ".after > a, ._3FJ1FEb.WTz_C1E"}
+        "nextLink": {"s": ".before > a, ._382QOVK._s3YizR"}, // 'link': '_382QOVK', 'next': '_s3YizR'
+        "prevLink": {"s": ".after > a, ._382QOVK._22qFJA0"}   // 'link': '_382QOVK', 'prev': '_22qFJA0'
       }
     };
 
@@ -642,8 +642,8 @@
       {'q': '.sibling-items > .before > a', 'n': 1},      // 次の作品
       // 以下新UI対応
       {'q': '.aw29wyY .kbZjQ32', 'n': -1, 'c': 'P1uthkK', 'm': 'border'},     // 関連作品
-      {'q': '.bJ-RXgp ._3FJ1FEb', 'n': -1, 'c': '_2r6o3jI', 'm': 'border'},   // サムネイルリスト
-      {'q': '.cTjUwDK ._3FJ1FEb', 'n': -1, 'c': '_2r6o3jI', 'm': 'border'}    // 前の作品、次の作品
+      {'q': '._3kixzeH ._382QOVK', 'n': -1, 'c': '_30HYOf4', 'm': 'border'},   // サムネイルリスト
+      {'q': '._2qiYXlt ._382QOVK', 'n': -1, 'c': '_30HYOf4', 'm': 'border'}    // 前の作品、次の作品
     ];
 
     return AnkSite.prototype.markDownloaded.call(this, opts, {
@@ -831,7 +831,7 @@
     };
 
     // 作品リストが自動伸長したらダウンロード済みマークを追加する
-    let followExpansion = () => {
+    let thumbnailListExpansion = () => {
       let observe = (elm) => {
         new MutationObserver((o) => {
           o.forEach((e) => Array.prototype.forEach.call(e.addedNodes, (n) => this.markDownloaded({'node': n, 'force':true})));
@@ -876,7 +876,7 @@
       AnkUtils.delayFunctionInstaller({'func': openCaption, 'retry': RETRY_VALUE, 'label': 'openCaption'}),
       AnkUtils.delayFunctionInstaller({'func': niceEventFunc, 'retry': RETRY_VALUE, 'label': 'niceEventFunc'}),
       AnkUtils.delayFunctionInstaller({'func': detectContentChange, 'retry': RETRY_VALUE, 'label': 'detectContentChange'}),
-      AnkUtils.delayFunctionInstaller({'func': followExpansion, 'retry': RETRY_VALUE, 'label': 'followExpansion'}),
+      AnkUtils.delayFunctionInstaller({'func': thumbnailListExpansion, 'retry': RETRY_VALUE, 'label': 'thumbnailListExpansion'}),
       AnkUtils.delayFunctionInstaller({'func': recommendExpansion, 'retry': RETRY_VALUE, 'label': 'recommendExpansion'})
     ])
       .catch((e) => logger.warn(e));

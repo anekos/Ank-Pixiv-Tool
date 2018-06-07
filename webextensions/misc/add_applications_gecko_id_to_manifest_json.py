@@ -30,7 +30,7 @@ def main():
   json_man['applications'] = {
     "gecko": {
       "id": "ankpixiv@snca.net",
-      "strict_min_version": "55.0"
+      "strict_min_version": "56.0"
     }
   }
 
