@@ -1,38 +1,23 @@
 "use strict";
 
-{
-
+class AnkDeviantart extends AnkSite {
   /**
-   *
-   * @constructor
+   * コンストラクタ
    */
-  let AnkDeviantart = function () {
-
-    AnkSite.apply(this, arguments);
+  constructor () {
+    super();
 
     this.SITE_ID = 'dART';
 
     this.USE_CONTEXT_CACHE = false;
-
-  };
-
-  /**
-   *
-   * @type {AnkSite}
-   */
-  AnkDeviantart.prototype = Object.create(AnkSite.prototype, {
-    constructor: {
-      'value': AnkDeviantart,
-      'enumerable': false
-    }
-  });
+  }
 
   /**
    * 利用するクエリのまとめ
    * - Override Selector は使えません
    * @param doc
    */
-  AnkDeviantart.prototype.getElements = function (doc) {
+  getElements (doc) {
 
     let miniBrowse = null;
 
@@ -101,24 +86,24 @@
       },
       'doc': doc
     };
-  };
+  }
 
   /**
    *
    * @param doc
    * @returns {boolean}
    */
-  AnkDeviantart.prototype.inIllustPage = function (doc) {
+  inIllustPage (doc) {
     doc = doc || document;
     return !!this.getIllustId(doc.location.href);
-  };
+  }
 
   /**
    * ダウンロード情報（画像パス）の取得
    * @param elm
    * @returns {Promise}
    */
-  AnkDeviantart.prototype.getPathContext = async function (elm) {
+  async getPathContext (elm) {
     let getMedPath = async () => {
       return {
         'thumbnail': [{'src': elm.illust.med.img.src}],
@@ -129,14 +114,14 @@
     if (elm.illust.med.img) {
       return getMedPath();
     }
-  };
+  }
 
   /**
    * ダウンロード情報（イラスト情報）の取得
    * @param elm
    * @returns {Promise.<{url: (string|*), id: *, title: (*|string|XML|void), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: *, caption: (*|SELECTOR_ITEMS.info.illust.caption|{s}|*|string|XML|void), R18: boolean}>}
    */
-  AnkDeviantart.prototype.getIllustContext = async function (elm) {
+  async getIllustContext (elm) {
     try {
       let dd = new Date(parseInt(elm.info.illust.datetime.getAttribute('ts'),10) * 1000);
       let posted = this.getPosted(() => AnkUtils.getDateData(dd));
@@ -157,14 +142,14 @@
     catch (e) {
       logger.error(e);
     }
-  };
+  }
 
   /**
    * ダウンロード情報（メンバー情報）の取得
    * @param elm
    * @returns {Promise.<{id: *, name: (*|string|XML|void), pixiv_id: null, memoized_name: null}>}
    */
-  AnkDeviantart.prototype.getMemberContext = async function(elm) {
+  async getMemberContext(elm) {
     try {
       return {
         'id': /^https?:\/\/([^/]+?)\.deviantart\.com\//.exec(elm.info.member.memberLink.href)[1],
@@ -176,16 +161,16 @@
     catch (e) {
       logger.error(e);
     }
-  };
+  }
 
   /**
    * イラストIDの取得
    * @param loc
    * @returns {*}
    */
-  AnkDeviantart.prototype.getIllustId = function (loc) {
+  getIllustId (loc) {
     return (/^https?:\/\/[^/]+?\.deviantart\.com\/art\/(.+?)(?:\?|$)/.exec(loc) || [])[1];
-  };
+  }
 
   /**
    * サムネイルにダウンロード済みマークを付ける
@@ -193,7 +178,7 @@
    * @param siteSpecs
    * @returns {*}
    */
-  AnkDeviantart.prototype.markDownloaded = function (opts, siteSpecs) {
+  markDownloaded (opts, siteSpecs) {
 
     const MARKING_TARGETS = [
       /*
@@ -208,21 +193,22 @@
       { 'q': '.thumb > a', 'n': 1 }
     ];
 
-    return AnkSite.prototype.markDownloaded.call(this, opts, {
-      'node': this.elements.misc.miniBrowse,
-      'queries': MARKING_TARGETS,
-      'getId': (href) => {
-        return this.getIllustId(href);
-      },
-      'getLastUpdate': undefined,
-      'method': 'border'
-    });
-  };
+    return super.markDownloaded(opts,
+      {
+        'node': this.elements.misc.miniBrowse,
+        'queries': MARKING_TARGETS,
+        'getId': (href) => {
+          return this.getIllustId(href);
+        },
+        'getLastUpdate': undefined,
+        'method': 'border'
+      });
+  }
 
   /**
    * 機能のインストール
    */
-  AnkDeviantart.prototype.installFunctions = function () {
+  installFunctions () {
 
     // 「保存済み」を表示する
     let delayDisplaying = () => {
@@ -305,13 +291,13 @@
       AnkUtils.delayFunctionInstaller({'func': detectContentChange, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'detectContentChange'})
     ])
       .catch((e) => logger.warn(e));
-  };
-
-  // 開始
-
-  new AnkDeviantart().start()
-    .catch((e) => {
-      console.error(e);
-    });
+  }
 
 }
+
+// 開始
+
+new AnkDeviantart().start()
+  .catch((e) => {
+    console.error(e);
+  });

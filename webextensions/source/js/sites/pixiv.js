@@ -1,35 +1,20 @@
 "use strict";
 
-{
-
+class AnkPixiv extends AnkSite {
   /**
-   *
-   * @constructor
+   * コンストラクタ
    */
-  let AnkPixiv = function () {
-
-    AnkSite.apply(this, arguments);
+  constructor() {
+    super();
 
     this.SITE_ID = 'PXV';
-
-  };
-
-  /**
-   *
-   * @type {AnkSite}
-   */
-  AnkPixiv.prototype = Object.create(AnkSite.prototype, {
-    constructor: {
-      'value': AnkPixiv,
-      'enumerable': false
-    }
-  });
+  }
 
   /**
    * 利用するクエリのまとめ
    * @param doc
    */
-  AnkPixiv.prototype.getElements = function (doc) {
+  getElements (doc) {
 
     const SELECTOR_ITEMS = {
       "illust": {
@@ -93,24 +78,24 @@
     let gElms = this.initSelectors({'doc': doc}, SELECTOR_ITEMS, doc);
 
     return gElms;
-  };
+  }
 
   /**
    *
    * @param doc
    * @returns {boolean}
    */
-  AnkPixiv.prototype.inIllustPage = function (doc) {
+  inIllustPage (doc) {
     doc = doc || document;
     return !!this.getIllustId(doc.location.href);
-  };
+  }
 
   /**
    * ダウンロード情報（画像パス）の取得
    * @param elm
    * @returns {Promise}
    */
-  AnkPixiv.prototype.getPathContext = async function (elm) {
+  async getPathContext (elm) {
     let getMedPath = async () => {
       return {
         'thumbnail': [{'src': elm.illust.med.img.src, 'referrer': elm.doc.location.href}],
@@ -473,14 +458,14 @@
     if (elm.illust.ugo.img) {
       return getUgoPath();
     }
-  };
+  }
 
   /**
    * ダウンロード情報（イラスト情報）の取得
    * @param elm
    * @returns {Promise.<{url: string, id: *, title: (SELECTOR_ITEMS.info.illust.title|{s}|*|*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), size: {width, height}, tags: *, tools: (SELECTOR_ITEMS.info.illust.tools|{s}|*|string|XML|void|string), caption: (SELECTOR_ITEMS.info.illust.caption|{s}|*|*|string|XML|void|string), R18: boolean}>}
    */
-  AnkPixiv.prototype.getIllustContext = async function (elm) {
+  async getIllustContext (elm) {
     try {
       let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(elm.info.illust.datetime.textContent));
 
@@ -546,14 +531,14 @@
     catch (e) {
       logger.error(e);
     }
-  };
+  }
 
   /**
    * ダウンロード情報（メンバー情報）の取得
    * @param elm
    * @returns {Promise.<{id: *, pixiv_id: (SELECTOR_ITEMS.info.member.feedLink|{s}|*|string), name: (*|string|XML|void), memoized_name: null}>}
    */
-  AnkPixiv.prototype.getMemberContext = async function(elm) {
+  async getMemberContext(elm) {
     try {
       let memberId = /\/member\.php\?id=(.+?)(?:&|$)/.exec(elm.info.member.memberLink.href)[1];
 
@@ -595,28 +580,28 @@
     catch (e) {
       logger.error(e);
     }
-  };
+  }
 
   /**
    * イラストIDの取得
    * @param loc
    * @returns {*}
    */
-  AnkPixiv.prototype.getIllustId = function (loc) {
+  getIllustId (loc) {
     if (/\/member_illust\.php\?/.test(loc) && /(?:&|\?)mode=medium(?:&|$)/.test(loc)) {
       return (/(?:&|\?)illust_id=(\d+)(?:&|$)/.exec(loc) || [])[1];
     }
-  };
+  }
 
   /**
    * 最終更新日時の取得
    * @param loc
    * @returns {Array|{index: number, input: string}|number}
    */
-  AnkPixiv.prototype.getLastUpdate = function (loc) {
+  getLastUpdate (loc) {
     let m = /\/(20\d\d\/\d\d\/\d\d)\/(\d\d\/\d\d)\/\d\d\//.exec(loc);
     return m && new Date(m[1]+' '+m[2].replace(/\//g, ':')).getTime();
-  };
+  }
 
   /**
    * サムネイルにダウンロード済みマークを付ける
@@ -624,7 +609,7 @@
    * @param siteSpecs
    * @returns {*}
    */
-  AnkPixiv.prototype.markDownloaded = function (opts, siteSpecs) {
+  markDownloaded (opts, siteSpecs) {
     const MARKING_TARGETS = [
       {'q': '.image-item > .work', 'n': 1},               // 作品一覧、ブックマーク
       {'q': '.rank-detail a._work', 'n': 2},              // ホーム（ランキング）
@@ -646,36 +631,37 @@
       {'q': '._2qiYXlt ._382QOVK', 'n': -1, 'c': '_30HYOf4', 'm': 'border'}    // 前の作品、次の作品
     ];
 
-    return AnkSite.prototype.markDownloaded.call(this, opts, {
-      'queries': MARKING_TARGETS,
-      'getId': (href) => {
-        return this.getIllustId(href);
-      },
-      'getLastUpdate': (e) => {
-        let g = e.querySelector('img');
-        let s = g && g.src || e.getAttribute('style');
-        return s && this.getLastUpdate(s);
-      },
-      'method': undefined
-    });
-  };
+    return super.markDownloaded(opts,
+      {
+        'queries': MARKING_TARGETS,
+        'getId': (href) => {
+          return this.getIllustId(href);
+        },
+        'getLastUpdate': (e) => {
+          let g = e.querySelector('img');
+          let s = g && g.src || e.getAttribute('style');
+          return s && this.getLastUpdate(s);
+        },
+        'method': undefined
+      });
+  }
 
   /**
    * いいね！する
    */
-  AnkPixiv.prototype.setNice = function () {
+  setNice () {
     if (this.elements.info.illust.nice.classList.contains('rated')) {
       logger.info('already rated');
       return;
     }
 
     this.elements.info.illust.nice.click();
-  };
+  }
 
   /**
    * 機能のインストール（イラストページ用）
    */
-  AnkPixiv.prototype.installIllustPageFunction = function (RETRY_VALUE) {
+  installIllustPageFunction (RETRY_VALUE) {
     // 中画像クリック関連
     let middleClickEventFunc = () => {
       // imgOvrの方になった場合は、medImgより広い領域がクリック可能となるが、ページ側の jQuery.on('click')を無効化できないため止む無し
@@ -880,12 +866,12 @@
       AnkUtils.delayFunctionInstaller({'func': recommendExpansion, 'retry': RETRY_VALUE, 'label': 'recommendExpansion'})
     ])
       .catch((e) => logger.warn(e));
-  };
+  }
 
   /**
    * 機能のインストール（リストページ用）
    */
-  AnkPixiv.prototype.installListPageFunction = function (RETRY_VALUE) {
+  installListPageFunction (RETRY_VALUE) {
 
     // サムネイルにダウンロード済みマークを表示する
     let delayMarking = () => {
@@ -933,25 +919,25 @@
       AnkUtils.delayFunctionInstaller({'func': autoPagerize, 'retry': RETRY_VALUE, 'label': 'autoPagerize'})
     ])
       .catch((e) => logger.warn(e));
-  };
+  }
 
   /**
    * 機能のインストールのまとめ
    */
-  AnkPixiv.prototype.installFunctions = function () {
+  installFunctions () {
     if (this.inIllustPage()) {
       this.installIllustPageFunction(this.FUNC_INST_RETRY_VALUE);
       return;
     }
 
     this.installListPageFunction(this.FUNC_INST_RETRY_VALUE);
-  };
-
-  // 開始
-
-  new AnkPixiv().start()
-    .catch((e) => {
-      console.error(e);
-    });
+  }
 
 }
+
+// 開始
+
+new AnkPixiv().start()
+  .catch((e) => {
+    console.error(e);
+  });

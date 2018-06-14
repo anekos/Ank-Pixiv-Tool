@@ -1,35 +1,20 @@
 "use strict";
 
-{
-
+class AnkTinami extends AnkSite {
   /**
-   *
-   * @constructor
+   * コンストラクタ
    */
-  let AnkTinami = function () {
-
-    AnkSite.apply(this, arguments);
+  constructor () {
+    super();
 
     this.SITE_ID = 'TNM';
-
-  };
-
-  /**
-   *
-   * @type {AnkSite}
-   */
-  AnkTinami.prototype = Object.create(AnkSite.prototype, {
-    constructor: {
-      'value': AnkTinami,
-      'enumerable': false
-    }
-  });
+  }
 
   /**
    * 利用するクエリのまとめ
    * @param doc
    */
-  AnkTinami.prototype.getElements = function (doc) {
+  getElements (doc) {
 
     const SELECTOR_ITEMS = {
       "illust": {
@@ -68,24 +53,24 @@
     let gElms = this.initSelectors({'doc': doc}, SELECTOR_ITEMS, doc);
 
     return gElms;
-  };
+  }
 
   /**
    *
    * @param doc
    * @returns {boolean}
    */
-  AnkTinami.prototype.inIllustPage = function (doc) {
+  inIllustPage (doc) {
     doc = doc || document;
     return !!this.getIllustId(doc.location.href);
-  };
+  }
 
   /**
    * ダウンロード情報（画像パス）の取得
    * @param elm
    * @returns {Promise}
    */
-  AnkTinami.prototype.getPathContext = async function (elm) {
+  async getPathContext (elm) {
     let getMngPath = async () => {
       let m = Array.prototype.map.call(elm.illust.mng.imgs, (e) => {
         return {'src': e.src};
@@ -128,14 +113,14 @@
     if (elm.illust.mng.imgs) {
       return getMngPath();
     }
-  };
+  }
 
   /**
    * ダウンロード情報（イラスト情報）の取得
    * @param elm
    * @returns {Promise.<{url: string, id: *, title: (*|string|XML|void), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: *, caption: string, R18: boolean}>}
    */
-  AnkTinami.prototype.getIllustContext = async function (elm) {
+  async getIllustContext (elm) {
     try {
       let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(elm.info.illust.datetime.textContent));
 
@@ -156,14 +141,14 @@
     catch (e) {
       logger.error(e);
     }
-  };
+  }
 
   /**
    * ダウンロード情報（メンバー情報）の取得
    * @param elm
    * @returns {Promise.<{id: *, name: (*|string|XML|void), pixiv_id: null, memoized_name: null}>}
    */
-  AnkTinami.prototype.getMemberContext = async function(elm) {
+  async getMemberContext(elm) {
     try {
       return {
         'id': /\/profile\/(.+)(?:\?|$)/.exec(elm.info.member.memberLink.href)[1],
@@ -175,16 +160,16 @@
     catch (e) {
       logger.error(e);
     }
-  };
+  }
 
   /**
    * イラストIDの取得
    * @param loc
    * @returns {*}
    */
-  AnkTinami.prototype.getIllustId = function (loc) {
+  getIllustId (loc) {
     return (/www\.tinami\.com\/view\/([^/]+?)(?:\?|$)/.exec(loc) || [])[1];
-  };
+  }
 
   /**
    * サムネイルにダウンロード済みマークを付ける
@@ -192,7 +177,7 @@
    * @param siteSpecs
    * @returns {*}
    */
-  AnkTinami.prototype.markDownloaded = function (opts, siteSpecs) {
+  markDownloaded (opts, siteSpecs) {
 
     const MARKING_TARGETS = [
       { 'q':'td > p.capt + a', 'n':1},                              // 一覧
@@ -200,20 +185,21 @@
       { 'q':'.thumbs > li > ul > li > a', 'n':1}                    // 最近の投稿作品
     ];
 
-    return AnkSite.prototype.markDownloaded.call(this, opts, {
-      'queries': MARKING_TARGETS,
-      'getId': (href) => {
-        return this.getIllustId(href);
-      },
-      'getLastUpdate': undefined,
-      'method': undefined
-    });
-  };
+    return super.markDownloaded(opts,
+      {
+        'queries': MARKING_TARGETS,
+        'getId': (href) => {
+          return this.getIllustId(href);
+        },
+        'getLastUpdate': undefined,
+        'method': undefined
+      });
+  }
 
   /**
    * 機能のインストール（イラストページ用）
    */
-  AnkTinami.prototype.installIllustPageFunction = function (RETRY_VALUE) {
+  installIllustPageFunction (RETRY_VALUE) {
     // 中画像クリック関連
     let middleClickEventFunc = () => {
       let addMiddleClickEventListener = (imgOvr) => {
@@ -309,12 +295,12 @@
       AnkUtils.delayFunctionInstaller({'func': openCaption, 'retry': RETRY_VALUE, 'label': 'openCaption'})
     ])
       .catch((e) => logger.warn(e));
-  };
+  }
 
   /**
    * 機能のインストール（リストページ用）
    */
-  AnkTinami.prototype.installListPageFunction = function (RETRY_VALUE) {
+  installListPageFunction (RETRY_VALUE) {
 
     // サムネイルにダウンロード済みマークを表示する
     let delayMarking = () => {
@@ -329,25 +315,25 @@
       AnkUtils.delayFunctionInstaller({'func': delayMarking, 'retry': RETRY_VALUE, 'label': 'delayMarking'})
     ])
       .catch((e) => logger.error(e));
-  };
+  }
 
   /**
    * 機能のインストールのまとめ
    */
-  AnkTinami.prototype.installFunctions = function () {
+  installFunctions () {
     if (this.inIllustPage()) {
       this.installIllustPageFunction(this.FUNC_INST_RETRY_VALUE);
       return;
     }
 
     this.installListPageFunction(this.FUNC_INST_RETRY_VALUE);
-  };
-
-  // 開始
-
-  new AnkTinami().start()
-    .catch((e) => {
-      console.error(e);
-    });
+  }
 
 }
+
+// 開始
+
+new AnkTinami().start()
+  .catch((e) => {
+    console.error(e);
+  });

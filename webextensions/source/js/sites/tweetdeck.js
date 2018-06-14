@@ -1,38 +1,23 @@
 "use strict";
 
-{
-
+class AnkTweetdeck extends AnkSite {
   /**
-   *
-   * @constructor
+   * コンストラクタ
    */
-  let AnkTweetdeck = function () {
-
-    AnkSite.apply(this, arguments);
+  constructor () {
+    super();
 
     this.SITE_ID = 'TDK';
     this.ALT_SITE_ID = 'TWT';
 
     this.USE_CONTEXT_CACHE = false;
-
-  };
-
-  /**
-   *
-   * @type {AnkSite}
-   */
-  AnkTweetdeck.prototype = Object.create(AnkSite.prototype, {
-    constructor: {
-      'value': AnkTweetdeck,
-      'enumerable': false
-    }
-  });
+  }
 
   /**
    * 利用するクエリのまとめ
    * @param doc
    */
-  AnkTweetdeck.prototype.getElements = function (doc) {
+  getElements (doc) {
 
     const SELECTOR_ITEMS = {
       "illust": {
@@ -73,25 +58,25 @@
     });
 
     return gElms;
-  };
+  }
 
   /**
    *
    * @returns {boolean}
    */
-  AnkTweetdeck.prototype.inIllustPage = function () {
+  inIllustPage () {
     let modal = this.elements.illust.modal;
     if (modal) {
       return getComputedStyle(modal, '').getPropertyValue('display') === 'block';
     }
-  };
+  }
 
   /**
    * ダウンロード情報（画像パス）の取得
    * @param elm
    * @returns {Promise}
    */
-  AnkTweetdeck.prototype.getPathContext = async function (elm) {
+  async getPathContext (elm) {
     let photos = elm.illust.photos;
     if (!photos || photos.length == 0) {
       return;
@@ -121,14 +106,14 @@
       'thumbnail': thumb,
       'original': orig
     };
-  };
+  }
 
   /**
    * ダウンロード情報（イラスト情報）の取得
    * @param elm
    * @returns {Promise.<{url: (string|*), id: *, title: (*|string|XML|void), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: Array, caption: (*|string|XML|void), R18: boolean}>}
    */
-  AnkTweetdeck.prototype.getIllustContext = async function (elm) {
+  async getIllustContext (elm) {
     try {
       let dd = new Date(parseInt(elm.info.illust.datetime.getAttribute('data-time'),10));
       let posted = this.getPosted(() => AnkUtils.getDateData(dd));
@@ -149,14 +134,14 @@
     catch (e) {
       logger.error(e);
     }
-  };
+  }
 
   /**
    * ダウンロード情報（メンバー情報）の取得
    * @param elm
    * @returns {Promise.<{id: string, name: (*|string|XML|void), pixiv_id: *, memoized_name: null}>}
    */
-  AnkTweetdeck.prototype.getMemberContext = async function(elm) {
+  async getMemberContext(elm) {
     try {
       return {
         'id': elm.info.illust.actionsMenu.getAttribute('data-user-id'),
@@ -168,32 +153,32 @@
     catch (e) {
       logger.error(e);
     }
-  };
+  }
 
   /**
    * ダウンロード情報をまとめる
    * @param elm
    * @returns {Promise.<*>}
    */
-  AnkTweetdeck.prototype.getContext = async function (elm) {
+  async getContext (elm) {
     if (!this.inIllustPage()) {
       return;
     }
 
-    return AnkSite.prototype.getContext.call(this, elm);
-  };
+    return super.getContext(elm);
+  }
 
   /**
    *
    * @param opts
    * @param siteSpecs
    */
-  AnkTweetdeck.prototype.markDownloaded = function (opts, siteSpecs) {};
+  markDownloaded (opts, siteSpecs) {}
 
   /**
    *
    */
-  AnkTweetdeck.prototype.installFunctions = function () {
+  installFunctions () {
 
     let displayWhenOpened = () => {
       let modal = this.elements.illust.modal;
@@ -214,13 +199,13 @@
       AnkUtils.delayFunctionInstaller({'func': displayWhenOpened, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'displayWhenOpened'})
     ])
       .catch((e) => logger.warn(e));
-  };
-
-  // 開始
-
-  new AnkTweetdeck().start()
-    .catch((e) => {
-      console.error(e);
-    });
+  }
 
 }
+
+// 開始
+
+new AnkTweetdeck().start()
+  .catch((e) => {
+    console.error(e);
+  });

@@ -1,16 +1,10 @@
 "use strict";
 
-{
-
+class AnkSite {
   /**
    * コンストラクタ
-   * @constructor
    */
-  var AnkSite = function () {
-    if (this.constructor === AnkSite) {
-      throw new Error("Can't instantiate abstract class!");
-    }
-
+  constructor () {
     this.SITE_ID = null;
     this.ALT_SITE_ID = null;
 
@@ -31,13 +25,13 @@
       'max': 30,
       'wait': 1000
     };
-
-  };
+  }
 
   /**
    * 初期化
+   * @returns {Promise}
    */
-  AnkSite.prototype.start = function () {
+  start () {
 
     let applyPrefsChange = () => {
       let applySitePrefs = (global, local) => {
@@ -97,13 +91,12 @@
       this.initFocusListener();
       this.installFunctions();
     })();
-  };
+  }
 
   /**
    * 再初期化
    */
-  AnkSite.prototype.restart = function () {
-
+  restart () {
     logger.info('RESET CONTEXT INFO:', this.SITE_ID, document.location.href);
 
     AnkViewer.reset();
@@ -116,20 +109,19 @@
       'markDownloaded': false
     };
     this.marked = 0;
-  };
+  }
 
   /**
    * focusイベントリスナーの定義
    */
-  AnkSite.prototype.initFocusListener = function () {
+  initFocusListener () {
     window.addEventListener('focus', () => this.onFocusHandler())
-  };
+  }
 
   /**
    * メッセージリスナーの定義
    */
-  AnkSite.prototype.initMessageListener = function () {
-
+  initMessageListener () {
     let execMessage = (message, sender) => {
       switch (message.type) {
         case 'AnkPixiv.Download':
@@ -171,12 +163,13 @@
       sendResponse();
       return false;
     });
-  };
+  }
 
   /**
    * ダウンロードの実行
+   * @param dw
    */
-  AnkSite.prototype.executeDownload = function (dw) {
+  executeDownload (dw) {
 
     // ファイル名定義を実際のファイル名に変換する
     let getFileName = (info) => {
@@ -383,13 +376,13 @@
       .catch((e) => {
         logger.error('download error:', e);
       });
-  };
+  }
 
   /**
    * backgroundにサイトの最終更新時刻を問い合わせる
    * @returns {Promise}
    */
-  AnkSite.prototype.requestGetSiteChanged = function () {
+  requestGetSiteChanged () {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({
           'type': 'AnkPixiv.Query.getSiteChanged',
@@ -400,7 +393,7 @@
         (result) => resolve(result)
       );
     });
-  };
+  }
 
   /**
    * backgroundにユーザ情報を問い合わせる
@@ -409,7 +402,7 @@
    * @param member_name
    * @returns {Promise}
    */
-  AnkSite.prototype.requestGetMemberInfo = function (member_id, member_name) {
+  requestGetMemberInfo (member_id, member_name) {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({
           'type': 'AnkPixiv.Query.getMemberInfo',
@@ -422,14 +415,15 @@
         (result) => resolve(result)
       );
     });
-  };
+  }
 
   /**
    * backgroundに作品のダウンロード状態を問い合わせる
    * @param illust_id
+   * @param ignore_cache
    * @returns {Promise}
    */
-  AnkSite.prototype.requestGetDownloadStatus = function (illust_id, ignore_cache) {
+  requestGetDownloadStatus (illust_id, ignore_cache) {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({
           'type': 'AnkPixiv.Query.getDownloadStatus',
@@ -442,14 +436,14 @@
         (result) => resolve(result)
       );
     });
-  };
+  }
 
   /**
    *
-   * @param info
+   * @param hist_data
    * @returns {Promise}
    */
-  AnkSite.prototype.requestUpdateDownloadHistory = function (hist_data) {
+  requestUpdateDownloadHistory (hist_data) {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({
           'type': 'AnkPixiv.Query.updateDownloadHistory',
@@ -460,14 +454,14 @@
         (result) => resolve(result)
       );
     });
-  };
+  }
 
   /**
    * backgroundにデータのファイルへの保存を依頼する
    * @param info
    * @returns {Promise}
    */
-  AnkSite.prototype.requestExecuteSaveObject = function (info) {
+  requestExecuteSaveObject (info) {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({
           'type': 'AnkPixiv.Execute.saveObject',
@@ -484,14 +478,15 @@
         }
       );
     });
-  };
+  }
 
   /**
    *
-   * @param info
+   * @param targets
+   * @param hist_data
    * @returns {Promise}
    */
-  AnkSite.prototype.requestExecuteAddToDownloadQueue = function (targets, hist_data) {
+  requestExecuteAddToDownloadQueue (targets, hist_data) {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({
           'type': 'AnkPixiv.Execute.addToDownloadQueue',
@@ -509,14 +504,14 @@
         }
       );
     });
-  };
+  }
 
   /**
    * 投稿日時の解析の共通部分
    * @param callback
    * @returns {*}
    */
-  AnkSite.prototype.getPosted = function (callback) {
+  getPosted (callback) {
     let posted = callback();
     if (posted.fault) {
       if (!this.prefs.ignoreWrongDatetimeFormat) {
@@ -531,14 +526,14 @@
       }
     }
     return posted;
-  };
+  }
 
   /**
    * ダウンロード情報をまとめる
    * @param elm
    * @returns {Promise.<*>}
    */
-  AnkSite.prototype.getContext = async function (elm) {
+  async getContext (elm) {
 
     if (this.USE_CONTEXT_CACHE) {
       if (this.contextCache && this.contextCache.downloadable) {
@@ -567,13 +562,13 @@
 
       return this.contextCache = context;
     });
-  };
+  }
 
   /**
    * ダウンロードの実行
    * @param opts
    */
-  AnkSite.prototype.downloadCurrentImage = function (opts) {
+  downloadCurrentImage (opts) {
     if (!this.inIllustPage()) {
       return;
     }
@@ -610,32 +605,35 @@
       this.executeDownload({'status': status, 'context': context, 'autoDownload': opts.autoDownload});
 
     })().catch((e) => logger.error(e));
-  };
+  }
 
   /**
    * focusイベントのハンドラ
    */
-  AnkSite.prototype.onFocusHandler = function () {
+  onFocusHandler () {
     if (document.readyState !== "complete") {
       return;
     }
     this.forceDisplayAndMarkDownloaded();
-  };
+  }
 
   /**
    * 保存済み表示の強制実行
    */
-  AnkSite.prototype.forceDisplayAndMarkDownloaded = function () {
+  forceDisplayAndMarkDownloaded () {
     if (this.inIllustPage()) {
       this.displayDownloaded({'force': true});
     }
     this.markDownloaded({'force': true});
-  };
+  }
 
   /**
    * 作品ページに「保存済み」メッセージを表示する（DOM操作部）
+   * @param appendTo
+   * @param opts
+   * @private
    */
-  AnkSite.prototype._insertDownloadedDisplay = function (appendTo, opts) {
+  _insertDownloadedDisplay (appendTo, opts) {
 
     let display = appendTo.querySelector('#ank-pixiv-downloaded-display');
     if (!display) {
@@ -703,14 +701,14 @@
       display.setAttribute('class', '');
       display.classList.add.apply(display.classList, cls);
     }
-  };
+  }
 
   /**
    *　作品ページに「保存済み」メッセージを表示する
    * @param opts
-   * @returns {boolean}
+   * @returns {Promise.<boolean>}
    */
-  AnkSite.prototype.displayDownloaded = async function (opts) {
+  async displayDownloaded (opts) {
     if (!this.prefs.site.displayDownloaded) {
       return true;
     }
@@ -761,14 +759,15 @@
     }
 
     return true;
-  };
+  }
 
   /**
    * サムネイルにダウンロード済みマークを付ける（DOM操作部）
    * @param node
    * @param opts
+   * @private
    */
-  AnkSite.prototype._insertDownloadedMark = function (node, opts) {
+  _insertDownloadedMark (node, opts) {
     (async () => {
 
       let boxes = {};
@@ -855,7 +854,7 @@
         }
       }
     })();
-  };
+  }
 
   /**
    * サムネイルにダウンロード済みマークを付ける ※半完成品なのでサイト別スクリプト側で補完する必要がある（siteSpecsを与える）
@@ -863,7 +862,7 @@
    * @param siteSpecs
    * @returns {boolean}
    */
-  AnkSite.prototype.markDownloaded = function (opts, siteSpecs) {
+  markDownloaded (opts, siteSpecs) {
     if (!this.prefs.site.markDownloaded) {
       return true;
     }
@@ -909,13 +908,13 @@
     }
 
     return true;
-  };
+  }
 
   /**
    * ビューアを開く
    * @param opts
    */
-  AnkSite.prototype.openViewer = function (opts) {
+  openViewer (opts) {
     if (!this.prefs.site.largeOnMiddle) {
       return;
     }
@@ -948,16 +947,17 @@
         AnkViewer.setPage({'nextPage': true});
         break;
     }
-  };
+  }
 
   /**
    *
    * @param o
    * @param items
    * @param doc
+   * @param mod_selector
    * @returns {*}
    */
-  AnkSite.prototype.initSelectors = function (o, items, doc, mod_selector) {
+  initSelectors (o, items, doc, mod_selector) {
 
     mod_selector = mod_selector || this.prefs.site._mod_selector;
 
@@ -1026,7 +1026,7 @@
     });
 
     return o;
-  };
+  }
 
   /*
    * 以下はサイト別スクリプトの中で実装が必要なもの
@@ -1036,40 +1036,39 @@
    * 利用するクエリのまとめ
    * @param doc
    */
-  AnkSite.prototype.getElements = function (doc) {};
+  getElements (doc) {}
 
   /**
    * 画像ダウンロード可能なページに居るか？
    */
-  AnkSite.prototype.inIllustPage = function () {};
+  inIllustPage () {}
 
   /**
    * ダウンロード情報（画像パス）の取得
    * @param elm
    * @returns {Promise.<void>}
    */
-  AnkSite.prototype.getPathContext = async function (elm) {};
+  async getPathContext (elm) {}
 
   /**
    * ダウンロード情報（イラスト情報）の取得
    * @param elm
    */
-  AnkSite.prototype.getIllustContext = async function (elm) {};
+  async getIllustContext (elm) {}
 
   /**
    * ダウンロード情報（メンバー情報）の取得
    * @param elm
    */
-  AnkSite.prototype.getMemberContext = async function (elm) {};
+  async getMemberContext (elm) {}
 
   /**
    * いいね！する
    */
-  AnkSite.prototype.setNice = function () {};
+  setNice () {}
 
   /**
    * ページに機能をインストールする
    */
-  AnkSite.prototype.installFunctions = function () {};
-
+  installFunctions () {}
 }

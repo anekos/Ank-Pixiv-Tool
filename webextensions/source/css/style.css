@@ -1,11 +1,13 @@
 @charset "utf-8";
 
 .ank-pixiv-downloading.ank-pixiv-mark-background {
-    background: repeat-x bottom lime url("chrome-extension://__MSG_@@extension_id__/images/bg-downloading.png") !important;
+    background: lime !important;
+    box-shadow: 0 -4px 0 0 green inset !important;
 }
 
 .ank-pixiv-downloaded.ank-pixiv-mark-background {
-    background: repeat-x bottom pink url("chrome-extension://__MSG_@@extension_id__/images/bg-downloaded.png") !important;
+    background: pink !important;
+    box-shadow: 0 -4px 0 0 red inset !important;
 }
 
 .ank-pixiv-downloaded.ank-pixiv-mark-border {
@@ -15,9 +17,9 @@
 }
 
 .ank-pixiv-updated.ank-pixiv-mark-background {
-    background: repeat-x bottom paleturquoise url("chrome-extension://__MSG_@@extension_id__/images/bg-updated.png") !important;
+    background: paleturquoise !important;
+    box-shadow: 0 -4px 0 0 blue inset !important;
 }
-
 
 .ank-pixiv-downloaded.ank-pixiv-mark-overlay {
     background-image: url("chrome-extension://__MSG_@@extension_id__/images/downloaded.png");
