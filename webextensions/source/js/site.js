@@ -947,19 +947,69 @@ class AnkSite {
         AnkViewer.setPage({'nextPage': true});
         break;
     }
+  };
+
+  /**
+   * セレクタ定義を上書きする
+   * @param selector_items
+   * @param mod_selector
+   * @returns {{}}
+   */
+  attachSelectorOverride (o, selector_items, mod_selector) {
+
+    const S_OR_ALL = ['s', 'ALL'];
+
+    let dig = (o, selector_items, mod_selector) => {
+      Object.keys(selector_items).forEach((k) => {
+        let item = selector_items[k];
+        if (item === undefined) {
+          throw new Error('invalid selector format');
+        }
+
+        if (item === null) {
+          // パターンA （セレクタの書き換えだけでは対処できないパターン）
+          o[k] = null;
+          return;
+        }
+
+        o[k] = o[k] || {};
+
+        let mods = mod_selector && mod_selector[k] || {};
+
+        let typ = S_OR_ALL.find((p) => item.hasOwnProperty(p));
+        if (typ) {
+          // パターンB
+          if (!Array.isArray(mods[typ]) || typ == 's') {
+            // 's'&'ALL'で値が文字列 or 's'で値が配列
+            o[k][typ] = mods[typ] || item[typ];
+          }
+          else {
+            // 上記以外は mods は使わない
+            o[k][typ] = item[typ];
+          }
+        }
+        else {
+          // パターンC
+          this.attachSelectorOverride(o[k], item, mods);
+        }
+      });
+
+      return o;
+    };
+
+    return dig(o || {}, selector_items, mod_selector || this.prefs.site._mod_selector);
   }
 
   /**
-   *
+   * セレクタ定義を展開する
    * @param o
    * @param items
    * @param doc
-   * @param mod_selector
    * @returns {*}
    */
-  initSelectors (o, items, doc, mod_selector) {
+  initSelectors (o, items, doc) {
 
-    mod_selector = mod_selector || this.prefs.site._mod_selector;
+    const S_OR_ALL = ['s', 'ALL'];
 
     Object.keys(items).forEach((k) => {
       let item = items[k];
@@ -975,12 +1025,10 @@ class AnkSite {
 
       o[k] = o[k] || {};
 
-      let mods = mod_selector && mod_selector[k] || {};
-
-      let typ = ['s', 'ALL'].find((p) => item.hasOwnProperty(p));
+      let typ = S_OR_ALL.find((p) => item.hasOwnProperty(p));
       if (typ) {
         // パターンB
-        let s = mods[typ] || item[typ];
+        let s = item[typ];
         if (typ == 's') {
           if (!Array.isArray(s)) {
             // 決め打ち
@@ -1022,7 +1070,7 @@ class AnkSite {
       }
 
       // パターンC
-      this.initSelectors(o[k], item, doc, mods);
+      this.initSelectors(o[k], item, doc);
     });
 
     return o;

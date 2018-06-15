@@ -40,7 +40,9 @@ class AnkTweetdeck extends AnkSite {
       }
     };
 
-    let gElms = this.initSelectors({'doc': doc}, SELECTOR_ITEMS, doc);
+    let selectors = this.attachSelectorOverride({}, SELECTOR_ITEMS);
+
+    let gElms = this.initSelectors({'doc': doc}, selectors, doc);
 
     Object.defineProperty(gElms.illust, 'photos', {
       'get': function () {
