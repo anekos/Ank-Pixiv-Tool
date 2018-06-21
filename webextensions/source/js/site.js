@@ -204,10 +204,10 @@ class AnkSite {
         ].reduce((s, v) => {
           try {
             // TODO dir//file みたいな感じで File Separator が複数連続していると FILE_NAME_TOO_LONG 例外が発生するので注意。あと .. もNG
-            return s.replace(v.re, AnkUtils.fixFilename((v.val || '-')).toString());
+            return s.replace(v.re, AnkUtils.fixFilename((v.val && v.val.toString() || '-')).toString());
           }
           catch (e) {
-            logger.warn(v.re + ' is not found');
+            logger.warn(v.re.toString(), 'is not found:', e.toString());
           }
           return s;
         }, this.prefs.defaultFilename);
