@@ -86,13 +86,15 @@ class AnkTweetdeck extends AnkSite {
 
     let thumb = Array.prototype.map.call(photos, (e) => {
       let src = (/background-image:\s*url\("?(.+?)"?\)/.exec(e.getAttribute('style')) || [])[1];
-      if (src) {
-        return {'src': src.replace(/:small$/, ':large')};
+      if (!src) {
+        let img = e.querySelector('.media-img');
+        if (!img || !img.src) {
+          return;
+        }
+
+        src = img.src;
       }
-      let img = e.querySelector('.media-img');
-      if (img && img.src) {
-        return {'src': img.src.replace(/:small$/, ':large')};
-      }
+      return {'src': src.replace(/\?.+?(?::|$)/, '').replace(/:small$/, ':large')};
     })
       .filter(e => !!e);
 

@@ -30,7 +30,7 @@ class AnkTwitter extends AnkSite {
           "tweet": {"s": ".Gallery.with-tweet .tweet"},
           "content": {"s": ".Gallery.with-tweet .Gallery-content"}
         },
-        "video": {"s": ".AdaptiveMedia-container .AdaptiveMedia-videoContainer video source"},
+        "video": {"s": ".AdaptiveMedia-container .AdaptiveMedia-videoContainer video"},
 
         "photos": {"ALL": ".AdaptiveMedia-container .AdaptiveMedia-photoContainer img"}
       },
