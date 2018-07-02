@@ -94,7 +94,7 @@ class AnkTweetdeck extends AnkSite {
 
         src = img.src;
       }
-      return {'src': src.replace(/\?.+?(?::|$)/, '').replace(/:small$/, ':large')};
+      return {'src': src.replace(/\?.+?(:|$)/, '$1').replace(/:small$/, ':large')};
     })
       .filter(e => !!e);
 
