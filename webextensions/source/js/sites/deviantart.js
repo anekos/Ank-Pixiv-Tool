@@ -152,7 +152,7 @@ class AnkDeviantart extends AnkSite {
   async getMemberContext(elm) {
     try {
       return {
-        'id': /^https?:\/\/([^/]+?)\.deviantart\.com\//.exec(elm.info.member.memberLink.href)[1],
+        'id': /^https?:\/\/www\.deviantart\.com\/([^/]+?)(?:\?|$)/.exec(elm.info.member.memberLink.href)[1],
         'name': AnkUtils.trim(elm.info.member.memberLink.textContent),
         'pixiv_id': null,
         'memoized_name': null
@@ -169,7 +169,7 @@ class AnkDeviantart extends AnkSite {
    * @returns {*}
    */
   getIllustId (loc) {
-    return (/^https?:\/\/[^/]+?\.deviantart\.com\/art\/(.+?)(?:\?|$)/.exec(loc) || [])[1];
+    return (/^https?:\/\/www\.deviantart\.com\/[^/]+?\/art\/(.+?)(?:\?|$)/.exec(loc) || [])[1];
   }
 
   /**

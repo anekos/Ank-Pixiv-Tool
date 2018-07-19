@@ -18,19 +18,19 @@ class AnkPixiv extends AnkSite {
 
     const SELECTOR_ITEMS = {
       "illust": {
-        "imgOvr": {"s": ".works_display, ._1tR0cJT"},
+        "imgOvr": {"s": ".works_display, ._1tR0cJT"}, // .@{illistList}
         "med": {
-          "img": {"s": ".works_display > ._layout-thumbnail > img, ._1tR0cJT ._2r_DywD"},
-          "bigImg": {"s": ".original-image, ._1tR0cJT ._1-h8Se6.r_Q2Jin"}
+          "img": {"s": ".works_display > ._layout-thumbnail > img, ._1tR0cJT ._2r_DywD"}, // .@{illustList} .@{illust}
+          "bigImg": {"s": ".original-image, ._1tR0cJT ._1-h8Se6.r_Q2Jin"} // .@{illustList} .@{illust//link}.@{illust//zoom}
         },
         "mng": {
-          "img": {"s": ".works_display > ._work > ._layout-thumbnail > img, ._1tR0cJT ._2r_DywD"},
-          "largeLink": {"s": ".works_display > a, ._1tR0cJT ._1-h8Se6"},
-          "pages": {"s": "._2uvBc97"}
+          "img": {"s": ".works_display > ._work > ._layout-thumbnail > img, ._1tR0cJT ._2r_DywD"}, // .@{illustList} .@{illust}
+          "largeLink": {"s": ".works_display > a, ._1tR0cJT ._1-h8Se6"}, // .@{illustList} .@{illust//link}
+          "pages": {"s": "._2uvBc97"} // .@{badgeContainer}
         },
         "ugo": {
           "img": {"s": ".works_display > ._ugoku-illust-player-container canvas"},
-          "pause": {"s": ".kbpwWEq"}
+          "pause": {"s": ".kbpwWEq"} // .@{play}
         }
       },
       "mngIdx": {
@@ -42,36 +42,36 @@ class AnkPixiv extends AnkSite {
       },
       "info": {
         "illust": {
-          "datetime": {"s": ".work-info .meta > li, ._3VLfD7p"},
+          "datetime": {"s": ".work-info .meta > li, ._3NX6JMB"}, // .@{createDate}
           "size": {"s": ".work-info .meta > li+li"},
           "tools": {"s": ".work-info .tools"},
-          "seriesTitle": {"s": "._1XvRWok"},
-          "title": {"s": ".work-info .title, .TTmQ_bQ"},
-          "R18": {"s": '.work-info .r-18, .work-info .r-18g, ._2wuGX9T > a[href*="R-18"]'},
-          "caption": {"s": ".work-info .caption, ._2awgH_j .EG8MDwA p"},
-          "nice": {"s": ".work-info .js-nice-button, .Ki5EGTG"},
+          "seriesTitle": {"s": "._2bKY8u8"}, // .@{seriesTitle}
+          "title": {"s": ".work-info .title, ._36RmBkO"}, // .@{contestBanners//title}
+          "R18": {"s": '.work-info .r-18, .work-info .r-18g, ._12GHAzp > a[href*="R-18"]'}, // .@{xRestrict}
+          "caption": {"s": ".work-info .caption, .AEZvvAS .EG8MDwA p"}, // .@{contestBanners//description} .@{expandable//root}
+          "nice": {"s": ".work-info .js-nice-button, .Ki5EGTG"}, // .@{liked//button}
           "update": {"s": ".bookmark_modal_thumbnail"},
 
-          "tags": {"ALL": ".work-tags .tags > .tag > .text, ._1tTPwGC"}
+          "tags": {"ALL": ".work-tags .tags > .tag > .text, .FNBxGia"} // .@{tagMeta//tag}
         },
         "member": {
-          "memberLink": {"s": ".profile .user-name, .JdrBYtD ._3RqJTSD"},
+          "memberLink": {"s": ".profile .user-name, .JdrBYtD ._3RqJTSD"}, // .@{authorMeta} .@{authorMeta//authorName}
           "feedLink": {"s": '.column-header .tabs a[href^="/stacc/"]'}
         }
       },
       "misc": {
-        "content": {"s": "._290uSJE"},
-        "openCantion": {"s": ".ui-expander-container > .ui-expander-target > .expand, ._1MskjZd"},
-        "downloadedDisplayParent": {"s": ".score, ._3VLfD7p"},
+        "content": {"s": "._290uSJE"}, // .@{sectionWithBorder//container}
+        "openCantion": {"s": ".ui-expander-container > .ui-expander-target > .expand, ._1MskjZd"}, // .@{expandable//expanderButton}
+        "downloadedDisplayParent": {"s": ".score, ._3NX6JMB"}, // .@{createDate}
         "recommendList": {"s": "#illust-recommend ._image-items"},
         "feedList": {"s": ["#stacc_timeline", "#stacc_center_timeline"]},
         "rankingList": {"s": ".ranking-items"},
         "discovery": {"s": "#js-mount-point-discovery"},
-        "allContents": {"s": '._3kixzeH div[role="rowgroup"]'}, // 'thumbnailAll': '_3kixzeH'
-        "recommendContents": {"s": "._3NOStiW > aside:last-child"},
+        "allContents": {"s": '._3kixzeH div[role="rowgroup"]'}, // .@{thumbnailAll}
+        "recommendContents": {"s": "._3NOStiW > .vLWu89a > aside:last-child"}, // .@{article//body} .@{illustBody}
         "downloadedFilenameArea": {"s": ".ank-pixiv-downloaded-filename-text"},
-        "nextLink": {"s": ".before > a, ._382QOVK._s3YizR"}, // 'link': '_382QOVK', 'next': '_s3YizR'
-        "prevLink": {"s": ".after > a, ._382QOVK._22qFJA0"}   // 'link': '_382QOVK', 'prev': '_22qFJA0'
+        "nextLink": {"s": ".before > a, ._382QOVK._s3YizR"}, // .@{next//link}.@{next}
+        "prevLink": {"s": ".after > a, ._382QOVK._22qFJA0"}   // .@{next//link}.@{prev}
       }
     };
 
@@ -628,9 +628,9 @@ class AnkPixiv extends AnkSite {
       {'q': '.sibling-items > .after > a', 'n': 1},       // 前の作品
       {'q': '.sibling-items > .before > a', 'n': 1},      // 次の作品
       // 以下新UI対応
-      {'q': '.aw29wyY .kbZjQ32', 'n': -1, 'c': 'P1uthkK', 'm': 'border'},     // 関連作品
-      {'q': '._3kixzeH ._382QOVK', 'n': -1, 'c': '_30HYOf4', 'm': 'border'},   // サムネイルリスト
-      {'q': '._2qiYXlt ._382QOVK', 'n': -1, 'c': '_30HYOf4', 'm': 'border'}    // 前の作品、次の作品
+      {'q': '.aw29wyY .kbZjQ32', 'n': -1, 'c': 'P1uthkK', 'm': 'border'},     // 関連作品 // .@{recommendContainer//list} .@{thumbnailBadge//thumbnailLink} @{thumbnailBadge//thumbnail}
+      {'q': '._3kixzeH ._382QOVK', 'n': -1, 'c': '_30HYOf4', 'm': 'border'},   // サムネイルリスト // .@{thumbnailAll} .@{next//link} @{image}
+      {'q': '._2qiYXlt ._382QOVK', 'n': -1, 'c': '_30HYOf4', 'm': 'border'}    // 前の作品、次の作品 // .@{thumbnailStrip} .@{next//link} @{image}
     ];
 
     return super.markDownloaded(opts,
@@ -839,7 +839,7 @@ class AnkPixiv extends AnkSite {
       let observe = (elm) => {
         new MutationObserver((o) => {
           o.forEach((e) => Array.prototype.forEach.call(e.addedNodes, (n) => {
-            if (n.classList.contains('_2UWAFbb')) {
+            if (n.classList.contains('_2UWAFbb')) { // @{} ... 限定できない
               this.markDownloaded({'node': n, 'force':true});
             }
           }));
