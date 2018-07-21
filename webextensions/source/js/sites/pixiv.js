@@ -45,7 +45,7 @@ class AnkPixiv extends AnkSite {
           "datetime": {"s": ".work-info .meta > li, ._3NX6JMB"}, // .@{createDate}
           "size": {"s": ".work-info .meta > li+li"},
           "tools": {"s": ".work-info .tools"},
-          "seriesTitle": {"s": "._2bKY8u8"}, // .@{seriesTitle}
+          "seriesTitle": {"s": "._1XvRWok"}, // .@{seriesNavigationWrapper//seriesTitle}
           "title": {"s": ".work-info .title, ._36RmBkO"}, // .@{contestBanners//title}
           "R18": {"s": '.work-info .r-18, .work-info .r-18g, ._12GHAzp > a[href*="R-18"]'}, // .@{xRestrict}
           "caption": {"s": ".work-info .caption, .AEZvvAS .EG8MDwA p"}, // .@{contestBanners//description} .@{expandable//root}

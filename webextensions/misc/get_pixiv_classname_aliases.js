@@ -38,7 +38,7 @@
     "badgeContainer",
     "play",
     "createDate",
-    "seriesTitle",
+    "seriesNavigationWrapper//seriesTitle",
     "contestBanners//title",
     "xRestrict",
     "contestBanners//description",
