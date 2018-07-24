@@ -1,17 +1,21 @@
 "use strict";
 
-{
+class _AnkUtilsClass {
+
+  constructor () {
+    this.DT_DECODE_FUNCS = this._getDateTextDecodeFuncs();
+  }
 
   /**
    * ミリ秒スリープ
    * @param mSec
    * @returns {Promise}
    */
-  let sleep = (mSec) => {
+   sleep (mSec) {
     return new Promise((resolve) => {
       setTimeout(() => resolve(), mSec);
     });
-  };
+  }
 
   /**
    * 指定階層上の先祖エレメントまで遡る
@@ -20,7 +24,7 @@
    * @param targetClass 指定がある場合は n まで遡っていなくても見つかり次第返却
    * @returns {*}
    */
-  let trackbackParentNode = (node, n, targetClass) => {
+   trackbackParentNode (node, n, targetClass) {
     if (n < 0) {
       return targetClass && node.getElementsByClassName(targetClass)[0] || node.firstChild;
     }
@@ -31,13 +35,13 @@
       }
     }
     return node;
-  };
+  }
 
   /**
    * スクロールバーの幅を返す
    * @returns {{width, height}}
    */
-  let getScrollbarSize = () => {
+  getScrollbarSize () {
     let f = (wh) => {
       let outer = document.createElement('div');
       let inner = document.createElement('div');
@@ -63,28 +67,28 @@
       'width': f('width'),
       'height': f('height')
     };
-  };
+  }
 
   /**
    * trimする
    * @param str
    * @returns {*|string|XML|void}
    */
-  let trim = (str) => {
+  trim (str) {
     return str && str.replace(/^\s*|\s*$/g, '');
-  };
+  }
 
   /**
    * br を改行として認識する textContent
    *    elem:     要素
    *    return:   String;
    */
-  let getTextContent = (e) => {
+   getTextContent (e) {
     let doc = e.ownerDocument;
     let temp = doc.createElement('div');
     temp.innerHTML = e.innerHTML.replace(/<br\s*\/?>/ig, '\n');
     return temp.textContent;
-  };
+  }
 
   /**
    * ゼロパディングする
@@ -92,131 +96,134 @@
    * @param n
    * @returns {string}
    */
-  let zeroPad = (s, n) => {
-    return s.toString().replace(new RegExp('^(.{0,'+(n-1)+'})$'), (s) => zeroPad('0'+s, n));
-  };
+   zeroPad (s, n) {
+    return s.toString().replace(new RegExp('^(.{0,'+(n-1)+'})$'), (s) => this.zeroPad('0'+s, n));
+  }
 
   /**
    * decodeTextToDate が扱う各種日時形式に対応する変換処理
-   * @type {[null,null,null,null,null]}
+   * @returns {[*,*,*,*,*]}
+   * @private
    */
-  let dCalc = [
-    // A. 時分 - 年月日 (A.とB.は一部被るのでA.を優先する)
-    (dText) => {
-      let m = /^(\d{1,2})\s*[\u6642:\-]\s*(\d{1,2})(?:\s*\D{1,2}\s*)(\d{4})\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})/.exec(dText);
-      if (m) {
-        return new Date(
-          parseInt(m[3]),
-          parseInt(m[4])-1,
-          parseInt(m[5]),
-          parseInt(m[1]),
-          parseInt(m[2]),
-          0,
-          0
-        );
-      }
-    },
-
-    // B. 年/月/日 時:分
-    (dText) => {
-      let m = /(\d{4})\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})(?:\s*\D{1,2}\s*(\d{1,2})\s*[\u6642:\-]\s*(\d{1,2}))?/.exec(dText);
-      if (m) {
-        return new Date(
-          parseInt(m[1]),
-          parseInt(m[2])-1,
-          parseInt(m[3]),
-          m[4] ? parseInt(m[4]) : 0,
-          m[5] ? parseInt(m[5]) : 0,
-          0,
-          0
-        );
-      }
-    },
-
-    // C. 月日,年
-    (dText) => {
-      let m = /(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})(?:st|nd|rd|th)?\s*,\s*(\d{4})/.exec(dText);
-      if (m) {
-        return new Date(
-          parseInt(m[3]),
-          parseInt(m[1])-1,
-          parseInt(m[2]),
-          0,
-          0,
-          0,
-          0
-        );
-      }
-    },
-
-    // D. 相対表記('less than a minute ago', etc.) ※元々大雑把な値しかとれないので、年・月の計算は輪をかけて大雑把に
-    (dText) => {
-      let m = /(an?|\d+) (min|hour|day|month|year)/.exec(dText);
-      if (m) {
-        let d = /an?/.test(m[1]) ? 1 : m[1];
-        let diff = 60 * 1000 * (
-          m[2] === 'year'  ? d * 1440 * 365 :
-          m[2] === 'month' ? d * 1440 * 31 :
-          m[2] === 'day'   ? d * 1440 :
-          m[2] === 'hour'  ? d * 60 :
-                             d
-        );
-
-        d = new Date();
-        if (diff) {
-          d.setTime(d.getTime() - diff);
+  _getDateTextDecodeFuncs () {
+    return [
+      // A. 時分 - 年月日 (A.とB.は一部被るのでA.を優先する)
+      (dText) => {
+        let m = /^(\d{1,2})\s*[\u6642:\-]\s*(\d{1,2})(?:\s*\D{1,2}\s*)(\d{4})\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})/.exec(dText);
+        if (m) {
+          return new Date(
+            parseInt(m[3]),
+            parseInt(m[4])-1,
+            parseInt(m[5]),
+            parseInt(m[1]),
+            parseInt(m[2]),
+            0,
+            0
+          );
         }
+      },
 
-        return d;
-      }
-    },
+      // B. 年/月/日 時:分
+      (dText) => {
+        let m = /(\d{4})\s*[\u5E74/\-]\s*(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})(?:\s*\D{1,2}\s*(\d{1,2})\s*[\u6642:\-]\s*(\d{1,2}))?/.exec(dText);
+        if (m) {
+          return new Date(
+            parseInt(m[1]),
+            parseInt(m[2])-1,
+            parseInt(m[3]),
+            m[4] ? parseInt(m[4]) : 0,
+            m[5] ? parseInt(m[5]) : 0,
+            0,
+            0
+          );
+        }
+      },
 
-    // E. 洋式
-    (dText) => {
-      let d = new Date(dText.replace(/(\s\d+)(?:st|nd|rd|th),/, "$1,"));
-      if (!isNaN(d.getFullYear())) {
-        return d;
+      // C. 月日,年
+      (dText) => {
+        let m = /(\d{1,2})\s*[\u6708/\-]\s*(\d{1,2})(?:st|nd|rd|th)?\s*,\s*(\d{4})/.exec(dText);
+        if (m) {
+          return new Date(
+            parseInt(m[3]),
+            parseInt(m[1])-1,
+            parseInt(m[2]),
+            0,
+            0,
+            0,
+            0
+          );
+        }
+      },
+
+      // D. 相対表記('less than a minute ago', etc.) ※元々大雑把な値しかとれないので、年・月の計算は輪をかけて大雑把に
+      (dText) => {
+        let m = /(an?|\d+) (min|hour|day|month|year)/.exec(dText);
+        if (m) {
+          let d = /an?/.test(m[1]) ? 1 : m[1];
+          let diff = 60 * 1000 * (
+              m[2] === 'year'  ? d * 1440 * 365 :
+              m[2] === 'month' ? d * 1440 * 31 :
+              m[2] === 'day'   ? d * 1440 :
+              m[2] === 'hour'  ? d * 60 :
+              d
+            );
+
+          d = new Date();
+          if (diff) {
+            d.setTime(d.getTime() - diff);
+          }
+
+          return d;
+        }
+      },
+
+      // E. 洋式
+      (dText) => {
+        let d = new Date(dText.replace(/(\s\d+)(?:st|nd|rd|th),/, "$1,"));
+        if (!isNaN(d.getFullYear())) {
+          return d;
+        }
       }
-    }
-  ];
+    ];
+  }
 
   /**
    * 日時表現テキストからDateに変換する
    * @param dText
    * @returns {*}
    */
-  let decodeTextToDate = (dText) => {
+   decodeTextToDate (dText) {
     // まずは明らかなゴミを排除 && 連続の空白をまとめる
     dText = dText.replace(/[^-,0-9a-zA-Z:\/\u5E74\u6708\u6642\s]/g, '').replace(/\s+/g, ' ').trim();
 
-    for (let i=0; i<dCalc.length; i++) {
-      let d = dCalc[i](dText);
+    for (let i=0; i<this.DT_DECODE_FUNCS.length; i++) {
+      let d = this.DT_DECODE_FUNCS[i](dText);
       if (d) {
         return d;
       }
     }
-  };
+  }
 
   /**
    * 日時表現テキストからDateDataに変換する
    * @param dText
    * @returns {{year: string, month: string, day: string, hour: string, minute: string, timestamp: number, ymd: string, fault: boolean}}
    */
-  let decodeTextToDateData = (dText) => {
+   decodeTextToDateData (dText) {
     if (!Array.isArray(dText)) {
       dText = [dText];
     }
 
     for (let i=0; i<dText.length; i++) {
-      let d = decodeTextToDate(dText[i]);
+      let d = this.decodeTextToDate(dText[i]);
       if (d) {
-        return getDateData(d, false);
+        return this.getDateData(d, false);
       }
     }
 
     // 日時解析失敗時に、失敗フラグ＋現在日時を返す
-    return getDateData(new Date(), true);
-  };
+    return this.getDateData(new Date(), true);
+  }
 
   /**
    * Dateを使いやすい形(DateData)に整形する
@@ -224,13 +231,13 @@
    * @param fault
    * @returns {{year: string, month: string, day: string, hour: string, minute: string, timestamp: number, ymd: string, fault: boolean}}
    */
-  let getDateData = (d, fault) => {
+   getDateData (d, fault) {
     let o = {
-      'year': zeroPad(d.getFullYear(), 4),
-      'month': zeroPad(d.getMonth()+1, 2),
-      'day': zeroPad(d.getDate(), 2),
-      'hour': zeroPad(d.getHours(), 2),
-      'minute': zeroPad(d.getMinutes(), 2),
+      'year': this.zeroPad(d.getFullYear(), 4),
+      'month': this.zeroPad(d.getMonth()+1, 2),
+      'day': this.zeroPad(d.getDate(), 2),
+      'hour': this.zeroPad(d.getHours(), 2),
+      'minute': this.zeroPad(d.getMinutes(), 2),
       'timestamp': d.getTime(),
       'ymd': '',
       'fault': !!fault
@@ -239,7 +246,7 @@
     o.ymd = o.year+'/'+o.month+'/'+o.day+' '+o.hour+':'+o.minute;
 
     return o;
-  };
+  }
 
   /**
    * "x.x.x" 形式のバージョン番号文字列の比較
@@ -247,7 +254,7 @@
    * @param b
    * @returns {number}
    */
-  let compareVersion = (a, b) => {
+   compareVersion (a, b) {
     a = a && a.split('.') || [];
     b = b && b.split('.') || [];
 
@@ -261,14 +268,14 @@
     }
 
     return 0;
-  };
+  }
 
   /**
    * blob -> ArrayBuffer
    * @param blob
    * @returns {Promise}
    */
-  let blobToArrayBuffer = (blob) => {
+   blobToArrayBuffer (blob) {
     return new Promise((resolve) => {
       let reader = new FileReader();
       reader.onload = () => {
@@ -277,14 +284,14 @@
 
       reader.readAsArrayBuffer(blob);
     });
-  };
+  }
 
   /**
    * blob -> DataURL
    * @param blob
    * @returns {Promise}
    */
-  let blobToDataURL = (blob) => {
+   blobToDataURL (blob) {
     return new Promise((resolve) => {
       let reader = new FileReader();
       reader.onload = () =>{
@@ -293,14 +300,14 @@
 
       reader.readAsDataURL(blob);
     });
-  };
+  }
 
   /**
    * blob -> JSON
    * @param blob
    * @returns {Promise.<TResult>}
    */
-  let blobToJSON = (blob) => {
+   blobToJSON (blob) {
     let objurl = URL.createObjectURL(blob);
     let json = null;
     let error = null;
@@ -336,7 +343,7 @@
 
         return json;
       });
-  };
+  }
 
   /**
    * ファイル名として使えない文字を除去する
@@ -344,7 +351,7 @@
    * @param opts オプション
    * @returns {string} ファイル名
    */
-  let fixFilename = (filename, opts) => {
+   fixFilename (filename, opts) {
     opts = opts || {};
     if (!opts.file) {
       filename = filename.replace(/[\\\/]/g, '_');
@@ -353,24 +360,25 @@
       filename = filename.replace(/[\?]/g, '_');
     }
     filename = filename.replace(/\.+$/, '');
-    return filename.replace(/[:;*"<>|#~]/g, '_').replace(/[\n\r\t\xa0]/g, ' ').trim();
-  };
+    // \u061c\u200e-\u200f\u2028-\u202e\u2066-\u2069 : Bidi_Control characters, LS, PS
+    return filename.replace(/[:;*"<>|#~]/g, '_').replace(/[\n\r\t\xa0\u061c\u200e-\u200f\u2028-\u202e\u2066-\u2069]/g, ' ').trim();
+  }
 
   /**
    * URLからファイルの拡張子を取得する
    * @param filename
    * @returns {*|string}
    */
-  let getFileExt = (filename) => {
+   getFileExt (filename) {
     return (/\.(\w+?)(?:\?|$)/.exec(filename) || [])[1];
-  };
+  }
 
   /**
    * ファイルの拡張子を正しいものに置換する
    * @param filename
    * @param aBuffer
    */
-  let fixFileExt = (filename, aBuffer) => {
+   fixFileExt (filename, aBuffer) {
     let newExt = ((header) => {
       if (/^\x89PNG/.test(header))
         return 'png';
@@ -392,7 +400,7 @@
     }
 
     return filename.replace(/\.(?:\w+?)(\?|$)/, (m,a) => ['.',newExt,a].join(''));
-  };
+  }
 
   /**
    * ターゲットを順次ダウンロードする（objurlは呼び出し側でrevokeしてね）
@@ -401,7 +409,7 @@
    * @param timeout
    * @returns {Promise.<*>}
    */
-  let downloadTargets = async (targets, saveAs, timeout) => {
+  async downloadTargets (targets, saveAs, timeout) {
     try {
       for (let i=0; i < targets.length; i++) {
         let t = targets[i];
@@ -418,8 +426,8 @@
             'responseType': 'blob'
           });
 
-          let aBuffer = await blobToArrayBuffer(resp.blob.slice(0, 16));
-          t.filename = fixFileExt(t.filename, aBuffer);
+          let aBuffer = await this.blobToArrayBuffer(resp.blob.slice(0, 16));
+          t.filename = this.fixFileExt(t.filename, aBuffer);
 
           t.objurl = URL.createObjectURL(resp.blob);
         }
@@ -435,7 +443,7 @@
       logger.error(e);
       return Promise.reject(e);
     }
-  };
+  }
 
   /**
    * executeSiteScript の戻り値を受け取るハンドラ
@@ -444,13 +452,13 @@
    * @param evName
    * @param callback
    */
-  let siteScriptReceiver = (ev, elmScript, evName, callback) => {
-    ev.target.removeEventListener(evName, siteScriptReceiver);
+   siteScriptReceiver (ev, elmScript, evName, callback) {
+    ev.target.removeEventListener(evName, this.siteScriptReceiver);
     if (ev.target.parentNode) {
       ev.target.parentNode.removeChild(elmScript);
     }
     callback(JSON.parse(ev.data));
-  };
+  }
 
   /**
    * サイトにスクリプトを埋め込んで情報を得る
@@ -460,10 +468,10 @@
    * @param callback
    * @returns {Promise|undefined}
    */
-  let executeSiteScript = (id, evName, genObj, callback) => {
+   executeSiteScript (id, evName, genObj, callback) {
     if (!callback) {
       return new Promise((resolve) => {
-        executeSiteScript(id, evName, genObj, (r) => resolve(r));
+        this.executeSiteScript(id, evName, genObj, (r) => resolve(r));
       });
     }
 
@@ -490,20 +498,20 @@
       elmScript.id = id;
       elmScript.textContent = SCRIPT_TEMPLATE.replace(/#GENOBJ#/, genObj).replace(/#EVENTNAME#/, evName);
 
-      document.addEventListener(evName, (ev) => siteScriptReceiver(ev, elmScript, evName, callback));
+      document.addEventListener(evName, (ev) => this.siteScriptReceiver(ev, elmScript, evName, callback));
 
       document.body.appendChild(elmScript);
 
       elmScript = null;
     }
-  };
+  }
 
   /**
    * 機能の遅延インストール
    * @param opts
    * @returns {Promise}
    */
-  let delayFunctionInstaller = async function (opts) {
+  async delayFunctionInstaller (opts) {
     for (let retry=1; retry <= opts.retry.max; retry++) {
       let installed = await opts.func();
       if (installed) {
@@ -513,36 +521,13 @@
 
       if (retry <= opts.retry.max) {
         logger.info('wait for retry:', retry, '/', opts.retry.max ,':', opts.label);
-        await sleep(opts.retry.wait);
+        await this.sleep(opts.retry.wait);
       }
     }
 
     return Promise.reject(new Error('retry over:', opts.label));
-  };
-
-  /*
-   *
-   */
-
-  var AnkUtils = {
-    'sleep': sleep,
-    'trackbackParentNode': trackbackParentNode,
-    'getScrollbarSize': getScrollbarSize,
-    'trim': trim,
-    'getTextContent': getTextContent,
-    'zeroPad': zeroPad,
-    'decodeTextToDateData': decodeTextToDateData,
-    'getDateData': getDateData,
-    'compareVersion': compareVersion,
-    'blobToArrayBuffer': blobToArrayBuffer,
-    'blobToDataURL': blobToDataURL,
-    'blobToJSON': blobToJSON,
-    'fixFilename': fixFilename,
-    'fixFileExt': fixFileExt,
-    'getFileExt': getFileExt,
-    'downloadTargets': downloadTargets,
-    'executeSiteScript': executeSiteScript,
-    'delayFunctionInstaller': delayFunctionInstaller
-  };
+  }
 
 }
+
+var AnkUtils = new _AnkUtilsClass();
