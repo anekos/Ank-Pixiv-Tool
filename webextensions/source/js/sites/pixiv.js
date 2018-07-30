@@ -18,19 +18,19 @@ class AnkPixiv extends AnkSite {
 
     const SELECTOR_ITEMS = {
       "illust": {
-        "imgOvr": {"s": ".works_display, ._1tR0cJT"}, // .@{illistList}
+        "imgOvr": {"s": ".works_display, figure > div[role=\"presentation\"]"},
         "med": {
-          "img": {"s": ".works_display > ._layout-thumbnail > img, ._1tR0cJT ._2r_DywD"}, // .@{illustList} .@{illust}
-          "bigImg": {"s": ".original-image, ._1tR0cJT ._1-h8Se6.r_Q2Jin"} // .@{illustList} .@{illust//link}.@{illust//zoom}
+          "img": {"s": ".works_display > ._layout-thumbnail > img, figure > div[role=\"presentation\"] a[href^=\"https://i.pximg.net/\"] > img"},
+          "bigImg": {"s": ".original-image, figure > div[role=\"presentation\"] a[href^=\"https://i.pximg.net/\"]"}
         },
         "mng": {
-          "img": {"s": ".works_display > ._work > ._layout-thumbnail > img, ._1tR0cJT ._2r_DywD"}, // .@{illustList} .@{illust}
-          "largeLink": {"s": ".works_display > a, ._1tR0cJT ._1-h8Se6"}, // .@{illustList} .@{illust//link}
-          "pages": {"s": "._2uvBc97"} // .@{badgeContainer}
+          "img": {"s": ".works_display > ._work > ._layout-thumbnail > img, figure > div[role=\"presentation\"] a[href^=\"/member_illust.php?mode=manga\"] > img"},
+          "largeLink": {"s": ".works_display > a, figure > div[role=\"presentation\"] a[href^=\"/member_illust.php?mode=manga\"]"},
+          "pages": {"s": "figure > div[role=\"presentation\"] > div:nth-child(1) > div"}
         },
         "ugo": {
           "img": {"s": ".works_display > ._ugoku-illust-player-container canvas"},
-          "pause": {"s": ".kbpwWEq"} // .@{play}
+          "pause": {"s": "figure > div[role=\"presentation\"] button"}
         }
       },
       "mngIdx": {
@@ -42,36 +42,40 @@ class AnkPixiv extends AnkSite {
       },
       "info": {
         "illust": {
-          "datetime": {"s": ".work-info .meta > li, ._3NX6JMB"}, // .@{createDate}
+          "datetime": {"s": ".work-info .meta > li, figure+div > ul+div"},
           "size": {"s": ".work-info .meta > li+li"},
           "tools": {"s": ".work-info .tools"},
-          "seriesTitle": {"s": "._1XvRWok"}, // .@{seriesNavigationWrapper//seriesTitle}
-          "title": {"s": ".work-info .title, ._36RmBkO"}, // .@{contestBanners//title}
-          "R18": {"s": '.work-info .r-18, .work-info .r-18g, ._12GHAzp > a[href*="R-18"]'}, // .@{xRestrict}
-          "caption": {"s": ".work-info .caption, .AEZvvAS .EG8MDwA p"}, // .@{contestBanners//description} .@{expandable//root}
-          "nice": {"s": ".work-info .js-nice-button, .Ki5EGTG"}, // .@{liked//button}
+          "seriesTitle": { "s": "article figure figcaption >div > div > a[href*=\"/series/\"]" },
+          "title": {"s": ".work-info .title, figcaption > h1"},
+          "R18": {"s": ".work-info .r-18, .work-info .r-18g, figure  footer li > a[href*=\"R-18\"]"},
+          "caption": {"s": ".work-info .caption, figure figcaption > h1+div p"},
+          "nice": {"s": ".work-info .js-nice-button, figure > div[role=\"presentation\"]+div section > div:nth-child(4) > button"},
           "update": {"s": ".bookmark_modal_thumbnail"},
 
-          "tags": {"ALL": ".work-tags .tags > .tag > .text, .FNBxGia"} // .@{tagMeta//tag}
+          "tags": {"ALL": ".work-tags .tags > .tag > .text, figcaption > footer > ul > li > span > a"}
         },
         "member": {
-          "memberLink": {"s": ".profile .user-name, .JdrBYtD ._3RqJTSD"}, // .@{authorMeta} .@{authorMeta//authorName}
-          "feedLink": {"s": '.column-header .tabs a[href^="/stacc/"]'}
+          "memberLink": {
+            "s": ".profile .user-name, article+aside > section > div > div > a[href^=\"/member.php?id=\"]"
+          },
+          "feedLink": {
+            "s": ".column-header .tabs a[href^=\"/stacc/\"]"
+          }
         }
       },
       "misc": {
-        "content": {"s": "._290uSJE"}, // .@{sectionWithBorder//container}
-        "openCantion": {"s": ".ui-expander-container > .ui-expander-target > .expand, ._1MskjZd"}, // .@{expandable//expanderButton}
-        "downloadedDisplayParent": {"s": ".score, ._3NX6JMB"}, // .@{createDate}
+        "content": {"s": "article figure"},
+        "openCantion": {"s": ".ui-expander-container > .ui-expander-target > .expand, figure figcaption h1+div p+div > button"},
+        "downloadedDisplayParent": {"s": ".score, figure+div > ul+div"},
         "recommendList": {"s": "#illust-recommend ._image-items"},
         "feedList": {"s": ["#stacc_timeline", "#stacc_center_timeline"]},
         "rankingList": {"s": ".ranking-items"},
         "discovery": {"s": "#js-mount-point-discovery"},
-        "allContents": {"s": '._3kixzeH div[role="rowgroup"]'}, // .@{thumbnailAll}
-        "recommendContents": {"s": "._3NOStiW > .vLWu89a > aside:last-child"}, // .@{article//body} .@{illustBody}
+        "allContents": {"s": "nav div[role=\"rowgroup\"]"},
+        "recommendContents": {"s": "header+div > div > aside:last-child"},
         "downloadedFilenameArea": {"s": ".ank-pixiv-downloaded-filename-text"},
-        "nextLink": {"s": ".before > a, ._382QOVK._s3YizR"}, // .@{next//link}.@{next}
-        "prevLink": {"s": ".after > a, ._382QOVK._22qFJA0"}   // .@{next//link}.@{prev}
+        "nextLink": {"s": ".before > a, aside nav > a[href^=\"/member_illust.php?\"]:nth-child(1)"},
+        "prevLink": {"s": ".after > a, aside nav > a[href^=\"/member_illust.php?\"]:nth-child(3)"}
       }
     };
 
@@ -628,9 +632,9 @@ class AnkPixiv extends AnkSite {
       {'q': '.sibling-items > .after > a', 'n': 1},       // 前の作品
       {'q': '.sibling-items > .before > a', 'n': 1},      // 次の作品
       // 以下新UI対応
-      {'q': '.aw29wyY .kbZjQ32', 'n': -1, 'c': 'P1uthkK', 'm': 'border'},     // 関連作品 // .@{recommendContainer//list} .@{thumbnailBadge//thumbnailLink} @{thumbnailBadge//thumbnail}
-      {'q': '._3kixzeH ._382QOVK', 'n': -1, 'c': '_30HYOf4', 'm': 'border'},   // サムネイルリスト // .@{thumbnailAll} .@{next//link} @{image}
-      {'q': '._2qiYXlt ._382QOVK', 'n': -1, 'c': '_30HYOf4', 'm': 'border'}    // 前の作品、次の作品 // .@{thumbnailStrip} .@{next//link} @{image}
+      {'q': 'aside li > a[href^="/member_illust.php?mode=medium"]:first-child', 'n': -1, 'r': 'div[style*="background-image:"]', 'm': 'border'},
+      {'q': 'aside nav div[role="rowgroup"] > div >  a[href^="/member_illust.php?mode=medium"]', 'n': -1, 'r': 'div[style*="background-image:"]', 'm': 'border'},
+      {'q': 'aside nav > a[href^="/member_illust.php?"]', 'n': -1, 'r': 'div[style*="background-image:"]', 'm': 'border'}
     ];
 
     return super.markDownloaded(opts,
@@ -839,7 +843,7 @@ class AnkPixiv extends AnkSite {
       let observe = (elm) => {
         new MutationObserver((o) => {
           o.forEach((e) => Array.prototype.forEach.call(e.addedNodes, (n) => {
-            if (n.classList.contains('_2UWAFbb')) { // @{} ... 限定できない
+            if (n.tagName.toLowerCase() == 'li') {
               this.markDownloaded({'node': n, 'force':true});
             }
           }));

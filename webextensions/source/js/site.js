@@ -790,7 +790,32 @@ class AnkSite {
             return;
           }
 
-          let box = AnkUtils.trackbackParentNode(e, t.n, t.c);
+          let box = (() => {
+            if (t.n < 0) {
+              // 子にくだりおりる
+              if (t.r) {
+                // クエリ指定
+                let box = e.querySelector(t.r);
+                if (box) {
+                  return box;
+                }
+              }
+              else if (t.c) {
+                // クラス名指定
+                let box = e.getElementsByClassName(t.c)[0];
+                if (box) {
+                  return box;
+                }
+              }
+              // 指定なし or 見つからなければ最初の子
+              return e.firstChild
+            }
+            else {
+              // 親にさかのぼる
+              return AnkUtils.trackbackParentNode(e, t.n, t.c);
+            }
+          })();
+
           if (!box) {
             return;
           }

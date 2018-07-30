@@ -20,15 +20,11 @@ class _AnkUtilsClass {
   /**
    * 指定階層上の先祖エレメントまで遡る
    * @param node
-   * @param n <0 の場合はfirstChildを返す
+   * @param n
    * @param targetClass 指定がある場合は n まで遡っていなくても見つかり次第返却
    * @returns {*}
    */
    trackbackParentNode (node, n, targetClass) {
-    if (n < 0) {
-      return targetClass && node.getElementsByClassName(targetClass)[0] || node.firstChild;
-    }
-
     for (let i=0; i<n && node; i++, node = node.parentNode) {
       if (targetClass && node.classList.contains(targetClass)) {
         break;
