@@ -656,12 +656,16 @@ class AnkPixiv extends AnkSite {
    * いいね！する
    */
   setNice () {
-    if (this.elements.info.illust.nice.classList.contains('rated')) {
+    let nice = this.elements.info.illust.nice;
+    if (!nice) {
+      return;
+    }
+    if (nice.classList.contains('rated') || nice.disabled) {
       logger.info('already rated');
       return;
     }
 
-    this.elements.info.illust.nice.click();
+    nice.click();
   }
 
   /**
@@ -782,13 +786,13 @@ class AnkPixiv extends AnkSite {
         return;
       }
 
-      let rated = nice.classList.contains('rated') || nice.classList.contains('_2iDv0r8');
+      let rated = nice.classList.contains('rated') || nice.disabled;
       if (rated) {
         return true;
       }
 
       nice.addEventListener('click', () => {
-        let rated = nice.classList.contains('rated') || nice.classList.contains('_2iDv0r8');
+        let rated = nice.classList.contains('rated') || nice.disabled;
         if (rated) {
           return;
         }
