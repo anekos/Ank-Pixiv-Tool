@@ -20,7 +20,7 @@ class AnkNijie extends AnkSite {
       "illust": {
         "imgOvr": {"s": ["#gallery", "#dojin_left .left"]},
         "med": {
-          "img": {"s": "#gallery  > #gallery_open > #img_filter > a > img"},
+          "img": {"s": "#gallery  > #gallery_open > #img_filter > a > img, #gallery  > #gallery_open > #img_filter > a > video"},
 
           "imgs": {"ALL": "#gallery  > #gallery_open > #img_diff > a > img"}
         },
