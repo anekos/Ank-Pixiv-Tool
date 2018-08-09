@@ -25,9 +25,9 @@ class AnkNijie extends AnkSite {
           "imgs": {"ALL": "#gallery  > #gallery_open > #img_diff > a > img"}
         },
         "djn": {
-          "imgLink": {"s": "#dojin_left .left .image a"},
+          "imgLink": {"s": "#dojin_left .left .image a img"},
 
-          "imgLinks": {"ALL": "#gallery_new #thumbnail a"}
+          "imgLinks": {"ALL": "#gallery_new #thumbnail a img"}
         }
       },
       "info": {
@@ -88,9 +88,9 @@ class AnkNijie extends AnkSite {
     };
 
     let getDjnPath = async () => {
-      let m = [{'src': this.elements.illust.djn.imgLink.href}];
+      let m = [{'src': this.elements.illust.djn.imgLink.src}];
       Array.prototype.forEach.call(this.elements.illust.djn.imgLinks, (e) => {
-        m.push({'src': e.href});
+        m.push({'src': e.src.replace(/(\.nijie\.info\/).+?\/(dojin_main\/)/, "$1$2")});
       });
 
       return {
