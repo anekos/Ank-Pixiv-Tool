@@ -42,17 +42,17 @@ class AnkPixiv extends AnkSite {
       },
       "info": {
         "illust": {
-          "datetime": {"s": ".work-info .meta > li, figure+div > ul+div"},
+          "datetime": {"s": ".work-info .meta > li, figcaption ul+div"},
           "size": {"s": ".work-info .meta > li+li"},
           "tools": {"s": ".work-info .tools"},
-          "seriesTitle": { "s": "article figure figcaption >div > div > a[href*=\"/series/\"]" },
-          "title": {"s": ".work-info .title, figcaption > h1"},
-          "R18": {"s": ".work-info .r-18, .work-info .r-18g, figure  footer li > a[href*=\"R-18\"]"},
-          "caption": {"s": ".work-info .caption, figure figcaption > h1+div p"},
+          "seriesTitle": { "s": "figcaption > div > div > a[href*=\"/series/\"]" },
+          "title": {"s": ".work-info .title, figcaption h1"},
+          "R18": {"s": ".work-info .r-18, .work-info .r-18g, figure footer li > a[href*=\"R-18\"]"},
+          "caption": {"s": ".work-info .caption, figcaption h1+div p"},
           "nice": {"s": ".work-info .js-nice-button, figure > div[role=\"presentation\"]+div section > div:nth-child(4) > button"},
           "update": {"s": ".bookmark_modal_thumbnail"},
 
-          "tags": {"ALL": ".work-tags .tags > .tag > .text, figcaption > footer > ul > li > span > a"}
+          "tags": {"ALL": ".work-tags .tags > .tag > .text, figcaption footer > ul > li > span > a"}
         },
         "member": {
           "memberLink": {
@@ -65,8 +65,8 @@ class AnkPixiv extends AnkSite {
       },
       "misc": {
         "content": {"s": "article figure"},
-        "openCantion": {"s": ".ui-expander-container > .ui-expander-target > .expand, figure figcaption h1+div p+div > button"},
-        "downloadedDisplayParent": {"s": ".score, figure+div > ul+div"},
+        "openCantion": {"s": ".ui-expander-container > .ui-expander-target > .expand, figcaption h1+div p+div > button"},
+        "downloadedDisplayParent": {"s": ".score, figcaption ul+div"},
         "recommendList": {"s": "#illust-recommend ._image-items"},
         "feedList": {"s": ["#stacc_timeline", "#stacc_center_timeline"]},
         "rankingList": {"s": ".ranking-items"},
@@ -633,8 +633,8 @@ class AnkPixiv extends AnkSite {
       {'q': '.sibling-items > .before > a', 'n': 1},      // 次の作品
       // 以下新UI対応
       {'q': 'aside li > a[href^="/member_illust.php?mode=medium"]:first-child', 'n': -1, 'r': 'div[style*="background-image:"]', 'm': 'border'},
-      {'q': 'aside nav div[role="rowgroup"] > div >  a[href^="/member_illust.php?mode=medium"]', 'n': -1, 'r': 'div[style*="background-image:"]', 'm': 'border'},
-      {'q': 'aside nav > a[href^="/member_illust.php?"]', 'n': -1, 'r': 'div[style*="background-image:"]', 'm': 'border'}
+      {'q': 'nav div[role="rowgroup"] > div >  a[href^="/member_illust.php?mode=medium"]', 'n': -1, 'r': 'div[style*="background-image:"]', 'm': 'border'},
+      {'q': 'nav > a[href^="/member_illust.php?"]', 'n': -1, 'r': 'div[style*="background-image:"]', 'm': 'border'}
     ];
 
     return super.markDownloaded(opts,
