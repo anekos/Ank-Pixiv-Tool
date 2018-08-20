@@ -545,8 +545,14 @@ class AnkSite {
     return Promise.all([
       this.getPathContext(elm),
       this.getIllustContext(elm),
-      this.getMemberContext(elm)
+      this.getMemberContext(elm),
+      this.getAnyContext(elm)
     ]).then((result) => {
+      if (result[3]) {
+        result[0] = result[3][0] || result[0];
+        result[1] = result[3][1] || result[1];
+        result[2] = result[3][2] || result[2];
+      }
       let context = {
         'downloadable': !!result[0] && !!result[1] && !!result[2],
         'service_id': this.ALT_SITE_ID || this.SITE_ID,
@@ -1134,6 +1140,12 @@ class AnkSite {
    * @param elm
    */
   async getMemberContext (elm) {}
+
+  /**
+   * ダウンロード情報（メンバー情報）の取得
+   * @param elm
+   */
+  async getAnyContext (elm) {}
 
   /**
    * いいね！する

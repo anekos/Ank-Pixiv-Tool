@@ -57,6 +57,10 @@
     let sms = OPTION_DEFAULT.siteModules;
     Object.keys(sms).forEach((site_key) => {
       let box = document.createElement('tr');
+      box.classList.add('item');
+      if (sms[site_key].experimental) {
+        box.classList.add('hidden');
+      }
       container.appendChild(box);
       SITE_MODULE_VALKEYS.forEach((value_key) => {
         let value = sms[site_key][value_key];
