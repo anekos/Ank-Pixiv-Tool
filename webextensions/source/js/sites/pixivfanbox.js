@@ -42,9 +42,10 @@ class AnkPixivFanbox extends AnkSite {
   /**
    * ダウンロード情報（画像パス）の取得
    * @param elm
-   * @returns {Promise}
+   * @param mode
+   * @returns {Promise.<*>}
    */
-  async getAnyContext (elm) {
+  async getAnyContext (elm, mode) {
     /**
      *
      * @param elm
@@ -60,6 +61,11 @@ class AnkPixivFanbox extends AnkSite {
           'responseType': 'json',
           'timeout': this.prefs.xhrTimeout
         });
+
+        if (post_resp.error) {
+          logger.error(new Error(post_resp.message));
+          return null;
+        }
 
         let post_json = post_resp.json.body;
 
@@ -147,17 +153,28 @@ class AnkPixivFanbox extends AnkSite {
 
     };
 
+    /**
+     * ダミー
+     * @param post_data
+     * @returns {Promise.<void>}
+     */
+    let getDummyContext = async (post_data) => {};
+
     //
+
+    mode = mode || this.GET_CONTEXT.ALL;
 
     let post_data = await getPostData(elm);
 
-    logger.debug(JSON.stringify(post_data, null, ' '));
-
     if (post_data) {
+      let path_func = mode & this.GET_CONTEXT.PATH ? getPathContext : getDummyContext;
+      let illust_func = mode & this.GET_CONTEXT.ILLUST ? getIllustContext : getDummyContext;
+      let member_func = mode & this.GET_CONTEXT.MEMBER ? getMemberContext : getDummyContext;
+
       return Promise.all([
-        getPathContext(post_data),
-        getIllustContext(post_data),
-        getMemberContext(post_data)
+        path_func(post_data),
+        illust_func(post_data),
+        member_func(post_data)
       ]);
     }
 

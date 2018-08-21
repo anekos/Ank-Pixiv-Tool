@@ -8,6 +8,8 @@ class AnkPixiv extends AnkSite {
     super();
 
     this.SITE_ID = 'PXV';
+
+    this.USE_AJAX_PAGES_DATA = false;
   }
 
   /**
@@ -25,12 +27,10 @@ class AnkPixiv extends AnkSite {
         },
         "mng": {
           "img": {"s": ".works_display > ._work > ._layout-thumbnail > img, figure > div[role=\"presentation\"] a[href^=\"/member_illust.php?mode=manga\"] > img"},
-          "largeLink": {"s": ".works_display > a, figure > div[role=\"presentation\"] a[href^=\"/member_illust.php?mode=manga\"]"},
-          "pages": {"s": "figure > div[role=\"presentation\"] > div:nth-child(1) > div"}
+          "largeLink": {"s": ".works_display > a, figure > div[role=\"presentation\"] a[href^=\"/member_illust.php?mode=manga\"]"}
         },
         "ugo": {
-          "img": {"s": ".works_display > ._ugoku-illust-player-container canvas"},
-          "pause": {"s": "figure > div[role=\"presentation\"] button"}
+          "img": {"s": ".works_display > ._ugoku-illust-player-container canvas"}
         }
       },
       "mngIdx": {
@@ -45,18 +45,17 @@ class AnkPixiv extends AnkSite {
           "datetime": {"s": ".work-info .meta > li, figcaption ul+div"},
           "size": {"s": ".work-info .meta > li+li"},
           "tools": {"s": ".work-info .tools"},
-          "seriesTitle": { "s": "figcaption > div > div > a[href*=\"/series/\"]" },
-          "title": {"s": ".work-info .title, figcaption h1"},
-          "R18": {"s": ".work-info .r-18, .work-info .r-18g, figure footer li > a[href*=\"R-18\"]"},
-          "caption": {"s": ".work-info .caption, figcaption h1+div p"},
+          "title": {"s": ".work-info .title"},
+          "R18": {"s": ".work-info .r-18, .work-info .r-18g"},
+          "caption": {"s": ".work-info .caption"},
           "nice": {"s": ".work-info .js-nice-button, figure > div[role=\"presentation\"]+div section > div:nth-child(4) > button"},
           "update": {"s": ".bookmark_modal_thumbnail"},
 
-          "tags": {"ALL": ".work-tags .tags > .tag > .text, figcaption footer > ul > li > span > a"}
+          "tags": {"ALL": ".work-tags .tags > .tag > .text"}
         },
         "member": {
           "memberLink": {
-            "s": ".profile .user-name, article+aside > section > div > div > a[href^=\"/member.php?id=\"]"
+            "s": ".profile .user-name"
           },
           "feedLink": {
             "s": ".column-header .tabs a[href^=\"/stacc/\"]"
@@ -65,7 +64,7 @@ class AnkPixiv extends AnkSite {
       },
       "misc": {
         "content": {"s": "article figure"},
-        "openCantion": {"s": ".ui-expander-container > .ui-expander-target > .expand, figcaption h1+div p+div > button"},
+        "openCaption": {"s": ".ui-expander-container > .ui-expander-target > .expand, figcaption h1+div p+div > button"},
         "downloadedDisplayParent": {"s": ".score, figcaption ul+div"},
         "recommendList": {"s": "#illust-recommend ._image-items"},
         "feedList": {"s": ["#stacc_timeline", "#stacc_center_timeline"]},
@@ -94,6 +93,285 @@ class AnkPixiv extends AnkSite {
   inIllustPage (doc) {
     doc = doc || document;
     return !!this.getIllustId(doc.location.href);
+  }
+
+  /**
+   *
+   * @param elm
+   * @param mode
+   * @returns {Promise.<*>}
+   */
+  async getAnyContext (elm, mode) {
+    /**
+     *
+     * @param url
+     * @returns {Promise.<*>}
+     */
+    let getPostData = async (url) => {
+      try {
+        let post_resp = await remote.get({
+          'url': url,
+          'responseType': 'json',
+          'timeout': this.prefs.xhrTimeout
+        });
+
+        if (post_resp.error) {
+          logger.error(new Error(post_resp.message));
+          return null;
+        }
+
+        let post_json = post_resp.json.body;
+
+        return post_json;
+      }
+      catch (e) {
+        logger.error(e);
+      }
+    };
+
+    /**
+     *
+     * @param elm
+     * @returns {Promise.<void>}
+     */
+    let getIllustData = async (elm) => {
+      let illustId = this.getIllustId(elm.doc.location.href);
+      let url = 'https://www.pixiv.net/ajax/illust/'+illustId;
+
+      return getPostData(url);
+    };
+
+    /**
+     *
+     * @param elm
+     * @returns {Promise.<void>}
+     */
+    let getPagesData = async (illustId) => {
+      let url = 'https://www.pixiv.net/ajax/illust/'+illustId+'/pages';
+
+      return getPostData(url);
+    };
+
+    /**
+     *
+     * @param elm
+     * @returns {Promise.<void>}
+     */
+    let getUgoiraMeta = async (illustId) => {
+      let url = 'https://www.pixiv.net/ajax/illust/'+illustId+'/ugoira_meta';
+
+      return getPostData(url);
+    };
+
+    /**
+     *
+     * @param post_data
+     * @returns {Promise.<{original: Array}>}
+     */
+    let getPathContext = async (illust_data) => {
+      try {
+        let loc = elm.doc.location.href;
+
+        let orig_base = illust_data.urls.original;
+        let thumb_base = illust_data.urls.regular || orig_base;
+
+        let genPages = (base, pages) => {
+          return [...Array(pages).keys()].map((v, i) => {
+            return {
+              'src': base.replace('_p0', '_p'+i),
+              'referrer': loc
+            }
+          });
+        };
+
+        let original = genPages(orig_base, illust_data.pageCount);
+        let thumbnail = genPages(thumb_base, illust_data.pageCount);
+
+        if (this.USE_AJAX_PAGES_DATA) {
+          // 存在するが使われていないAPIなので利用は保留
+          let pages_data = await getPagesData(illust_data.illustId);
+          if (!pages_data) {
+            return null;
+          }
+          original = pages_data.map((e) => { return {'src': e.urls.original, 'referrer': loc}});
+          thumbnail = pages_data.map((e) => { return {'src': e.urls.regular, 'referrer': loc}});
+        }
+
+        if (illust_data.illustType != 1) {
+          let sp_book_style = illust_data.contestBanners && parseInt(illust_data.contestBanners.illust_book_style, 10);
+          if (sp_book_style == 1 || sp_book_style == 2) {
+            // 特殊な値を返してくるタイプのブックスタイルマンガ (ex. 46271807 ～ 事務局の作品でしか見かけないが？)
+            illust_data.illustType = 1;
+            illust_data.restrict = sp_book_style == 1 && 2 || 1;
+          }
+        }
+
+        if (illust_data.restrict) {
+          // ブックスタイルマンガ - ブックスタイルマンガは作品数が少ないので考慮漏れがあるかもしれない
+
+          let swapLR = (a, i) => {
+            let tmp = a[i-1];
+            a[i-1] = a[i];
+            a[i] = tmp;
+          };
+
+          // 見開き方向の判定
+          let left2right = illust_data.restrict == 1;
+
+          // 見開きを考慮したページ数のカウントと画像の並べ替え
+          for (let i=0; i<thumbnail.length; i++) {
+            let p = i + 1;
+            let odd = p % 2;
+            thumbnail[i].facingNo = original[i].facingNo = (p - odd) / 2 + 1;
+
+            // 見開きの向きに合わせて画像の順番を入れ替える
+            if (i > 0 && (left2right && odd)) {
+              swapLR(thumbnail, i);
+              swapLR(original, i);
+            }
+          }
+        }
+
+        return {
+          'original': original,
+          'thumbnail': thumbnail
+        };
+      }
+      catch (e) {
+        logger.error(e);
+      }
+    };
+
+    /**
+     *
+     * @param illust_data
+     * @returns {Promise.<{thumbnail, original}>}
+     */
+    let getUgoiraContext = async (illust_data) => {
+      try {
+        let f = (s, u) => {
+          return [{
+            'src': s,
+            'frames': u.map((o) => {return {'f':o.file, 'd':o.delay}}),
+            'referrer': elm.doc.location.href
+          }];
+        };
+
+        let ugoira_meta = await getUgoiraMeta(illust_data.illustId);
+        if (!ugoira_meta) {
+          return null;
+        }
+
+        return {
+          'thumbnail': f(ugoira_meta.src, ugoira_meta.frames),
+          'original': f(ugoira_meta.originalSrc, ugoira_meta.frames)
+        };
+      }
+      catch (e) {
+        logger.error(e);
+      }
+    };
+
+    /**
+     *
+     * @param illust_data
+     * @returns {Promise.<{url: string, id: *, title: (string|*|string|XML|void), posted: (boolean|*|Number), postedYMD: (boolean|string|*), size: ({width, height}|string), tags: *, tools: string, caption: (string|*|string|XML|void), R18: boolean}>}
+     */
+    let getIllustContext = async (illust_data) => {
+      try {
+        let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(illust_data.createDate));
+        let updated = this.getPosted(() => AnkUtils.decodeTextToDateData(illust_data.uploadDate));
+
+        let tags = illust_data.tags.tags.map((e) => {
+          let tag = AnkUtils.trim(e.tag);
+          if (this.prefs.saveTagsWithTranslation && e.romaji) {
+              tag += '('+e.romaji+')';
+          }
+          return tag;
+        });
+
+        let info = {
+          'url': elm.doc.location.href,
+          'id': this.getIllustId(elm.doc.location.href),
+          'title': AnkUtils.trim(illust_data.title),
+          'posted': !posted.fault && posted.timestamp,
+          'postedYMD': !posted.fault && posted.ymd,
+          'size': illust_data.width && {
+            'width': illust_data.width,
+            'height': illust_data.height
+          } || '',
+          'tags': tags,
+          'tools': '',
+          'caption': AnkUtils.trim(AnkUtils.decodeTextContent(illust_data.description)),
+          'R18': !!illust_data.xRestrict
+        };
+
+        if (updated.timestamp > posted.timestamp) {
+          // 更新があった場合
+          info.updated = updated.timestamp;
+          info.updatedYMD = updated.ymd;
+        }
+
+        if (illust_data.seriesNavData) {
+          info.seriesId = illust_data.seriesNavData.seriesId;
+          info.seriesTitle = AnkUtils.trim(illust_data.seriesNavData.title);
+          info.seriesOrder = illust_data.seriesNavData.order;
+        }
+
+        return info;
+      }
+      catch (e) {
+        logger.error(e);
+      }
+    };
+
+    /**
+     *
+     * @param post_data
+     * @returns {Promise.<{id: *, pixiv_id: null, name: (string|*|string|XML|void), memoized_name: null}>}
+     */
+    let getMemberContext = async (illust_data) => {
+      try {
+        return {
+          'id': illust_data.userId,
+          'pixiv_id': illust_data.userAccount,
+          'name': AnkUtils.trim(illust_data.userName),
+          'memoized_name': null
+        };
+      }
+      catch (e) {
+        logger.error(e);
+      }
+
+    };
+
+    /**
+     * ダミー
+     * @returns {Promise.<void>}
+     */
+    let getDummyContext = async (illust_data) => {};
+
+    //
+
+    mode = mode || this.GET_CONTEXT.ALL;
+
+    let illust_data = await getIllustData(elm);
+
+    if (illust_data) {
+      let path_func = illust_data.illustType == 2 ? getUgoiraContext : getPathContext;
+      path_func = mode & this.GET_CONTEXT.PATH ? path_func : getDummyContext;
+
+      let illust_func = mode & this.GET_CONTEXT.ILLUST ? getIllustContext : getDummyContext;
+      let member_func = mode & this.GET_CONTEXT.MEMBER ? getMemberContext : getDummyContext;
+
+      return Promise.all([
+        path_func(illust_data),
+        illust_func(illust_data),
+        member_func(illust_data)
+      ]);
+    }
+
+    return null;
   }
 
   /**
@@ -335,126 +613,6 @@ class AnkPixiv extends AnkSite {
       return AnkUtils.executeSiteScript(id, name, script);
     };
 
-    let getMangaPath = async () => {
-      try {
-        let loc = elm.doc.location.href;
-        let illustId = this.getIllustId(loc);
-
-        let illust_resp = await remote.get({
-          'url': 'https://www.pixiv.net/ajax/illust/'+illustId,
-          'responseType': 'json',
-          'timeout': this.prefs.xhrTimeout
-        });
-
-        let pages_resp = await remote.get({
-          'url': 'https://www.pixiv.net/ajax/illust/'+illustId+'/pages',
-          'responseType': 'json',
-          'timeout': this.prefs.xhrTimeout
-        });
-
-        let illust_json = illust_resp.json.body;
-        let pages_json = pages_resp.json.body;
-
-        let thumbnail = pages_json.map((e) => { return {'src': e.urls.regular, 'referrer': loc}});
-        let original = pages_json.map((e) => { return {'src': e.urls.original, 'referrer': loc}});
-
-        if (illust_json.illustType != 1) {
-          let sp_book_style = illust_json.contestBanners && parseInt(illust_json.contestBanners.illust_book_style, 10);
-          if (sp_book_style == 1 || sp_book_style == 2) {
-            // 特殊な値を返してくるタイプのブックスタイルマンガ (ex. 46271807 ～ 事務局の作品でしか見かけないが？)
-            illust_json.illustType = 1;
-            illust_json.restrict = sp_book_style == 1 && 2 || 1;
-          }
-          else if (illust_json.pageCount <= 1) {
-            // マンガじゃないかも
-            logger.error('not manga: illustType =', illust_json.illustType);
-            return Promise.reject();
-          }
-        }
-
-        if (!illust_json.restrict) {
-          // イラストマンガ
-          return {
-            'original': original.length == 1 ? original[0] : original,
-            'thumbnail': thumbnail.length == 1 ? thumbnail[0] : thumbnail
-          };
-        }
-        else {
-          // ブックスタイルマンガ - ブックスタイルマンガは作品数が少ないので考慮漏れがあるかもしれない
-
-          let swapLR = (a, i) => {
-            let tmp = a[i-1];
-            a[i-1] = a[i];
-            a[i] = tmp;
-          };
-
-          // 見開き方向の判定
-          let left2right = illust_json.restrict == 1;
-
-          // 見開きを考慮したページ数のカウントと画像の並べ替え
-          for (let i=0; i<thumbnail.length; i++) {
-            let p = i + 1;
-            let odd = p % 2;
-            thumbnail[i].facingNo = original[i].facingNo = (p - odd) / 2 + 1;
-
-            // 見開きの向きに合わせて画像の順番を入れ替える
-            if (i > 0 && (left2right && odd)) {
-              swapLR(thumbnail, i);
-              swapLR(original, i);
-            }
-          }
-
-          return {
-            'original': original,
-            'thumbnail': thumbnail
-          };
-        }
-      }
-      catch (e) {
-        logger.error(e);
-      }
-    };
-
-    let getUgoiraPath = async () => {
-      try {
-        let f = (s, u, r) => {
-          return [{
-            'src': s,
-            'frames': u.map((o) => {return {'f':o.file, 'd':o.delay}}),
-            'referrer': r
-          }];
-        };
-
-        let loc = elm.doc.location.href;
-        let illustId = this.getIllustId(loc);
-
-        let resp = await remote.get({
-          'url': 'https://www.pixiv.net/ajax/illust/'+illustId+'/ugoira_meta',
-          'responseType': 'json',
-          'timeout': this.prefs.xhrTimeout
-        });
-
-        return {
-          'thumbnail': f(resp.json.body.src, resp.json.body.frames, loc),
-          'original': f(resp.json.body.originalSrc, resp.json.body.frames, loc)
-        };
-      }
-      catch (e) {
-        logger.error(e);
-      }
-    };
-
-    //
-
-    // 新デザイン
-    if (elm.illust.mng.pages) {
-      return getMangaPath();
-    }
-    if (elm.illust.ugo.pause) {
-      return getUgoiraPath();
-    }
-
-    // 旧デザイン
     if (elm.illust.med.img) {
       return getMedPath();
     }
@@ -523,14 +681,6 @@ class AnkPixiv extends AnkSite {
           }
         }
       })(elm.info.illust.update);
-
-      ((e) => {
-        let m = e && /\/(\d+)$/.exec(e.href);
-        if (m) {
-          info.seriesId = m[1];
-          info.seriesTitle = AnkUtils.trim(elm.info.illust.seriesTitle.textContent);
-        }
-      })(elm.info.illust.seriesTitle);
 
       return info;
     }
@@ -761,7 +911,7 @@ class AnkPixiv extends AnkSite {
         return true;
       }
 
-      let caption = this.elements.misc.openCantion;
+      let caption = this.elements.misc.openCaption;
       if (!caption) {
         return;
       }

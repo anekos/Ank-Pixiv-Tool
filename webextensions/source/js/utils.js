@@ -75,15 +75,40 @@ class _AnkUtilsClass {
   }
 
   /**
+   * innerHTML的なデータからテキストを抽出する(brは改行に変換)
+   * @param t
+   * @returns {string}
+   */
+  decodeTextContent (t) {
+    // <br> -> \n
+    t = t.replace(/<br\s*\/?>/ig, '\n');
+
+    try {
+      return new DOMParser().parseFromString(t, 'text/html').body.textContent;
+    }
+    catch (e) {}
+
+    // DOMParser非対応の場合
+    let f = (t) => {
+      while (true) {
+        let s = t.replace(/<([a-z]+?)[^>]*?>(.+?)<\/(\1)>/i, '$2');
+        if (s.length == t.length) {
+          return t;
+        }
+        t = s;
+      }
+    };
+
+    return f(t);
+  }
+
+  /**
    * br を改行として認識する textContent
    *    elem:     要素
    *    return:   String;
    */
    getTextContent (e) {
-    let doc = e.ownerDocument;
-    let temp = doc.createElement('div');
-    temp.innerHTML = e.innerHTML.replace(/<br\s*\/?>/ig, '\n');
-    return temp.textContent;
+     return this.decodeTextContent(e.innerHTML);
   }
 
   /**

@@ -20,11 +20,19 @@ class AnkSite {
       'markDownloaded': false
     };
     this.marked = 0;        // markingを行った最終時刻（キューインや保存完了の時刻と比較する）
+    this.displayed = 0;
 
     this.FUNC_INST_RETRY_VALUE = {
       'max': 30,
       'wait': 1000
     };
+
+    this.GET_CONTEXT = {
+      'PATH': 0x01,
+      'ILLUST': 0x02,
+      'MEMBER': 0x04,
+      'ALL': 0x07
+    }
   }
 
   /**
@@ -109,6 +117,7 @@ class AnkSite {
       'markDownloaded': false
     };
     this.marked = 0;
+    this.displayed = 0;
   }
 
   /**
@@ -542,32 +551,29 @@ class AnkSite {
       }
     }
 
-    return Promise.all([
-      this.getPathContext(elm),
-      this.getIllustContext(elm),
-      this.getMemberContext(elm),
-      this.getAnyContext(elm)
-    ]).then((result) => {
-      if (result[3]) {
-        result[0] = result[3][0] || result[0];
-        result[1] = result[3][1] || result[1];
-        result[2] = result[3][2] || result[2];
-      }
-      let context = {
-        'downloadable': !!result[0] && !!result[1] && !!result[2],
-        'service_id': this.ALT_SITE_ID || this.SITE_ID,
-        'siteName': this.prefs.site.folder,
-        'path': result[0],
-        'info': {
-          'illust': result[1],
-          'member': result[2]
-        }
-      };
+    return this.getAnyContext(elm, this.GET_CONTEXT.ALL)
+      .then((r) => {
+        return Promise.all([
+          r && r[0] || this.getPathContext(elm),
+          r && r[1] || this.getIllustContext(elm),
+          r && r[2] || this.getMemberContext(elm)
+        ]);
+      }).then((result) => {
+        let context = {
+          'downloadable': !!result[0] && !!result[1] && !!result[2],
+          'service_id': this.ALT_SITE_ID || this.SITE_ID,
+          'siteName': this.prefs.site.folder,
+          'path': result[0],
+          'info': {
+            'illust': result[1],
+            'member': result[2]
+          }
+        };
 
-      logger.info('CONTEXT: ', context);
+        logger.info('CONTEXT: ', context);
 
-      return this.contextCache = context;
-    });
+        return this.contextCache = context;
+      });
   }
 
   /**
@@ -628,7 +634,7 @@ class AnkSite {
    */
   forceDisplayAndMarkDownloaded () {
     if (this.inIllustPage()) {
-      this.displayDownloaded({'force': true});
+      this.displayDownloaded({'force': true}).then();
     }
     this.markDownloaded({'force': true});
   }
@@ -739,7 +745,28 @@ class AnkSite {
       return true;
     }
 
-    let illustContext = await this.getIllustContext(elm);
+    let changed = await this.requestGetSiteChanged()
+      .then((siteChanged) => {
+        if (this.displayed > siteChanged) {
+          logger.debug('skip display downloaded');
+          return;
+        }
+
+        this.displayed = new Date().getTime();
+        return true;
+      });
+    if (!changed) {
+      // 前回実行時から変化なし
+      return true;
+    }
+
+    let illustContext = await this.getAnyContext(elm, this.GET_CONTEXT.ILLUST)
+      .then((r) => {
+        if (r) {
+          return r[1];
+        }
+        return this.getIllustContext(elm);
+      });
     if (!illustContext) {
       return false;
     }
@@ -1144,8 +1171,10 @@ class AnkSite {
   /**
    * ダウンロード情報（メンバー情報）の取得
    * @param elm
+   * @param mode
+   * @returns {Promise.<void>}
    */
-  async getAnyContext (elm) {}
+  async getAnyContext (elm, mode) {}
 
   /**
    * いいね！する
