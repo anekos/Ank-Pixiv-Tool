@@ -68,101 +68,122 @@ class AnkTinami extends AnkSite {
   }
 
   /**
-   * ダウンロード情報（画像パス）の取得
+   *
    * @param elm
-   * @returns {Promise}
+   * @param mode
+   * @returns {Promise.<{}>}
    */
-  async getPathContext (elm) {
-    let getMngPath = async () => {
-      let m = Array.prototype.map.call(elm.illust.mng.imgs, (e) => {
-        return {'src': e.src};
-      });
+  async getAnyContext (elm, mode) {
 
-      return {
-        'thumbnail': m,
-        'original': m
-      }
-    };
-
-    let getMedPath = async () => {
-      let params = Array.prototype.map.call(elm.misc.postParams, (e) => {
-        return [e.getAttribute('name'), e.getAttribute('value')].join('=');
-      }).join('&');
-      let respMed = await remote.post({
-        'url': elm.doc.location.href,
-        'body': params,
-        'timeout': this.prefs.xhrTimeout,
-        'responseType': 'document'
-      });
-
-
-      let docMed = respMed.document;
-
-      let m = Array.prototype.filter.call(docMed.querySelectorAll('img'), (e) => /^https?:\/\/img\.tinami\.com\/illust\d*\/img\//.test(e.src))
-        .map((e) => {
+    /**
+     * ダウンロード情報（画像パス）の取得
+     * @param elm
+     * @returns {Promise}
+     */
+    let getPathContext = async (elm) => {
+      let getMngPath = async () => {
+        let m = Array.prototype.map.call(elm.illust.mng.imgs, (e) => {
           return {'src': e.src};
         });
 
-      return {
-        'thumbnail': m,
-        'original': m
+        return {
+          'thumbnail': m,
+          'original': m
+        }
+      };
+
+      let getMedPath = async () => {
+        let params = Array.prototype.map.call(elm.misc.postParams, (e) => {
+          return [e.getAttribute('name'), e.getAttribute('value')].join('=');
+        }).join('&');
+        let respMed = await remote.post({
+          'url': elm.doc.location.href,
+          'body': params,
+          'timeout': this.prefs.xhrTimeout,
+          'responseType': 'document'
+        });
+
+
+        let docMed = respMed.document;
+
+        let m = Array.prototype.filter.call(docMed.querySelectorAll('img'), (e) => /^https?:\/\/img\.tinami\.com\/illust\d*\/img\//.test(e.src))
+          .map((e) => {
+            return {'src': e.src};
+          });
+
+        return {
+          'thumbnail': m,
+          'original': m
+        }
+      };
+
+      if (elm.illust.med.img) {
+        return getMedPath();
+      }
+      if (elm.illust.mng.imgs) {
+        return getMngPath();
       }
     };
 
-    if (elm.illust.med.img) {
-      return getMedPath();
+    /**
+     * ダウンロード情報（イラスト情報）の取得
+     * @param elm
+     * @returns {{url: string, id: *, title: (*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: *, caption: string, R18: boolean}}
+     */
+    let getIllustContext = (elm) => {
+      try {
+        let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(elm.info.illust.datetime.textContent));
+
+        let info = {
+          'url': elm.doc.location.href,
+          'id': this.getIllustId(elm.doc.location.href),
+          'title': AnkUtils.trim(elm.info.illust.title.textContent),
+          'posted': !posted.fault && posted.timestamp,
+          'postedYMD': !posted.fault && posted.ymd,
+          'tags': Array.prototype.map.call(elm.info.illust.tags, (e) => AnkUtils.trim(e.textContent)),
+          'caption': Array.prototype.map.call(elm.info.illust.captions, (e) =>AnkUtils.trim(e.textContent)).join('\n'),
+          'R18': false
+        };
+
+        return info;
+      }
+      catch (e) {
+        logger.error(e);
+      }
+    };
+
+    /**
+     * ダウンロード情報（メンバー情報）の取得
+     * @param elm
+     * @returns {{id: *, name: (*|string|XML|void|string), pixiv_id: null, memoized_name: null}}
+     */
+    let getMemberContext = (elm) => {
+      try {
+        return {
+          'id': /\/profile\/(.+)(?:\?|$)/.exec(elm.info.member.memberLink.href)[1],
+          'name': AnkUtils.trim(elm.info.member.memberLink.textContent),
+          'pixiv_id': null,
+          'memoized_name': null
+        };
+      }
+      catch (e) {
+        logger.error(e);
+      }
+    };
+
+    //
+
+    let context = {};
+
+    if (mode & this.GET_CONTEXT.PATH) {
+      context.path = await getPathContext(elm);
     }
-    if (elm.illust.mng.imgs) {
-      return getMngPath();
-    }
+    context.illust = getIllustContext(elm);
+    context.member = getMemberContext(elm);
+
+    return context;
   }
 
-  /**
-   * ダウンロード情報（イラスト情報）の取得
-   * @param elm
-   * @returns {Promise.<{url: string, id: *, title: (*|string|XML|void), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: *, caption: string, R18: boolean}>}
-   */
-  async getIllustContext (elm) {
-    try {
-      let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(elm.info.illust.datetime.textContent));
-
-
-      let info = {
-        'url': elm.doc.location.href,
-        'id': this.getIllustId(elm.doc.location.href),
-        'title': AnkUtils.trim(elm.info.illust.title.textContent),
-        'posted': !posted.fault && posted.timestamp,
-        'postedYMD': !posted.fault && posted.ymd,
-        'tags': Array.prototype.map.call(elm.info.illust.tags, (e) => AnkUtils.trim(e.textContent)),
-        'caption': Array.prototype.map.call(elm.info.illust.captions, (e) =>AnkUtils.trim(e.textContent)).join('\n'),
-        'R18': false
-      };
-
-      return info;
-    }
-    catch (e) {
-      logger.error(e);
-    }
-  }
-
-  /**
-   * ダウンロード情報（メンバー情報）の取得
-   * @param elm
-   * @returns {Promise.<{id: *, name: (*|string|XML|void), pixiv_id: null, memoized_name: null}>}
-   */
-  async getMemberContext(elm) {
-    try {
-      return {
-        'id': /\/profile\/(.+)(?:\?|$)/.exec(elm.info.member.memberLink.href)[1],
-        'name': AnkUtils.trim(elm.info.member.memberLink.textContent),
-        'pixiv_id': null,
-        'memoized_name': null
-      };
-    }
-    catch (e) {
-      logger.error(e);
-    }
-  }
 
   /**
    * イラストIDの取得
@@ -175,11 +196,9 @@ class AnkTinami extends AnkSite {
 
   /**
    * サムネイルにダウンロード済みマークを付ける
-   * @param opts
-   * @param siteSpecs
-   * @returns {*}
+   * @returns {{queries: [*,*,*], getId: (function(*=)), getLastUpdate: undefined, method: undefined}}
    */
-  markDownloaded (opts, siteSpecs) {
+  getMarkingRules () {
 
     const MARKING_TARGETS = [
       { 'q':'td > p.capt + a', 'n':1},                              // 一覧
@@ -187,15 +206,14 @@ class AnkTinami extends AnkSite {
       { 'q':'.thumbs > li > ul > li > a', 'n':1}                    // 最近の投稿作品
     ];
 
-    return super.markDownloaded(opts,
-      {
-        'queries': MARKING_TARGETS,
-        'getId': (href) => {
-          return this.getIllustId(href);
-        },
-        'getLastUpdate': undefined,
-        'method': undefined
-      });
+    return {
+      'queries': MARKING_TARGETS,
+      'getId': (href) => {
+        return this.getIllustId(href);
+      },
+      'getLastUpdate': undefined,
+      'method': undefined
+    };
   }
 
   /**
@@ -256,7 +274,8 @@ class AnkTinami extends AnkSite {
         return false;
       }
 
-      return this.displayDownloaded();
+      this.displayDownloaded().then();
+      return true;
     };
 
     // イメレスのサムネイルにダウンロード済みマークを表示する
@@ -265,7 +284,8 @@ class AnkTinami extends AnkSite {
         return false;
       }
 
-      return this.markDownloaded();
+      this.markDownloaded().then();
+      return true;
     };
 
     // キャプションを自動で開く
@@ -310,7 +330,8 @@ class AnkTinami extends AnkSite {
         return false;
       }
 
-      return this.markDownloaded();
+      this.markDownloaded().then();
+      return true;
     };
 
     Promise.all([

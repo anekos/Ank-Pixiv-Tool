@@ -74,110 +74,123 @@ class AnkTweetdeck extends AnkSite {
   }
 
   /**
-   * ダウンロード情報（画像パス）の取得
+   *
    * @param elm
-   * @returns {Promise}
+   * @param mode
+   * @returns {Promise.<{}>}
    */
-  async getPathContext (elm) {
-    let photos = elm.illust.photos;
-    if (!photos || photos.length == 0) {
-      return;
-    }
+  async getAnyContext (elm, mode) {
 
-    let thumb = Array.prototype.map.call(photos, (e) => {
-      let src = (/background-image:\s*url\("?(.+?)"?\)/.exec(e.getAttribute('style')) || [])[1];
-      if (!src) {
-        let img = e.querySelector('.media-img');
-        if (!img || !img.src) {
-          return;
-        }
-
-        src = img.src;
+    /**
+     * ダウンロード情報（画像パス）の取得
+     * @param elm
+     * @returns {{thumbnail: (*|Array.<T>), original: Array}}
+     */
+    let getPathContext = (elm) => {
+      let photos = elm.illust.photos;
+      if (!photos || photos.length == 0) {
+        return;
       }
-      return {'src': src.replace(/\?.+?(:|$)/, '$1').replace(/:small$/, ':large')};
-    })
-      .filter(e => !!e);
 
-    if (thumb.length < photos.length) {
-      return;
-    }
+      let thumb = Array.prototype.map.call(photos, (e) => {
+        let src = (/background-image:\s*url\("?(.+?)"?\)/.exec(e.getAttribute('style')) || [])[1];
+        if (!src) {
+          let img = e.querySelector('.media-img');
+          if (!img || !img.src) {
+            return;
+          }
 
-    let orig = thumb.map((e) => {
-      return {'src': e.src.replace(/(?::large)?$/, ':orig')};
-    });
+          src = img.src;
+        }
+        return {'src': src.replace(/\?.+?(:|$)/, '$1').replace(/:small$/, ':large')};
+      })
+        .filter(e => !!e);
 
-    return {
-      'thumbnail': thumb,
-      'original': orig
-    };
-  }
+      if (thumb.length < photos.length) {
+        return;
+      }
 
-  /**
-   * ダウンロード情報（イラスト情報）の取得
-   * @param elm
-   * @returns {Promise.<{url: (string|*), id: *, title: (*|string|XML|void), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: Array, caption: (*|string|XML|void), R18: boolean}>}
-   */
-  async getIllustContext (elm) {
-    try {
-      let dd = new Date(parseInt(elm.info.illust.datetime.getAttribute('data-time'),10));
-      let posted = this.getPosted(() => AnkUtils.getDateData(dd));
+      let orig = thumb.map((e) => {
+        return {'src': e.src.replace(/(?::large)?$/, ':orig')};
+      });
 
-      let info = {
-        'url': elm.info.illust.ownLink.href,
-        'id': /\/status\/(\d+)$/.exec(elm.info.illust.ownLink.href)[1],
-        'title': AnkUtils.trim(elm.info.illust.caption.textContent),
-        'posted': !posted.fault && posted.timestamp,
-        'postedYMD': !posted.fault && posted.ymd,
-        'tags': [],
-        'caption': AnkUtils.trim(elm.info.illust.caption.textContent),
-        'R18': false
-      };
-
-      return info;
-    }
-    catch (e) {
-      logger.error(e);
-    }
-  }
-
-  /**
-   * ダウンロード情報（メンバー情報）の取得
-   * @param elm
-   * @returns {Promise.<{id: string, name: (*|string|XML|void), pixiv_id: *, memoized_name: null}>}
-   */
-  async getMemberContext(elm) {
-    try {
       return {
-        'id': elm.info.illust.actionsMenu.getAttribute('data-user-id'),
-        'name': AnkUtils.trim(elm.info.illust.name.textContent),
-        'pixiv_id': /^https?:\/\/twitter\.com\/(.+?)\//.exec(elm.info.illust.ownLink.href)[1],
-        'memoized_name': null
+        'thumbnail': thumb,
+        'original': orig
       };
-    }
-    catch (e) {
-      logger.error(e);
-    }
+    };
+
+    /**
+     * ダウンロード情報（イラスト情報）の取得
+     * @param elm
+     * @returns {{url, id: *, title: (*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: Array, caption: (*|string|XML|void|string), R18: boolean}}
+     */
+    let getIllustContext = (elm) => {
+      try {
+        let dd = new Date(parseInt(elm.info.illust.datetime.getAttribute('data-time'),10));
+        let posted = this.getPosted(() => AnkUtils.getDateData(dd));
+
+        let info = {
+          'url': elm.info.illust.ownLink.href,
+          'id': /\/status\/(\d+)$/.exec(elm.info.illust.ownLink.href)[1],
+          'title': AnkUtils.trim(elm.info.illust.caption.textContent),
+          'posted': !posted.fault && posted.timestamp,
+          'postedYMD': !posted.fault && posted.ymd,
+          'tags': [],
+          'caption': AnkUtils.trim(elm.info.illust.caption.textContent),
+          'R18': false
+        };
+
+        return info;
+      }
+      catch (e) {
+        logger.error(e);
+      }
+    };
+
+    /**
+     * ダウンロード情報（メンバー情報）の取得
+     * @param elm
+     * @returns {{id: string, name: (*|string|XML|void|string), pixiv_id: *, memoized_name: null}}
+     */
+    let getMemberContext = (elm) => {
+      try {
+        return {
+          'id': elm.info.illust.actionsMenu.getAttribute('data-user-id'),
+          'name': AnkUtils.trim(elm.info.illust.name.textContent),
+          'pixiv_id': /^https?:\/\/twitter\.com\/(.+?)\//.exec(elm.info.illust.ownLink.href)[1],
+          'memoized_name': null
+        };
+      }
+      catch (e) {
+        logger.error(e);
+      }
+    };
+
+    //
+
+    let context = {};
+
+    context.path = getPathContext(elm);
+    context.illust = getIllustContext(elm);
+    context.member = getMemberContext(elm);
+
+    return context;
   }
 
   /**
-   * ダウンロード情報をまとめる
+   * override : getContext()
    * @param elm
+   * @param mode
    * @returns {Promise.<*>}
    */
-  async getContext (elm) {
+  async getContext (elm, mode) {
     if (!this.inIllustPage()) {
       return;
     }
 
-    return super.getContext(elm);
+    return super.getContext(elm, mode);
   }
-
-  /**
-   *
-   * @param opts
-   * @param siteSpecs
-   */
-  markDownloaded (opts, siteSpecs) {}
 
   /**
    *
@@ -192,7 +205,7 @@ class AnkTweetdeck extends AnkSite {
 
       new MutationObserver(() => {
         if (this.inIllustPage()) {
-          this.displayDownloaded({'force': true});
+          this.displayDownloaded({'force': true}).then();
         }
       }).observe(modal, {'attributes': true});
 

@@ -99,68 +99,87 @@ class AnkDeviantart extends AnkSite {
   }
 
   /**
-   * ダウンロード情報（画像パス）の取得
+   *
    * @param elm
-   * @returns {Promise}
+   * @param mode
+   * @returns {Promise.<{}>}
    */
-  async getPathContext (elm) {
-    let getMedPath = async () => {
-      return {
-        'thumbnail': [{'src': elm.illust.med.img.src}],
-        'original': [{'src': elm.illust.med.bigImg.src}]
+  async getAnyContext (elm, mode) {
+
+    /**
+     * ダウンロード情報（画像パス）の取得
+     * @param elm
+     * @returns {{thumbnail, original}}
+     */
+    let getPathContext = (elm) => {
+      let getMedPath = () => {
+        return {
+          'thumbnail': [{'src': elm.illust.med.img.src}],
+          'original': [{'src': elm.illust.med.bigImg.src}]
+        }
+      };
+
+      if (elm.illust.med.img) {
+        return getMedPath();
       }
     };
 
-    if (elm.illust.med.img) {
-      return getMedPath();
-    }
-  }
+    /**
+     * ダウンロード情報（イラスト情報）の取得
+     * @param elm
+     * @returns {{url, id: *, title: (*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: *, caption: (*|SELECTOR_ITEMS.info.illust.caption|{s}|*|string|XML|void|string), R18: boolean}}
+     */
+    let getIllustContext = (elm) => {
+      try {
+        let dd = new Date(parseInt(elm.info.illust.datetime.getAttribute('ts'),10) * 1000);
+        let posted = this.getPosted(() => AnkUtils.getDateData(dd));
 
-  /**
-   * ダウンロード情報（イラスト情報）の取得
-   * @param elm
-   * @returns {Promise.<{url: (string|*), id: *, title: (*|string|XML|void), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: *, caption: (*|SELECTOR_ITEMS.info.illust.caption|{s}|*|string|XML|void), R18: boolean}>}
-   */
-  async getIllustContext (elm) {
-    try {
-      let dd = new Date(parseInt(elm.info.illust.datetime.getAttribute('ts'),10) * 1000);
-      let posted = this.getPosted(() => AnkUtils.getDateData(dd));
+        let info = {
+          'url': elm.info.illust.title.href,
+          'id': this.getIllustId(elm.info.illust.title.href),
+          'title': AnkUtils.trim(elm.info.illust.title.textContent),
+          'posted': !posted.fault && posted.timestamp,
+          'postedYMD': !posted.fault && posted.ymd,
+          'tags': Array.prototype.map.call(elm.info.illust.tags, (e) => AnkUtils.trim(e.textContent).replace(/^#/, '')),
+          'caption': elm.info.illust.caption && AnkUtils.trim(elm.info.illust.caption.textContent),
+          'R18': false
+        };
 
-      let info = {
-        'url': elm.info.illust.title.href,
-        'id': this.getIllustId(elm.info.illust.title.href),
-        'title': AnkUtils.trim(elm.info.illust.title.textContent),
-        'posted': !posted.fault && posted.timestamp,
-        'postedYMD': !posted.fault && posted.ymd,
-        'tags': Array.prototype.map.call(elm.info.illust.tags, (e) => AnkUtils.trim(e.textContent).replace(/^#/, '')),
-        'caption': elm.info.illust.caption && AnkUtils.trim(elm.info.illust.caption.textContent),
-        'R18': false
-      };
+        return info;
+      }
+      catch (e) {
+        logger.error(e);
+      }
+    };
 
-      return info;
-    }
-    catch (e) {
-      logger.error(e);
-    }
-  }
+    /**
+     * ダウンロード情報（メンバー情報）の取得
+     * @param elm
+     * @returns {{id: *, name: (*|string|XML|void|string), pixiv_id: null, memoized_name: null}}
+     */
+    let getMemberContext = (elm) => {
+      try {
+        return {
+          'id': /^https?:\/\/www\.deviantart\.com\/([^/]+?)(?:\?|$)/.exec(elm.info.member.memberLink.href)[1],
+          'name': AnkUtils.trim(elm.info.member.memberLink.textContent),
+          'pixiv_id': null,
+          'memoized_name': null
+        };
+      }
+      catch (e) {
+        logger.error(e);
+      }
+    };
 
-  /**
-   * ダウンロード情報（メンバー情報）の取得
-   * @param elm
-   * @returns {Promise.<{id: *, name: (*|string|XML|void), pixiv_id: null, memoized_name: null}>}
-   */
-  async getMemberContext(elm) {
-    try {
-      return {
-        'id': /^https?:\/\/www\.deviantart\.com\/([^/]+?)(?:\?|$)/.exec(elm.info.member.memberLink.href)[1],
-        'name': AnkUtils.trim(elm.info.member.memberLink.textContent),
-        'pixiv_id': null,
-        'memoized_name': null
-      };
-    }
-    catch (e) {
-      logger.error(e);
-    }
+    //
+
+    let context = {};
+
+    context.path = getPathContext(elm);
+    context.illust = getIllustContext(elm);
+    context.member = getMemberContext(elm);
+
+    return context;
   }
 
   /**
@@ -174,11 +193,9 @@ class AnkDeviantart extends AnkSite {
 
   /**
    * サムネイルにダウンロード済みマークを付ける
-   * @param opts
-   * @param siteSpecs
-   * @returns {*}
+   * @returns {{node: *, queries: [*,*,*], getId: (function(*=)), getLastUpdate: undefined, method: string}}
    */
-  markDownloaded (opts, siteSpecs) {
+  getMarkingRules () {
 
     const MARKING_TARGETS = [
       /*
@@ -193,16 +210,15 @@ class AnkDeviantart extends AnkSite {
       { 'q': '.thumb > a', 'n': 1 }
     ];
 
-    return super.markDownloaded(opts,
-      {
-        'node': this.elements.misc.miniBrowse,
-        'queries': MARKING_TARGETS,
-        'getId': (href) => {
-          return this.getIllustId(href);
-        },
-        'getLastUpdate': undefined,
-        'method': 'border'
-      });
+    return {
+      'node': this.elements.misc.miniBrowse,
+      'queries': MARKING_TARGETS,
+      'getId': (href) => {
+        return this.getIllustId(href);
+      },
+      'getLastUpdate': undefined,
+      'method': 'border'
+    };
   }
 
   /**
@@ -216,7 +232,8 @@ class AnkDeviantart extends AnkSite {
         return false;
       }
 
-      return this.displayDownloaded();
+      this.displayDownloaded().then();
+      return true;
     };
 
     // イメレスのサムネイルにダウンロード済みマークを表示する
@@ -225,7 +242,8 @@ class AnkDeviantart extends AnkSite {
         return false;
       }
 
-      return this.markDownloaded();
+      this.markDownloaded().then();
+      return true;
     };
 
     // ajaxによるコンテンツの入れ替えを検出する
@@ -254,6 +272,7 @@ class AnkDeviantart extends AnkSite {
           });
         });
         if (rise) {
+          this.contentChanged();
           this.forceDisplayAndMarkDownloaded();
         }
       });
@@ -274,6 +293,7 @@ class AnkDeviantart extends AnkSite {
           });
         });
         if (miniBrowse && rise) {
+          this.contentChanged();
           this.forceDisplayAndMarkDownloaded();
           moBody.disconnect();
           moBrowse.observe(miniBrowse, {'childList': true, 'subtree': true});

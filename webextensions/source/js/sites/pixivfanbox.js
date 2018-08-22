@@ -10,6 +10,11 @@ class AnkPixivFanbox extends AnkSite {
     this.SITE_ID = 'PFB';
 
     this.USE_CONTEXT_CACHE = false;
+
+    this._illust_data_cache = {
+      'id': null,
+      'data': null
+    };
   }
 
   /**
@@ -79,9 +84,9 @@ class AnkPixivFanbox extends AnkSite {
     /**
      *
      * @param post_data
-     * @returns {Promise.<{original: Array}>}
+     * @returns {{original: Array}}
      */
-    let getPathContext = async (post_data) => {
+    let getPathContext = (post_data) => {
       try {
         if (post_data.type == 'image') {
           return {
@@ -102,9 +107,9 @@ class AnkPixivFanbox extends AnkSite {
     /**
      *
      * @param post_data
-     * @returns {Promise.<{url: string, id: *, title: (string|*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: Array, caption: (*|string|*|string|XML|void|string), R18: boolean}>}
+     * @returns {{url: string, id: *, title: (*|string|XML|void|string|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: Array, caption: (*|*|string|XML|void|string|string), R18: boolean}}
      */
-    let getIllustContext = async (post_data) => {
+    let getIllustContext = (post_data) => {
       try {
         let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(post_data.publishedDatetime));
         let updated = this.getPosted(() => AnkUtils.decodeTextToDateData(post_data.updatedDatetime));
@@ -136,9 +141,9 @@ class AnkPixivFanbox extends AnkSite {
     /**
      *
      * @param post_data
-     * @returns {Promise.<{id: *, pixiv_id: null, name: (string|*|string|XML|void), memoized_name: null}>}
+     * @returns {{id: *, pixiv_id: null, name: (*|string|XML|void|string), memoized_name: null}}
      */
-    let getMemberContext = async (post_data) => {
+    let getMemberContext = (post_data) => {
       try {
         return {
           'id': post_data.user.userId,
@@ -153,32 +158,28 @@ class AnkPixivFanbox extends AnkSite {
 
     };
 
-    /**
-     * ダミー
-     * @param post_data
-     * @returns {Promise.<void>}
-     */
-    let getDummyContext = async (post_data) => {};
-
     //
 
-    mode = mode || this.GET_CONTEXT.ALL;
+    let illustId = this.getIllustId(elm.doc.location.href);
 
-    let post_data = await getPostData(elm);
+    let illust_data = this._illust_data_cache.id === illustId && this._illust_data_cache.data;
+    if (!illust_data) {
+      illust_data = await getPostData(elm);
+      if (!illust_data) {
+        return null;
+      }
 
-    if (post_data) {
-      let path_func = mode & this.GET_CONTEXT.PATH ? getPathContext : getDummyContext;
-      let illust_func = mode & this.GET_CONTEXT.ILLUST ? getIllustContext : getDummyContext;
-      let member_func = mode & this.GET_CONTEXT.MEMBER ? getMemberContext : getDummyContext;
-
-      return Promise.all([
-        path_func(post_data),
-        illust_func(post_data),
-        member_func(post_data)
-      ]);
+      this._illust_data_cache.id = illustId;
+      this._illust_data_cache.data = illust_data;
     }
 
-    return null;
+    let context = {};
+
+    context.path = getPathContext(illust_data);
+    context.illust = getIllustContext(illust_data);
+    context.member = getMemberContext(illust_data);
+
+    return context;
   }
 
   /**

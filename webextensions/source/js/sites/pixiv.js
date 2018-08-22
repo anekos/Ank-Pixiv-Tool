@@ -10,6 +10,11 @@ class AnkPixiv extends AnkSite {
     this.SITE_ID = 'PXV';
 
     this.USE_AJAX_PAGES_DATA = false;
+
+    this._illust_data_cache = {
+      'id': null,
+      'data': null
+    };
   }
 
   /**
@@ -164,7 +169,7 @@ class AnkPixiv extends AnkSite {
     };
 
     /**
-     *
+     * ダウンロード情報（画像パス）の取得
      * @param post_data
      * @returns {Promise.<{original: Array}>}
      */
@@ -243,7 +248,7 @@ class AnkPixiv extends AnkSite {
     };
 
     /**
-     *
+     * ダウンロード情報（うごイラパス）の取得
      * @param illust_data
      * @returns {Promise.<{thumbnail, original}>}
      */
@@ -273,11 +278,11 @@ class AnkPixiv extends AnkSite {
     };
 
     /**
-     *
+     * ダウンロード情報（イラスト情報）の取得
      * @param illust_data
-     * @returns {Promise.<{url: string, id: *, title: (string|*|string|XML|void), posted: (boolean|*|Number), postedYMD: (boolean|string|*), size: ({width, height}|string), tags: *, tools: string, caption: (string|*|string|XML|void), R18: boolean}>}
+     * @returns {{url: string, id: *, title: (string|*|string|XML|void), posted: (boolean|*|Number), postedYMD: (boolean|string|*), size: ({width, height}|string), tags: Array, tools: string, caption: (string|*|string|XML|void), R18: boolean}}
      */
-    let getIllustContext = async (illust_data) => {
+    let getIllustContext = (illust_data) => {
       try {
         let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(illust_data.createDate));
         let updated = this.getPosted(() => AnkUtils.decodeTextToDateData(illust_data.uploadDate));
@@ -326,11 +331,11 @@ class AnkPixiv extends AnkSite {
     };
 
     /**
-     *
-     * @param post_data
-     * @returns {Promise.<{id: *, pixiv_id: null, name: (string|*|string|XML|void), memoized_name: null}>}
+     * ダウンロード情報（メンバー情報）の取得
+     * @param illust_data
+     * @returns {{id, pixiv_id: *, name: (string|*|string|XML|void), memoized_name: null}}
      */
-    let getMemberContext = async (illust_data) => {
+    let getMemberContext = (illust_data) => {
       try {
         return {
           'id': illust_data.userId,
@@ -345,41 +350,56 @@ class AnkPixiv extends AnkSite {
 
     };
 
-    /**
-     * ダミー
-     * @returns {Promise.<void>}
-     */
-    let getDummyContext = async (illust_data) => {};
-
     //
 
-    mode = mode || this.GET_CONTEXT.ALL;
+    let illustId = this.getIllustId(elm.doc.location.href);
 
-    let illust_data = await getIllustData(elm);
+    let illust_data = this._illust_data_cache.id === illustId && this._illust_data_cache.data;
+    if (!illust_data) {
+      illust_data = await getIllustData(elm);
+      if (!illust_data) {
+        return null;
+      }
 
-    if (illust_data) {
-      let path_func = illust_data.illustType == 2 ? getUgoiraContext : getPathContext;
-      path_func = mode & this.GET_CONTEXT.PATH ? path_func : getDummyContext;
-
-      let illust_func = mode & this.GET_CONTEXT.ILLUST ? getIllustContext : getDummyContext;
-      let member_func = mode & this.GET_CONTEXT.MEMBER ? getMemberContext : getDummyContext;
-
-      return Promise.all([
-        path_func(illust_data),
-        illust_func(illust_data),
-        member_func(illust_data)
-      ]);
+      this._illust_data_cache.id = illustId;
+      this._illust_data_cache.data = illust_data;
     }
 
-    return null;
+    let context = {};
+
+    // 新サイト向け
+    if (mode & this.GET_CONTEXT.PATH) {
+      if (illust_data.illustType == 2) {
+        context.path = await getUgoiraContext(illust_data);
+      }
+      else {
+        context.path = await getPathContext(illust_data);
+      }
+    }
+    context.illust = getIllustContext(illust_data);
+    context.member = getMemberContext(illust_data);
+
+    // 旧サイト向け
+    if (!context.path && (mode & this.GET_CONTEXT.PATH)) {
+      context.path = await this._getPathContextOld(elm);
+    }
+    if (!context.illust) {
+      context.illust = this._getIllustContextOld(elm);
+    }
+    if (!context.member) {
+      context.member = this._getMemberContextOld(elm);
+    }
+
+    return context;
   }
 
   /**
    * ダウンロード情報（画像パス）の取得
    * @param elm
    * @returns {Promise}
+   * @private
    */
-  async getPathContext (elm) {
+  async _getPathContextOld (elm) {
     let getMedPath = async () => {
       return {
         'thumbnail': [{'src': elm.illust.med.img.src, 'referrer': elm.doc.location.href}],
@@ -627,9 +647,10 @@ class AnkPixiv extends AnkSite {
   /**
    * ダウンロード情報（イラスト情報）の取得
    * @param elm
-   * @returns {Promise.<{url: string, id: *, title: (SELECTOR_ITEMS.info.illust.title|{s}|*|*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), size: {width, height}, tags: *, tools: (SELECTOR_ITEMS.info.illust.tools|{s}|*|string|XML|void|string), caption: (SELECTOR_ITEMS.info.illust.caption|{s}|*|*|string|XML|void|string), R18: boolean}>}
+   * @returns {{url: string, id: *, title: (SELECTOR_ITEMS.info.illust.title|{s}|*|string|*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), size: {width, height}, tags: *, tools: (SELECTOR_ITEMS.info.illust.tools|{s}|string|*|string|XML|void|string), caption: (SELECTOR_ITEMS.info.illust.caption|{s}|*|string|*|string|XML|void|string), R18: boolean}}
+   * @private
    */
-  async getIllustContext (elm) {
+  _getIllustContextOld (elm) {
     try {
       let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(elm.info.illust.datetime.textContent));
 
@@ -692,43 +713,14 @@ class AnkPixiv extends AnkSite {
   /**
    * ダウンロード情報（メンバー情報）の取得
    * @param elm
-   * @returns {Promise.<{id: *, pixiv_id: (SELECTOR_ITEMS.info.member.feedLink|{s}|*|string), name: (*|string|XML|void), memoized_name: null}>}
+   * @returns {{id: *, pixiv_id: *, name: (string|*|string|XML|void), memoized_name: null}}
+   * @private
    */
-  async getMemberContext(elm) {
+  _getMemberContextOld (elm) {
     try {
-      let memberId = /\/member\.php\?id=(.+?)(?:&|$)/.exec(elm.info.member.memberLink.href)[1];
-
-      /* - body.background が存在しないユーザが居るので保留 -
-      let resp = await remote.get({
-        'url': 'https://www.pixiv.net/ajax/user/'+memberId,
-        'responseType': 'json',
-        'timeout': this.prefs.xhrTimeout
-      });
-
       return {
-        'id': memberId,
-        'pixiv_id': resp.json.body.background.extra.user_account,
-        'name': resp.json.body.name,
-        'memoized_name': null
-      };
-      */
-
-      let pixivId = await (async (feedLink) => {
-        if (!feedLink) {
-          let memDoc = await remote.get({
-            'url': 'https://www.pixiv.net/member.php?id='+memberId,
-            //headers: [{name:'Referer', value:indexPage}],
-            'responseType': 'document',
-            'timeout': this.prefs.xhrTimeout
-          });
-          feedLink = memDoc.document.querySelector('#wrapper a[href*="/stacc/"]');
-        }
-        return /\/stacc\/([^?\/]+)/.exec(feedLink.href)[1];
-      })(elm.info.member.feedLink);
-
-      return {
-        'id': memberId,
-        'pixiv_id': pixivId,
+        'id': /\/member\.php\?id=(.+?)(?:&|$)/.exec(elm.info.member.memberLink.href)[1],
+        'pixiv_id': /\/stacc\/([^?\/]+)/.exec(elm.info.member.feedLink.href)[1],
         'name': AnkUtils.trim(elm.info.member.memberLink.textContent),
         'memoized_name': null
       };
@@ -760,12 +752,11 @@ class AnkPixiv extends AnkSite {
   }
 
   /**
-   * サムネイルにダウンロード済みマークを付ける
-   * @param opts
-   * @param siteSpecs
-   * @returns {*}
+   * サムネイルにダウンロード済みマークを付けるルールを返す
+   * @returns {{queries: [*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*], getId: (function(*=)), getLastUpdate: (function(*)), method: undefined}}
    */
-  markDownloaded (opts, siteSpecs) {
+  getMarkingRules () {
+
     const MARKING_TARGETS = [
       {'q': '.image-item > .work', 'n': 1},               // 作品一覧、ブックマーク
       {'q': '.rank-detail a._work', 'n': 2},              // ホーム（ランキング）
@@ -787,19 +778,18 @@ class AnkPixiv extends AnkSite {
       {'q': 'nav > a[href^="/member_illust.php?"]', 'n': -1, 'r': 'div[style*="background-image:"]', 'm': 'border'}
     ];
 
-    return super.markDownloaded(opts,
-      {
-        'queries': MARKING_TARGETS,
-        'getId': (href) => {
-          return this.getIllustId(href);
-        },
-        'getLastUpdate': (e) => {
-          let g = e.querySelector('img');
-          let s = g && g.src || e.getAttribute('style');
-          return s && this.getLastUpdate(s);
-        },
-        'method': undefined
-      });
+    return {
+      'queries': MARKING_TARGETS,
+      'getId': (href) => {
+        return this.getIllustId(href);
+      },
+      'getLastUpdate': (e) => {
+        let g = e.querySelector('img');
+        let s = g && g.src || e.getAttribute('style');
+        return s && this.getLastUpdate(s);
+      },
+      'method': undefined
+    };
   }
 
   /**
@@ -893,7 +883,8 @@ class AnkPixiv extends AnkSite {
         return false;
       }
 
-      return this.displayDownloaded();
+      this.displayDownloaded().then();
+      return true;
     };
 
     // イメレスのサムネイルにダウンロード済みマークを表示する
@@ -902,7 +893,8 @@ class AnkPixiv extends AnkSite {
         return false;
       }
 
-      return this.markDownloaded();
+      this.markDownloaded().then();
+      return true;
     };
 
     // キャプションを自動で開く
@@ -967,7 +959,7 @@ class AnkPixiv extends AnkSite {
       // miniBrowseの中身が書き換わるのを検出する
       let moBrowse = new MutationObserver(() => {
         logger.debug('content changed.');
-        this.restart();
+        this.contentChanged();
         this.forceDisplayAndMarkDownloaded();
       });
 
@@ -998,7 +990,7 @@ class AnkPixiv extends AnkSite {
         new MutationObserver((o) => {
           o.forEach((e) => Array.prototype.forEach.call(e.addedNodes, (n) => {
             if (n.tagName.toLowerCase() == 'li') {
-              this.markDownloaded({'node': n, 'force':true});
+              this.markDownloaded({'node': n, 'force':true}).then();
             }
           }));
         }).observe(elm, {'childList': true, 'subtree': true});
@@ -1039,14 +1031,15 @@ class AnkPixiv extends AnkSite {
         return false;
       }
 
-      return this.markDownloaded();
+      this.markDownloaded().then();
+      return true;
     };
 
     // ページが自動伸長したらダウンロード済みマークを追加する
     let followExpansion = () => {
       let observe = (elm) => {
         new MutationObserver((o) => {
-          o.forEach((e) => Array.prototype.forEach.call(e.addedNodes, (n) => this.markDownloaded({'node': n, 'force':true})));
+          o.forEach((e) => Array.prototype.forEach.call(e.addedNodes, (n) => this.markDownloaded({'node': n, 'force':true}).then()));
         }).observe(elm, {'childList': true});
 
         return true;
@@ -1068,8 +1061,8 @@ class AnkPixiv extends AnkSite {
 
     // AutoPagerize/AutoPatchWork が継ぎ足し動作したらダウンロード済みマークを追加する
     let autoPagerize = () => {
-      this.elements.doc.addEventListener('AutoPagerize_DOMNodeInserted', (e) => this.markDownloaded({'node': e.target, 'force':true}), false);
-      this.elements.doc.addEventListener('AutoPatchWork.DOMNodeInserted', (e) => this.markDownloaded({'node': e.target, 'force':true}), false);
+      this.elements.doc.addEventListener('AutoPagerize_DOMNodeInserted', (e) => this.markDownloaded({'node': e.target, 'force':true}).then(), false);
+      this.elements.doc.addEventListener('AutoPatchWork.DOMNodeInserted', (e) => this.markDownloaded({'node': e.target, 'force':true}).then(), false);
       return true;
     };
 

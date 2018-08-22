@@ -70,87 +70,106 @@ class AnkNijie extends AnkSite {
   }
 
   /**
-   * ダウンロード情報（画像パス）の取得
+   *
    * @param elm
-   * @returns {Promise}
+   * @param mode
+   * @returns {Promise.<{}>}
    */
-  async getPathContext (elm) {
-    let getMedPath = async () => {
-      let m = [{'src': this.elements.illust.med.img.src}];
-      Array.prototype.forEach.call(this.elements.illust.med.imgs, (e) => {
-        m.push({'src': e.src.replace(/(\.nijie\.info\/).+?\/(nijie_picture\/)/, "$1$2")});
-      });
+  async getAnyContext (elm, mode) {
 
-      return {
-        'thumbnail': m,
-        'original': m
+    /**
+     * ダウンロード情報（画像パス）の取得
+     * @param elm
+     * @returns {{thumbnail, original}}
+     */
+    let getPathContext = (elm) => {
+      let getMedPath = () => {
+        let m = [{'src': this.elements.illust.med.img.src}];
+        Array.prototype.forEach.call(this.elements.illust.med.imgs, (e) => {
+          m.push({'src': e.src.replace(/(\.nijie\.info\/).+?\/(nijie_picture\/)/, "$1$2")});
+        });
+
+        return {
+          'thumbnail': m,
+          'original': m
+        }
+      };
+
+      let getDjnPath = () => {
+        let m = [{'src': this.elements.illust.djn.imgLink.src}];
+        Array.prototype.forEach.call(this.elements.illust.djn.imgLinks, (e) => {
+          m.push({'src': e.src.replace(/(\.nijie\.info\/).+?\/(dojin_main\/)/, "$1$2")});
+        });
+
+        return {
+          'thumbnail': m,
+          'original': m
+        }
+      };
+
+      if (elm.illust.med.img) {
+        return getMedPath();
+      }
+      if (elm.illust.djn.imgLink) {
+        return getDjnPath();
       }
     };
 
-    let getDjnPath = async () => {
-      let m = [{'src': this.elements.illust.djn.imgLink.src}];
-      Array.prototype.forEach.call(this.elements.illust.djn.imgLinks, (e) => {
-        m.push({'src': e.src.replace(/(\.nijie\.info\/).+?\/(dojin_main\/)/, "$1$2")});
-      });
+    /**
+     * ダウンロード情報（イラスト情報）の取得
+     * @param elm
+     * @returns {{url: string, id: *, title: (*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: *, caption: (SELECTOR_ITEMS.info.illust.caption|{s}|*|*|string|XML|void|string), R18: boolean}}
+     */
+    let getIllustContext = (elm) => {
+      try {
+        let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(elm.info.illust.datetime.textContent));
 
-      return {
-        'thumbnail': m,
-        'original': m
+        let info = {
+          'url': elm.doc.location.href,
+          'id': this.getIllustId(elm.doc.location.href),
+          'title': AnkUtils.trim(elm.info.illust.title.textContent),
+          'posted': !posted.fault && posted.timestamp,
+          'postedYMD': !posted.fault && posted.ymd,
+          'tags': Array.prototype.map.call(elm.info.illust.tags, (e) => AnkUtils.trim(e.textContent)),
+          'caption': elm.info.illust.caption && AnkUtils.trim(elm.info.illust.caption.textContent),
+          'R18': true
+        };
+
+        return info;
+      }
+      catch (e) {
+        logger.error(e);
       }
     };
 
-    if (elm.illust.med.img) {
-      return getMedPath();
-    }
-    if (elm.illust.djn.imgLink) {
-      return getDjnPath();
-    }
-  }
+    /**
+     * ダウンロード情報（メンバー情報）の取得
+     * @param elm
+     * @returns {{id: *, name: (*|string|XML|void|string), pixiv_id: null, memoized_name: null}}
+     */
+    let getMemberContext = (elm) => {
+      try {
+        return {
+          'id': /\/members\.php\?id=(.+?)(?:&|$)/.exec(elm.info.member.memberLink.href)[1],
+          'name': AnkUtils.trim(elm.info.member.memberLink.textContent),
+          'pixiv_id': null,
+          'memoized_name': null
+        };
+      }
+      catch (e) {
+        logger.error(e);
+      }
+    };
 
-  /**
-   * ダウンロード情報（イラスト情報）の取得
-   * @param elm
-   * @returns {Promise.<{url: string, id: *, title: (*|string|XML|void), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: *, caption: (SELECTOR_ITEMS.info.illust.caption|{s}|*|*|string|XML|void), R18: boolean}>}
-   */
-  async getIllustContext (elm) {
-    try {
-      let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(elm.info.illust.datetime.textContent));
+    //
 
-      let info = {
-        'url': elm.doc.location.href,
-        'id': this.getIllustId(elm.doc.location.href),
-        'title': AnkUtils.trim(elm.info.illust.title.textContent),
-        'posted': !posted.fault && posted.timestamp,
-        'postedYMD': !posted.fault && posted.ymd,
-        'tags': Array.prototype.map.call(elm.info.illust.tags, (e) => AnkUtils.trim(e.textContent)),
-        'caption': elm.info.illust.caption && AnkUtils.trim(elm.info.illust.caption.textContent),
-        'R18': true
-      };
+    let context = {};
 
-      return info;
-    }
-    catch (e) {
-      logger.error(e);
-    }
-  }
+    context.path = getPathContext(elm);
+    context.illust = getIllustContext(elm);
+    context.member = getMemberContext(elm);
 
-  /**
-   * ダウンロード情報（メンバー情報）の取得
-   * @param elm
-   * @returns {Promise.<{id: *, name: (*|string|XML|void), pixiv_id: null, memoized_name: null}>}
-   */
-  async getMemberContext(elm) {
-    try {
-      return {
-        'id': /\/members\.php\?id=(.+?)(?:&|$)/.exec(elm.info.member.memberLink.href)[1],
-        'name': AnkUtils.trim(elm.info.member.memberLink.textContent),
-        'pixiv_id': null,
-        'memoized_name': null
-      };
-    }
-    catch (e) {
-      logger.error(e);
-    }
+    return context;
   }
 
   /**
@@ -164,11 +183,9 @@ class AnkNijie extends AnkSite {
 
   /**
    * サムネイルにダウンロード済みマークを付ける
-   * @param opts
-   * @param siteSpecs
-   * @returns {*}
+   * @returns {{queries: [*,*,*,*,*], getId: (function(*=)), getLastUpdate: undefined, method: undefined}}
    */
-  markDownloaded (opts, siteSpecs) {
+  getMarkingRules () {
 
     const MARKING_TARGETS = [
       { 'q':'.nijie > .picture > .nijiedao > a', 'n':3 },         // 通常の一覧
@@ -178,15 +195,14 @@ class AnkNijie extends AnkSite {
       { 'q':'#carouselInner-view > ul > li > a', 'n':1 }          // "あなたにオススメのイラスト"
     ];
 
-    return super.markDownloaded(opts,
-      {
-        'queries': MARKING_TARGETS,
-        'getId': (href) => {
-          return this.getIllustId(href);
-        },
-        'getLastUpdate': undefined,
-        'method': undefined
-      });
+    return {
+      'queries': MARKING_TARGETS,
+      'getId': (href) => {
+        return this.getIllustId(href);
+      },
+      'getLastUpdate': undefined,
+      'method': undefined
+    };
   }
 
   /**
@@ -258,7 +274,8 @@ class AnkNijie extends AnkSite {
         return false;
       }
 
-      return this.displayDownloaded();
+      this.displayDownloaded().then();
+      return true;
     };
 
     // イメレスのサムネイルにダウンロード済みマークを表示する
@@ -267,7 +284,8 @@ class AnkNijie extends AnkSite {
         return false;
       }
 
-      return this.markDownloaded();
+      this.markDownloaded().then();
+      return true;
     };
 
     // 抜いた・いいねしたら自動ダウンロード
@@ -312,7 +330,8 @@ class AnkNijie extends AnkSite {
         return false;
       }
 
-      return this.markDownloaded();
+      this.markDownloaded().then();
+      return true;
     };
 
     Promise.all([

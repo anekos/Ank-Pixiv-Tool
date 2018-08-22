@@ -16,11 +16,9 @@ class AnkSite {
     this.contextCache = null;
 
     this.executed = {
-      'displayDownloaded': false,
-      'markDownloaded': false
+      'displayDownloaded': 0,
+      'markDownloaded': 0     // markingを行った最終時刻（キューインや保存完了の時刻と比較する）
     };
-    this.marked = 0;        // markingを行った最終時刻（キューインや保存完了の時刻と比較する）
-    this.displayed = 0;
 
     this.FUNC_INST_RETRY_VALUE = {
       'max': 30,
@@ -102,22 +100,31 @@ class AnkSite {
   }
 
   /**
-   * 再初期化
+   * AJAX等でコンテンツが入れ替わった時に情報をリセットする (DOMからコンテキストまで全部)
    */
-  restart () {
-    logger.info('RESET CONTEXT INFO:', this.SITE_ID, document.location.href);
+  contentChanged () {
+    logger.info('ON CHANGED CONTENT:', this.SITE_ID, document.location.href);
 
     AnkViewer.reset();
 
     this.elements = this.getElements(document);
+
+    this.resetContext();
+  }
+
+  /**
+   * AJAX等でコンテンツが入れ替わった時に情報をリセットする (コンテキストのみ)
+   */
+  resetContext () {
+
+    logger.info('RESET CONTEXT INFO:', this.SITE_ID, document.location.href);
+
     this.contextCache = null;
 
     this.executed = {
-      'displayDownloaded': false,
-      'markDownloaded': false
+      'displayDownloaded': 0,
+      'markDownloaded': 0
     };
-    this.marked = 0;
-    this.displayed = 0;
   }
 
   /**
@@ -540,40 +547,58 @@ class AnkSite {
   /**
    * ダウンロード情報をまとめる
    * @param elm
+   * @param mode
    * @returns {Promise.<*>}
    */
-  async getContext (elm) {
+  async getContext (elm, mode) {
 
-    if (this.USE_CONTEXT_CACHE) {
-      if (this.contextCache && this.contextCache.downloadable) {
-        // 既にダウンロード可能な情報を取得済みならそのまま返す
+    // path/illust/memberに分かれているのは、path@nicoのみ要XHRでコスト高→pathが不要な場合(displayDownloaded)と必要な場合(左記以外)を分けられるようにしたため
+    // path@pixivも要XHRになったので再検討が必要
+
+
+    mode = mode || this.GET_CONTEXT.ALL;
+
+    if (this.contextCache) {
+      if ((this.contextCache.status & mode) == mode) {
+        // 必要な情報がそろっているなら取得済みの情報を返す
         return this.contextCache;
       }
+
+      // 取得済みの情報は再度指定しない
+      mode = ((0xff ^ this.contextCache.status) & 0xff) & mode;
     }
 
-    return this.getAnyContext(elm, this.GET_CONTEXT.ALL)
-      .then((r) => {
-        return Promise.all([
-          r && r[0] || this.getPathContext(elm),
-          r && r[1] || this.getIllustContext(elm),
-          r && r[2] || this.getMemberContext(elm)
-        ]);
-      }).then((result) => {
-        let context = {
-          'downloadable': !!result[0] && !!result[1] && !!result[2],
-          'service_id': this.ALT_SITE_ID || this.SITE_ID,
-          'siteName': this.prefs.site.folder,
-          'path': result[0],
-          'info': {
-            'illust': result[1],
-            'member': result[2]
-          }
-        };
+    return this.getAnyContext(elm, mode).then((result) => {
+      let context = this.contextCache || {
+        'status': 0,
+        'downloadable': false,
+        'service_id': this.ALT_SITE_ID || this.SITE_ID,
+        'siteName': this.prefs.site.folder,
+        'path': undefined,
+        'info': {
+          'illust': undefined,
+          'member': undefined
+        }
+      };
 
-        logger.info('CONTEXT: ', context);
+      context.path = context.path || result.path;
+      context.info.illust = context.info.illust || result.illust;
+      context.info.member = context.info.member || result.member;
 
-        return this.contextCache = context;
-      });
+      context.status = (context.path ? this.GET_CONTEXT.PATH : 0) +
+        (context.info.illust ? this.GET_CONTEXT.ILLUST : 0) +
+        (context.info.member ? this.GET_CONTEXT.MEMBER : 0);
+
+      context.downloadable =  (context.status & this.GET_CONTEXT.ALL) == this.GET_CONTEXT.ALL;
+
+      logger.info('CONTEXT: ', context);
+
+      if (this.USE_CONTEXT_CACHE) {
+        this.contextCache = context;
+      }
+
+      return context;
+    });
   }
 
   /**
@@ -591,13 +616,13 @@ class AnkSite {
 
       opts = opts || {};
 
-      let context = await this.getContext(this.elements);
+      let context = await this.getContext(this.elements, this.GET_CONTEXT.ALL);
       if (!context) {
         // コンテキストが集まらない（ダウンロード可能な状態になっていない）
         let msg = chrome.i18n.getMessage('msg_notReady');
         logger.warn(new Error(msg));
         await this.displayDownloaded({'force': true});
-        return;
+        return false;
       }
 
       if (!context.downloadable) {
@@ -606,7 +631,7 @@ class AnkSite {
         logger.error(new Error(msg));
         alert(msg);
         await this.displayDownloaded({'force': true});
-        return;
+        return false;
       }
 
       let status = await this.requestGetDownloadStatus(context.info.illust.id, true);
@@ -636,7 +661,7 @@ class AnkSite {
     if (this.inIllustPage()) {
       this.displayDownloaded({'force': true}).then();
     }
-    this.markDownloaded({'force': true});
+    this.markDownloaded({'force': true}).then();
   }
 
   /**
@@ -716,7 +741,7 @@ class AnkSite {
   }
 
   /**
-   *　作品ページに「保存済み」メッセージを表示する
+   * 作品ページに「保存済み」メッセージを表示する
    * @param opts
    * @returns {Promise.<boolean>}
    */
@@ -745,51 +770,44 @@ class AnkSite {
       return true;
     }
 
-    let changed = await this.requestGetSiteChanged()
-      .then((siteChanged) => {
-        if (this.displayed > siteChanged) {
-          logger.debug('skip display downloaded');
-          return;
-        }
+    let changed = await this.requestGetSiteChanged().then((siteChanged) => {
+      if (this.executed.displayDownloaded > siteChanged) {
+        logger.debug('skip display downloaded');
+        return;
+      }
 
-        this.displayed = new Date().getTime();
-        return true;
-      });
+      return true;
+    });
     if (!changed) {
       // 前回実行時から変化なし
       return true;
     }
 
-    let illustContext = await this.getAnyContext(elm, this.GET_CONTEXT.ILLUST)
-      .then((r) => {
-        if (r) {
-          return r[1];
-        }
-        return this.getIllustContext(elm);
-      });
-    if (!illustContext) {
+    this.executed.displayDownloaded = new Date().getTime();
+
+    logger.debug('exec display downloaded');
+
+    let context = await this.getContext(elm, this.GET_CONTEXT.ILLUST);
+    if (!context) {
       return false;
     }
 
-    this.requestGetDownloadStatus(illustContext.id)
-      .then((status) => {
-        this._insertDownloadedDisplay(appendTo, {
-          'status': status,
-          'R18': illustContext.R18,
-          'updated': (() => {
-            if (status) {
-              if (status.last_saved && illustContext.updated &&  (illustContext.updated > status.last_saved)) {
-                logger.debug('updated:', new Date(illustContext.updated), '>', new Date(status.last_saved));
-                return true;
-              }
-            }
-          })()
-        });
-      });
+    let illustContext = context.info.illust;
 
-    if (!opts.force) {
-      this.executed.displayDownloaded = true;
-    }
+    this.requestGetDownloadStatus(illustContext.id).then((status) => {
+      this._insertDownloadedDisplay(appendTo, {
+        'status': status,
+        'R18': illustContext.R18,
+        'updated': (() => {
+          if (status) {
+            if (status.last_saved && illustContext.updated &&  (illustContext.updated > status.last_saved)) {
+              logger.debug('updated:', new Date(illustContext.updated), '>', new Date(status.last_saved));
+              return true;
+            }
+          }
+        })()
+      });
+    });
 
     return true;
   }
@@ -915,17 +933,18 @@ class AnkSite {
   }
 
   /**
-   * サムネイルにダウンロード済みマークを付ける ※半完成品なのでサイト別スクリプト側で補完する必要がある（siteSpecsを与える）
+   * サムネイルにダウンロード済みマークを付ける
    * @param opts
    * @param siteSpecs
-   * @returns {boolean}
+   * @returns {Promise.<boolean>}
    */
-  markDownloaded (opts, siteSpecs) {
+  async markDownloaded (opts) {
     if (!this.prefs.site.markDownloaded) {
       return true;
     }
 
-    if (!siteSpecs) {
+    let markRule = this.getMarkingRules();
+    if (!markRule) {
       return true;
     }
 
@@ -936,34 +955,42 @@ class AnkSite {
       return true;
     }
 
-    this.requestGetSiteChanged()
-      .then((siteChanged) => {
-        if (!opts.node) {
-          // ページ単位のチェック（＝node決め打ちでないチェック）の場合は前回チェック時刻と比較を行い、前回以降にサイトの更新が発生していなければ再度のチェックはしない
-          if (this.marked > siteChanged) {
-            logger.debug('skip mark downloaded');
-            return;
-          }
-
-          this.marked = new Date().getTime();
+    if (!opts.node) {
+      // ページ単位のチェック（＝node決め打ちでないチェック）の場合は前回チェック時刻と比較を行い、前回以降にサイトの更新が発生していなければ再度のチェックはしない
+      let changed = await this.requestGetSiteChanged().then((siteChanged) => {
+        if (this.executed.markDownloaded > siteChanged) {
+          logger.debug('skip mark downloaded');
+          return;
         }
 
-        let node = siteSpecs.node || this.elements.doc;
-
-        this._insertDownloadedMark(node, {
-          'illust_id': opts.illust_id,
-          'queries': siteSpecs.queries,
-          'getId': siteSpecs.getId,
-          'getLastUpdate': siteSpecs.getLastUpdate,
-          'method': siteSpecs.method,
-          'ignorePref': false
-        });
-
+        return true;
       });
+      if (!changed) {
+        // 前回実行時から変化なし
+        return true;
+      }
 
-    if (!opts.force) {
-      this.executed.markDownloaded = true;
+      /*
+      if (!opts.force) {
+        // 強制時は実行時刻を更新しない
+        this.executed.markDownloaded = new Date().getTime();
+      }
+      */
+      this.executed.markDownloaded = new Date().getTime();
     }
+
+    logger.debug('exec mark downloaded');
+
+    let node = markRule.node || this.elements.doc;
+
+    this._insertDownloadedMark(node, {
+      'illust_id': opts.illust_id,
+      'queries': markRule.queries,
+      'getId': markRule.getId,
+      'getLastUpdate': markRule.getLastUpdate,
+      'method': markRule.method,
+      'ignorePref': false
+    });
 
     return true;
   }
@@ -980,14 +1007,13 @@ class AnkSite {
     let cmd = opts && opts.cmd || 'open';
     switch (cmd) {
       case 'open':
-        this.getContext(this.elements)
-          .then((context) => {
-            if (!context) {
-              logger.error(new Error('viewer not ready'));
-              return;
-            }
-            AnkViewer.open({'prefs': this.prefs, 'path': context.path});
-          }).catch((e) => logger.error(e));
+        this.getContext(this.elements, this.GET_CONTEXT.PATH).then((context) => {
+          if (!context) {
+            logger.error(new Error('viewer not ready'));
+            return;
+          }
+          AnkViewer.open({'prefs': this.prefs, 'path': context.path});
+        }).catch((e) => logger.error(e));
         break;
       case 'close':
         AnkViewer.close();
@@ -1150,31 +1176,17 @@ class AnkSite {
   inIllustPage () {}
 
   /**
-   * ダウンロード情報（画像パス）の取得
-   * @param elm
-   * @returns {Promise.<void>}
-   */
-  async getPathContext (elm) {}
-
-  /**
-   * ダウンロード情報（イラスト情報）の取得
-   * @param elm
-   */
-  async getIllustContext (elm) {}
-
-  /**
    * ダウンロード情報（メンバー情報）の取得
    * @param elm
-   */
-  async getMemberContext (elm) {}
-
-  /**
-   * ダウンロード情報（メンバー情報）の取得
-   * @param elm
-   * @param mode
+   * @param mode : mode指定で最低限欲しい情報を指定するが、低コストで返せる場合は指定されていない情報も返却してよい
    * @returns {Promise.<void>}
    */
   async getAnyContext (elm, mode) {}
+
+  /**
+   * サムネイルにダウンロード済みマークを付けるサイト別のルールを取得する
+   */
+  getMarkingRules () {}
 
   /**
    * いいね！する

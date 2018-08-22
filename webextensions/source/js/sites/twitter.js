@@ -78,117 +78,137 @@ class AnkTwitter extends AnkSite {
   }
 
   /**
-   * ダウンロード情報（画像パス）の取得
+   *
    * @param elm
-   * @returns {Promise}
+   * @param mode
+   * @returns {Promise.<{}>}
    */
-  async getPathContext (elm) {
-    let getPhotoPath = async () => {
-      let thumb = Array.prototype.map.call(elm.illust.photos, (e) => {
-        return {'src': e.src};
-      });
+  async getAnyContext (elm, mode) {
 
-      let orig = thumb.map((e) => {
-        return {'src': e.src.replace(/(?::large)?$/, ':orig')};
-      });
+    /**
+     * ダウンロード情報（画像パス）の取得
+     * @param elm
+     * @returns {{thumbnail, original}}
+     */
+    let getPathContext = (elm) => {
+      let getPhotoPath = () => {
+        let thumb = Array.prototype.map.call(elm.illust.photos, (e) => {
+          return {'src': e.src};
+        });
 
-      return {
-        'thumbnail': thumb,
-        'original': orig
+        let orig = thumb.map((e) => {
+          return {'src': e.src.replace(/(?::large)?$/, ':orig')};
+        });
+
+        return {
+          'thumbnail': thumb,
+          'original': orig
+        };
       };
+
+      let getVideoPath = () => {
+        let src = elm.illust.video.src;
+        if (/^https?:\/\//.test(src)) {
+          let m = [{'src': src}];
+          return {
+            'thumbnail': m,
+            'original': m
+          };
+        }
+
+        // ストリーム再生の動画(.m3u8/blob)には未対応
+      };
+
+      if (elm.illust.photos && elm.illust.photos.length > 0) {
+        return getPhotoPath();
+      }
+      if (elm.illust.video) {
+        return getVideoPath();
+      }
     };
 
-    let getVideoPath = async () => {
-      let src = elm.illust.video.src;
-      if (/^https?:\/\//.test(src)) {
-        let m = [{'src': src}];
+    /**
+     * ダウンロード情報（イラスト情報）の取得
+     * @param elm
+     * @returns {{url, id: string, title: (*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: Array, caption: (*|string|XML|void|string), R18: boolean}}
+     */
+    let getIllustContext = (elm) => {
+      try {
+        let dd = new Date(parseInt(elm.info.illust.datetime.getAttribute('data-time-ms'), 10));
+        let posted = this.getPosted(() => AnkUtils.getDateData(dd));
+
+        let info = {
+          'url': elm.info.illust.ownLink.href,
+          'id': elm.doc.getAttribute('data-tweet-id'),
+          'title': AnkUtils.trim(elm.info.illust.caption.textContent),
+          'posted': !posted.fault && posted.timestamp,
+          'postedYMD': !posted.fault && posted.ymd,
+          'tags': [],
+          'caption': AnkUtils.trim(elm.info.illust.caption.textContent),
+          'R18': false
+        };
+
+        return info;
+      }
+      catch (e) {
+        logger.error(e);
+      }
+    };
+
+    /**
+     * ダウンロード情報（メンバー情報）の取得
+     * @param elm
+     * @returns {Promise.<{id: string, name: string, pixiv_id: string, memoized_name: null}>}
+     */
+    let getMemberContext = (elm) => {
+      try {
         return {
-          'thumbnail': m,
-          'original': m
+          'id': elm.doc.getAttribute('data-user-id'),
+          'name': elm.doc.getAttribute('data-name'),
+          'pixiv_id': elm.doc.getAttribute('data-screen-name'),
+          'memoized_name': null
         };
       }
-
-      // ストリーム再生の動画(.m3u8/blob)には未対応
+      catch (e) {
+        logger.error(e);
+      }
     };
 
-    if (elm.illust.photos && elm.illust.photos.length > 0) {
-      return getPhotoPath();
-    }
-    if (elm.illust.video) {
-      return getVideoPath();
-    }
+    //
+
+    let context = {};
+
+    context.path = getPathContext(elm);
+    context.illust = getIllustContext(elm);
+    context.member = getMemberContext(elm);
+
+    return context;
   }
 
   /**
-   * ダウンロード情報（イラスト情報）の取得
+   * override : getContext()
    * @param elm
-   * @returns {Promise.<{url: (string|*), id: string, title: (*|string|XML|void), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: Array, caption: (*|string|XML|void), R18: boolean}>}
-   */
-  async getIllustContext (elm) {
-    try {
-      let dd = new Date(parseInt(elm.info.illust.datetime.getAttribute('data-time-ms'),10));
-      let posted = this.getPosted(() => AnkUtils.getDateData(dd));
-
-      let info = {
-        'url': elm.info.illust.ownLink.href,
-        'id': elm.doc.getAttribute('data-tweet-id'),
-        'title': AnkUtils.trim(elm.info.illust.caption.textContent),
-        'posted': !posted.fault && posted.timestamp,
-        'postedYMD': !posted.fault && posted.ymd,
-        'tags': [],
-        'caption': AnkUtils.trim(elm.info.illust.caption.textContent),
-        'R18': false
-      };
-
-      return info;
-    }
-    catch (e) {
-      logger.error(e);
-    }
-  }
-
-  /**
-   * ダウンロード情報（メンバー情報）の取得
-   * @param elm
-   * @returns {Promise.<{id: string, name: string, pixiv_id: string, memoized_name: null}>}
-   */
-  async getMemberContext(elm) {
-    try {
-      return {
-        'id': elm.doc.getAttribute('data-user-id'),
-        'name': elm.doc.getAttribute('data-name'),
-        'pixiv_id': elm.doc.getAttribute('data-screen-name'),
-        'memoized_name': null
-      };
-    }
-    catch (e) {
-      logger.error(e);
-    }
-  }
-
-  /**
-   * ダウンロード情報をまとめる
-   * @param elm
+   * @param mode
    * @returns {Promise.<*>}
    */
-  async getContext (elm) {
+  async getContext (elm, mode) {
 
     let modal = this.getOpenedModal();
     if (!modal) {
-      return;
+      return false;
     }
 
     let elmTweet = this.getElements(modal.tweet);
 
-    return super.getContext(elmTweet);
+    return super.getContext(elmTweet, mode);
   }
 
   /**
-   *
+   * override : displayDownloaded()
    * @param opts
-   * @returns {boolean}
+   * @returns {Promise.<boolean>}
    */
-  displayDownloaded (opts) {
+  async displayDownloaded (opts) {
 
     opts = opts || {};
 
@@ -208,17 +228,10 @@ class AnkTwitter extends AnkSite {
 
   /**
    *
-   * @param opts
-   * @param siteSpecs
-   */
-  markDownloaded (opts, siteSpecs) {}
-
-  /**
-   *
    */
   installFunctions () {
 
-    //
+    // ギャラリーを開いたとき
     let displayWhenGallaryOpened = () => {
       let content = this.elements.illust.gallary.content;
       if (!content) {
@@ -228,14 +241,15 @@ class AnkTwitter extends AnkSite {
       new MutationObserver(() => {
         let modal = this.getOpenedModal();
         if (modal && modal.tweet) {
-          this.displayDownloaded({'elm': this.getElements(modal.tweet), 'force': true});
+          this.resetContext();
+          this.displayDownloaded({'elm': this.getElements(modal.tweet), 'force': true}).then();
         }
       }).observe(content, {'attributes': true});
 
       return true;
     };
 
-    //
+    // ツイートを開いたとき
     let displayWhenTweetOpened = () => {
       let content = this.elements.illust.tweet.content;
       if (!content) {
@@ -246,7 +260,8 @@ class AnkTwitter extends AnkSite {
         o.forEach((e) => {
           if (e.target.classList.contains('permalink-tweet')) {
             if (getComputedStyle(e.target, '').getPropertyValue('display') === 'block') {
-              this.displayDownloaded({'elm': this.getElements(e.target), 'force': true});
+              this.resetContext();
+              this.displayDownloaded({'elm': this.getElements(e.target), 'force': true}).then();
             }
           }
         });
@@ -262,7 +277,8 @@ class AnkTwitter extends AnkSite {
         return false;
       }
 
-      return this.displayDownloaded({'elm': this.getElements(modal.tweet), 'force': true});
+      this.displayDownloaded({'elm': this.getElements(modal.tweet), 'force': true}).then();
+      return true;
     };
 
     Promise.all([
