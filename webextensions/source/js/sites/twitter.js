@@ -186,12 +186,12 @@ class AnkTwitter extends AnkSite {
   }
 
   /**
-   * override : getContext()
+   * override : getDownloadContext()
    * @param elm
    * @param mode
    * @returns {Promise.<*>}
    */
-  async getContext (elm, mode) {
+  async getDownloadContext (elm, mode) {
 
     let modal = this.getOpenedModal();
     if (!modal) {
@@ -200,7 +200,7 @@ class AnkTwitter extends AnkSite {
 
     let elmTweet = this.getElements(modal.tweet);
 
-    return super.getContext(elmTweet, mode);
+    return super.getDownloadContext(elmTweet, mode);
   }
 
   /**
@@ -241,7 +241,7 @@ class AnkTwitter extends AnkSite {
       new MutationObserver(() => {
         let modal = this.getOpenedModal();
         if (modal && modal.tweet) {
-          this.resetContext();
+          this.resetCondition();
           this.displayDownloaded({'elm': this.getElements(modal.tweet), 'force': true}).then();
         }
       }).observe(content, {'attributes': true});
@@ -260,7 +260,7 @@ class AnkTwitter extends AnkSite {
         o.forEach((e) => {
           if (e.target.classList.contains('permalink-tweet')) {
             if (getComputedStyle(e.target, '').getPropertyValue('display') === 'block') {
-              this.resetContext();
+              this.resetCondition();
               this.displayDownloaded({'elm': this.getElements(e.target), 'force': true}).then();
             }
           }

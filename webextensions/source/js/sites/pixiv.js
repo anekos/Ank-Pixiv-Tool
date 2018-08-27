@@ -11,7 +11,7 @@ class AnkPixiv extends AnkSite {
 
     this.USE_AJAX_PAGES_DATA = false;
 
-    this._illust_data_cache = {
+    this._illustDataCache = {
       'id': null,
       'data': null
     };
@@ -47,7 +47,7 @@ class AnkPixiv extends AnkSite {
       },
       "info": {
         "illust": {
-          "datetime": {"s": ".work-info .meta > li, figcaption ul+div"},
+          "datetime": {"s": ".work-info .meta > li, figcaption footer+ul+div"},
           "size": {"s": ".work-info .meta > li+li"},
           "tools": {"s": ".work-info .tools"},
           "title": {"s": ".work-info .title"},
@@ -70,7 +70,7 @@ class AnkPixiv extends AnkSite {
       "misc": {
         "content": {"s": "article figure"},
         "openCaption": {"s": ".ui-expander-container > .ui-expander-target > .expand, figcaption h1+div p+div > button"},
-        "downloadedDisplayParent": {"s": ".score, figcaption ul+div"},
+        "downloadedDisplayParent": {"s": ".score, article+aside section > *:last-child"},
         "recommendList": {"s": "#illust-recommend ._image-items"},
         "feedList": {"s": ["#stacc_timeline", "#stacc_center_timeline"]},
         "rankingList": {"s": ".ranking-items"},
@@ -283,14 +283,28 @@ class AnkPixiv extends AnkSite {
      * @returns {{url: string, id: *, title: (string|*|string|XML|void), posted: (boolean|*|Number), postedYMD: (boolean|string|*), size: ({width, height}|string), tags: Array, tools: string, caption: (string|*|string|XML|void), R18: boolean}}
      */
     let getIllustContext = (illust_data) => {
+      let getLang = () => {
+        let e = document.documentElement.lang.toLowerCase();
+        switch (e) {
+          case "zh-cn":
+          case "zh":
+            return "zh-CN";
+          case "zh-tw":
+            return "zh-TW";
+          default:
+            return e;
+        }
+      };
+
       try {
         let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(illust_data.createDate));
         let updated = this.getPosted(() => AnkUtils.decodeTextToDateData(illust_data.uploadDate));
 
+        let lang = getLang();
         let tags = illust_data.tags.tags.map((e) => {
           let tag = AnkUtils.trim(e.tag);
-          if (this.prefs.saveTagsWithTranslation && e.romaji) {
-              tag += '('+e.romaji+')';
+          if (this.prefs.saveTagsWithTranslation && e.translation && e.translation.hasOwnProperty(lang)) {
+              tag += '('+e.translation[lang]+')';
           }
           return tag;
         });
@@ -354,15 +368,15 @@ class AnkPixiv extends AnkSite {
 
     let illustId = this.getIllustId(elm.doc.location.href);
 
-    let illust_data = this._illust_data_cache.id === illustId && this._illust_data_cache.data;
+    let illust_data = this._illustDataCache.id === illustId && this._illustDataCache.data;
     if (!illust_data) {
       illust_data = await getIllustData(elm);
       if (!illust_data) {
         return null;
       }
 
-      this._illust_data_cache.id = illustId;
-      this._illust_data_cache.data = illust_data;
+      this._illustDataCache.id = illustId;
+      this._illustDataCache.data = illust_data;
     }
 
     let context = {};
@@ -773,9 +787,9 @@ class AnkPixiv extends AnkSite {
       {'q': '.sibling-items > .after > a', 'n': 1},       // 前の作品
       {'q': '.sibling-items > .before > a', 'n': 1},      // 次の作品
       // 以下新UI対応
-      {'q': 'aside li > a[href^="/member_illust.php?mode=medium"]:first-child', 'n': -1, 'r': 'div[style*="background-image:"]', 'm': 'border'},
-      {'q': 'nav div[role="rowgroup"] > div >  a[href^="/member_illust.php?mode=medium"]', 'n': -1, 'r': 'div[style*="background-image:"]', 'm': 'border'},
-      {'q': 'nav > a[href^="/member_illust.php?"]', 'n': -1, 'r': 'div[style*="background-image:"]', 'm': 'border'}
+      {'q': 'aside li a[href^="/member_illust.php?mode=medium"]:first-child', 'n': -1, 'r': 'div[style*="background-image:"]', 'm': 'border'},       // 関連作品
+      {'q': 'nav div[role="rowgroup"] > div >  a[href^="/member_illust.php?mode=medium"]', 'n': -1, 'r': 'div[role="presentation"]', 'm': 'border'}, // すべて見る
+      {'q': 'nav > a[href^="/member_illust.php?"]', 'n': -1, 'r': 'div[role="presentation"]', 'm': 'border'}                                         // 前後の作品
     ];
 
     return {
@@ -959,7 +973,8 @@ class AnkPixiv extends AnkSite {
       // miniBrowseの中身が書き換わるのを検出する
       let moBrowse = new MutationObserver(() => {
         logger.debug('content changed.');
-        this.contentChanged();
+        this.resetElements();
+        this.resetCondition();
         this.forceDisplayAndMarkDownloaded();
       });
 

@@ -11,7 +11,7 @@ class AnkPixivFanbox extends AnkSite {
 
     this.USE_CONTEXT_CACHE = false;
 
-    this._illust_data_cache = {
+    this._illustDataCache = {
       'id': null,
       'data': null
     };
@@ -162,15 +162,15 @@ class AnkPixivFanbox extends AnkSite {
 
     let illustId = this.getIllustId(elm.doc.location.href);
 
-    let illust_data = this._illust_data_cache.id === illustId && this._illust_data_cache.data;
+    let illust_data = this._illustDataCache.id === illustId && this._illustDataCache.data;
     if (!illust_data) {
       illust_data = await getPostData(elm);
       if (!illust_data) {
         return null;
       }
 
-      this._illust_data_cache.id = illustId;
-      this._illust_data_cache.data = illust_data;
+      this._illustDataCache.id = illustId;
+      this._illustDataCache.data = illust_data;
     }
 
     let context = {};

@@ -272,7 +272,8 @@ class AnkDeviantart extends AnkSite {
           });
         });
         if (rise) {
-          this.contentChanged();
+          this.resetElements();
+          this.resetCondition();
           this.forceDisplayAndMarkDownloaded();
         }
       });
@@ -293,7 +294,8 @@ class AnkDeviantart extends AnkSite {
           });
         });
         if (miniBrowse && rise) {
-          this.contentChanged();
+          this.resetElements();
+          this.resetCondition();
           this.forceDisplayAndMarkDownloaded();
           moBody.disconnect();
           moBrowse.observe(miniBrowse, {'childList': true, 'subtree': true});

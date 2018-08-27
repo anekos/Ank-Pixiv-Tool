@@ -100,24 +100,21 @@ class AnkSite {
   }
 
   /**
-   * AJAX等でコンテンツが入れ替わった時に情報をリセットする (DOMからコンテキストまで全部)
+   * AJAX等でコンテンツが入れ替わった時に情報をリセットする (DOM情報)
    */
-  contentChanged () {
-    logger.info('ON CHANGED CONTENT:', this.SITE_ID, document.location.href);
+  resetElements () {
+    logger.info('RESET ELEMENTS:', this.SITE_ID, document.location.href);
 
     AnkViewer.reset();
 
     this.elements = this.getElements(document);
-
-    this.resetContext();
   }
 
   /**
-   * AJAX等でコンテンツが入れ替わった時に情報をリセットする (コンテキストのみ)
+   * AJAX等でコンテンツが入れ替わった時に情報をリセットする (内部状態)
    */
-  resetContext () {
-
-    logger.info('RESET CONTEXT INFO:', this.SITE_ID, document.location.href);
+  resetCondition () {
+    logger.info('RESET CONDITION:', this.SITE_ID, document.location.href);
 
     this.contextCache = null;
 
@@ -550,11 +547,10 @@ class AnkSite {
    * @param mode
    * @returns {Promise.<*>}
    */
-  async getContext (elm, mode) {
+  async getDownloadContext (elm, mode) {
 
-    // path/illust/memberに分かれているのは、path@nicoのみ要XHRでコスト高→pathが不要な場合(displayDownloaded)と必要な場合(左記以外)を分けられるようにしたため
-    // path@pixivも要XHRになったので再検討が必要
-
+    // 取得がpath/illust/memberで分かれているのは、path@pixivやpath@nicoが要XHRだが、pathが不要な場合(displayDownloaded)に無駄なXHRを行わないようにするため
+    // しかしillust@pixivも要XHRになったので再検討が必要
 
     mode = mode || this.GET_CONTEXT.ALL;
 
@@ -616,7 +612,7 @@ class AnkSite {
 
       opts = opts || {};
 
-      let context = await this.getContext(this.elements, this.GET_CONTEXT.ALL);
+      let context = await this.getDownloadContext(this.elements, this.GET_CONTEXT.ALL);
       if (!context) {
         // コンテキストが集まらない（ダウンロード可能な状態になっていない）
         let msg = chrome.i18n.getMessage('msg_notReady');
@@ -689,6 +685,14 @@ class AnkSite {
         display.setAttribute('data-text-'+k, chrome.i18n.getMessage('msg_'+k));
       });
       appendTo.appendChild(display);
+    }
+
+    if (opts.illustId) {
+      let displayedId = display.getAttribute('data-illust-id');
+      if (displayedId != opts.illustId) {
+        display.className = '';
+        display.setAttribute('data-illust-id', opts.illustId)
+      }
     }
 
     let cls = (() => {
@@ -787,7 +791,7 @@ class AnkSite {
 
     logger.debug('exec display downloaded');
 
-    let context = await this.getContext(elm, this.GET_CONTEXT.ILLUST);
+    let context = await this.getDownloadContext(elm, this.GET_CONTEXT.ILLUST);
     if (!context) {
       return false;
     }
@@ -796,6 +800,7 @@ class AnkSite {
 
     this.requestGetDownloadStatus(illustContext.id).then((status) => {
       this._insertDownloadedDisplay(appendTo, {
+        'illustId': illustContext.id,
         'status': status,
         'R18': illustContext.R18,
         'updated': (() => {
@@ -1007,7 +1012,7 @@ class AnkSite {
     let cmd = opts && opts.cmd || 'open';
     switch (cmd) {
       case 'open':
-        this.getContext(this.elements, this.GET_CONTEXT.PATH).then((context) => {
+        this.getDownloadContext(this.elements, this.GET_CONTEXT.PATH).then((context) => {
           if (!context) {
             logger.error(new Error('viewer not ready'));
             return;

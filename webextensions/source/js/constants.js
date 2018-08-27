@@ -25,7 +25,7 @@ const OPTION_DEFAULT ={
   "mangaImagesSaveToFolder": true,
   "ignoreWrongDatetimeFormat": false,
   "warnWrongDatetimeFormat": true,
-  "saveTagsWithTranslation": true,
+  "saveTagsWithTranslation": false,
   "largeOnMiddle": true,
   "largeImageSize": 0,
   "dontResizeIfSmall": false,

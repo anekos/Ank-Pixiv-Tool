@@ -179,17 +179,17 @@ class AnkTweetdeck extends AnkSite {
   }
 
   /**
-   * override : getContext()
+   * override : getDownloadContext()
    * @param elm
    * @param mode
    * @returns {Promise.<*>}
    */
-  async getContext (elm, mode) {
+  async getDownloadContext (elm, mode) {
     if (!this.inIllustPage()) {
       return;
     }
 
-    return super.getContext(elm, mode);
+    return super.getDownloadContext(elm, mode);
   }
 
   /**
@@ -205,6 +205,7 @@ class AnkTweetdeck extends AnkSite {
 
       new MutationObserver(() => {
         if (this.inIllustPage()) {
+          this.resetCondition();
           this.displayDownloaded({'force': true}).then();
         }
       }).observe(modal, {'attributes': true});
