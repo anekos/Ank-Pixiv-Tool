@@ -83,10 +83,6 @@
     content: attr(data-text-downloaded_updated);
 }
 
-#ank-pixiv-downloaded-display.inprogress:after {
-    content: attr(data-text-download_inprogress);
-}
-
 #ank-pixiv-downloaded-display.wait:after {
     content: attr(data-text-download_wait);
 }
@@ -101,6 +97,10 @@
 
 #ank-pixiv-downloaded-display.timeout:after {
     content: attr(data-text-download_timeout);
+}
+
+#ank-pixiv-downloaded-display.inprogress:after {
+    content: attr(data-text-download_inprogress);
 }
 
 

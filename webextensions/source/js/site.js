@@ -358,6 +358,7 @@ class AnkSite {
         let msg = chrome.i18n.getMessage('msg_downloadExistingImage');
         let result = confirm(msg);
         if (!result) {
+          this.displayDownloaded({'inProgress': false}).then();
           return;
         }
       }
@@ -617,7 +618,7 @@ class AnkSite {
         // コンテキストが集まらない（ダウンロード可能な状態になっていない）
         let msg = chrome.i18n.getMessage('msg_notReady');
         logger.warn(new Error(msg));
-        await this.displayDownloaded({'force': true});
+        await this.displayDownloaded({'inProgress': false});
         return false;
       }
 
@@ -626,7 +627,7 @@ class AnkSite {
         let msg = chrome.i18n.getMessage('msg_cannotFindImages');
         logger.error(new Error(msg));
         alert(msg);
-        await this.displayDownloaded({'force': true});
+        await this.displayDownloaded({'inProgress': false});
         return false;
       }
 
@@ -695,12 +696,17 @@ class AnkSite {
       }
     }
 
-    let cls = (() => {
-      if (opts.inProgress) {
-        // ダウンロードイベントがトリガーされた
-        return ['inprogress'];
-      }
+    if (opts.inProgress) {
+      display.classList.add('inprogress');
+    }
+    else {
+      display.classList.remove('inprogress');
+    }
+    if (opts.hasOwnProperty('inProgress')) {
+      return;
+    }
 
+    let cls = (() => {
       if (!opts.status) {
         // 状態なし
         return;
@@ -763,7 +769,7 @@ class AnkSite {
       return false;
     }
 
-    if (opts.inProgress) {
+    if (opts.hasOwnProperty('inProgress')) {
       // ダウンロードイベントトリガー時に強制表示
       this._insertDownloadedDisplay(appendTo, opts);
       return true;
