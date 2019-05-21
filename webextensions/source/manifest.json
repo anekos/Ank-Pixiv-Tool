@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Ank Pixiv Tool",
-  "version": "3.0.12",
+  "version": "3.0.13",
   "homepage_url": "https://github.com/anekos/Ank-Pixiv-Tool",
   "author": "anekos, ginzu",
   "default_locale": "en",
@@ -65,7 +65,7 @@
       "run_at": "document_start"
     },
     {
-      "matches": [ "*://twitter.com/*" ],
+      "matches": [ "*://twitter.com/*", "*://mobile.twitter.com/*" ],
       "js": [ "js/constants.js", "js/prefs.js", "js/logger.js", "js/utils.js", "js/remote.js", "js/viewer.js", "js/site.js", "js/sites/twitter.js" ],
       "css": [ "css/style.css" ],
       "run_at": "document_start"

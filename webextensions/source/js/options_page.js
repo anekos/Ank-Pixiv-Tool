@@ -437,89 +437,6 @@
     });
   };
 
-  // セレクタ上書き設定インポートボタンのイベント
-  let addImportOverrideSelectorEvent = () => {
-
-    let button = document.querySelector('#importOverrideSelectorButton');
-    let chooser = document.querySelector('#importOverrideSelector');
-
-    // ファイルが選択されたら
-    chooser.addEventListener('change', () => {
-      let file = chooser.files[0];
-      chooser.value = '';
-      if (!file) {
-        return;
-      }
-
-      AnkUtils.blobToJSON(file)
-        .then((r) => {
-
-          let opts = {
-            'siteModules': {}
-          };
-
-          let sms = OPTION_DEFAULT.siteModules;
-          Object.keys(sms).forEach((site_key) => {
-            if (r.hasOwnProperty(site_key) && r[site_key] && typeof r[site_key] == 'object') {
-              opts.siteModules[site_key] = {
-                '_mod_selector': r[site_key]
-              }
-            }
-          });
-
-          opts.selector_overrode = OPTION_DEFAULT.version;
-
-          return AnkPrefs.save(opts)
-            .then(() => {
-              alert(chrome.i18n.getMessage('msg_importOverrideSelectorCompleted'));
-            });
-        })
-        .catch((e) => {
-          logger.error(e);
-          alert(chrome.i18n.getMessage('msg_importOverrideSelectorError'));
-        });
-    });
-
-    // ボタンクリックで chooser を開く
-    button.addEventListener('click', () => {
-      chooser.click();
-    });
-  };
-
-  // ダウンロード履歴DB初期化ボタンのイベント
-  let addClearOverrideSelectorEvent = () => {
-
-    let button = document.querySelector('#cleartOverrideSelectorButton');
-
-    button.addEventListener('click', () => {
-      let msg = chrome.i18n.getMessage('msg_ARE_YOU_SURE');
-      let result = confirm(msg);
-      if (!result) {
-        return;
-      }
-
-      let opts = {
-        'siteModules': {}
-      };
-
-      let sms = OPTION_DEFAULT.siteModules;
-      Object.keys(sms).forEach((site_key) => {
-        opts.siteModules[site_key] = {
-          '_mod_selector': {}
-        }
-      });
-
-      AnkPrefs.save(opts)
-        .then(() => {
-          alert(chrome.i18n.getMessage('msg_clearOverrideSelectorCompleted'));
-        })
-        .catch((e) => {
-          logger.error(e);
-          alert(chrome.i18n.getMessage('msg_clearOverrideSelectorError'));
-        });
-    });
-  };
-
   //
   let setLicense = () => {
     let title = document.getElementById('license_title');
@@ -550,8 +467,6 @@
     addExportHistoryEvent();
     addImportHistoryEvent();
     addClearHistoryEvent();
-    addImportOverrideSelectorEvent();
-    addClearOverrideSelectorEvent();
   })();
 
 }

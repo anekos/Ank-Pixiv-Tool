@@ -18,49 +18,26 @@ class AnkPixivFanbox extends AnkSite {
   }
 
   /**
-   * 利用するクエリのまとめ
-   * @param doc
-   */
-  getElements (doc) {
-
-    const SELECTOR_ITEMS = {
-      //
-    };
-
-    let selectors = this.attachSelectorOverride({}, SELECTOR_ITEMS);
-
-    let gElms = this.initSelectors({'doc': doc}, selectors, doc);
-
-    return gElms;
-  }
-
-  /**
    *
-   * @param doc
    * @returns {boolean}
    */
-  inIllustPage (doc) {
-    doc = doc || document;
-    return /^https?:\/\/www\.pixiv\.net\/fanbox\//.test(doc.location.href);
+  inIllustPage () {
+    return !!this.getIllustId();
   }
 
   /**
    * ダウンロード情報（画像パス）の取得
-   * @param elm
    * @param mode
    * @returns {Promise.<*>}
    */
-  async getAnyContext (elm, mode) {
+  async getAnyContext (mode) {
     /**
-     *
-     * @param elm
-     * @returns {Promise.<void>}
+     * 作品情報を要求する
+     * @param illustId
+     * @returns {Promise.<*>}
      */
-    let getPostData = async (elm) => {
+    let reqPostData = async (illustId) => {
       try {
-        let loc = elm.doc.location.href;
-        let illustId = this.getIllustId(loc);
-
         let post_resp = await remote.get({
           'url': 'https://www.pixiv.net/ajax/fanbox/post?postId='+illustId,
           'responseType': 'json',
@@ -82,7 +59,7 @@ class AnkPixivFanbox extends AnkSite {
     };
 
     /**
-     *
+     * ダウンロード情報（画像パス）の取得
      * @param post_data
      * @returns {{original: Array}}
      */
@@ -90,12 +67,12 @@ class AnkPixivFanbox extends AnkSite {
       try {
         if (post_data.type == 'image') {
           return {
-            'original': post_data.body.images.map((e) => {return {'src': e.originalUrl, 'referrer': elm.doc.location.href}})
+            'original': post_data.body.images.map((e) => {return {'src': e.originalUrl, 'referrer': document.location.href}})
           };
         }
         else if (post_data.type == 'file') {
           return {
-            'original': post_data.body.files.map((e) => {return {'src': e.url, 'referrer': elm.doc.location.href}})
+            'original': post_data.body.files.map((e) => {return {'src': e.url, 'referrer': document.location.href}})
           };
         }
       }
@@ -105,7 +82,7 @@ class AnkPixivFanbox extends AnkSite {
     };
 
     /**
-     *
+     * ダウンロード情報（イラスト情報）の取得
      * @param post_data
      * @returns {{url: string, id: *, title: (*|string|XML|void|string|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: Array, caption: (*|*|string|XML|void|string|string), R18: boolean}}
      */
@@ -115,8 +92,8 @@ class AnkPixivFanbox extends AnkSite {
         let updated = this.getPosted(() => AnkUtils.decodeTextToDateData(post_data.updatedDatetime));
 
         let info = {
-          'url': elm.doc.location.href,
-          'id': this.getIllustId(elm.doc.location.href),
+          'url': document.location.href,
+          'id': post_data.id,
           'title': post_data.title && AnkUtils.trim(post_data.title) || '',
           'posted': !posted.fault && posted.timestamp,
           'postedYMD': !posted.fault && posted.ymd,
@@ -139,7 +116,7 @@ class AnkPixivFanbox extends AnkSite {
     };
 
     /**
-     *
+     * ダウンロード情報（メンバー情報）の取得
      * @param post_data
      * @returns {{id: *, pixiv_id: null, name: (*|string|XML|void|string), memoized_name: null}}
      */
@@ -160,11 +137,11 @@ class AnkPixivFanbox extends AnkSite {
 
     //
 
-    let illustId = this.getIllustId(elm.doc.location.href);
+    let illustId = this.getIllustId();
 
     let illust_data = this._illustDataCache.id === illustId && this._illustDataCache.data;
     if (!illust_data) {
-      illust_data = await getPostData(elm);
+      illust_data = await reqPostData(illustId);
       if (!illust_data) {
         return null;
       }
@@ -184,28 +161,64 @@ class AnkPixivFanbox extends AnkSite {
 
   /**
    * イラストIDの取得
-   * @param loc
+   * @param url
    * @returns {*}
    */
-  getIllustId (loc) {
-    return (/\/creator\/\d+\/post\/(\d+)$/.exec(loc) || [])[1];
+  getIllustId (url) {
+    url = url || document.location.href;
+    let m = /\/creator\/\d+\/post\/(\d+)$/.exec(url);
+    if (m) {
+      return m[1];
+    }
+  }
+
+  /**
+   *
+   * @param data
+   */
+  onHistoryChanged (data) {
+
+    logger.debug('on history changed.');
+
+    this.resetMarkAndDisplay();
+    this.resetElements();
+    this.resetCondition();
+
+    if (this.inIllustPage()) {
+      this.installIllustPageFunction(this.FUNC_INST_RETRY_VALUE);
+    }
   }
 
   /**
    * 機能のインストール（イラストページ用）
    */
   installIllustPageFunction (RETRY_VALUE) {
-    // no proc.
+    // 「保存済み」を表示する
+    let delayDisplaying = () => {
+      if (document.readyState !== "complete") {
+        return false;
+      }
+
+      this.displayDownloaded().then();
+      return true;
+    };
+
+    //
+
+    Promise.all([
+      AnkUtils.delayFunctionInstaller({'func': delayDisplaying, 'retry': RETRY_VALUE, 'label': 'delayDisplaying'})
+    ])
+      .catch((e) => logger.warn(e));
   }
 
   /**
    * 機能のインストールのまとめ
    */
   installFunctions () {
-    if (this.inIllustPage()) {
-      this.installIllustPageFunction(this.FUNC_INST_RETRY_VALUE);
-      return;
-    }
+    // window.history.pushState に割り込む
+    AnkUtils.overridePushState();
+
+    this.installIllustPageFunction(this.FUNC_INST_RETRY_VALUE);
   }
 
 }

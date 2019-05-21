@@ -8,83 +8,64 @@ class AnkNicosei extends AnkSite {
     super();
 
     this.SITE_ID = 'NCS';
-  }
 
-  /**
-   * 利用するクエリのまとめ
-   * @param doc
-   */
-  getElements (doc) {
-
-    const SELECTOR_ITEMS = {
-      "illust": {
-        "imgOvr": {"s": ".illust_wrapper"},
-        "med": {
-          "imgLink": {"s": "#illust_link"}
-        }
-      },
-      "info": {
-        "illust": {
-          "datetime": {"s": "#content #detail .created"},
-          "title": {"s": "#content #detail .title"},
-          "R18": {"s": "#content #detail .kind a[href=\"/shunga/\"]"},
-          "caption": {"s": "#content #detail .discription"},
-          "clip": {"s": ".add_clip_button"},
-
-          "tags": {"ALL": "#content #detail .illust_tag.static .tag .text"}
+    this.SELECTORS = {
+      'illust': {
+        'imgOvr': '.illust_wrapper',
+        'med': {
+          'imgLink': '#illust_link'
         },
-        "member": {
-          "memberLink": {"s": "#content #detail .user_link > a"},
-          "memberName": {"s": "#content #detail .user_name strong"},
+        'orig': {
+          'img': '.illust_view_big'
         }
       },
-      "misc": {
-        "downloadedDisplayParent": {"s": "#content #detail .other_info"},
-        "downloadedFilenameArea": {"s": ".ank-pixiv-downloaded-filename-text"}
+      'info': {
+        'illust': {
+          'datetime': '#content #detail .created',
+          'title': '#content #detail .title',
+          'R18': '#content #detail .kind a[href="/shunga/"]',
+          'caption': '#content #detail .discription',
+          'clip': '.add_clip_button',
+
+          'tags': '#content #detail .illust_tag.static .tag .text'
+        },
+        'member': {
+          'memberLink': '#content #detail .user_link > a',
+          'memberName': '#content #detail .user_name strong',
+        }
       }
     };
-
-    let selectors = this.attachSelectorOverride({}, SELECTOR_ITEMS);
-
-    let gElms = this.initSelectors({'doc': doc}, selectors, doc);
-
-    return gElms;
   }
 
   /**
-   *
-   * @param doc
+   * イラストページに居るかどうか
    * @returns {boolean}
    */
-  inIllustPage (doc) {
-    doc = doc || document;
-    return !!this.getIllustId(doc.location.href);
+  inIllustPage () {
+    return !!this.getIllustId();
   }
 
   /**
-   *
-   * @param elm
+   * ダウンロード情報の取得
    * @param mode
    * @returns {Promise.<{}>}
    */
-  async getAnyContext (elm, mode) {
+  async getAnyContext (mode) {
 
     /**
      * ダウンロード情報（画像パス）の取得
-     * @param elm
      * @returns {Promise}
      */
-    let getPathContext = async (elm) => {
-      let getMedPath = async () => {
-        let largePage = this.elements.illust.med.imgLink.href;
-        logger.info('ORIGINAL IMAGE PAGE:', largePage);
+    let getPathContext = async () => {
+      let getMedPath = async (imgLink) => {
+        logger.info('ORIGINAL IMAGE PAGE:', imgLink.href);
         let resp = await remote.get({
-          'url': largePage,
+          'url': imgLink.href,
           'responseType': 'document',
           'timeout': this.prefs.xhrTimeout
         });
 
-        let img = resp.document.querySelector('.illust_view_big');
+        let img = resp.document.querySelector(this.SELECTORS.illust.orig.img);
         if (img) {
           let m = [{'src': [new URL(resp.responseURL).origin, img.getAttribute('data-src')].join('')}];
           return {
@@ -92,31 +73,41 @@ class AnkNicosei extends AnkSite {
             'original': m
           };
         }
+        else {
+          // FIXME ↑のレスポンスが空になるので応急処置としてresponseURLを加工する。httpでのリクエストがhttpsにリダイレクトするのが問題か？
+          let m = [{'src': [resp.responseURL.replace(/\/o\//, '/priv/')]}];
+          return {
+            'thumbnail': m,
+            'original': m
+          };
+        }
       };
 
-      if (elm.illust.med.imgLink) {
-        return getMedPath();
+      let imgLink = document.querySelector(this.SELECTORS.illust.med.imgLink);
+      if (imgLink) {
+        return getMedPath(imgLink);
       }
     };
 
     /**
      * ダウンロード情報（イラスト情報）の取得
-     * @param elm
-     * @returns {{url: string, id: *, title: (*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: *, caption: (SELECTOR_ITEMS.info.illust.caption|{s}|*|*|string|XML|void|string), R18: boolean}}
+     * @returns {{url: string, id: *, title: (*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: *, caption: (Element|*|string|XML|void|string), R18: boolean}}
      */
-    let getIllustContext = (elm) => {
+    let getIllustContext = () => {
       try {
-        let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(elm.info.illust.datetime.textContent));
+        let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(document.querySelector(this.SELECTORS.info.illust.datetime).textContent));
+
+        let caption = document.querySelector(this.SELECTORS.info.illust.caption);
 
         let info = {
-          'url': elm.doc.location.href,
-          'id': this.getIllustId(elm.doc.location.href),
-          'title': AnkUtils.trim(elm.info.illust.title.textContent),
+          'url': document.location.href,
+          'id': this.getIllustId(),
+          'title': AnkUtils.trim(document.querySelector(this.SELECTORS.info.illust.title).textContent),
           'posted': !posted.fault && posted.timestamp,
           'postedYMD': !posted.fault && posted.ymd,
-          'tags': Array.prototype.map.call(elm.info.illust.tags, (e) => AnkUtils.trim(e.textContent)),
-          'caption': elm.info.illust.caption && AnkUtils.trim(elm.info.illust.caption.textContent),
-          'R18': !!elm.info.illust.R18
+          'tags': Array.prototype.map.call(document.querySelectorAll(this.SELECTORS.info.illust.tags), (e) => AnkUtils.trim(e.textContent)),
+          'caption': caption && AnkUtils.trim(caption.textContent),
+          'R18': !!document.querySelector(this.SELECTORS.info.illust.R18)
         };
 
         return info;
@@ -128,14 +119,13 @@ class AnkNicosei extends AnkSite {
 
     /**
      * ダウンロード情報（メンバー情報）の取得
-     * @param elm
      * @returns {{id: *, name: (*|string|XML|void|string), pixiv_id: null, memoized_name: null}}
      */
-    let getMemberContext = (elm) => {
+    let getMemberContext = () => {
       try {
         return {
-          'id': /\/user\/illust\/(.+?)(?:$|\?)/.exec(elm.info.member.memberLink.href)[1],
-          'name': AnkUtils.trim(elm.info.member.memberName.textContent),
+          'id': /\/user\/illust\/(.+?)(?:$|\?)/.exec(document.querySelector(this.SELECTORS.info.member.memberLink).href)[1],
+          'name': AnkUtils.trim(document.querySelector(this.SELECTORS.info.member.memberName).textContent),
           'pixiv_id': null,
           'memoized_name': null
         };
@@ -150,21 +140,25 @@ class AnkNicosei extends AnkSite {
     let context = {};
 
     if (mode & this.GET_CONTEXT.PATH) {
-      context.path = await getPathContext(elm);
+      context.path = await getPathContext();
     }
-    context.illust = getIllustContext(elm);
-    context.member = getMemberContext(elm);
+    context.illust = getIllustContext();
+    context.member = getMemberContext();
 
     return context;
   }
 
   /**
    * イラストIDの取得
-   * @param loc
+   * @param url
    * @returns {*}
    */
-  getIllustId (loc) {
-    return (/^https?:\/\/seiga\.nicovideo\.jp\/seiga\/(im\d+)/.exec(loc) || [])[1];
+  getIllustId (url) {
+    url = url || document.location.href;
+    let m = /^https?:\/\/seiga\.nicovideo\.jp\/seiga\/(im\d+)/.exec(url);
+    if (m) {
+      return m[1];
+    }
   }
 
   /**
@@ -195,11 +189,12 @@ class AnkNicosei extends AnkSite {
    * クリップする
    */
   setNice () {
-    if (!this.elements.info.illust.clip) {
+    let clip = document.querySelector(this.SELECTORS.info.illust.clip);
+    if (!clip) {
       return;
     }
 
-    this.elements.info.illust.clip.click();
+    clip.click();
   }
 
   /**
@@ -237,14 +232,14 @@ class AnkNicosei extends AnkSite {
       //
 
       // オーバーレイ
-      let imgOvr = this.elements.illust.imgOvr;
+      let imgOvr = document.querySelector(this.SELECTORS.illust.imgOvr);
       if (!imgOvr) {
         return;
       }
 
       let result = (() => {
         // イラスト
-        let img = this.elements.illust.med.imgLink;
+        let img = document.querySelector(this.SELECTORS.illust.med.imgLink);
         if (img) {
           addMiddleClickEventListener(imgOvr);
           return true;
@@ -256,7 +251,7 @@ class AnkNicosei extends AnkSite {
 
     // 「保存済み」を表示する
     let delayDisplaying = () => {
-      if (this.elements.doc.readyState !== "complete") {
+      if (document.readyState !== "complete") {
         return false;
       }
 
@@ -266,7 +261,7 @@ class AnkNicosei extends AnkSite {
 
     // イメレスのサムネイルにダウンロード済みマークを表示する
     let delayMarking = () => {
-      if (this.elements.doc.readyState !== "complete") {
+      if (document.readyState !== "complete") {
         return false;
       }
 
@@ -280,7 +275,7 @@ class AnkNicosei extends AnkSite {
         return true;
       }
 
-      let clip = this.elements.info.illust.clip;
+      let clip = document.querySelector(this.SELECTORS.info.illust.clip);
       if (!clip) {
         return;
       }
@@ -310,7 +305,7 @@ class AnkNicosei extends AnkSite {
 
     // サムネイルにダウンロード済みマークを表示する
     let delayMarking = () => {
-      if (this.elements.doc.readyState !== "complete") {
+      if (document.readyState !== "complete") {
         return false;
       }
 

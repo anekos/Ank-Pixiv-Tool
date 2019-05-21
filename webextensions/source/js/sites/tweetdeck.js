@@ -11,55 +11,26 @@ class AnkTweetdeck extends AnkSite {
     this.ALT_SITE_ID = 'TWT';
 
     this.USE_CONTEXT_CACHE = false;
-  }
 
-  /**
-   * 利用するクエリのまとめ
-   * @param doc
-   */
-  getElements (doc) {
-
-    const SELECTOR_ITEMS = {
-      "illust": {
-        "modal": {"s": "#open-modal"},
-        "photos": null
+    this.SELECTORS = {
+      'illust': {
+        'modal': '#open-modal',
+        'photo_containers': 'article[data-key="#CHIRP_ID#"], .quoted-tweet[data-key="#CHIRP_ID#"]',
+        'photos': '.js-media-image-link',
+        'photo_alt': '.media-img'
       },
-      "info": {
-        "illust": {
-          "actionsMenu": {"s": "#open-modal .tweet-action[rel=\"actionsMenu\"]"},
-          "ownLink": {"s": "#open-modal .tweet-timestamp a"},
-          "name": {"s": "#open-modal .fullname"},
-          "datetime": {"s": "#open-modal .tweet-timestamp"},
-          "caption": {"s": "#open-modal .tweet-text"}
+      'info': {
+        'illust': {
+          'actionsMenu': '#open-modal .tweet-action[rel="actionsMenu"]',
+          'ownLink': '#open-modal .tweet-timestamp a',
+          'name': '#open-modal .fullname',
+          'datetime': '#open-modal .tweet-timestamp',
+          'caption': '#open-modal .tweet-text'
         },
-        "member": {
+        'member': {
         }
-      },
-      "misc": {
-        "downloadedDisplayParent": {"s": "#open-modal .tweet"}
       }
-    };
-
-    let selectors = this.attachSelectorOverride({}, SELECTOR_ITEMS);
-
-    let gElms = this.initSelectors({'doc': doc}, selectors, doc);
-
-    Object.defineProperty(gElms.illust, 'photos', {
-      'get': function () {
-        let photos = [];
-        let chirpId = gElms.info.illust.actionsMenu.getAttribute('data-chirp-id');
-        Array.prototype.find.call(
-          gElms.doc.querySelectorAll('article[data-key="'+chirpId+'"], .quoted-tweet[data-key="'+chirpId+'"]'),
-          (e) => {
-            photos = Array.prototype.filter.call(e.querySelectorAll('.js-media-image-link'), (e) => !e.parentNode.classList.contains('is-video'));
-            return !!photos.length;
-          }
-        );
-        return photos;
-      }
-    });
-
-    return gElms;
+    }
   }
 
   /**
@@ -67,35 +38,42 @@ class AnkTweetdeck extends AnkSite {
    * @returns {boolean}
    */
   inIllustPage () {
-    let modal = this.elements.illust.modal;
-    if (modal) {
-      return getComputedStyle(modal, '').getPropertyValue('display') === 'block';
-    }
+    return !!this.getIllustId();
   }
 
   /**
-   *
-   * @param elm
+   * ダウンロード情報の取得
    * @param mode
    * @returns {Promise.<{}>}
    */
-  async getAnyContext (elm, mode) {
+  async getAnyContext (mode) {
 
     /**
      * ダウンロード情報（画像パス）の取得
-     * @param elm
+     * @param modal
      * @returns {{thumbnail: (*|Array.<T>), original: Array}}
      */
-    let getPathContext = (elm) => {
-      let photos = elm.illust.photos;
-      if (!photos || photos.length == 0) {
+    let getPathContext = (modal) => {
+      let actionsMenu = modal.querySelector(this.SELECTORS.info.illust.actionsMenu);
+      if (!actionsMenu) {
+        return;
+      }
+      let chirpId = actionsMenu.getAttribute('data-chirp-id');
+      let photo_containers = document.querySelectorAll(this.SELECTORS.illust.photo_containers.replace(/#CHIRP_ID#/g, chirpId));
+      let photos = [];
+      Array.prototype.find.call(photo_containers, (e) => {
+          photos = Array.prototype.filter.call(e.querySelectorAll(this.SELECTORS.illust.photos), (e) => !e.parentNode.classList.contains('is-video'));
+          return !!photos.length;
+        }
+      );
+      if (!photos.length) {
         return;
       }
 
       let thumb = Array.prototype.map.call(photos, (e) => {
         let src = (/background-image:\s*url\("?(.+?)"?\)/.exec(e.getAttribute('style')) || [])[1];
         if (!src) {
-          let img = e.querySelector('.media-img');
+          let img = e.querySelector(this.SELECTORS.illust.photo_alt);
           if (!img || !img.src) {
             return;
           }
@@ -122,22 +100,25 @@ class AnkTweetdeck extends AnkSite {
 
     /**
      * ダウンロード情報（イラスト情報）の取得
-     * @param elm
+     * @param modal
      * @returns {{url, id: *, title: (*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: Array, caption: (*|string|XML|void|string), R18: boolean}}
      */
-    let getIllustContext = (elm) => {
+    let getIllustContext = (modal) => {
       try {
-        let dd = new Date(parseInt(elm.info.illust.datetime.getAttribute('data-time'),10));
+        let dd = new Date(parseInt(modal.querySelector(this.SELECTORS.info.illust.datetime).getAttribute('data-time'),10));
         let posted = this.getPosted(() => AnkUtils.getDateData(dd));
 
+        let ownLink = modal.querySelector(this.SELECTORS.info.illust.ownLink);
+        let caption = modal.querySelector(this.SELECTORS.info.illust.caption);
+
         let info = {
-          'url': elm.info.illust.ownLink.href,
-          'id': /\/status\/(\d+)$/.exec(elm.info.illust.ownLink.href)[1],
-          'title': AnkUtils.trim(elm.info.illust.caption.textContent),
+          'url': ownLink.href,
+          'id': this.getIllustId(ownLink.url),
+          'title': AnkUtils.trim(caption.textContent),
           'posted': !posted.fault && posted.timestamp,
           'postedYMD': !posted.fault && posted.ymd,
           'tags': [],
-          'caption': AnkUtils.trim(elm.info.illust.caption.textContent),
+          'caption': caption && AnkUtils.trim(caption.textContent),
           'R18': false
         };
 
@@ -150,15 +131,19 @@ class AnkTweetdeck extends AnkSite {
 
     /**
      * ダウンロード情報（メンバー情報）の取得
-     * @param elm
+     * @param modal
      * @returns {{id: string, name: (*|string|XML|void|string), pixiv_id: *, memoized_name: null}}
      */
-    let getMemberContext = (elm) => {
+    let getMemberContext = (modal) => {
       try {
+        let actionsMenu = modal.querySelector(this.SELECTORS.info.illust.actionsMenu);
+        let name = modal.querySelector(this.SELECTORS.info.illust.name);
+        let ownLink = modal.querySelector(this.SELECTORS.info.illust.ownLink);
+
         return {
-          'id': elm.info.illust.actionsMenu.getAttribute('data-user-id'),
-          'name': AnkUtils.trim(elm.info.illust.name.textContent),
-          'pixiv_id': /^https?:\/\/twitter\.com\/(.+?)\//.exec(elm.info.illust.ownLink.href)[1],
+          'id': actionsMenu.getAttribute('data-user-id'),
+          'name': AnkUtils.trim(name.textContent),
+          'pixiv_id': /^https?:\/\/twitter\.com\/(.+?)\/status\//.exec(ownLink.href)[1],
           'memoized_name': null
         };
       }
@@ -169,27 +154,57 @@ class AnkTweetdeck extends AnkSite {
 
     //
 
+    let modal = this._getOpenedModal();
+    if (!modal) {
+      return null;
+    }
+
     let context = {};
 
-    context.path = getPathContext(elm);
-    context.illust = getIllustContext(elm);
-    context.member = getMemberContext(elm);
+    context.path = getPathContext(modal);
+    context.illust = getIllustContext(modal);
+    context.member = getMemberContext(modal);
 
     return context;
   }
 
   /**
-   * override : getDownloadContext()
-   * @param elm
-   * @param mode
-   * @returns {Promise.<*>}
+   * 開いているツイートモーダルを探す
+   * @returns {Element}
+   * @private
    */
-  async getDownloadContext (elm, mode) {
-    if (!this.inIllustPage()) {
+  _getOpenedModal () {
+    let modal = document.querySelector(this.SELECTORS.illust.modal);
+    if (!modal) {
+      return;
+    }
+    if (getComputedStyle(modal, '').getPropertyValue('display') !== 'block') {
       return;
     }
 
-    return super.getDownloadContext(elm, mode);
+    return modal;
+  }
+
+  /**
+   * イラストIDの取得
+   * @param url
+   * @returns {*}
+   */
+  getIllustId (url) {
+    if (url) {
+      let m = /\/status\/(\d+)$/.exec(url);
+      if (m) {
+        return m[1];
+      }
+    }
+
+    let modal = this._getOpenedModal();
+    if (modal) {
+      let ownLink = modal.querySelector(this.SELECTORS.info.illust.ownLink);
+      if (ownLink && ownLink.href) {
+        return this.getIllustId(ownLink.href);
+      }
+    }
   }
 
   /**
@@ -198,15 +213,20 @@ class AnkTweetdeck extends AnkSite {
   installFunctions () {
 
     let displayWhenOpened = () => {
-      let modal = this.elements.illust.modal;
+      let modal = document.querySelector(this.SELECTORS.illust.modal);
       if (!modal) {
         return false;
       }
 
       new MutationObserver(() => {
         if (this.inIllustPage()) {
+          this.resetMarkAndDisplay();
           this.resetCondition();
           this.displayDownloaded({'force': true}).then();
+        }
+        else {
+          this.resetMarkAndDisplay();
+          this.resetCondition();
         }
       }).observe(modal, {'attributes': true});
 

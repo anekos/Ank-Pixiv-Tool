@@ -3,6 +3,8 @@
 const IS_FIREFOX = ((ua)=>{return ua && ua.indexOf("Firefox") != -1})(navigator.userAgent);
 const IS_WINDOWS = ((ua)=>{return ua && ua.indexOf("Win") != -1})(navigator.platform);
 
+const EXTENSION_ID = chrome.runtime.getURL('').replace(/\/$/, '');
+
 const OPTION_DEFAULT ={
   "downloadWhenNice": false,
   "downloadWhenClickMiddle": false,
@@ -50,14 +52,15 @@ const OPTION_DEFAULT ={
   "historyCacheSize": 200,
   "maxFilenameLength": 100,
   "siteModules": {
-    "PXV":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Pixiv", "folder": "Pixiv", "_mod_selector": {}},
-    "PFB":{"enabled": false, "experimental": true, "name": "Pixiv Fanbox", "folder": "Pixiv Fanbox", "_mod_selector": {}},
-    "NJE":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Nijie", "folder": "Nijie", "_mod_selector": {}},
-    "NCS":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Nicosei", "folder": "Nicosei", "_mod_selector": {}},
-    "TNM":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Tinami", "folder": "Tinami", "_mod_selector": {}},
-    "dART":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "name": "DeviantArt", "folder": "DeviantArt", "_mod_selector": {}},
-    "TWT":{"enabled": true, "experimental": false, "useDisplayDownloaded": true, "name": "Twitter", "folder": "Twitter", "_mod_selector": {}},
-    "TDK":{"enabled": true, "experimental": false, "useDisplayDownloaded": true, "name": "Tweetdeck", "folder": "Twitter", "_mod_selector": {}}
+    //"PXV":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Pixiv", "folder": "Pixiv"},
+    "PXV":{"enabled": true, "experimental": false, "useDisplayDownloaded": true, "useMarkDownloaded": true, "name": "Pixiv", "folder": "Pixiv"},
+    "PFB":{"enabled": false, "experimental": true, "useDisplayDownloaded": true, "name": "Pixiv Fanbox", "folder": "Pixiv Fanbox"},
+    "NJE":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Nijie", "folder": "Nijie"},
+    "NCS":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Nicosei", "folder": "Nicosei"},
+    "TNM":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Tinami", "folder": "Tinami"},
+    "dART":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "name": "DeviantArt", "folder": "DeviantArt"},
+    "TWT":{"enabled": true, "experimental": false, "useDisplayDownloaded": true, "name": "Twitter", "folder": "Twitter", "authToken": ""},
+    "TDK":{"enabled": true, "experimental": false, "useDisplayDownloaded": true, "name": "Tweetdeck", "folder": "Twitter"}
   },
   "selector_overrode": null,
   "version": chrome.runtime.getManifest().version

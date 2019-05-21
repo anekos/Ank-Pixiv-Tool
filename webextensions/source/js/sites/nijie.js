@@ -8,84 +8,63 @@ class AnkNijie extends AnkSite {
     super();
 
     this.SITE_ID = 'NJE';
-  }
 
-  /**
-   * 利用するクエリのまとめ
-   * @param doc
-   */
-  getElements (doc) {
-
-    const SELECTOR_ITEMS = {
-      "illust": {
-        "imgOvr": {"s": ["#gallery", "#dojin_left .left"]},
-        "med": {
-          "img": {"s": "#gallery  > #gallery_open > #img_filter > a > img, #gallery  > #gallery_open > #img_filter > a > video"},
-
-          "imgs": {"ALL": "#gallery  > #gallery_open > #img_diff > a > img"}
+    this.SELECTORS = {
+      'illust': {
+        'imgOvr': '#gallery, #dojin_left .left',
+        'med': {
+          'img': '#gallery  > #gallery_open > #img_filter > a > img, #gallery  > #gallery_open > #img_filter > a > video',
+          'imgs': '#gallery  > #gallery_open > #img_diff > a > img'
         },
-        "djn": {
-          "imgLink": {"s": "#dojin_left .left .image a img"},
-
-          "imgLinks": {"ALL": "#gallery_new #thumbnail a img"}
+        'djn': {
+          'imgLink': '#dojin_left .left .image a img',
+          'imgLinks': '#gallery_new #thumbnail a img'
         }
       },
-      "info": {
-        "illust": {
-          "datetime": {"s": ["div#view-honbun > p", "div#created > p"]},
-          "title": {"s": ["#view-header > #view-left > .illust_title", "#dojin_header .title"]},
-          "caption": {"s": ["#view-honbun > p+p", "#dojin_text > p+p"]},
-          "nuita": {"s": "#nuita"},
-          "good": {"s": "#good"},
+      'info': {
+        'illust': {
+          'datetime': 'div#view-honbun > p, div#created > p',
+          'title': '#view-header > #view-left > .illust_title, #dojin_header .title',
+          'caption': '#view-honbun > p+p, #dojin_text > p+p',
+          'nuita': '#nuita',
+          'good': '#good',
+          'tags': '#view-tag .tag .tag_name'
 
-          "tags": {"ALL": "#view-tag .tag .tag_name"}
         },
-        "member": {
-          "memberLink": {"s": ["a.name", "div#dojin_left > div.right > p.text > a"]}
+        'member': {
+          'memberLink': 'a.name, div#dojin_left > div.right > p.text > a'
         }
       },
-      "misc": {
-        "downloadedDisplayParent": {"s": ["div#view-honbun", "div#infomation"]},
-        "downloadedFilenameArea": {"s": ".ank-pixiv-downloaded-filename-text"},
-        "nextLink": {"s": "a#nextIllust"},
-        "prevLink": {"s": "a#backIllust"}
+      'misc': {
+        'nextLink': 'a#nextIllust',
+        'prevLink': 'a#backIllust'
       }
     };
-
-    let selectors = this.attachSelectorOverride({}, SELECTOR_ITEMS);
-
-    let gElms = this.initSelectors({'doc': doc}, selectors, doc);
-
-    return gElms;
   }
 
   /**
-   *
-   * @param doc
+   * イラストページに居るかどうか
    * @returns {boolean}
    */
-  inIllustPage (doc) {
-    doc = doc || document;
-    return !!this.getIllustId(doc.location.href);
+  inIllustPage () {
+    return !!this.getIllustId();
   }
 
   /**
-   *
-   * @param elm
+   * ダウンロード情報の取得
    * @param mode
    * @returns {Promise.<{}>}
    */
-  async getAnyContext (elm, mode) {
+  async getAnyContext (mode) {
 
     /**
      * ダウンロード情報（画像パス）の取得
-     * @param elm
      * @returns {{thumbnail, original}}
      */
-    let getPathContext = (elm) => {
-      let getMedPath = () => {
-        let m = [{'src': this.elements.illust.med.img.src}];
-        Array.prototype.forEach.call(this.elements.illust.med.imgs, (e) => {
+    let getPathContext = () => {
+      let getMedPath = (img) => {
+        let m = [{'src': img.src}];
+        Array.prototype.forEach.call(document.querySelectorAll(this.SELECTORS.illust.med.imgs), (e) => {
           m.push({'src': e.src.replace(/(\.nijie\.info\/).+?\/(nijie_picture\/)/, "$1$2")});
         });
 
@@ -95,9 +74,9 @@ class AnkNijie extends AnkSite {
         }
       };
 
-      let getDjnPath = () => {
-        let m = [{'src': this.elements.illust.djn.imgLink.src}];
-        Array.prototype.forEach.call(this.elements.illust.djn.imgLinks, (e) => {
+      let getDjnPath = (imgLink) => {
+        let m = [{'src': imgLink.src}];
+        Array.prototype.forEach.call(document.querySelectorAll(this.SELECTORS.illust.djn.imgLinks), (e) => {
           m.push({'src': e.src.replace(/(\.nijie\.info\/).+?\/(dojin_main\/)/, "$1$2")});
         });
 
@@ -107,31 +86,35 @@ class AnkNijie extends AnkSite {
         }
       };
 
-      if (elm.illust.med.img) {
-        return getMedPath();
+      let img = document.querySelector(this.SELECTORS.illust.med.img);
+      if (img) {
+        return getMedPath(img);
       }
-      if (elm.illust.djn.imgLink) {
-        return getDjnPath();
+
+      let imgLink = document.querySelector(this.SELECTORS.illust.djn.imgLink);
+      if (imgLink) {
+        return getDjnPath(imgLink);
       }
     };
 
     /**
      * ダウンロード情報（イラスト情報）の取得
-     * @param elm
-     * @returns {{url: string, id: *, title: (*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: *, caption: (SELECTOR_ITEMS.info.illust.caption|{s}|*|*|string|XML|void|string), R18: boolean}}
+     * @returns {{url: string, id: *, title: (*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: *, caption: (Element|*|string|XML|void|string), R18: boolean}}
      */
-    let getIllustContext = (elm) => {
+    let getIllustContext = () => {
       try {
-        let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(elm.info.illust.datetime.textContent));
+        let posted = this.getPosted(() => AnkUtils.decodeTextToDateData(document.querySelector(this.SELECTORS.info.illust.datetime).textContent));
+
+        let caption  = document.querySelector(this.SELECTORS.info.illust.caption);
 
         let info = {
-          'url': elm.doc.location.href,
-          'id': this.getIllustId(elm.doc.location.href),
-          'title': AnkUtils.trim(elm.info.illust.title.textContent),
+          'url': document.location.href,
+          'id': this.getIllustId(),
+          'title': AnkUtils.trim(document.querySelector(this.SELECTORS.info.illust.title).textContent),
           'posted': !posted.fault && posted.timestamp,
           'postedYMD': !posted.fault && posted.ymd,
-          'tags': Array.prototype.map.call(elm.info.illust.tags, (e) => AnkUtils.trim(e.textContent)),
-          'caption': elm.info.illust.caption && AnkUtils.trim(elm.info.illust.caption.textContent),
+          'tags': Array.prototype.map.call(document.querySelectorAll(this.SELECTORS.info.illust.tags), (e) => AnkUtils.trim(e.textContent)),
+          'caption': caption && AnkUtils.trim(caption.textContent),
           'R18': true
         };
 
@@ -144,14 +127,14 @@ class AnkNijie extends AnkSite {
 
     /**
      * ダウンロード情報（メンバー情報）の取得
-     * @param elm
      * @returns {{id: *, name: (*|string|XML|void|string), pixiv_id: null, memoized_name: null}}
      */
-    let getMemberContext = (elm) => {
+    let getMemberContext = () => {
       try {
+        let memberLink = document.querySelector(this.SELECTORS.info.member.memberLink);
         return {
-          'id': /\/members\.php\?id=(.+?)(?:&|$)/.exec(elm.info.member.memberLink.href)[1],
-          'name': AnkUtils.trim(elm.info.member.memberLink.textContent),
+          'id': /\/members\.php\?id=(.+?)(?:&|$)/.exec(memberLink.href)[1],
+          'name': AnkUtils.trim(memberLink.textContent),
           'pixiv_id': null,
           'memoized_name': null
         };
@@ -165,20 +148,24 @@ class AnkNijie extends AnkSite {
 
     let context = {};
 
-    context.path = getPathContext(elm);
-    context.illust = getIllustContext(elm);
-    context.member = getMemberContext(elm);
+    context.path = getPathContext();
+    context.illust = getIllustContext();
+    context.member = getMemberContext();
 
     return context;
   }
 
   /**
    * イラストIDの取得
-   * @param loc
+   * @param url
    * @returns {*}
    */
-  getIllustId (loc) {
-    return (/^https?:\/\/nijie\.info\/view\.php\?id=(\d+)/.exec(loc) || [])[1];
+  getIllustId (url) {
+    url = url || document.location.href;
+    let m = /^https?:\/\/nijie\.info\/view\.php\?id=(\d+)/.exec(url);
+    if (m) {
+      return m[1];
+    }
   }
 
   /**
@@ -209,11 +196,12 @@ class AnkNijie extends AnkSite {
    * いいね！する
    */
   setNice () {
-    if (!this.elements.info.illust.good) {
+    let good = document.querySelector(this.SELECTORS.info.illust.good);
+    if (!good) {
       return;
     }
 
-    this.elements.info.illust.good.click();
+    good.click();
   }
 
   /**
@@ -251,14 +239,14 @@ class AnkNijie extends AnkSite {
       //
 
       // オーバーレイ
-      let imgOvr = this.elements.illust.imgOvr;
+      let imgOvr = document.querySelector(this.SELECTORS.illust.imgOvr);
       if (!imgOvr) {
         return;
       }
 
       let result = (() => {
         // イラスト
-        let img = this.elements.illust.med.img || this.elements.illust.djn.imgLink;
+        let img = document.querySelector(this.SELECTORS.illust.med.img) || document.querySelector(this.SELECTORS.illust.djn.imgLink);
         if (img) {
           addMiddleClickEventListener(imgOvr);
           return true;
@@ -270,7 +258,7 @@ class AnkNijie extends AnkSite {
 
     // 「保存済み」を表示する
     let delayDisplaying = () => {
-      if (this.elements.doc.readyState !== "complete") {
+      if (document.readyState !== "complete") {
         return false;
       }
 
@@ -280,7 +268,7 @@ class AnkNijie extends AnkSite {
 
     // イメレスのサムネイルにダウンロード済みマークを表示する
     let delayMarking = () => {
-      if (this.elements.doc.readyState !== "complete") {
+      if (document.readyState !== "complete") {
         return false;
       }
 
@@ -294,7 +282,7 @@ class AnkNijie extends AnkSite {
         return true;
       }
 
-      let btns = ['nuita', 'good'].map((e) => this.elements.info.illust[e]);
+      let btns = ['nuita', 'good'].map((e) => document.querySelector(this.SELECTORS.info.illust[e]));
       if (!btns[0] || !btns[1]) {
         return;
       }
@@ -326,7 +314,7 @@ class AnkNijie extends AnkSite {
 
     // サムネイルにダウンロード済みマークを表示する
     let delayMarking = () => {
-      if (this.elements.doc.readyState !== "complete") {
+      if (document.readyState !== "complete") {
         return false;
       }
 

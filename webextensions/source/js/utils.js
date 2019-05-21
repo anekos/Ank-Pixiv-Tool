@@ -215,7 +215,7 @@ class _AnkUtilsClass {
    */
    decodeTextToDate (dText) {
     // まずは明らかなゴミを排除 && 連続の空白をまとめる
-    dText = dText.replace(/[^-,0-9a-zA-Z:\/\u5E74\u6708\u6642\s]/g, '').replace(/\s+/g, ' ').trim();
+    dText = dText.replace(/[^-+,0-9a-zA-Z:\/\u5E74\u6708\u6642\s]/g, '').replace(/\s+/g, ' ').trim();
 
     for (let i=0; i<this.DT_DECODE_FUNCS.length; i++) {
       let d = this.DT_DECODE_FUNCS[i](dText);
@@ -528,11 +528,60 @@ class _AnkUtilsClass {
   }
 
   /**
+   *
+   * @param doc
+   */
+  overridePushState (doc) {
+    // ページに埋め込むスクリプト
+    const INSERT_FUNC = function () {
+      if (window.__ankpixiv_pushstate_override) {
+        return;
+      }
+
+      window.__ankpixiv_pushstate_override = true;
+
+      if (typeof window.history.pushState !== 'object') {
+        console.log('override pushState');
+        let NativePushState = window.history.pushState;
+        window.history.pushState = function () {
+          let r = NativePushState.apply(window.history, arguments);
+          window.postMessage({
+            'data': JSON.parse(JSON.stringify(arguments)),
+            'type': 'AnkPixiv.onPushState'
+          });
+          return r;
+        };
+      }
+
+      if (typeof window.history.replaceState !== 'object') {
+        console.log('override replaceState');
+        let NativeReplaceState = window.history.replaceState;
+        window.history.replaceState = function () {
+          let r = NativeReplaceState.apply(window.history, arguments);
+          window.postMessage({
+            'data': JSON.parse(JSON.stringify(arguments)),
+            'type': 'AnkPixiv.onReplaceState'
+          });
+          return r;
+        };
+      }
+    };
+
+    doc = doc || document;
+
+    let e = doc.createElement('script');
+    e.textContent = '('+ INSERT_FUNC.toString() + ')();';
+    (doc.head||doc.documentElement).appendChild(e);
+    e.remove();
+  }
+
+  /**
    * 機能の遅延インストール
    * @param opts
    * @returns {Promise}
    */
   async delayFunctionInstaller (opts) {
+    let loc = document.location.href;
     for (let retry=1; retry <= opts.retry.max; retry++) {
       let installed = await opts.func();
       if (installed) {
@@ -543,6 +592,11 @@ class _AnkUtilsClass {
       if (retry <= opts.retry.max) {
         logger.info('wait for retry:', retry, '/', opts.retry.max ,':', opts.label);
         await this.sleep(opts.retry.wait);
+      }
+
+      if (loc != document.location.href) {
+        // コンテンツの入れ替えがあったら終了
+        return Promise.reject(new Error('quit: '+ opts.label));
       }
     }
 

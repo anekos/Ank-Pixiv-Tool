@@ -10,138 +10,86 @@ class AnkDeviantart extends AnkSite {
     this.SITE_ID = 'dART';
 
     this.USE_CONTEXT_CACHE = false;
-  }
 
-  /**
-   * 利用するクエリのまとめ
-   * - Override Selector は使えません
-   * @param doc
-   */
-  getElements (doc) {
-
-    let miniBrowse = null;
-
-    let query = (s) => {
-      miniBrowse = miniBrowse || doc.querySelector('.minibrowse-container.dev-page-container');
-      if (miniBrowse) {
-        return miniBrowse.querySelector(s);
-      }
-      return doc.querySelector(s);
-    };
-
-    let queryAll = (s) => {
-      miniBrowse = miniBrowse || doc.querySelector('.minibrowse-container.dev-page-container');
-      if (miniBrowse) {
-        return miniBrowse.querySelectorAll(s);
-      }
-      return doc.querySelectorAll(s);
-    };
-
-    return {
+    this.SELECTORS = {
       'illust': {
         'med': {
-          get img () {
-            return query('.dev-view-deviation .dev-content-normal');
-          },
-          get bigImg () {
-            return query('.dev-view-deviation .dev-content-full')
-          }
-        }
+          'img': '.dev-view-deviation .dev-content-normal',
+          'bigImg': '.dev-view-deviation .dev-content-full'
+        },
       },
       'info': {
         'illust': {
-          get datetime () {
-            return query('.dev-metainfo-content.dev-metainfo-details > dl > dd > span');
-          },
-          get title () {
-            return query('.dev-title-container h1 > a');
-          },
-          get caption () {
-            return query('.dev-description .text.block');
-          },
-
-          get tags () {
-            return queryAll('.dev-title-container .dev-about-breadcrumb a');
-          }
+          'datetime': '.dev-metainfo-content.dev-metainfo-details > dl > dd > span',
+          'title': '.dev-title-container h1 > a',
+          'caption': '.dev-description .text.block',
+          'tags': '.dev-title-container .dev-about-breadcrumb a'
         },
         'member': {
-          get memberLink () {
-            return query('.dev-title-container .author .username');
-          }
+          'memberLink': '.dev-title-container .author .username'
+        },
+        'misc': {
+          'content': 'body',
         }
       },
-      'misc': {
-        get content () {
-          return doc.querySelector('body');
-        },
-        get miniBrowse () {
-          return miniBrowse;
-        },
-        get downloadedDisplayParent () {
-          return query('.dev-title-container');
-        },
-        get downloadedFilenameArea () {
-          return query('.ank-pixiv-downloaded-filename-text');
-        }
-      },
-      'doc': doc
+      'miniBrowse': '.minibrowse-container.dev-page-container'
     };
   }
 
   /**
-   *
-   * @param doc
+   * イラストページに居るかどうか
    * @returns {boolean}
    */
-  inIllustPage (doc) {
-    doc = doc || document;
-    return !!this.getIllustId(doc.location.href);
+  inIllustPage () {
+    return !!this.getIllustId();
   }
 
   /**
-   *
-   * @param elm
+   * ダウンロード情報の取得
    * @param mode
    * @returns {Promise.<{}>}
    */
-  async getAnyContext (elm, mode) {
+  async getAnyContext (mode) {
 
     /**
      * ダウンロード情報（画像パス）の取得
-     * @param elm
+     * @param container
      * @returns {{thumbnail, original}}
      */
-    let getPathContext = (elm) => {
-      let getMedPath = () => {
+    let getPathContext = (container) => {
+      let getMedPath = (img) => {
         return {
-          'thumbnail': [{'src': elm.illust.med.img.src}],
-          'original': [{'src': elm.illust.med.bigImg.src}]
+          'thumbnail': [{'src': img.src}],
+          'original': [{'src': container.querySelector(this.SELECTORS.illust.med.bigImg).src}]
         }
       };
 
-      if (elm.illust.med.img) {
-        return getMedPath();
+      let img = container.querySelector(this.SELECTORS.illust.med.img);
+      if (img) {
+        return getMedPath(img);
       }
     };
 
     /**
      * ダウンロード情報（イラスト情報）の取得
-     * @param elm
-     * @returns {{url, id: *, title: (*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: *, caption: (*|SELECTOR_ITEMS.info.illust.caption|{s}|*|string|XML|void|string), R18: boolean}}
+     * @param container
+     * @returns {{url: string, id: *, title: (*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: *, caption: (Element|*|string|XML|void|string), R18: boolean}}
      */
-    let getIllustContext = (elm) => {
+    let getIllustContext = (container) => {
       try {
-        let dd = new Date(parseInt(elm.info.illust.datetime.getAttribute('ts'),10) * 1000);
+        let dd = new Date(parseInt(container.querySelector(this.SELECTORS.info.illust.datetime).getAttribute('ts'),10) * 1000);
         let posted = this.getPosted(() => AnkUtils.getDateData(dd));
 
+        let caption = container.querySelector(this.SELECTORS.info.illust.caption);
+
         let info = {
-          'url': elm.info.illust.title.href,
-          'id': this.getIllustId(elm.info.illust.title.href),
-          'title': AnkUtils.trim(elm.info.illust.title.textContent),
+          'url': document.location.href,
+          'id': this.getIllustId(),
+          'title': AnkUtils.trim(container.querySelector(this.SELECTORS.info.illust.title).textContent),
           'posted': !posted.fault && posted.timestamp,
           'postedYMD': !posted.fault && posted.ymd,
-          'tags': Array.prototype.map.call(elm.info.illust.tags, (e) => AnkUtils.trim(e.textContent).replace(/^#/, '')),
-          'caption': elm.info.illust.caption && AnkUtils.trim(elm.info.illust.caption.textContent),
+          'tags': Array.prototype.map.call(container.querySelectorAll(this.SELECTORS.info.illust.tags), (e) => AnkUtils.trim(e.textContent).replace(/^#/, '')),
+          'caption': caption && AnkUtils.trim(caption.textContent),
           'R18': false
         };
 
@@ -154,14 +102,15 @@ class AnkDeviantart extends AnkSite {
 
     /**
      * ダウンロード情報（メンバー情報）の取得
-     * @param elm
+     * @param container
      * @returns {{id: *, name: (*|string|XML|void|string), pixiv_id: null, memoized_name: null}}
      */
-    let getMemberContext = (elm) => {
+    let getMemberContext = (container) => {
       try {
+        let memberLink = container.querySelector(this.SELECTORS.info.member.memberLink);
         return {
-          'id': /^https?:\/\/www\.deviantart\.com\/([^/]+?)(?:\?|$)/.exec(elm.info.member.memberLink.href)[1],
-          'name': AnkUtils.trim(elm.info.member.memberLink.textContent),
+          'id': /^https?:\/\/www\.deviantart\.com\/([^/]+?)(?:\?|$)/.exec(memberLink.href)[1],
+          'name': AnkUtils.trim(memberLink.textContent),
           'pixiv_id': null,
           'memoized_name': null
         };
@@ -173,22 +122,49 @@ class AnkDeviantart extends AnkSite {
 
     //
 
+    let container = this._getOpenedContainer();
+    if (!container) {
+      // miniBrowseの中身が書き換わっていない
+      return null;
+    }
+
     let context = {};
 
-    context.path = getPathContext(elm);
-    context.illust = getIllustContext(elm);
-    context.member = getMemberContext(elm);
+    context.path = getPathContext(container);
+    context.illust = getIllustContext(container);
+    context.member = getMemberContext(container);
 
     return context;
   }
 
   /**
    * イラストIDの取得
-   * @param loc
+   * @param url
    * @returns {*}
    */
-  getIllustId (loc) {
-    return (/^https?:\/\/www\.deviantart\.com\/[^/]+?\/art\/(.+?)(?:\?|$)/.exec(loc) || [])[1];
+  getIllustId (url) {
+    url = url || document.location.href;
+    let m = /^https?:\/\/www\.deviantart\.com\/[^/]+?\/art\/(.+?)(?:\?|$)/.exec(url);
+    if (m) {
+      return m[1];
+    }
+  }
+
+  /**
+   * 開いているコンテナを探す
+   * @returns {Element|HTMLDocument}
+   * @private
+   */
+  _getOpenedContainer () {
+    let illustId = this.getIllustId();
+    if (illustId) {
+      let container = document.querySelector(this.SELECTORS.miniBrowse) || document;
+      let title = container.querySelector(this.SELECTORS.info.illust.title);
+      if (title && illustId === this.getIllustId(title.href)) {
+        // miniBrowseの中身がURLに一致している場合のみ
+        return container;
+      }
+    }
   }
 
   /**
@@ -211,7 +187,7 @@ class AnkDeviantart extends AnkSite {
     ];
 
     return {
-      'node': this.elements.misc.miniBrowse,
+      'node': this._getOpenedContainer(),
       'queries': MARKING_TARGETS,
       'getId': (href) => {
         return this.getIllustId(href);
@@ -222,13 +198,35 @@ class AnkDeviantart extends AnkSite {
   }
 
   /**
-   * 機能のインストール
+   *
+   * @param data
    */
-  installFunctions () {
+  onHistoryChanged (data) {
+
+    logger.debug('on history changed.');
+
+    this.resetMarkAndDisplay();
+    this.resetElements();
+    this.resetCondition();
+
+    if (this.inIllustPage()) {
+      this.installIllustPageFunction(this.FUNC_INST_RETRY_VALUE);
+    }
+  }
+
+  /**
+   * 機能のインストール（イラストページ用）
+   * @param RETRY_VALUE
+   */
+  installIllustPageFunction (RETRY_VALUE) {
 
     // 「保存済み」を表示する
     let delayDisplaying = () => {
-      if (this.elements.doc.readyState !== "complete") {
+      if (document.readyState !== "complete") {
+        return false;
+      }
+
+      if (!this._getOpenedContainer()) {
         return false;
       }
 
@@ -238,7 +236,11 @@ class AnkDeviantart extends AnkSite {
 
     // イメレスのサムネイルにダウンロード済みマークを表示する
     let delayMarking = () => {
-      if (this.elements.doc.readyState !== "complete") {
+      if (document.readyState !== "complete") {
+        return false;
+      }
+
+      if (!this._getOpenedContainer()) {
         return false;
       }
 
@@ -246,73 +248,23 @@ class AnkDeviantart extends AnkSite {
       return true;
     };
 
-    // ajaxによるコンテンツの入れ替えを検出する
-    let detectContentChange = () => {
-      if (this.elements.doc.readyState !== "complete") {
-        return false;   // リトライしてほしい
-      }
-
-      let content = this.elements.misc.content;
-      if (!content) {
-        return false;   // リトライしてほしい
-      }
-
-      let miniBrowse = null;
-
-      // miniBrowseの中身が書き換わるのを検出する
-      let moBrowse = new MutationObserver((o) => {
-        let rise = false;
-        o.forEach((a) => {
-          Array.prototype.forEach.call(a.addedNodes, (e) => {
-            if (e.classList) {
-              if (e.classList.contains('dev-title-container')) {
-                rise = true;
-              }
-            }
-          });
-        });
-        if (rise) {
-          this.resetElements();
-          this.resetCondition();
-          this.forceDisplayAndMarkDownloaded();
-        }
-      });
-
-      // miniBrowseが開くのを検出する
-      let moBody = new MutationObserver((o) => {
-        let rise = false;
-        o.forEach((a) => {
-          Array.prototype.forEach.call(a.addedNodes, (e) => {
-            if (e.classList) {
-              if (e.classList.contains('dev-title-container')) {
-                rise = true;
-              }
-              if (e.classList.contains('minibrowse-container')) {
-                miniBrowse = e;
-              }
-            }
-          });
-        });
-        if (miniBrowse && rise) {
-          this.resetElements();
-          this.resetCondition();
-          this.forceDisplayAndMarkDownloaded();
-          moBody.disconnect();
-          moBrowse.observe(miniBrowse, {'childList': true, 'subtree': true});
-        }
-      });
-
-      moBody.observe(content, {'childList': true, 'subtree': true});
-
-      return true;
-    };
-
     Promise.all([
-      AnkUtils.delayFunctionInstaller({'func': delayDisplaying, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'delayDisplaying'}),
-      AnkUtils.delayFunctionInstaller({'func': delayMarking, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'delayMarking'}),
-      AnkUtils.delayFunctionInstaller({'func': detectContentChange, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'detectContentChange'})
+      AnkUtils.delayFunctionInstaller({'func': delayDisplaying, 'retry': RETRY_VALUE, 'label': 'delayDisplaying'}),
+      AnkUtils.delayFunctionInstaller({'func': delayMarking, 'retry': RETRY_VALUE, 'label': 'delayMarking'}),
+      //AnkUtils.delayFunctionInstaller({'func': detectContentChange, 'retry': this.FUNC_INST_RETRY_VALUE, 'label': 'detectContentChange'})
     ])
       .catch((e) => logger.warn(e));
+  }
+
+  /**
+   * 機能のインストール
+   */
+  installFunctions () {
+
+    // window.history.pushState に割り込む
+    AnkUtils.overridePushState();
+
+    this.installIllustPageFunction(this.FUNC_INST_RETRY_VALUE);
   }
 
 }

@@ -49,13 +49,29 @@
 
 }
 
-#ank-pixiv-downloaded-display {
+#ank-pixiv-message-box {
+    position: fixed;
+    top: 6em;
+    right: 2em;
+    padding: .5em 1em;
+    min-width: 6em;
     color: red;
     font-weight: bold;
     font-size: small;
+    text-align: center;
+    border: outset .5em;
+    border-radius: 1em;
+    background: lightgray;
+    opacity: .6;
+    z-index: 99999999;
+    display: none;
 }
 
-#ank-pixiv-downloaded-display.slidein {
+#ank-pixiv-message-box.show {
+    display: block;
+}
+
+#ank-pixiv-message-box.slidein {
     animation-timing-function: ease;
     animation-duration: 10s;
     animation-name: slidein;
@@ -63,7 +79,7 @@
     animation-direction: alternate;
 }
 
-#ank-pixiv-downloaded-display.shake {
+#ank-pixiv-message-box.shake {
     animation-timing-function: linear;
     animation-duration: 5s;
     animation-name: shake;
@@ -71,36 +87,39 @@
     animation-direction: normal;
 }
 
-#ank-pixiv-downloaded-display.done:after {
+#ank-pixiv-message-box.done:after {
     content: attr(data-text-downloaded);
 }
 
-#ank-pixiv-downloaded-display.R18:after {
+#ank-pixiv-message-box.R18:after {
     content: attr(data-text-downloaded_used);
 }
 
-#ank-pixiv-downloaded-display.updated:after {
+#ank-pixiv-message-box.updated:after {
     content: attr(data-text-downloaded_updated);
 }
 
-#ank-pixiv-downloaded-display.wait:after {
+#ank-pixiv-message-box.wait:after {
     content: attr(data-text-download_wait);
+    color: green;
 }
 
-#ank-pixiv-downloaded-display.run:after {
+#ank-pixiv-message-box.run:after {
     content: attr(data-text-download_run);
+    color: lime;
 }
 
-#ank-pixiv-downloaded-display.failed:after {
+#ank-pixiv-message-box.failed:after {
     content: attr(data-text-download_failed);
 }
 
-#ank-pixiv-downloaded-display.timeout:after {
+#ank-pixiv-message-box.timeout:after {
     content: attr(data-text-download_timeout);
 }
 
-#ank-pixiv-downloaded-display.inprogress:after {
+#ank-pixiv-message-box.inprogress:after {
     content: attr(data-text-download_inprogress);
+    color: green;
 }
 
 

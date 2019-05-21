@@ -242,6 +242,7 @@
           ]
         }, [
           "requestHeaders",
+          "extraHeaders",
           "blocking"
         ]);
       });

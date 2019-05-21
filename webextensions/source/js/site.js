@@ -12,8 +12,9 @@ class AnkSite {
 
     this.prefs = null;
 
-    this.elements = null;
     this.contextCache = null;
+
+    this.addedListeners = [];
 
     this.executed = {
       'displayDownloaded': 0,
@@ -74,29 +75,34 @@ class AnkSite {
         return;
       }
 
-      if (Object.keys(this.prefs.site._mod_selector).length) {
-        let selector_overrode = this.prefs.selector_overrode || "3.0.0";
-        if (AnkUtils.compareVersion(this.prefs.version, selector_overrode) > 0) {
-          // 過去のバージョンでインポートしたセレクタ上書き設定は無視する
-          logger.info("IGNORE override_selector:", selector_overrode);
-          this.prefs.site._mod_selector = {};
-        }
-        else {
-          logger.info("USE override_selector:", selector_overrode);
-        }
-      }
-
       logger.info('SITE MODULE INSTALLED:', this.SITE_ID, document.location.href);
 
       AnkPrefs.setAutoApply(() => applyPrefsChange());
       applyPrefsChange();
 
-      this.elements = this.getElements(document);
-
       this.initMessageListener();
       this.initFocusListener();
+
       this.installFunctions();
     })();
+  }
+
+  /**
+   * AJAX等でコンテンツが入れ替わった時に情報をリセットする (マーキング消去)
+   */
+  resetMarkAndDisplay () {
+    logger.info('RESET MARK AND DISPLAY:', this.SITE_ID, document.location.href);
+
+    Array.prototype.forEach.call(document.querySelectorAll('.ank-pixiv-downloading, .ank-pixiv-downloaded, .ank-pixiv-updated'), (e) => {
+      e.classList.remove('ank-pixiv-downloading', 'ank-pixiv-downloaded', 'ank-pixiv-updated', 'ank-pixiv-mark-background', 'ank-pixiv-mark-border', 'ank-pixiv-mark-overlay');
+    });
+
+    this.hideMsgBox();
+
+    this.executed = {
+      'displayDownloaded': 0,
+      'markDownloaded': 0
+    };
   }
 
   /**
@@ -107,7 +113,6 @@ class AnkSite {
 
     AnkViewer.reset();
 
-    this.elements = this.getElements(document);
   }
 
   /**
@@ -143,6 +148,9 @@ class AnkSite {
           return this.openViewer(message.data);
         case 'AnkPixiv.Nice!':
           return this.setNice();
+        case 'AnkPixiv.onPushState':
+        case 'AnkPixiv.onReplaceState':
+          return this.onHistoryChanged(message.data);
       }
 
       if (!sender) {
@@ -154,6 +162,12 @@ class AnkSite {
           return this.forceDisplayAndMarkDownloaded();
       }
     };
+
+    // historyイベント (AnkPixiv.onPushstateと同じ処理なのでMessageEventではないがここに)
+    window.addEventListener('popstate', (e) => {
+      this.onHistoryChanged(e)
+    });
+
 
     // web page から
     window.addEventListener('message', (e) => {
@@ -176,6 +190,31 @@ class AnkSite {
       sendResponse();
       return false;
     });
+  }
+
+  /**
+   * historyの変更イベントのハンドラ
+   */
+  onHistoryChanged (data) {
+    // dummy
+    logger.debug('onHistoryChanged', data, document.location.href);
+  }
+
+  /**
+   *
+   * @returns {*}
+   */
+  pushEventListener () {
+    let l = {
+      'target': arguments[0],
+      'type': arguments[1],
+      'callback': arguments[2]
+    };
+
+    this.addedListeners.push(l);
+    logger.debug('pushed:', arguments);
+
+    return l.target.addEventListener.apply(l.target, Array.from(arguments).slice(1));
   }
 
   /**
@@ -544,11 +583,10 @@ class AnkSite {
 
   /**
    * ダウンロード情報をまとめる
-   * @param elm
    * @param mode
    * @returns {Promise.<*>}
    */
-  async getDownloadContext (elm, mode) {
+  async getDownloadContext (mode) {
 
     // 取得がpath/illust/memberで分かれているのは、path@pixivやpath@nicoが要XHRだが、pathが不要な場合(displayDownloaded)に無駄なXHRを行わないようにするため
     // しかしillust@pixivも要XHRになったので再検討が必要
@@ -565,7 +603,11 @@ class AnkSite {
       mode = ((0xff ^ this.contextCache.status) & 0xff) & mode;
     }
 
-    return this.getAnyContext(elm, mode).then((result) => {
+    return this.getAnyContext(mode).then((result) => {
+      if ( ! result) {
+        return;
+      }
+
       let context = this.contextCache || {
         'status': 0,
         'downloadable': false,
@@ -599,6 +641,17 @@ class AnkSite {
   }
 
   /**
+   *
+   * @param illustId
+   * @returns {boolean}
+   */
+  isContextCached (illustId) {
+    if (this.contextCache && this.contextCache.info && this.contextCache.info.illust) {
+      return this.contextCache.info.illust.id == illustId;
+    }
+  }
+
+  /**
    * ダウンロードの実行
    * @param opts
    */
@@ -613,8 +666,8 @@ class AnkSite {
 
       opts = opts || {};
 
-      let context = await this.getDownloadContext(this.elements, this.GET_CONTEXT.ALL);
-      if (!context) {
+      let context = await this.getDownloadContext(this.GET_CONTEXT.ALL);
+      if ( ! context) {
         // コンテキストが集まらない（ダウンロード可能な状態になっていない）
         let msg = chrome.i18n.getMessage('msg_notReady');
         logger.warn(new Error(msg));
@@ -663,36 +716,18 @@ class AnkSite {
 
   /**
    * 作品ページに「保存済み」メッセージを表示する（DOM操作部）
-   * @param appendTo
    * @param opts
    * @private
    */
-  _insertDownloadedDisplay (appendTo, opts) {
+  _insertDownloadedDisplay (opts) {
 
-    let display = appendTo.querySelector('#ank-pixiv-downloaded-display');
-    if (!display) {
-      display = appendTo.ownerDocument.createElement('div');
-      display.setAttribute('id', 'ank-pixiv-downloaded-display');
-      [
-        'downloaded',
-        'downloaded_used',
-        'downloaded_updated',
-        'download_inprogress',
-        'download_wait',
-        'download_run',
-        'download_failed',
-        'download_timeout'
-      ].forEach((k) => {
-        display.setAttribute('data-text-'+k, chrome.i18n.getMessage('msg_'+k));
-      });
-      appendTo.appendChild(display);
-    }
+    let display = this.addMsgBox();
 
     if (opts.illustId) {
       let displayedId = display.getAttribute('data-illust-id');
       if (displayedId != opts.illustId) {
         display.className = '';
-        display.setAttribute('data-illust-id', opts.illustId)
+        display.setAttribute('data-illust-id', opts.illustId);
       }
     }
 
@@ -744,8 +779,9 @@ class AnkSite {
       return;
     }
 
-    if (!display.classList.contains(cls[0])) {
-      display.setAttribute('class', '');
+    if ( ! display.classList.contains(cls[0])) {
+      display.className = '';
+      cls.push('show');
       display.classList.add.apply(display.classList, cls);
     }
   }
@@ -762,16 +798,9 @@ class AnkSite {
 
     opts = opts || {};
 
-    let elm = opts.getElms && opts.getElms() || this.elements;
-
-    let appendTo = elm.misc.downloadedDisplayParent;
-    if (!appendTo) {
-      return false;
-    }
-
     if (opts.hasOwnProperty('inProgress')) {
       // ダウンロードイベントトリガー時に強制表示
-      this._insertDownloadedDisplay(appendTo, opts);
+      this._insertDownloadedDisplay(opts);
       return true;
     }
 
@@ -797,7 +826,11 @@ class AnkSite {
 
     logger.debug('exec display downloaded');
 
-    let context = await this.getDownloadContext(elm, this.GET_CONTEXT.ILLUST);
+    /*
+
+    // USED表示のためだけに１回余計に通信を発生させるのが嫌になったのでR-18確認は廃止
+
+    let context = await this.getDownloadContext(this.GET_CONTEXT.ILLUST);
     if (!context) {
       return false;
     }
@@ -805,7 +838,7 @@ class AnkSite {
     let illustContext = context.info.illust;
 
     this.requestGetDownloadStatus(illustContext.id).then((status) => {
-      this._insertDownloadedDisplay(appendTo, {
+      this._insertDownloadedDisplay({
         'illustId': illustContext.id,
         'status': status,
         'R18': illustContext.R18,
@@ -819,6 +852,22 @@ class AnkSite {
         })()
       });
     });
+    */
+
+    let illustId = this.getIllustId();
+    if ( ! illustId) {
+      return false;
+    }
+
+    this.requestGetDownloadStatus(illustId).then((status) => {
+      this._insertDownloadedDisplay({
+        'illustId': illustId,
+        'status': status,
+        'R18': false,
+        'updated': false
+      });
+    });
+
 
     return true;
   }
@@ -838,6 +887,14 @@ class AnkSite {
       opts.queries.forEach((t) => {
         Array.prototype.map.call(node.querySelectorAll(t.q), (e) => {
           let url = ((tagName) => {
+            if (t.h && ! e.querySelector(t.h)) {
+              // :has()
+              return;
+            }
+            if (t.a) {
+              // img.data-src (for lazyLoad) や div.style (background-image) など
+              return e.getAttribute(t.a);
+            }
             if (tagName === 'a') {
               return e.href;
             }
@@ -992,7 +1049,7 @@ class AnkSite {
 
     logger.debug('exec mark downloaded');
 
-    let node = markRule.node || this.elements.doc;
+    let node = markRule.node || document;
 
     this._insertDownloadedMark(node, {
       'illust_id': opts.illust_id,
@@ -1007,6 +1064,63 @@ class AnkSite {
   }
 
   /**
+   * メッセージボックスを追加する
+   * @param doc
+   * @returns {*}
+   */
+  addMsgBox (doc) {
+    doc = doc || document;
+
+    let msg = this.findMsgBox(doc);
+    if (!msg) {
+      msg = doc.createElement('div');
+      msg.id = 'ank-pixiv-message-box';
+      msg.classList.add('hide');
+
+      [
+        'downloaded',
+        'downloaded_used',
+        'downloaded_updated',
+        'download_inprogress',
+        'download_wait',
+        'download_run',
+        'download_failed',
+        'download_timeout'
+      ].forEach((k) => {
+        msg.setAttribute('data-text-'+k, chrome.i18n.getMessage('msg_'+k));
+      });
+
+      doc.body.appendChild(msg);
+    }
+
+    return msg;
+  }
+
+  /**
+   * メッセージボックスさがす
+   * @param doc
+   * @returns {Element}
+   */
+  findMsgBox (doc) {
+    doc = doc || document;
+    return doc.getElementById('ank-pixiv-message-box');
+  }
+
+  /**
+   *
+   * @param doc
+   */
+  hideMsgBox (doc) {
+    doc = doc || document;
+    let msg = this.findMsgBox(doc);
+    if (msg) {
+      msg.className = '';
+      msg.setAttribute('data-illust-id', '');
+    }
+  }
+
+
+  /**
    * ビューアを開く
    * @param opts
    */
@@ -1018,7 +1132,7 @@ class AnkSite {
     let cmd = opts && opts.cmd || 'open';
     switch (cmd) {
       case 'open':
-        this.getDownloadContext(this.elements, this.GET_CONTEXT.PATH).then((context) => {
+        this.getDownloadContext(this.GET_CONTEXT.PATH).then((context) => {
           if (!context) {
             logger.error(new Error('viewer not ready'));
             return;
@@ -1044,142 +1158,14 @@ class AnkSite {
     }
   };
 
-  /**
-   * セレクタ定義を上書きする
-   * @param selector_items
-   * @param mod_selector
-   * @returns {{}}
-   */
-  attachSelectorOverride (o, selector_items, mod_selector) {
-
-    const S_OR_ALL = ['s', 'ALL'];
-
-    let dig = (o, selector_items, mod_selector) => {
-      Object.keys(selector_items).forEach((k) => {
-        let item = selector_items[k];
-        if (item === undefined) {
-          throw new Error('invalid selector format');
-        }
-
-        if (item === null) {
-          // パターンA （セレクタの書き換えだけでは対処できないパターン）
-          o[k] = null;
-          return;
-        }
-
-        o[k] = o[k] || {};
-
-        let mods = mod_selector && mod_selector[k] || {};
-
-        let typ = S_OR_ALL.find((p) => item.hasOwnProperty(p));
-        if (typ) {
-          // パターンB
-          if (!Array.isArray(mods[typ]) || typ == 's') {
-            // 's'&'ALL'で値が文字列 or 's'で値が配列
-            o[k][typ] = mods[typ] || item[typ];
-          }
-          else {
-            // 上記以外は mods は使わない
-            o[k][typ] = item[typ];
-          }
-        }
-        else {
-          // パターンC
-          this.attachSelectorOverride(o[k], item, mods);
-        }
-      });
-
-      return o;
-    };
-
-    return dig(o || {}, selector_items, mod_selector || this.prefs.site._mod_selector);
-  }
-
-  /**
-   * セレクタ定義を展開する
-   * @param o
-   * @param items
-   * @param doc
-   * @returns {*}
-   */
-  initSelectors (o, items, doc) {
-
-    const S_OR_ALL = ['s', 'ALL'];
-
-    Object.keys(items).forEach((k) => {
-      let item = items[k];
-      if (item === undefined) {
-        throw new Error('invalid selector format');
-      }
-
-      if (item === null) {
-        // パターンA （セレクタの書き換えだけでは対処できないパターン）
-        o[k] = null;
-        return;
-      }
-
-      o[k] = o[k] || {};
-
-      let typ = S_OR_ALL.find((p) => item.hasOwnProperty(p));
-      if (typ) {
-        // パターンB
-        let s = item[typ];
-        if (typ == 's') {
-          if (!Array.isArray(s)) {
-            // 決め打ち
-            Object.defineProperty(o, k, {
-              'get': function () {
-                return doc.querySelector(s)
-              }
-            });
-            return;
-          }
-          else {
-            // 複数候補
-            Object.defineProperty(o, k, {
-              'get': function () {
-                for (let i = 0; i < s.length; i++) {
-                  let o = doc.querySelector(s[i]);
-                  if (o) {
-                    return o;
-                  }
-                }
-              }
-            });
-            return;
-          }
-        }
-        else {
-          if (!Array.isArray(s)) {
-            // ALLの場合は決め打ちのみ
-            Object.defineProperty(o, k, {
-              'get': function () {
-                return doc.querySelectorAll(s)
-              }
-            });
-            return;
-          }
-        }
-
-        throw new Error('invalid selector format');
-      }
-
-      // パターンC
-      this.initSelectors(o[k], item, doc);
-    });
-
-    return o;
-  }
-
   /*
    * 以下はサイト別スクリプトの中で実装が必要なもの
    */
 
   /**
-   * 利用するクエリのまとめ
-   * @param doc
+   *
    */
-  getElements (doc) {}
+  getIllustId () {}
 
   /**
    * 画像ダウンロード可能なページに居るか？
@@ -1187,15 +1173,22 @@ class AnkSite {
   inIllustPage () {}
 
   /**
-   * ダウンロード情報（メンバー情報）の取得
-   * @param elm
+   * ダウンロード情報の取得
    * @param mode : mode指定で最低限欲しい情報を指定するが、低コストで返せる場合は指定されていない情報も返却してよい
    * @returns {Promise.<void>}
    */
-  async getAnyContext (elm, mode) {}
+  async getAnyContext (mode) {}
 
   /**
    * サムネイルにダウンロード済みマークを付けるサイト別のルールを取得する
+   *  MARKING_TARGETS {
+   *    q: Query,
+   *    n: Number of trackbacks (>0, 0, <0),
+   *    m: marking Method (overlay, border, background),
+   *    a: effective Attribute
+   *    r: query (Recursive),
+   *    h: query (Has)
+   *  }
    */
   getMarkingRules () {}
 
