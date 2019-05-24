@@ -53,7 +53,7 @@ const OPTION_DEFAULT ={
   "maxFilenameLength": 100,
   "siteModules": {
     //"PXV":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Pixiv", "folder": "Pixiv"},
-    "PXV":{"enabled": true, "experimental": false, "useDisplayDownloaded": true, "useMarkDownloaded": true, "name": "Pixiv", "folder": "Pixiv"},
+    "PXV":{"enabled": true, "experimental": false, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Pixiv", "folder": "Pixiv"},
     "PFB":{"enabled": false, "experimental": true, "useDisplayDownloaded": true, "name": "Pixiv Fanbox", "folder": "Pixiv Fanbox"},
     "NJE":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Nijie", "folder": "Nijie"},
     "NCS":{"enabled": true, "experimental": false, "useAutoDownload": true, "useDisplayDownloaded": true, "useMarkDownloaded": true, "useViewer": true, "name": "Nicosei", "folder": "Nicosei"},

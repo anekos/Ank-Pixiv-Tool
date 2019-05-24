@@ -11,7 +11,7 @@ class _AnkUtilsClass {
    * @param mSec
    * @returns {Promise}
    */
-   sleep (mSec) {
+  sleep (mSec) {
     return new Promise((resolve) => {
       setTimeout(() => resolve(), mSec);
     });
@@ -21,12 +21,14 @@ class _AnkUtilsClass {
    * 指定階層上の先祖エレメントまで遡る
    * @param node
    * @param n
-   * @param targetClass 指定がある場合は n まで遡っていなくても見つかり次第返却
+   * @param target 指定がある場合は n まで遡っていなくても見つかり次第返却
    * @returns {*}
    */
-   trackbackParentNode (node, n, targetClass) {
+  trackbackParentNode (node, n, target) {
+    let targetClass = target && target.cls;
+    let targetTagName = target && target.tag;
     for (let i=0; i<n && node; i++, node = node.parentNode) {
-      if (targetClass && node.classList.contains(targetClass)) {
+      if (targetClass && node.classList.contains(targetClass) || targetTagName && node.tagName.toLowerCase() === targetTagName) {
         break;
       }
     }

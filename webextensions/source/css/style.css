@@ -10,6 +10,12 @@
     box-shadow: 0 -4px 0 0 red inset !important;
 }
 
+.ank-pixiv-downloading.ank-pixiv-mark-border {
+    box-sizing: border-box;
+    border: solid 6px limegreen;
+    border-bottom: solid 6px green;
+}
+
 .ank-pixiv-downloaded.ank-pixiv-mark-border {
     box-sizing: border-box;
     border: solid 6px pink;

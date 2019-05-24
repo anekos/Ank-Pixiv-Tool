@@ -931,7 +931,7 @@ class AnkSite {
             }
             else {
               // 親にさかのぼる
-              return AnkUtils.trackbackParentNode(e, t.n, t.c);
+              return AnkUtils.trackbackParentNode(e, t.n, {'cls': t.c});
             }
           })();
 
@@ -962,9 +962,6 @@ class AnkSite {
             boxes[s.illust_id].forEach((e) => {
               let cls = (() => {
                 // s.failed は見る必要がない
-                if (s.downloading) {
-                  return 'ank-pixiv-downloading';
-                }
                 if (s.downloading) {
                   return 'ank-pixiv-downloading';
                 }

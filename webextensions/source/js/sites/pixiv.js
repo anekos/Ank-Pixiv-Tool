@@ -13,10 +13,12 @@ class AnkPixiv extends AnkSite {
 
     this.SELECTORS = {
       'illust': {
+        'self_thumbnails': 'div > a[href*="illust_id=#ILLUST_ID#"] > div > img[src*="/img-master/',
         'thumbnails': 'div > a[href*="illust_id="] > div > img[src*="/img-master/',
         'thumbnail_container': 'div > a[href*="illust_id="]',
         'thumbnail_image': ':scope > div > img[src*="/img-master/"], :scope > div > figure',
-        'R18': 'a[href*="R-18"]'
+        'R18': 'a[href*="R-18"]',
+        'recommendZone': '.gtm-illust-recommend-zone'
       },
       'list': {
         'recommendList': '#illust-recommend ._image-items',
@@ -26,9 +28,19 @@ class AnkPixiv extends AnkSite {
       }
     };
 
+    this.LONG_RETRY_VALUE = {
+      'max': 9999,
+      'wait': 3000
+    };
+
     this._illustDataCache = {
       'id': null,
       'data': null
+    };
+
+    this._installed_function = {
+      'thumbnailListExpansion': null,
+      'recommendExpansion': null
     };
   }
 
@@ -435,7 +447,10 @@ class AnkPixiv extends AnkSite {
     this.resetElements();
     this.resetCondition();
 
-    this.installIllustPageFunction(this.FUNC_INST_RETRY_VALUE);
+    // FIXME history操作からサムネイルの入れ替えまでタイムラグがあるのだが、入れ替え完了を検出するのが難しいので苦肉の策として1秒待つ
+    AnkUtils.sleep(1000).then(() => {
+      this.installIllustPageFunction(this.FUNC_INST_RETRY_VALUE);
+    });
   }
 
   /**
@@ -524,34 +539,95 @@ class AnkPixiv extends AnkSite {
         return false;
       }
 
-      let e = document.querySelector(this.SELECTORS.illust.thumbnails);
-      if ( ! e) {
-        // ドキュメントが構築されていない
-        return false;
-      }
+      let illustId = this.getIllustId();
+      if (illustId) {
+        const SELF_THUMBNAILS_QUERY = this.SELECTORS.illust.self_thumbnails.replace('#ILLUST_ID#', illustId);
 
-      this.markDownloaded().then();
-      return true;
-    };
+        // 前後サムネとall_listサムネの２か所に自分がいる
+        let e = document.querySelectorAll(SELF_THUMBNAILS_QUERY);
+        if (e.length < 1) {
+          // ドキュメントが構築されていない
+          return false;
+        }
+        if (e.length < 2) {
+          // all listが構築されていない
+          this.markDownloaded().then();
+          return false;
+        }
 
-    // キャプションを自動で開く
-    let openCaption = () => {
-      if (!this.prefs.openCaption) {
+        this.markDownloaded({'node': document, 'force': true}).then(() => {
+          let alist = AnkUtils.trackbackParentNode(e[0], 20, {'tag': 'nav'});
+          if (alist) {
+            thumbnailListExpansion(alist.firstChild);
+          }
+        });
+
         return true;
       }
+      else {
+        let e = document.querySelector(this.SELECTORS.illust.thumbnails);
+        if ( ! e) {
+          // ドキュメントが構築されていない
+          return false;
+        }
 
-      let caption = this.elements.misc.openCaption;
-      if (!caption) {
-        return;
+        this.markDownloaded().then();
+
+        return true;
+      }
+    };
+
+    // 作品リストが自動伸長したらダウンロード済みマークを追加する
+    let thumbnailListExpansion = (alist) => {
+      let observe = (elm) => {
+        new MutationObserver((o) => {
+          o.forEach((e) => Array.prototype.forEach.call(e.addedNodes, (n) => this.markDownloaded({'node': n, 'force':true})));
+        }).observe(elm, {'childList': true});
+
+        return true;
+      };
+
+      if (alist) {
+        if (this._installed_function.thumbnailListExpansion === alist) {
+          logger.debug('already installed: thumbnailListExpansion');
+          return true;
+        }
+
+        this._installed_function.thumbnailListExpansion = alist;
+
+        return observe(alist);
+      }
+    };
+
+    // ページが自動伸長したらダウンロード済みマークを追加する
+    let recommendExpansion = () => {
+      let observe = (elm) => {
+        new MutationObserver((o) => {
+          o.forEach((e) => Array.prototype.forEach.call(e.addedNodes, (n) => {
+            if (n.tagName.toLowerCase() == 'li') {
+              this.markDownloaded({'node': n, 'force':true}).then();
+            }
+          }));
+        }).observe(elm, {'childList': true, 'subtree': true});
+
+        return true;
+      };
+
+      // FIXME 表示されるまで領域が構築されないので間隔を広げて長時間待ち合わせている
+      let alist = document.querySelector(this.SELECTORS.illust.recommendZone);
+      if (alist) {
+        if (this._installed_function.recommendExpansion === alist) {
+          logger.debug('already installed: recommendExpansion');
+          return true;
+        }
+
+        this._installed_function.recommendExpansion = alist;
+
+        this.markDownloaded({'node': alist, 'force': true}).then();
+
+        return observe(alist);
       }
 
-      setTimeout(() => {
-        if (getComputedStyle(caption).getPropertyValue('display').indexOf('block') != -1) {
-          caption.click();
-        }
-      }, this.prefs.openCaptionDelay);
-
-      return true;
     };
 
     // 評価したら自動ダウンロード
@@ -582,53 +658,14 @@ class AnkPixiv extends AnkSite {
       return true;
     };
 
-    // 作品リストが自動伸長したらダウンロード済みマークを追加する
-    let thumbnailListExpansion = () => {
-      let observe = (elm) => {
-        new MutationObserver((o) => {
-          o.forEach((e) => Array.prototype.forEach.call(e.addedNodes, (n) => this.markDownloaded({'node': n, 'force':true})));
-        }).observe(elm, {'childList': true});
-
-        return true;
-      };
-
-      let alist = this.elements.misc.allContents;
-      if (alist) {
-        return observe(alist);
-      }
-    };
-
-    // ページが自動伸長したらダウンロード済みマークを追加する
-    let recommendExpansion = () => {
-      let observe = (elm) => {
-        new MutationObserver((o) => {
-          o.forEach((e) => Array.prototype.forEach.call(e.addedNodes, (n) => {
-            if (n.tagName.toLowerCase() == 'li') {
-              this.markDownloaded({'node': n, 'force':true}).then();
-            }
-          }));
-        }).observe(elm, {'childList': true, 'subtree': true});
-
-        return true;
-      };
-
-      let alist = this.elements.misc.recommendContents;
-      if (alist) {
-        return observe(alist);
-      }
-
-    };
-
     //
 
     Promise.all([
       //AnkUtils.delayFunctionInstaller({'func': middleClickEventFunc, 'retry': RETRY_VALUE, 'label': 'middleClickEventFunc'}),
       AnkUtils.delayFunctionInstaller({'func': delayDisplaying, 'retry': RETRY_VALUE, 'label': 'delayDisplaying'}),
-      AnkUtils.delayFunctionInstaller({'func': delayMarking, 'retry': RETRY_VALUE, 'label': 'delayMarking'}),
-      //AnkUtils.delayFunctionInstaller({'func': openCaption, 'retry': RETRY_VALUE, 'label': 'openCaption'}),
-      //AnkUtils.delayFunctionInstaller({'func': niceEventFunc, 'retry': RETRY_VALUE, 'label': 'niceEventFunc'}),
-      //AnkUtils.delayFunctionInstaller({'func': thumbnailListExpansion, 'retry': RETRY_VALUE, 'label': 'thumbnailListExpansion'}),
-      //AnkUtils.delayFunctionInstaller({'func': recommendExpansion, 'retry': RETRY_VALUE, 'label': 'recommendExpansion'})
+      AnkUtils.delayFunctionInstaller({'func': delayMarking, 'retry': this.LONG_RETRY_VALUE, 'label': 'delayMarking'}),
+      AnkUtils.delayFunctionInstaller({'func': recommendExpansion, 'retry': this.LONG_RETRY_VALUE, 'label': 'recommendExpansion'})
+      //AnkUtils.delayFunctionInstaller({'func': niceEventFunc, 'retry': RETRY_VALUE, 'label': 'niceEventFunc'})
     ])
       .catch((e) => logger.warn(e));
   }
