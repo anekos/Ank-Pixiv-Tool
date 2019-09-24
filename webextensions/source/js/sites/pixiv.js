@@ -13,9 +13,9 @@ class AnkPixiv extends AnkSite {
 
     this.SELECTORS = {
       'illust': {
-        'self_thumbnails': 'div > a[href*="illust_id=#ILLUST_ID#"] > div > img[src*="/img-master/',
-        'thumbnails': 'div > a[href*="illust_id="] > div > img[src*="/img-master/',
-        'thumbnail_container': 'div > a[href*="illust_id="]',
+        'self_thumbnails': 'div > a[href*="/artworks/#ILLUST_ID#"] > div > img[src*="/img-master/"], div > a[href*="illust_id=#ILLUST_ID#"] > div > img[src*="/img-master/"]',
+        'thumbnails': 'div > a[href*="/artworks/"] > div > img[src*="/img-master/"], div > a[href*="illust_id="] > div > img[src*="/img-master/"]',
+        'thumbnail_container': 'div > a[href*="/artworks/"], div > a[href*="illust_id="]',
         'thumbnail_image': ':scope > div > img[src*="/img-master/"], :scope > div > figure',
         'R18': 'a[href*="R-18"]',
         'recommendZone': '.gtm-illust-recommend-zone'
@@ -51,6 +51,7 @@ class AnkPixiv extends AnkSite {
   inIllustPage () {
     // FIXME 新UIと旧UIが混在しているのでここで分ける。他のサイトモジュールとは inIllustPage() の用途が少し異なる
     return !! [
+      /\/artworks\//,
       /\/member_illust\.php\?/,
       /\/member\.php\?/,
       /\/bookmark\.php\?/
@@ -357,7 +358,11 @@ class AnkPixiv extends AnkSite {
    */
   getIllustId (url) {
     url = url || document.location.href;
-    let m = /^(?=.*\/member_illust\.php\?)(?=.*(?:&|\?)mode=medium(?:&|$))(?=.*(?:&|\?)illust_id=(\d+)(?:&|$))/.exec(url);
+    let m = /\/artworks\/(\d+)/.exec(url);
+    if (m) {
+      return m[1];
+    }
+    m = /^(?=.*\/member_illust\.php\?)(?=.*(?:&|\?)mode=medium(?:&|$))(?=.*(?:&|\?)illust_id=(\d+)(?:&|$))/.exec(url);
     if (m) {
       return m[1];
     }
@@ -387,7 +392,7 @@ class AnkPixiv extends AnkSite {
     return {
       'queries': MARKING_TARGETS,
       'getId': (href) => {
-        return (/\/(\d+)[^/?]*?\.jpg/.exec(href) || /illust_id=(\d+)/.exec(href) || [])[1];
+        return (/\/(\d+)[^/?]*?\.jpg/.exec(href) || /\/artworks\/(\d+)/.exec(href) || /illust_id=(\d+)/.exec(href) || [])[1];
       },
       'getLastUpdate': (e) => {
         let g = e.querySelector('img');
