@@ -65,7 +65,7 @@ class AnkNijie extends AnkSite {
       let getMedPath = (img) => {
         let m = [{'src': img.src}];
         Array.prototype.forEach.call(document.querySelectorAll(this.SELECTORS.illust.med.imgs), (e) => {
-          m.push({'src': e.src.replace(/(\.nijie\.info\/).+?\/(nijie_picture\/)/, "$1$2")});
+          m.push({'src': e.src.replace(/\/[^/]+?(\/nijie_picture\/)/, "$1")});
         });
 
         return {
@@ -77,7 +77,7 @@ class AnkNijie extends AnkSite {
       let getDjnPath = (imgLink) => {
         let m = [{'src': imgLink.src}];
         Array.prototype.forEach.call(document.querySelectorAll(this.SELECTORS.illust.djn.imgLinks), (e) => {
-          m.push({'src': e.src.replace(/(\.nijie\.info\/).+?\/(dojin_main\/)/, "$1$2")});
+          m.push({'src': e.src.replace(/\/[^/]+?(\/dojin_main\/)/, "$1")});
         });
 
         return {

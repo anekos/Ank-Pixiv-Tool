@@ -16,7 +16,7 @@ class AnkPixiv extends AnkSite {
         'self_thumbnails': 'div > a[href*="/artworks/#ILLUST_ID#"] > div > img[src*="/img-master/"], div > a[href*="illust_id=#ILLUST_ID#"] > div > img[src*="/img-master/"]',
         'thumbnails': 'div > a[href*="/artworks/"] > div > img[src*="/img-master/"], div > a[href*="illust_id="] > div > img[src*="/img-master/"]',
         'thumbnail_container': 'div > a[href*="/artworks/"], div > a[href*="illust_id="]',
-        'thumbnail_image': ':scope > div > img[src*="/img-master/"], :scope > div > figure',
+        'thumbnail_image': ':scope > div > img[src*="/img-master/"], :scope > div[style*="/img-master/"], :scope > div > figure',
         'R18': 'a[href*="R-18"]',
         'recommendZone': '.gtm-illust-recommend-zone'
       },

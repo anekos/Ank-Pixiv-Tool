@@ -438,7 +438,7 @@ class _AnkUtilsClass {
         let t = targets[i];
         if (t.data) {
           // データを渡された場合
-          t.objurl = URL.createObjectURL(new Blob([t.data]));
+          t.objurl = URL.createObjectURL(new Blob([t.data], {'type': 'application/octet-binary'}));
         }
         else if (t.url) {
           // urlを渡された場合
@@ -446,13 +446,12 @@ class _AnkUtilsClass {
             'url': t.url,
             'headers': t.headers || [],
             'timeout': timeout,
-            'responseType': 'blob'
+            'responseType': 'arrayBuffer'
           });
 
-          let aBuffer = await this.blobToArrayBuffer(resp.blob.slice(0, 16));
-          t.filename = this.fixFileExt(t.filename, aBuffer);
+          t.filename = this.fixFileExt(t.filename, resp.arrayBuffer.slice(0, 16));
 
-          t.objurl = URL.createObjectURL(resp.blob);
+          t.objurl = URL.createObjectURL(new Blob([new Uint8Array(resp.arrayBuffer)], {'type': 'application/octet-binary'}));
         }
         else {
           logger.warn('invalid download target:', t);

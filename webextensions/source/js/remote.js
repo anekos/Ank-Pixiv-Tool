@@ -164,6 +164,12 @@
                   resolve(resp);
                 });
               }
+              else if (opts.responseType == 'arrayBuffer') {
+                return response.arrayBuffer().then((data) => {
+                  resp['arrayBuffer'] = data;
+                  resolve(resp);
+                });
+              }
               else if (opts.responseType == 'blob') {
                 return response.blob().then((data) => {
                   resp['blob'] = data;

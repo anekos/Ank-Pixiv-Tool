@@ -321,7 +321,7 @@
           port.disconnect();
           port = null;
 
-          let objURL = URL.createObjectURL(new Blob([JSON.stringify(obj)], {'type': 'text/plain'}));
+          let objURL = URL.createObjectURL(new Blob([JSON.stringify(obj)], {'type': 'application/json'}));
           chooser.href = objURL;
           chooser.click();
           URL.revokeObjectURL(objURL);
