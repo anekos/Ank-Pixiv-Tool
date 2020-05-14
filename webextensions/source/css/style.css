@@ -10,6 +10,11 @@
     box-shadow: 0 -4px 0 0 red inset !important;
 }
 
+.ank-pixiv-updated.ank-pixiv-mark-background {
+    background: paleturquoise !important;
+    box-shadow: 0 -4px 0 0 blue inset !important;
+}
+
 .ank-pixiv-downloading.ank-pixiv-mark-border {
     box-sizing: border-box;
     border: solid 6px limegreen;
@@ -22,9 +27,16 @@
     border-bottom: solid 6px deeppink;
 }
 
-.ank-pixiv-updated.ank-pixiv-mark-background {
-    background: paleturquoise !important;
-    box-shadow: 0 -4px 0 0 blue inset !important;
+.ank-pixiv-downloaded.ank-pixiv-mark-border {
+    box-sizing: border-box;
+    border: solid 6px pink;
+    border-bottom: solid 6px deeppink;
+}
+
+.ank-pixiv-updated.ank-pixiv-mark-border {
+    box-sizing: border-box;
+    border: solid 6px paleturquoise;
+    border-bottom: solid 6px blue;
 }
 
 .ank-pixiv-downloaded.ank-pixiv-mark-overlay {

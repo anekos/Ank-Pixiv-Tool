@@ -15,6 +15,7 @@ class AnkTweetdeck extends AnkSite {
     this.SELECTORS = {
       'illust': {
         'modal': '#open-modal',
+        'video_container': '.js-media-native-video',
         'photo_containers': 'article[data-key="#CHIRP_ID#"], .quoted-tweet[data-key="#CHIRP_ID#"]',
         'photos': '.js-media-image-link',
         'photo_alt': '.media-img'
@@ -54,6 +55,23 @@ class AnkTweetdeck extends AnkSite {
      * @returns {{thumbnail: (*|Array.<T>), original: Array}}
      */
     let getPathContext = (modal) => {
+      // ビデオ（GIFはモーダルが開かないので対応できない）
+      // FIXME APIでID.json取得→m3u8(1)取得→m3u8(2)取得→分割TS取得→結合 に修正すべき
+      let video_container = modal.querySelector(this.SELECTORS.illust.video_container);
+      if (video_container) {
+        let src = (/video_url=(.+?)(&|$)/.exec(video_container.src) || [])[1];
+        if ( ! src) {
+          return;
+        }
+
+        let m = [{'src': src}];
+
+        return {
+          'thumbnail': m,
+          'original': m
+        };
+      }
+
       let actionsMenu = modal.querySelector(this.SELECTORS.info.illust.actionsMenu);
       if (!actionsMenu) {
         return;

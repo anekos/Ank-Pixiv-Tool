@@ -531,6 +531,57 @@ class _AnkUtilsClass {
   /**
    *
    * @param doc
+   * @param evName
+   * @param script
+   * @returns {Promise}
+   */
+  executeScript (doc, evName, genObj) {
+    return new Promise((resolve, reject) => {
+      const INSERT_SCRIPT = `
+        (#GENOBJ#)().then((e) => {
+          try {
+            let ev = new MessageEvent('#EVENTNAME#', {
+              'data': JSON.stringify(e),
+              'origin': location.protocol+'//'+location.host,
+              'source': window
+            });
+            document.dispatchEvent(ev);
+          }
+          catch (e) {
+            return Promise.reject(e);
+          }
+        }).ctach((e) => {
+          let ev = new MessageEvent('#EVENTNAME#', {
+            'data': null,
+            'error': JSON.stringify(e),
+            'origin': location.protocol+'//'+location.host,
+            'source': window
+          });
+          document.dispatchEvent(ev);
+        });`;
+
+      let handler = (e) => {
+        if (e.error) {
+          reject(JSON.parse(e.error));
+        }
+        else {
+          resolve(JSON.parse(e.data));
+        }
+        doc.removeEventListener(evName, handler);
+      };
+
+      doc.addEventListener(evName, handler);
+
+      let e = doc.createElement('script');
+      e.textContent = INSERT_SCRIPT.replace(/#GENOBJ#/, genObj).replace(/#EVENTNAME#/, evName);
+      (doc.head||doc.documentElement).appendChild(e);
+      e.remove();
+    })
+  }
+
+  /**
+   *
+   * @param doc
    */
   overridePushState (doc) {
     // ページに埋め込むスクリプト

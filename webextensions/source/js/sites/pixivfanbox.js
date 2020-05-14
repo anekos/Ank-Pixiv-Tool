@@ -37,25 +37,12 @@ class AnkPixivFanbox extends AnkSite {
      * @returns {Promise.<*>}
      */
     let reqPostData = async (illustId) => {
-      try {
-        let post_resp = await remote.get({
-          'url': 'https://www.pixiv.net/ajax/fanbox/post?postId='+illustId,
-          'responseType': 'json',
-          'timeout': this.prefs.xhrTimeout
-        });
-
-        if (post_resp.error) {
-          logger.error(new Error(post_resp.message));
-          return null;
-        }
-
-        let post_json = post_resp.json.body;
-
-        return post_json;
-      }
-      catch (e) {
-        logger.error(e);
-      }
+      // content script からの fecth では origin header を送れなかったのでページにスクリプトを挿入して実行させる
+      let f = function () {
+        return fetch("https://api.fanbox.cc/post.info?postId=#ILLUST_ID#", {"credentials": "include"}).then(e=>e.json());
+      };
+      let a = await AnkUtils.executeScript(document, 'ANKPIXPV_GET_POST_INFO', f.toString().replace(/#ILLUST_ID#/g, illustId));
+      return a && a.body;
     };
 
     /**
@@ -65,7 +52,8 @@ class AnkPixivFanbox extends AnkSite {
      */
     let getPathContext = (post_data) => {
       try {
-        if (post_data.type == 'image') {
+        console.log(post_data)
+        if (post_data.type === 'image') {
           return {
             'original': post_data.body.images.map((e) => {return {'src': e.originalUrl, 'referrer': document.location.href}})
           };
@@ -166,7 +154,7 @@ class AnkPixivFanbox extends AnkSite {
    */
   getIllustId (url) {
     url = url || document.location.href;
-    let m = /\/creator\/\d+\/post\/(\d+)$/.exec(url);
+    let m = /fanbox\.cc\/posts\/(\d+)$/.exec(url);
     if (m) {
       return m[1];
     }

@@ -35,7 +35,7 @@
       "run_at": "document_start"
     },
     {
-      "matches": [ "*://www.pixiv.net/fanbox/*" ],
+      "matches": [ "*://*.fanbox.cc/*" ],
       "js": [ "js/constants.js", "js/prefs.js", "js/logger.js", "js/utils.js", "js/remote.js", "js/viewer.js", "js/site.js", "js/sites/pixivfanbox.js" ],
       "css": [ "css/style.css" ],
       "run_at": "document_start"

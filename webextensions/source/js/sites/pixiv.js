@@ -427,9 +427,6 @@ class AnkPixiv extends AnkSite {
    * @param data
    */
   onHistoryChanged (data) {
-    if ( ! this.inIllustPage()) {
-      return;
-    }
 
     logger.debug('on history changed.');
 
@@ -453,8 +450,14 @@ class AnkPixiv extends AnkSite {
     this.resetCondition();
 
     // FIXME history操作からサムネイルの入れ替えまでタイムラグがあるのだが、入れ替え完了を検出するのが難しいので苦肉の策として1秒待つ
+    // FIXME 1秒待ってる間に別の入れ替えが発生する事あるのでは？
     AnkUtils.sleep(1000).then(() => {
-      this.installIllustPageFunction(this.FUNC_INST_RETRY_VALUE);
+      if ( ! this.inIllustPage()) {
+        this.installListPageFunction(this.FUNC_INST_RETRY_VALUE);
+      }
+      else {
+        this.installIllustPageFunction(this.FUNC_INST_RETRY_VALUE);
+      }
     });
   }
 
