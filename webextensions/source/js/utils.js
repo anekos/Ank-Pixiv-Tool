@@ -550,7 +550,7 @@ class _AnkUtilsClass {
           catch (e) {
             return Promise.reject(e);
           }
-        }).ctach((e) => {
+        }).catch((e) => {
           let ev = new MessageEvent('#EVENTNAME#', {
             'data': null,
             'error': JSON.stringify(e),

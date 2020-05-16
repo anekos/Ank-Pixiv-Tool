@@ -52,10 +52,27 @@ class AnkPixivFanbox extends AnkSite {
      */
     let getPathContext = (post_data) => {
       try {
-        console.log(post_data)
         if (post_data.type === 'image') {
           return {
             'original': post_data.body.images.map((e) => {return {'src': e.originalUrl, 'referrer': document.location.href}})
+          };
+        }
+        else if (post_data.type == 'article') {
+          return {
+            'original': post_data.body.blocks.map((e) => {
+              if (e.type ==='image') {
+                return {
+                  'src': post_data.body.imageMap[e.imageId].originalUrl,
+                  'referrer': document.location.href
+                };
+              }
+              else if (e.type ==='file') {
+                return {
+                  'src': post_data.body.fileMap[e.fileId].url,
+                  'referrer': document.location.href
+                };
+              }
+            }).filter(e=>!!e)
           };
         }
         else if (post_data.type == 'file') {
@@ -85,8 +102,8 @@ class AnkPixivFanbox extends AnkSite {
           'title': post_data.title && AnkUtils.trim(post_data.title) || '',
           'posted': !posted.fault && posted.timestamp,
           'postedYMD': !posted.fault && posted.ymd,
-          'tags': [],
-          'caption': post_data.body.text && AnkUtils.trim(post_data.body.text) || '',
+          'tags': post_data.tags && post_data.tags,
+          'caption': post_data.body.text && AnkUtils.trim(post_data.body.text) || post_data.excerpt && AnkUtils.trim(post_data.excerpt) || '',
           'R18': false
         };
 
@@ -154,7 +171,7 @@ class AnkPixivFanbox extends AnkSite {
    */
   getIllustId (url) {
     url = url || document.location.href;
-    let m = /fanbox\.cc\/posts\/(\d+)$/.exec(url);
+    let m = /\.fanbox\.cc\/(?:[^/]+?\/)?posts\/(\d+)$/.exec(url);
     if (m) {
       return m[1];
     }
