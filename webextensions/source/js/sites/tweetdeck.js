@@ -98,7 +98,7 @@ class AnkTweetdeck extends AnkSite {
 
           src = img.src;
         }
-        return {'src': src.replace(/\?.+?(:|$)/, '$1').replace(/:small$/, ':large')};
+        return {'src': src.replace(/([?&]name=).+?(&|$)/, '$1large$2')};
       })
         .filter(e => !!e);
 
@@ -107,7 +107,7 @@ class AnkTweetdeck extends AnkSite {
       }
 
       let orig = thumb.map((e) => {
-        return {'src': e.src.replace(/(?::large)?$/, ':orig')};
+        return {'src': e.src.replace(/(?:=large)/, '=orig')};
       });
 
       return {
