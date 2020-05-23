@@ -15,6 +15,7 @@ class AnkTweetdeck extends AnkSite {
     this.SELECTORS = {
       'illust': {
         'modal': '#open-modal',
+        'tree': '.js-detail-content .js-tweet-detail > article[data-key]',
         'video_container': '.js-media-native-video',
         'photo_containers': 'article[data-key="#CHIRP_ID#"], .quoted-tweet[data-key="#CHIRP_ID#"]',
         'photos': '.js-media-image-link',
@@ -22,11 +23,11 @@ class AnkTweetdeck extends AnkSite {
       },
       'info': {
         'illust': {
-          'actionsMenu': '#open-modal .tweet-action[rel="actionsMenu"]',
-          'ownLink': '#open-modal .tweet-timestamp a',
-          'name': '#open-modal .fullname',
-          'datetime': '#open-modal .tweet-timestamp',
-          'caption': '#open-modal .tweet-text'
+          'actionsMenu': '.tweet-action[rel="actionsMenu"]',
+          'ownLink': '.tweet-timestamp a',
+          'name': '.fullname',
+          'datetime': '.tweet-timestamp',
+          'caption': '.tweet-text'
         },
         'member': {
         }
@@ -50,40 +51,39 @@ class AnkTweetdeck extends AnkSite {
   async getAnyContext (mode) {
 
     /**
-     * ダウンロード情報（画像パス）の取得
+     * ダウンロード情報（動画パス）の取得
      * @param modal
      * @returns {{thumbnail: (*|Array.<T>), original: Array}}
      */
-    let getPathContext = (modal) => {
-      // ビデオ（GIFはモーダルが開かないので対応できない）
-      // FIXME APIでID.json取得→m3u8(1)取得→m3u8(2)取得→分割TS取得→結合 に修正すべき
+    let getVideoPathContext = (modal) => {
       let video_container = modal.querySelector(this.SELECTORS.illust.video_container);
-      if (video_container) {
-        let src = (/video_url=(.+?)(&|$)/.exec(video_container.src) || [])[1];
-        if ( ! src) {
-          return;
-        }
-
-        let m = [{'src': src}];
-
-        return {
-          'thumbnail': m,
-          'original': m
-        };
-      }
-
-      let actionsMenu = modal.querySelector(this.SELECTORS.info.illust.actionsMenu);
-      if (!actionsMenu) {
+      if (!video_container) {
         return;
       }
-      let chirpId = actionsMenu.getAttribute('data-chirp-id');
-      let photo_containers = document.querySelectorAll(this.SELECTORS.illust.photo_containers.replace(/#CHIRP_ID#/g, chirpId));
-      let photos = [];
-      Array.prototype.find.call(photo_containers, (e) => {
-          photos = Array.prototype.filter.call(e.querySelectorAll(this.SELECTORS.illust.photos), (e) => !e.parentNode.classList.contains('is-video'));
-          return !!photos.length;
+
+      let src = /^https?:\/\/.*/.test(video_container.src) && video_container.src;
+      if (!src) {
+        src = (/video_url=(.+?)(&|$)/.exec(video_container.src) || [])[1];
+        if (!src) {
+          return;
         }
-      );
+      }
+
+      let m = [{'src': src}];
+
+      return {
+        'thumbnail': m,
+        'original': m
+      };
+    };
+
+    /**
+     * ダウンロード情報（画像パス）の取得
+     * @param node
+     * @returns {{thumbnail: (*|Array.<T>), original: Array}}
+     */
+    let getPathContext = (node) => {
+      let photos = Array.prototype.filter.call(node.querySelectorAll(this.SELECTORS.illust.photos), (e) => !e.parentNode.classList.contains('is-video'));
       if (!photos.length) {
         return;
       }
@@ -97,6 +97,10 @@ class AnkTweetdeck extends AnkSite {
           }
 
           src = img.src;
+        }
+        let ext = /\.([a-z]{3,4})\?/.exec(src);
+        if (ext) {
+          src = src.replace(/([?&]format=).+?(&|$)/, '$1'+ext[1]+'$2');
         }
         return {'src': src.replace(/([?&]name=).+?(&|$)/, '$1large$2')};
       })
@@ -118,25 +122,40 @@ class AnkTweetdeck extends AnkSite {
 
     /**
      * ダウンロード情報（イラスト情報）の取得
-     * @param modal
-     * @returns {{url, id: *, title: (*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: Array, caption: (*|string|XML|void|string), R18: boolean}}
+     * @param node
+     * @returns {{url, id: *, title: (*|string|XML|void|string), posted: (boolean|*|Number), postedYMD: (boolean|string|*), tags: Array, caption: (Element|*|string|XML|void|string), R18: boolean}}
      */
-    let getIllustContext = (modal) => {
+    let getIllustContext = (node) => {
       try {
-        let dd = new Date(parseInt(modal.querySelector(this.SELECTORS.info.illust.datetime).getAttribute('data-time'),10));
+        let dd = new Date(parseInt(node.querySelector(this.SELECTORS.info.illust.datetime).getAttribute('data-time'),10));
         let posted = this.getPosted(() => AnkUtils.getDateData(dd));
 
-        let ownLink = modal.querySelector(this.SELECTORS.info.illust.ownLink);
-        let caption = modal.querySelector(this.SELECTORS.info.illust.caption);
+        let ownLink = node.querySelector(this.SELECTORS.info.illust.ownLink);
+        let caption = node.querySelector(this.SELECTORS.info.illust.caption);
+        let caption_text = ((node) => {
+          // リンクの省略表記を戻す
+          let t = '';
+          if (node) {
+            t = AnkUtils.trim(node.textContent);
+            Array.prototype.map.call(node.querySelectorAll('a[data-full-url]'), (e, i) => {
+              // FIXME 誤判定の可能性はある
+              t = t.replace(e.textContent, '###URL-'+i+'###');
+              return e.getAttribute('data-full-url');
+            }).forEach((e, i) => {
+              t = t.replace('###URL-'+i+'###', e);
+            });
+          }
+          return t;
+        })(caption);
 
         let info = {
           'url': ownLink.href,
           'id': this.getIllustId(ownLink.url),
-          'title': AnkUtils.trim(caption.textContent),
+          'title': caption_text,
           'posted': !posted.fault && posted.timestamp,
           'postedYMD': !posted.fault && posted.ymd,
-          'tags': [],
-          'caption': caption && AnkUtils.trim(caption.textContent),
+          'tags': Array.prototype.map.call(caption.querySelectorAll('a[rel="hashtag"] .link-complex-target'), (e)=>e.textContent),
+          'caption': caption_text,
           'R18': false
         };
 
@@ -147,16 +166,17 @@ class AnkTweetdeck extends AnkSite {
       }
     };
 
+
     /**
      * ダウンロード情報（メンバー情報）の取得
-     * @param modal
+     * @param node
      * @returns {{id: string, name: (*|string|XML|void|string), pixiv_id: *, memoized_name: null}}
      */
-    let getMemberContext = (modal) => {
+    let getMemberContext = (node) => {
       try {
-        let actionsMenu = modal.querySelector(this.SELECTORS.info.illust.actionsMenu);
-        let name = modal.querySelector(this.SELECTORS.info.illust.name);
-        let ownLink = modal.querySelector(this.SELECTORS.info.illust.ownLink);
+        let actionsMenu = node.querySelector(this.SELECTORS.info.illust.actionsMenu);
+        let name = node.querySelector(this.SELECTORS.info.illust.name);
+        let ownLink = node.querySelector(this.SELECTORS.info.illust.ownLink);
 
         return {
           'id': actionsMenu.getAttribute('data-user-id'),
@@ -171,19 +191,28 @@ class AnkTweetdeck extends AnkSite {
     };
 
     //
-
     let modal = this._getOpenedModal();
-    if (!modal) {
-      return null;
+    if (modal) {
+      // モーダルが開いている
+      let context = {};
+
+      let tw = this._getTweetItem(modal);
+
+      // ビデオはモーダルウィンドウから、画像は元ツイートからパスを取得する
+      context.path = getVideoPathContext(modal);
+      if ( ! context.path) {
+        context.path = getPathContext(tw);
+      }
+      context.illust = getIllustContext(tw);
+      context.member = getMemberContext(tw);
+
+      return context;
+    }
+    else {
+      // ツリーが開いている (GIFのための暫定対応)
     }
 
-    let context = {};
-
-    context.path = getPathContext(modal);
-    context.illust = getIllustContext(modal);
-    context.member = getMemberContext(modal);
-
-    return context;
+    return null;
   }
 
   /**
@@ -201,6 +230,25 @@ class AnkTweetdeck extends AnkSite {
     }
 
     return modal;
+  }
+
+  /**
+   * ツイート本体を探す
+   * @param node
+   * @returns {NodeList}
+   * @private
+   */
+  _getTweetItem (node) {
+    let actionsMenu = node.querySelector(this.SELECTORS.info.illust.actionsMenu);
+    if (!actionsMenu) {
+      return;
+    }
+    let chirpId = actionsMenu.getAttribute('data-chirp-id');
+    let photo_containers = document.querySelectorAll(this.SELECTORS.illust.photo_containers.replace(/#CHIRP_ID#/g, chirpId));
+    return Array.prototype.find.call(photo_containers, (e) => {
+        return e.querySelectorAll('.media-image-container, .media-preview-container').length;
+      }
+    );
   }
 
   /**

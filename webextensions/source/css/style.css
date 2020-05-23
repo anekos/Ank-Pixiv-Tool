@@ -67,6 +67,10 @@
 
 }
 
+.ank-pixiv-download-target {
+    background: brown;
+}
+
 #ank-pixiv-message-box {
     position: fixed;
     top: 6em;
@@ -139,7 +143,6 @@
     content: attr(data-text-download_inprogress);
     color: green;
 }
-
 
 @keyframes slidein {
     from {
