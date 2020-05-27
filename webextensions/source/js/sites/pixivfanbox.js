@@ -171,7 +171,7 @@ class AnkPixivFanbox extends AnkSite {
    */
   getIllustId (url) {
     url = url || document.location.href;
-    let m = /\.fanbox\.cc\/(?:[^/]+?\/)?posts\/(\d+)$/.exec(url);
+    let m = /\.fanbox\.cc\/(?:[^/]+?\/)?posts\/(\d+)(?:\?|$)/.exec(url);
     if (m) {
       return m[1];
     }

@@ -56,6 +56,8 @@ class AnkTweetdeck extends AnkSite {
      * @returns {{thumbnail: (*|Array.<T>), original: Array}}
      */
     let getVideoPathContext = (modal) => {
+      // ビデオ（GIFはモーダルが開かないので対応できない）
+      // FIXME APIでID.json取得→m3u8(1)取得→m3u8(2)取得→分割TS取得→結合 に修正すべき
       let video_container = modal.querySelector(this.SELECTORS.illust.video_container);
       if (!video_container) {
         return;
@@ -203,8 +205,8 @@ class AnkTweetdeck extends AnkSite {
       if ( ! context.path) {
         context.path = getPathContext(tw);
       }
-      context.illust = getIllustContext(tw);
-      context.member = getMemberContext(tw);
+      context.illust = getIllustContext(modal);
+      context.member = getMemberContext(modal);
 
       return context;
     }
