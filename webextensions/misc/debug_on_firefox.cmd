@@ -1,12 +1,16 @@
 @ECHO OFF
+SET MODIFY_MANIFEST=1
+
 REM MODIFY THESE SETTINGS DEPENDING ON YOUR ENVIRONMENT
-SET ROOT_DIR=Z:\APT
+SET ROOT_DIR=D:\Work\APT
 SET WEB_EXT_SOURCE_DIR=%ROOT_DIR%\source
 SET WEB_EXT_ARTIFACTS_DIR=%ROOT_DIR%\web-ext-artifacts
-SET WEB_EXT_FIREFOX_PROFILE=D:\AppData\Firefox\Developer3
+SET WEB_EXT_FIREFOX=firefoxdeveloperedition
+SET WEB_EXT_FIREFOX_PROFILE=Developer4APT
 SET WEB_EXT_NO_RELOAD=true
 SET WEB_EXT_KEEP_PROFILE_CHANGES=true
 SET WEB_EXT_BROWSER_CONSOLE=true
+SET WEB_EXT_VERBOSE=false
 
 SET MISC_DIR=%~dp0
 SET SRC_DIR=%~dp0\..\source
@@ -16,8 +20,11 @@ IF EXIST "%ROOT_DIR%" RD /S/Q "%ROOT_DIR%"
 MD "%WEB_EXT_SOURCE_DIR%"
 XCOPY /E/Q "%SRC_DIR%\*" "%WEB_EXT_SOURCE_DIR%\"
 
-ECHO # MODIFY manifest.json FOR FIREFOX
-python "%MISC_DIR%\add_applications_gecko_id_to_manifest_json.py" -i "%SRC_DIR%" -o "%WEB_EXT_SOURCE_DIR%"
+IF "%MODIFY_MANIFEST%"=="1" (
+    ECHO # MODIFY manifest.json FOR FIREFOX
+    py "%MISC_DIR%\add_applications_gecko_id_to_manifest_json.py" -i "%SRC_DIR%" -o "%WEB_EXT_SOURCE_DIR%"
+) 
 
 ECHO # EXECUTE FIREFOX IN DEBUG MODE
+
 web-ext run

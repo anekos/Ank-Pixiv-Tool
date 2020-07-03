@@ -211,11 +211,22 @@
         return;
       }
 
+      // Firefox は extraHeaders に対応していない
+      let extraInfoSpec = [
+        "requestHeaders",
+        "extraHeaders",
+        "blocking"
+      ];
+      if (IS_FIREFOX) {
+        extraInfoSpec = extraInfoSpec.filter((e)=>["extraHeaders"].indexOf(e)==-1);
+      }
+
       chrome.runtime.getBackgroundPage((background) => {
         if (background !== window) {
           return;
         }
 
+        
         chrome.webRequest.onBeforeSendHeaders.addListener((details) => {
 
           if (this.USE_INTERCEPT_ORIGINS && !this.intercept_origins.hasOwnProperty(new URL(details.url).origin)) {
@@ -246,11 +257,7 @@
           "types": [
             "xmlhttprequest"
           ]
-        }, [
-          "requestHeaders",
-          "extraHeaders",
-          "blocking"
-        ]);
+        }, extraInfoSpec);
       });
     }
 
